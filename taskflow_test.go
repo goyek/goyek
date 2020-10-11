@@ -11,7 +11,7 @@ import (
 	"github.com/pellared/taskflow"
 )
 
-func ExampleMain() {
+func Example() {
 	tasks := &taskflow.Taskflow{}
 	task1 := tasks.MustRegister(taskflow.Task{
 		Name: "task-1",
@@ -43,7 +43,7 @@ func ExampleMain() {
 	// --- FAIL: task-2 (0.00s)
 }
 
-func ExampleMain_verbose() {
+func Example_verbose() {
 	tasks := &taskflow.Taskflow{
 		Verbose: true, // move to flags TODO
 	}
