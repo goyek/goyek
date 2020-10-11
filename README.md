@@ -26,7 +26,7 @@ While [Make](https://www.gnu.org/software/make/) is currently de facto standard 
 - Requires to learn Make (which is not so easy).
 - It is hard to develop a Makefile which is truly cross-platform.
 
-Maybe better expiation can be found [here](https://github.com/magefile/mage#why).
+Maybe better explanation can be found [here](https://github.com/magefile/mage#why).
 
 ### Why not to use Mage
 
