@@ -96,6 +96,7 @@ func (f *Taskflow) run(ctx context.Context, task Task) bool {
 	sb := &strings.Builder{}
 	tf := &TF{
 		ctx:    ctx,
+		name:   task.Name,
 		writer: sb,
 	}
 

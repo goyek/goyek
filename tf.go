@@ -10,6 +10,7 @@ import (
 // TF TODO.
 type TF struct {
 	ctx     context.Context
+	name    string
 	writer  io.Writer
 	failed  bool
 	skipped bool
@@ -21,8 +22,8 @@ func (tf *TF) Context() context.Context {
 }
 
 // Name TODO.
-func Name() string {
-	panic("TODO")
+func (tf *TF) Name() string {
+	return tf.name
 }
 
 // Writer TODO.
