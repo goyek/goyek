@@ -40,6 +40,14 @@ This results in following benefits:
 - It can be easily used in more places than just for build automation.
 - Less magical. Pure Go code.
 
+## Credits
+
+**taskflow** is mainly inspired by:
+
+- [Mage](https://github.com/magefile/mage),
+- [testing](https://golang.org/pkg/testing),
+- [flag](https://golang.org/pkg/flag).
+
 ## Contributing
 
 Simply create an issue or a pull request.
