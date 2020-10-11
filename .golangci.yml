@@ -2,7 +2,7 @@ linters-settings:
   goimports:
     local-prefixes: github.com/pellared/taskflow
   golint:
-    min-confidence: 0
+    min-confidence: 0.8
   govet:
     check-shadowing: true
   misspell:
@@ -70,10 +70,10 @@ linters:
     - unconvert
     - unparam
     - whitespace
-    - wsl
     # don't enable:
     # - go-header
     # - testpackage
+    # - wsl
 
 issues:
   # enable issues excluded by default 

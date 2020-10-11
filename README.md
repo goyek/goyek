@@ -17,7 +17,7 @@ It can be used for example to create a build workflow in pure Go instead of usin
 
 ### Is taskflow stable
 
-No. It is a PoC which is under development.
+No, it is a PoC. However, I am open to any feedback.
 
 ### Why not to use Make
 
