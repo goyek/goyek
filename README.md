@@ -19,7 +19,7 @@ It can be used for example to create a build workflow in pure Go instead of usin
 
 No. It is a PoC which is under development.
 
-## Why not to use Make
+### Why not to use Make
 
 While [Make](https://www.gnu.org/software/make/) is currently de facto standard it has some pitfalls:
 
