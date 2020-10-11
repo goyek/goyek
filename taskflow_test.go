@@ -2,7 +2,7 @@ package taskflow_test
 
 import (
 	"context"
-	"errors"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,32 +11,126 @@ import (
 	"github.com/pellared/taskflow"
 )
 
+func ExampleMain() {
+	tasks := &taskflow.Taskflow{}
+	task1 := tasks.MustRegister(taskflow.Task{
+		Name: "task-1",
+		Command: func(tf *taskflow.TF) {
+			tf.Logf("one")
+		},
+	})
+	task2 := tasks.MustRegister(taskflow.Task{
+		Name: "task-2",
+		Command: func(tf *taskflow.TF) {
+			tf.Logf("hello")
+			tf.FailNow()
+			tf.Logf("world")
+		},
+		Dependencies: []taskflow.Dependency{task1},
+	})
+	tasks.MustRegister(taskflow.Task{
+		Name: "task-3",
+		Command: func(tf *taskflow.TF) {
+			tf.Logf("three")
+		},
+		Dependencies: []taskflow.Dependency{task2},
+	})
+
+	tasks.Main("build", "task-3") //nolint // example
+	// Output:
+	// === RUN   task-2
+	// hello
+	// --- FAIL: task-2 (0.00s)
+}
+
+func ExampleMain_verbose() {
+	tasks := &taskflow.Taskflow{
+		Verbose: true, // move to flags TODO
+	}
+	task1 := tasks.MustRegister(taskflow.Task{
+		Name: "task-1",
+		Command: func(tf *taskflow.TF) {
+			tf.Logf("one")
+		},
+	})
+	task2 := tasks.MustRegister(taskflow.Task{
+		Name: "task-2",
+		Command: func(tf *taskflow.TF) {
+			tf.Fatalf("hello")
+			tf.Logf("world")
+		},
+		Dependencies: []taskflow.Dependency{task1},
+	})
+	tasks.MustRegister(taskflow.Task{
+		Name: "task-3",
+		Command: func(tf *taskflow.TF) {
+			tf.Logf("three")
+		},
+		Dependencies: []taskflow.Dependency{task2},
+	})
+
+	tasks.Main("build", "task-3") //nolint // example
+	// Output:
+	// === RUN   task-1
+	// one
+	// --- PASS: task-1 (0.00s)
+	// === RUN   task-2
+	// hello
+	// --- FAIL: task-2 (0.00s)
+}
+
+func Test_Main_Verbose(t *testing.T) {
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
+	}
+	task1 := tasks.MustRegister(taskflow.Task{
+		Name: "task-1",
+		Command: func(tf *taskflow.TF) {
+			tf.FailNow()
+		},
+	})
+	tasks.MustRegister(taskflow.Task{
+		Name: "task-2",
+		Command: func(*taskflow.TF) {
+		},
+		Dependencies: []taskflow.Dependency{task1},
+	})
+	tasks.MustRegister(taskflow.Task{
+		Name: "task-3",
+		Command: func(*taskflow.TF) {
+		},
+	})
+
+	err := tasks.Main("build", "task-2", "task-3")
+
+	assert.Error(t, err, "should return error from first task")
+}
+
 func Test_successful(t *testing.T) {
 	ctx := context.Background()
-	tasks := &taskflow.Taskflow{}
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
+	}
 	var executed1 int
 	task1 := tasks.MustRegister(taskflow.Task{
 		Name: "task-1",
-		Command: func(*taskflow.TF) error {
+		Command: func(*taskflow.TF) {
 			executed1++
-			return nil
 		},
 	})
 	var executed2 int
 	tasks.MustRegister(taskflow.Task{
 		Name: "task-2",
-		Command: func(*taskflow.TF) error {
+		Command: func(*taskflow.TF) {
 			executed2++
-			return nil
 		},
 		Dependencies: []taskflow.Dependency{task1},
 	})
 	var executed3 int
 	tasks.MustRegister(taskflow.Task{
 		Name: "task-3",
-		Command: func(*taskflow.TF) error {
+		Command: func(*taskflow.TF) {
 			executed3++
-			return nil
 		},
 		Dependencies: []taskflow.Dependency{task1},
 	})
@@ -56,30 +150,31 @@ func Test_successful(t *testing.T) {
 
 func Test_dependency_failure(t *testing.T) {
 	ctx := context.Background()
-	tasks := &taskflow.Taskflow{}
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
+	}
 	var executed1 int
 	task1 := tasks.MustRegister(taskflow.Task{
 		Name: "task-1",
-		Command: func(*taskflow.TF) error {
+		Command: func(tf *taskflow.TF) {
 			executed1++
-			return errors.New("I failed you") //nolint:goerr113 // test code
+			tf.FailNow()
+			executed1 += 100
 		},
 	})
 	var executed2 int
 	tasks.MustRegister(taskflow.Task{
 		Name: "task-2",
-		Command: func(*taskflow.TF) error {
+		Command: func(*taskflow.TF) {
 			executed2++
-			return nil
 		},
 		Dependencies: []taskflow.Dependency{task1},
 	})
 	var executed3 int
 	tasks.MustRegister(taskflow.Task{
 		Name: "task-3",
-		Command: func(*taskflow.TF) error {
+		Command: func(*taskflow.TF) {
 			executed3++
-			return nil
 		},
 		Dependencies: []taskflow.Dependency{task1},
 	})

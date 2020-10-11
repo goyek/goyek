@@ -3,10 +3,17 @@ package taskflow
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"strings"
+	"time"
 )
 
 // Taskflow TODO.
 type Taskflow struct {
+	Verbose bool
+	Output  io.Writer
+
 	tasks map[string]Task
 }
 
@@ -54,11 +61,19 @@ func (f *Taskflow) Execute(ctx context.Context, taskNames ...string) error {
 
 // MustExecute TODO.
 func (f *Taskflow) MustExecute(ctx context.Context, taskNames ...string) {
-	if err := f.Execute(ctx, taskNames...); err != nil {
+	err := f.Execute(ctx, taskNames...)
+	if err != nil {
 		panic(err)
 	}
 }
 
+// Main TODO.
+func (f *Taskflow) Main(args ...string) error {
+	ctx := context.Background()
+	return f.Execute(ctx, args[1:]...)
+}
+
+// execute TODO.
 func (f *Taskflow) execute(ctx context.Context, name string, executed map[string]bool) error {
 	task := f.tasks[name]
 	if executed[name] {
@@ -69,11 +84,49 @@ func (f *Taskflow) execute(ctx context.Context, name string, executed map[string
 			return err
 		}
 	}
-	if err := task.Command(&TF{ctx: ctx}); err != nil {
-		return fmt.Errorf("%s task failed: %w", name, err) //nolint:goerr113 // TODO
+	if f.run(ctx, task) {
+		return fmt.Errorf("%s task failed", name) //nolint:goerr113 // TODO
 	}
 	executed[name] = true
 	return nil
+}
+
+// run TODO.
+func (f *Taskflow) run(ctx context.Context, task Task) bool {
+	sb := &strings.Builder{}
+	tf := &TF{
+		ctx:    ctx,
+		writer: sb,
+	}
+
+	sb.WriteString(reportTaskStart(task.Name))
+
+	finished := make(chan struct{})
+	var duration time.Duration
+	go func() {
+		defer close(finished)
+		from := time.Now()
+		task.Command(tf)
+		duration = time.Since(from)
+	}()
+	<-finished
+
+	switch {
+	default:
+		sb.WriteString(reportTaskEnd("PASS", task.Name, duration))
+	case tf.failed:
+		sb.WriteString(reportTaskEnd("FAIL", task.Name, duration))
+	case tf.skipped:
+		sb.WriteString(reportTaskEnd("SKIP", task.Name, duration))
+	}
+
+	if f.Verbose || tf.failed {
+		if _, err := io.Copy(f.output(), strings.NewReader(sb.String())); err != nil {
+			panic(err)
+		}
+	}
+
+	return tf.failed
 }
 
 func (f *Taskflow) isRegistered(name string) bool {
@@ -82,4 +135,19 @@ func (f *Taskflow) isRegistered(name string) bool {
 	}
 	_, ok := f.tasks[name]
 	return ok
+}
+
+func (f *Taskflow) output() io.Writer {
+	if f.Output == nil {
+		return os.Stdout
+	}
+	return f.Output
+}
+
+func reportTaskStart(taskName string) string {
+	return fmt.Sprintf("=== RUN   %s\n", taskName)
+}
+
+func reportTaskEnd(status string, taskName string, d time.Duration) string {
+	return fmt.Sprintf("--- %s: %s (%.2fs)\n", status, taskName, d.Seconds())
 }
