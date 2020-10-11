@@ -1,0 +1,36 @@
+name: build
+
+on:
+  push:
+    branches: 
+      - master
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  ci-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+      - name: Build
+        run: make ci
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: coverage.*
+      - name: Upload dist
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist
