@@ -70,13 +70,3 @@ func (tf *TF) SkipNow() {
 	tf.skipped = true
 	runtime.Goexit()
 }
-
-// Cleanup TODO.
-func (tf *TF) Cleanup(func()) {
-	panic("TODO")
-}
-
-// Helper TODO.
-// func (tf *TF) Helper() {
-// 	panic("TODO")
-// }
