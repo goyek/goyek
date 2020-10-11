@@ -24,9 +24,16 @@ type Dependency struct {
 
 // Register TODO.
 func (f *Taskflow) Register(task Task) (Dependency, error) {
+	// validate
 	if f.isRegistered(task.Name) {
-		return Dependency{}, fmt.Errorf("%s task was already registered", task.Name) //nolint:goerr113 // TODO
+		return Dependency{}, fmt.Errorf("%s task was already registered", task.Name)
 	}
+	for _, dep := range task.Dependencies {
+		if !f.isRegistered(dep.name) {
+			return Dependency{}, fmt.Errorf("invalid dependency %s", dep.name)
+		}
+	}
+
 	f.tasks[task.Name] = task
 	return Dependency{name: task.Name}, nil
 }
@@ -45,7 +52,7 @@ func (f *Taskflow) Execute(ctx context.Context, taskNames ...string) error {
 	// validate
 	for _, name := range taskNames {
 		if !f.isRegistered(name) {
-			return fmt.Errorf("%s task was not registered", name) //nolint:goerr113 // TODO
+			return fmt.Errorf("%s task was not registered", name)
 		}
 	}
 
@@ -85,7 +92,7 @@ func (f *Taskflow) execute(ctx context.Context, name string, executed map[string
 		}
 	}
 	if f.run(ctx, task) {
-		return fmt.Errorf("%s task failed", name) //nolint:goerr113 // TODO
+		return fmt.Errorf("%s task failed", name)
 	}
 	executed[name] = true
 	return nil
