@@ -2,7 +2,7 @@
 
 .PHONY: dev
 dev: ## dev build
-dev: clean install generate build fmt lint-fast test mod-tidy build-snapshot 
+dev: clean install generate build fmt lint-fast test mod-tidy
 
 .PHONY: ci
 ci: ## CI build
@@ -11,7 +11,6 @@ ci: dev diff
 .PHONY: clean
 clean: ## remove files created during build
 	$(call print-target)
-	rm -rf dist
 	rm -f coverage.*
 
 .PHONY: install
@@ -19,7 +18,6 @@ install: ## install build tools
 	$(call print-target)
 	cd build && go install mvdan.cc/gofumpt/gofumports
 	cd build && go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd build && go install github.com/goreleaser/goreleaser
 
 .PHONY: generate
 generate: ## go generate
@@ -34,7 +32,7 @@ build: ## go build
 .PHONY: fmt
 fmt: ## gofumports
 	$(call print-target)
-	gofumports -l -w -local github.com/golang-templates/seed . || true
+	gofumports -l -w -local github.com/pellared/taskflow . || true
 
 .PHONY: lint
 lint: ## golangci-lint
@@ -58,22 +56,11 @@ mod-tidy: ## go mod tidy
 	go mod tidy
 	cd build && go mod tidy
 
-.PHONY: build-snapshot
-build-snapshot: ## goreleaser --snapshot --skip-publish --rm-dist
-	$(call print-target)
-	goreleaser --snapshot --skip-publish --rm-dist
-
 .PHONY: diff
 diff: ## git diff
 	$(call print-target)
 	git diff --exit-code
 	RES=$$(git status --porcelain) ; if [ -n "$$RES" ]; then echo $$RES && exit 1 ; fi
-
-.PHONY: release
-release: ## goreleaser --rm-dist
-	$(call print-target)
-	cd build && go install github.com/goreleaser/goreleaser
-	goreleaser --rm-dist
 
 .PHONY: run
 run: ## go run

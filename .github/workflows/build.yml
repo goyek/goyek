@@ -28,9 +28,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: coverage
-          path: coverage.*
-      - name: Upload dist
-        uses: actions/upload-artifact@v2
-        with:
-          name: dist
-          path: dist
+          path: coverage.*t

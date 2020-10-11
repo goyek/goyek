@@ -1,4 +1,4 @@
-module github.com/golang-templates/seed
+module github.com/pellared/taskflow
 
 go 1.15
 

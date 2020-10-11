@@ -18,8 +18,6 @@ coverage.html
 # Dependency directories (remove the comment below to include it)
 #vendor/
 
-# Output of GoReleaser
-dist/
 
 # Visual Studio Code files
 .vscode/*
