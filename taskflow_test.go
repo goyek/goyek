@@ -56,15 +56,16 @@ func Example_verbose() {
 	task2 := tasks.MustRegister(taskflow.Task{
 		Name: "task-2",
 		Command: func(tf *taskflow.TF) {
-			tf.Fatalf("hello")
-			tf.Logf("world")
+			tf.Skipf("two")
+			tf.Logf("it is skipped")
 		},
 		Dependencies: taskflow.Deps{task1},
 	})
 	tasks.MustRegister(taskflow.Task{
 		Name: "task-3",
 		Command: func(tf *taskflow.TF) {
-			tf.Logf("three")
+			tf.Fatalf("hello from " + tf.Name())
+			tf.Logf("world")
 		},
 		Dependencies: taskflow.Deps{task2},
 	})
@@ -75,8 +76,11 @@ func Example_verbose() {
 	// one
 	// --- PASS: task-1 (0.00s)
 	// === RUN   task-2
-	// hello
-	// --- FAIL: task-2 (0.00s)
+	// two
+	// --- SKIP: task-2 (0.00s)
+	// === RUN   task-3
+	// hello from task-3
+	// --- FAIL: task-3 (0.00s)
 }
 
 func Test_Main_Verbose(t *testing.T) {
@@ -158,6 +162,8 @@ func Test_dependency_failure(t *testing.T) {
 		Name: "task-1",
 		Command: func(tf *taskflow.TF) {
 			executed1++
+			tf.Errorf("it still runs")
+			executed1 += 10
 			tf.FailNow()
 			executed1 += 100
 		},
@@ -185,5 +191,5 @@ func Test_dependency_failure(t *testing.T) {
 	err := tasks.Execute(ctx, "task-1", "task-2", "task-3")
 
 	assert.Error(t, err, "should return error from first task")
-	assert.Equal(t, []int{1, 0, 0}, got(), "should execute task 1")
+	assert.Equal(t, []int{11, 0, 0}, got(), "should execute task 1")
 }
