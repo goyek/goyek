@@ -100,6 +100,8 @@ func (f *Taskflow) execute(ctx context.Context, name string, executed map[string
 
 // run TODO.
 func (f *Taskflow) run(ctx context.Context, task Task) bool {
+	// 1. Handle cancelation via ctx. New state? Check how go test does it. TODO.
+	// 2. Handle writer streaming for verbose mode.
 	sb := &strings.Builder{}
 	tf := &TF{
 		ctx:    ctx,
