@@ -26,14 +26,14 @@ func Example() {
 			tf.FailNow()
 			tf.Logf("world")
 		},
-		Dependencies: []taskflow.Dependency{task1},
+		Dependencies: taskflow.Deps{task1},
 	})
 	tasks.MustRegister(taskflow.Task{
 		Name: "task-3",
 		Command: func(tf *taskflow.TF) {
 			tf.Logf("three")
 		},
-		Dependencies: []taskflow.Dependency{task2},
+		Dependencies: taskflow.Deps{task2},
 	})
 
 	tasks.Main("build", "task-3") //nolint // example
@@ -59,14 +59,14 @@ func Example_verbose() {
 			tf.Fatalf("hello")
 			tf.Logf("world")
 		},
-		Dependencies: []taskflow.Dependency{task1},
+		Dependencies: taskflow.Deps{task1},
 	})
 	tasks.MustRegister(taskflow.Task{
 		Name: "task-3",
 		Command: func(tf *taskflow.TF) {
 			tf.Logf("three")
 		},
-		Dependencies: []taskflow.Dependency{task2},
+		Dependencies: taskflow.Deps{task2},
 	})
 
 	tasks.Main("build", "task-3") //nolint // example
@@ -93,7 +93,7 @@ func Test_Main_Verbose(t *testing.T) {
 		Name: "task-2",
 		Command: func(*taskflow.TF) {
 		},
-		Dependencies: []taskflow.Dependency{task1},
+		Dependencies: taskflow.Deps{task1},
 	})
 	tasks.MustRegister(taskflow.Task{
 		Name: "task-3",
@@ -124,7 +124,7 @@ func Test_successful(t *testing.T) {
 		Command: func(*taskflow.TF) {
 			executed2++
 		},
-		Dependencies: []taskflow.Dependency{task1},
+		Dependencies: taskflow.Deps{task1},
 	})
 	var executed3 int
 	tasks.MustRegister(taskflow.Task{
@@ -132,7 +132,7 @@ func Test_successful(t *testing.T) {
 		Command: func(*taskflow.TF) {
 			executed3++
 		},
-		Dependencies: []taskflow.Dependency{task1},
+		Dependencies: taskflow.Deps{task1},
 	})
 	got := func() []int {
 		return []int{executed1, executed2, executed3}
@@ -168,7 +168,7 @@ func Test_dependency_failure(t *testing.T) {
 		Command: func(*taskflow.TF) {
 			executed2++
 		},
-		Dependencies: []taskflow.Dependency{task1},
+		Dependencies: taskflow.Deps{task1},
 	})
 	var executed3 int
 	tasks.MustRegister(taskflow.Task{
@@ -176,7 +176,7 @@ func Test_dependency_failure(t *testing.T) {
 		Command: func(*taskflow.TF) {
 			executed3++
 		},
-		Dependencies: []taskflow.Dependency{task1},
+		Dependencies: taskflow.Deps{task1},
 	})
 	got := func() []int {
 		return []int{executed1, executed2, executed3}

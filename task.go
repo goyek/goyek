@@ -4,6 +4,8 @@ package taskflow
 type Task struct {
 	Name         string
 	Command      func(*TF)
-	Dependencies []Dependency
-	// Parallelize bool TODO.
+	Dependencies Deps
 }
+
+// Deps TODO.
+type Deps []RegisteredTask

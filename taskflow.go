@@ -17,29 +17,29 @@ type Taskflow struct {
 	tasks map[string]Task
 }
 
-// Dependency TODO.
-type Dependency struct {
+// RegisteredTask TODO.
+type RegisteredTask struct {
 	name string
 }
 
 // Register TODO.
-func (f *Taskflow) Register(task Task) (Dependency, error) {
+func (f *Taskflow) Register(task Task) (RegisteredTask, error) {
 	// validate
 	if f.isRegistered(task.Name) {
-		return Dependency{}, fmt.Errorf("%s task was already registered", task.Name)
+		return RegisteredTask{}, fmt.Errorf("%s task was already registered", task.Name)
 	}
 	for _, dep := range task.Dependencies {
 		if !f.isRegistered(dep.name) {
-			return Dependency{}, fmt.Errorf("invalid dependency %s", dep.name)
+			return RegisteredTask{}, fmt.Errorf("invalid dependency %s", dep.name)
 		}
 	}
 
 	f.tasks[task.Name] = task
-	return Dependency{name: task.Name}, nil
+	return RegisteredTask{name: task.Name}, nil
 }
 
 // MustRegister TODO.
-func (f *Taskflow) MustRegister(task Task) Dependency {
+func (f *Taskflow) MustRegister(task Task) RegisteredTask {
 	dep, err := f.Register(task)
 	if err != nil {
 		panic(err)
