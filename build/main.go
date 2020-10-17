@@ -21,7 +21,7 @@ func main() {
 
 	test := tasks.MustRegister(taskflow.Task{
 		Name:        "test",
-		Description: "go test",
+		Description: "go test with race detector and code covarage",
 		Command:     taskTest,
 	})
 
@@ -45,6 +45,8 @@ func taskClean(tf *taskflow.TF) {
 }
 
 func taskTest(tf *taskflow.TF) {
-	err := taskflow.Exec(tf, "go", "test", "-v")
-	require.NoError(tf, err, "go test failed")
+	err := taskflow.Exec(tf, "go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./...")
+	assert.NoError(tf, err, "go test failed")
+	err = taskflow.Exec(tf, "go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html")
+	assert.NoError(tf, err, "go tool cover failed")
 }
