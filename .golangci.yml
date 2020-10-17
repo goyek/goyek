@@ -44,7 +44,6 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    - godox
     - gofmt
     - gofumpt
     - goimports
@@ -74,6 +73,7 @@ linters:
     # - testpackage
     # - wsl
     # - goerr113
+    # - godox
 
 issues:
   # enable issues excluded by default 

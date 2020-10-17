@@ -16,8 +16,8 @@ clean: ## remove files created during build
 .PHONY: install
 install: ## install build tools
 	$(call print-target)
-	cd build && go install mvdan.cc/gofumpt/gofumports
-	cd build && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd tools && go install mvdan.cc/gofumpt/gofumports
+	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
 .PHONY: generate
 generate: ## go generate
@@ -54,7 +54,7 @@ test: ## go test with race detector and code covarage
 mod-tidy: ## go mod tidy
 	$(call print-target)
 	go mod tidy
-	cd build && go mod tidy
+	cd tools && go mod tidy
 
 .PHONY: diff
 diff: ## git diff

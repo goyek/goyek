@@ -36,11 +36,11 @@ func Example() {
 		Dependencies: taskflow.Deps{task2},
 	})
 
-	tasks.Main("build", "task-3") //nolint // example
+	tasks.Execute(context.Background(), "task-3") //nolint // example
 	// Output:
-	// === RUN   task-2
+	// ===== TASK  task-2
 	// hello
-	// --- FAIL: task-2 (0.00s)
+	// ----- FAIL: task-2 (0.00s)
 }
 
 func Example_verbose() {
@@ -70,44 +70,17 @@ func Example_verbose() {
 		Dependencies: taskflow.Deps{task2},
 	})
 
-	tasks.Main("build", "task-3") //nolint // example
+	tasks.Execute(context.Background(), "task-3") //nolint // example
 	// Output:
-	// === RUN   task-1
+	// ===== TASK  task-1
 	// one
-	// --- PASS: task-1 (0.00s)
-	// === RUN   task-2
+	// ----- PASS: task-1 (0.00s)
+	// ===== TASK  task-2
 	// two
-	// --- SKIP: task-2 (0.00s)
-	// === RUN   task-3
+	// ----- SKIP: task-2 (0.00s)
+	// ===== TASK  task-3
 	// hello from task-3
-	// --- FAIL: task-3 (0.00s)
-}
-
-func Test_Main_Verbose(t *testing.T) {
-	tasks := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
-	task1 := tasks.MustRegister(taskflow.Task{
-		Name: "task-1",
-		Command: func(tf *taskflow.TF) {
-			tf.FailNow()
-		},
-	})
-	tasks.MustRegister(taskflow.Task{
-		Name: "task-2",
-		Command: func(*taskflow.TF) {
-		},
-		Dependencies: taskflow.Deps{task1},
-	})
-	tasks.MustRegister(taskflow.Task{
-		Name: "task-3",
-		Command: func(*taskflow.TF) {
-		},
-	})
-
-	err := tasks.Main("build", "task-2", "task-3")
-
-	assert.Error(t, err, "should return error from first task")
+	// ----- FAIL: task-3 (0.00s)
 }
 
 func Test_successful(t *testing.T) {
