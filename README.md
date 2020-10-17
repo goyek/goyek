@@ -27,6 +27,7 @@ While [Make](https://www.gnu.org/software/make/) is currently de facto standard 
 
 - Requires to learn Make (which is not so easy).
 - It is hard to develop a Makefile which is truly cross-platform.
+- Debugging and testing Make targets is not easy.
 
 Maybe better explanation can be found [here](https://github.com/magefile/mage#why).
 
@@ -39,8 +40,11 @@ Maybe better explanation can be found [here](https://github.com/magefile/mage#wh
 **taskflow** takes a different approach as it is a regular Go library (package).
 This results in following benefits:
 
-- It can be easily used in more places than just for build automation.
-- Less magical. Pure Go code.
+- It is easy to debug. Like a regular Go application.
+- Tasks and helpers are testable. See [exec_test.go](exec_test.go).
+- Easy to create reusable tasks or helpers.
+- API similar to [testing](https://golang.org/pkg/testing) so it is possible to use e.g. [testify](https://github.com/stretchr/testify) for assertions.
+- Less magical. Pure Go code. No build tags or special names for functions.
 
 ## Credits
 
