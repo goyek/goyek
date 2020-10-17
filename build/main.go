@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/pellared/taskflow"
@@ -23,7 +21,7 @@ func main() {
 		Dependencies: taskflow.Deps{test},
 	})
 
-	tasks.Main(os.Args...)
+	tasks.Main()
 }
 
 func taskTest(tf *taskflow.TF) {

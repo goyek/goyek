@@ -54,7 +54,7 @@ func (f *Taskflow) MustRegister(task Task) RegisteredTask {
 	return dep
 }
 
-func (f *Taskflow) Main(args ...string) {
+func (f *Taskflow) Main() {
 	ctx := context.Background()
 	cli := flag.NewFlagSet("", flag.ExitOnError)
 	cli.SetOutput(f.Output)
@@ -69,11 +69,19 @@ func (f *Taskflow) Main(args ...string) {
 		}
 	}
 	cli.Usage = usage
-	cli.Parse(args[1:]) //nolint // Ignore errors; FlagSet is set for ExitOnError.
+	cli.Parse(os.Args[1:]) //nolint // Ignore errors; FlagSet is set for ExitOnError.
+	tasks := cli.Args()
+	if len(tasks) == 0 {
+		fmt.Fprintln(cli.Output(), "no task provided")
+		usage()
+		os.Exit(1)
+	}
+
 	if *verbose {
 		f.Verbose = true
 	}
-	if err := f.Execute(ctx, cli.Args()...); err != nil {
+
+	if err := f.Execute(ctx, tasks...); err != nil {
 		fmt.Fprintln(cli.Output(), err)
 		if err == ErrTaskNotRegistered {
 			usage()

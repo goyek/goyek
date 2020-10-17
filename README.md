@@ -9,7 +9,7 @@
 This package ais to simplify creation of task-based workflows in Go.
 It can be used for example to create a build workflow in pure Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
 
-Take a look at the [dogfooding example](build/main.go).
+Take a look at the [dogfooding example](build/main.go). Example usage: `go run ./build/. -v dev`.
 
 `Star` this repository if you find it valuable and worth maintaining.
 
