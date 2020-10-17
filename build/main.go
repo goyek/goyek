@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"os/exec"
 
 	"github.com/stretchr/testify/require"
 
@@ -22,9 +21,6 @@ func main() {
 }
 
 func taskTest(tf *taskflow.TF) {
-	cmd := exec.CommandContext(tf.Context(), "go", "test", "-v")
-	cmd.Stderr = tf.Writer()
-	cmd.Stdout = tf.Writer()
-	err := cmd.Run()
+	err := taskflow.Exec(tf, "go", "test", "-v")
 	require.NoError(tf, err, "go test failed")
 }
