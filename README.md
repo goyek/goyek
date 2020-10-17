@@ -1,6 +1,5 @@
 # taskflow
 
-[![GitHub Release](https://img.shields.io/github/v/release/pellared/taskflow)](https://github.com/pellared/taskflow/releases)
 [![go.dev](https://img.shields.io/badge/go.dev-reference-blue.svg)](https://pkg.go.dev/github.com/pellared/taskflow)
 [![go.mod](https://img.shields.io/github/go-mod/go-version/pellared/taskflow)](go.mod)
 [![Build Status](https://img.shields.io/github/workflow/status/pellared/taskflow/build)](https://github.com/pellared/taskflow/actions?query=workflow%3Abuild+branch%3Amaster)
