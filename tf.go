@@ -5,68 +5,71 @@ import (
 	"fmt"
 	"io"
 	"runtime"
+	"time"
 )
 
-// TF TODO.
 type TF struct {
-	ctx     context.Context
-	name    string
-	writer  io.Writer
-	failed  bool
-	skipped bool
+	ctx      context.Context
+	name     string
+	writer   io.Writer
+	failed   bool
+	skipped  bool
+	duration time.Duration
 }
 
-// Context TODO.
 func (tf *TF) Context() context.Context {
 	return tf.ctx
 }
 
-// Name TODO.
 func (tf *TF) Name() string {
 	return tf.name
 }
 
-// Writer TODO.
 func (tf *TF) Writer() io.Writer {
 	return tf.writer
 }
 
-// Logf TODO.
 func (tf *TF) Logf(format string, args ...interface{}) {
 	fmt.Fprintf(tf.writer, format+"\n", args...)
 }
 
-// Errorf TODO.
 func (tf *TF) Errorf(format string, args ...interface{}) {
 	tf.Logf(format, args...)
 	tf.Fail()
 }
 
-// Fail TODO.
+func (tf *TF) Failed() bool {
+	return tf.failed
+}
+
 func (tf *TF) Fail() {
 	tf.failed = true
 }
 
-// Fatalf TODO.
 func (tf *TF) Fatalf(format string, args ...interface{}) {
 	tf.Logf(format, args...)
 	tf.FailNow()
 }
 
-// FailNow TODO.
 func (tf *TF) FailNow() {
 	tf.Fail()
 	runtime.Goexit()
 }
 
-// Skipf TODO.
+func (tf *TF) Skipped() bool {
+	return tf.skipped
+}
+
 func (tf *TF) Skipf(format string, args ...interface{}) {
 	tf.Logf(format, args...)
 	tf.SkipNow()
 }
 
-// SkipNow TODO.
 func (tf *TF) SkipNow() {
 	tf.skipped = true
 	runtime.Goexit()
+}
+
+func (tf *TF) Passed() bool {
+	return !tf.failed && !tf.skipped
 }

@@ -6,19 +6,17 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
 )
 
 var (
-	// ErrTaskNotRegistered TODO.
 	ErrTaskNotRegistered = errors.New("task provided but not registered")
-	// ErrTaskFail TODO.
-	ErrTaskFail = errors.New("FAIL")
+	ErrTaskFail          = errors.New("FAIL")
 )
 
-// Taskflow TODO.
 type Taskflow struct {
 	Verbose bool
 	Output  io.Writer
@@ -26,12 +24,10 @@ type Taskflow struct {
 	tasks map[string]Task
 }
 
-// RegisteredTask TODO.
 type RegisteredTask struct {
 	name string
 }
 
-// Register TODO.
 func (f *Taskflow) Register(task Task) (RegisteredTask, error) {
 	// validate
 	if task.Name == "" {
@@ -50,7 +46,6 @@ func (f *Taskflow) Register(task Task) (RegisteredTask, error) {
 	return RegisteredTask{name: task.Name}, nil
 }
 
-// MustRegister TODO.
 func (f *Taskflow) MustRegister(task Task) RegisteredTask {
 	dep, err := f.Register(task)
 	if err != nil {
@@ -59,7 +54,6 @@ func (f *Taskflow) MustRegister(task Task) RegisteredTask {
 	return dep
 }
 
-// Main TODO.
 func (f *Taskflow) Main(args ...string) {
 	ctx := context.Background()
 	cli := flag.NewFlagSet("", flag.ExitOnError)
@@ -88,7 +82,6 @@ func (f *Taskflow) Main(args ...string) {
 	}
 }
 
-// Execute TODO.
 func (f *Taskflow) Execute(ctx context.Context, taskNames ...string) error {
 	// validate
 	for _, name := range taskNames {
@@ -107,7 +100,6 @@ func (f *Taskflow) Execute(ctx context.Context, taskNames ...string) error {
 	return nil
 }
 
-// MustExecute TODO.
 func (f *Taskflow) MustExecute(ctx context.Context, taskNames ...string) {
 	err := f.Execute(ctx, taskNames...)
 	if err != nil {
@@ -115,7 +107,6 @@ func (f *Taskflow) MustExecute(ctx context.Context, taskNames ...string) {
 	}
 }
 
-// execute TODO.
 func (f *Taskflow) execute(ctx context.Context, name string, executed map[string]bool) error {
 	task := f.tasks[name]
 	if executed[name] {
@@ -126,47 +117,35 @@ func (f *Taskflow) execute(ctx context.Context, name string, executed map[string
 			return err
 		}
 	}
-	if f.run(ctx, task) {
+	if !f.run(ctx, task) {
 		return ErrTaskFail
 	}
 	executed[name] = true
 	return nil
 }
 
-// run TODO.
 func (f *Taskflow) run(ctx context.Context, task Task) bool {
 	if task.Command == nil {
-		return false
+		return true
 	}
 
-	// 1. Handle cancelation via ctx. New state? Check how go test does it. TODO.
+	// TODO:
+	// 1. Handle cancelation via ctx. New state? Check how go test does it.
 	// 2. Handle writer streaming for verbose mode.
+	// 3. Handle panics
 	sb := &strings.Builder{}
-	tf := &TF{
-		ctx:    ctx,
-		name:   task.Name,
-		writer: sb,
-	}
 
 	sb.WriteString(reportTaskStart(task.Name))
 
-	finished := make(chan struct{})
-	var duration time.Duration
-	go func() {
-		defer close(finished)
-		from := time.Now()
-		task.Command(tf)
-		duration = time.Since(from)
-	}()
-	<-finished
+	tf := Run(task, RunConfig{Ctx: ctx, Out: sb})
 
 	switch {
 	default:
-		sb.WriteString(reportTaskEnd("PASS", task.Name, duration))
+		sb.WriteString(reportTaskEnd("PASS", task.Name, tf.duration))
 	case tf.failed:
-		sb.WriteString(reportTaskEnd("FAIL", task.Name, duration))
+		sb.WriteString(reportTaskEnd("FAIL", task.Name, tf.duration))
 	case tf.skipped:
-		sb.WriteString(reportTaskEnd("SKIP", task.Name, duration))
+		sb.WriteString(reportTaskEnd("SKIP", task.Name, tf.duration))
 	}
 
 	if f.Verbose || tf.failed {
@@ -175,7 +154,38 @@ func (f *Taskflow) run(ctx context.Context, task Task) bool {
 		}
 	}
 
-	return tf.failed
+	return !tf.failed
+}
+
+type RunConfig struct {
+	Ctx context.Context
+	Out io.Writer
+}
+
+func Run(task Task, config RunConfig) *TF {
+	ctx := context.Background()
+	if config.Ctx != nil {
+		ctx = config.Ctx
+	}
+	writer := ioutil.Discard
+	if config.Out != nil {
+		writer = config.Out
+	}
+
+	tf := &TF{
+		ctx:    ctx,
+		name:   task.Name,
+		writer: writer,
+	}
+	finished := make(chan struct{})
+	go func() {
+		defer close(finished)
+		from := time.Now()
+		task.Command(tf)
+		tf.duration = time.Since(from)
+	}()
+	<-finished
+	return tf
 }
 
 func (f *Taskflow) isRegistered(name string) bool {

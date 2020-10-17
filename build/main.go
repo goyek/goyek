@@ -9,9 +9,7 @@ import (
 )
 
 func main() {
-	tasks := &taskflow.Taskflow{
-		Verbose: true, // move to flags TODO
-	}
+	tasks := &taskflow.Taskflow{}
 
 	test := tasks.MustRegister(taskflow.Task{
 		Name:        "test",

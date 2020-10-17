@@ -1,12 +1,10 @@
 package taskflow
 
-// Task TODO.
 type Task struct {
 	Name         string
 	Description  string
-	Command      func(*TF)
+	Command      func(tf *TF)
 	Dependencies Deps
 }
 
-// Deps TODO.
 type Deps []RegisteredTask

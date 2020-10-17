@@ -45,7 +45,7 @@ func Example() {
 
 func Example_verbose() {
 	tasks := &taskflow.Taskflow{
-		Verbose: true, // move to flags TODO
+		Verbose: true,
 	}
 	task1 := tasks.MustRegister(taskflow.Task{
 		Name: "task-1",
