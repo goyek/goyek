@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"strings"
 	"time"
 )
@@ -55,7 +56,7 @@ func (f *Taskflow) MustRegister(task Task) RegisteredTask {
 }
 
 func (f *Taskflow) Main() {
-	ctx := context.Background()
+	// validate args
 	cli := flag.NewFlagSet("", flag.ExitOnError)
 	cli.SetOutput(f.Output)
 	verbose := cli.Bool("v", false, "verbose")
@@ -81,6 +82,20 @@ func (f *Taskflow) Main() {
 		f.Verbose = true
 	}
 
+	// trap Ctrl+C and call cancel on the context
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		select {
+		case <-c:
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
+
+	// execute tasks
 	if err := f.Execute(ctx, tasks...); err != nil {
 		fmt.Fprintln(cli.Output(), err)
 		if err == ErrTaskNotRegistered {
