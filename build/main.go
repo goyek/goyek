@@ -12,11 +12,19 @@ func main() {
 	tasks := &taskflow.Taskflow{
 		Verbose: true, // move to flags TODO
 	}
-	tasks.MustRegister(taskflow.Task{
+
+	test := tasks.MustRegister(taskflow.Task{
 		Name:        "test",
 		Description: "go test",
 		Command:     taskTest,
 	})
+
+	tasks.MustRegister(taskflow.Task{
+		Name:         "dev",
+		Description:  "dev build",
+		Dependencies: taskflow.Deps{test},
+	})
+
 	tasks.Main(os.Args...)
 }
 
