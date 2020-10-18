@@ -102,6 +102,7 @@ func (f *Taskflow) Main() {
 		}
 		os.Exit(1)
 	}
+	fmt.Fprintln(cli.Output(), "PASS")
 }
 
 func (f *Taskflow) Execute(ctx context.Context, taskNames ...string) error {
