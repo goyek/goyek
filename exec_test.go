@@ -14,7 +14,7 @@ func TestExec_success(t *testing.T) {
 	r := Runner{
 		Out: sb,
 		Command: func(tf *TF) {
-			err = Exec(tf, "git", "help")
+			err = Exec(tf, "", nil, "git", "help")
 		},
 	}
 
@@ -28,7 +28,7 @@ func TestExec_error(t *testing.T) {
 	var err error
 	r := Runner{
 		Command: func(tf *TF) {
-			err = Exec(tf, "git", "wrong")
+			err = Exec(tf, "", nil, "git", "wrong")
 		},
 	}
 
