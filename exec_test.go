@@ -15,7 +15,7 @@ func TestExec_success(t *testing.T) {
 	}
 	sb := &strings.Builder{}
 
-	Run(Task{Name: "exec", Command: fn}, RunConfig{Out: sb})
+	Run(fn, RunConfig{Out: sb})
 
 	require.NoError(t, err, "should pass, everyone has git")
 	assert.Contains(t, sb.String(), "usage: git")
@@ -27,7 +27,7 @@ func TestExec_error(t *testing.T) {
 		err = Exec(tf, "git", "wrong")
 	}
 
-	Run(Task{Name: "exec", Command: fn}, RunConfig{})
+	Run(fn, RunConfig{})
 
 	assert.Error(t, err, "should error, bad git command")
 }

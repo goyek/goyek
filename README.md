@@ -5,8 +5,8 @@
 [![Build Status](https://img.shields.io/github/workflow/status/pellared/taskflow/build)](https://github.com/pellared/taskflow/actions?query=workflow%3Abuild+branch%3Amaster)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pellared/taskflow)](https://goreportcard.com/report/github.com/pellared/taskflow)
 
-This package ais to simplify creation of task-based workflows in Go.
-It can be used for example to create a build workflow in pure Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
+This package aims to simplify creation of task-based workflows in Go.
+It can be used to create build pipelines in pure Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
 
 Take a look at the [dogfooding example](build/main.go). Example usage: `go run ./build/. -v dev`.
 

@@ -160,7 +160,7 @@ func (f *Taskflow) run(ctx context.Context, task Task) bool {
 
 	sb.WriteString(reportTaskStart(task.Name))
 
-	tf := Run(task, RunConfig{Ctx: ctx, Out: sb})
+	tf := Run(task.Command, RunConfig{Ctx: ctx, Name: task.Name, Out: sb})
 
 	switch {
 	default:
@@ -181,14 +181,19 @@ func (f *Taskflow) run(ctx context.Context, task Task) bool {
 }
 
 type RunConfig struct {
-	Ctx context.Context
-	Out io.Writer
+	Ctx  context.Context
+	Name string
+	Out  io.Writer
 }
 
-func Run(task Task, config RunConfig) *TF {
+func Run(command func(tf *TF), config RunConfig) *TF {
 	ctx := context.Background()
 	if config.Ctx != nil {
 		ctx = config.Ctx
+	}
+	name := "no-name"
+	if config.Name != "" {
+		name = config.Name
 	}
 	writer := ioutil.Discard
 	if config.Out != nil {
@@ -197,14 +202,14 @@ func Run(task Task, config RunConfig) *TF {
 
 	tf := &TF{
 		ctx:    ctx,
-		name:   task.Name,
+		name:   name,
 		writer: writer,
 	}
 	finished := make(chan struct{})
 	go func() {
 		defer close(finished)
 		from := time.Now()
-		task.Command(tf)
+		command(tf)
 		tf.duration = time.Since(from)
 	}()
 	<-finished
