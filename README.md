@@ -8,7 +8,7 @@
 This package aims to simplify creation of task-based workflows in Go.
 It can be used to create build pipelines in pure Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
 
-Take a look at the [dogfooding example](build/main.go). Example usage: `go run ./build/. -v dev`.
+Take a look at the dogfooding [build pipeline](build/main.go). Example usage: `go run ./build/. -v dev`.
 
 `Star` this repository if you find it valuable and worth maintaining.
 
@@ -18,7 +18,7 @@ Take a look at the [dogfooding example](build/main.go). Example usage: `go run .
 
 ### Is taskflow stable
 
-No, it is a PoC. However, I am open to any feedback.
+No, it is experimental phase. I am open to any feedback.
 
 ### Why not to use Make
 
@@ -28,7 +28,7 @@ While [Make](https://www.gnu.org/software/make/) is currently de facto standard 
 - It is hard to develop a Makefile which is truly cross-platform.
 - Debugging and testing Make targets is not easy.
 
-Maybe better explanation can be found [here](https://github.com/magefile/mage#why).
+Probably a better explanation can be found [here](https://github.com/magefile/mage#why).
 
 ### Why not to use Mage
 
