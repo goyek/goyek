@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"strings"
@@ -155,12 +154,18 @@ func (f *Taskflow) run(ctx context.Context, task Task) bool {
 	// TODO:
 	// 1. Handle cancelation via ctx. New state? Check how go test does it.
 	// 2. Handle writer streaming for verbose mode.
-	// 3. Handle panics
+	// 3. Handle panics.
 	sb := &strings.Builder{}
 
 	sb.WriteString(reportTaskStart(task.Name))
 
-	tf := Run(task.Command, RunConfig{Ctx: ctx, Name: task.Name, Out: sb})
+	runner := Runner{
+		Ctx:     ctx,
+		Name:    task.Name,
+		Command: task.Command,
+		Out:     sb,
+	}
+	tf := runner.Run()
 
 	switch {
 	default:
@@ -178,42 +183,6 @@ func (f *Taskflow) run(ctx context.Context, task Task) bool {
 	}
 
 	return !tf.failed
-}
-
-type RunConfig struct {
-	Ctx  context.Context
-	Name string
-	Out  io.Writer
-}
-
-func Run(command func(tf *TF), config RunConfig) *TF {
-	ctx := context.Background()
-	if config.Ctx != nil {
-		ctx = config.Ctx
-	}
-	name := "no-name"
-	if config.Name != "" {
-		name = config.Name
-	}
-	writer := ioutil.Discard
-	if config.Out != nil {
-		writer = config.Out
-	}
-
-	tf := &TF{
-		ctx:    ctx,
-		name:   name,
-		writer: writer,
-	}
-	finished := make(chan struct{})
-	go func() {
-		defer close(finished)
-		from := time.Now()
-		command(tf)
-		tf.duration = time.Since(from)
-	}()
-	<-finished
-	return tf
 }
 
 func (f *Taskflow) isRegistered(name string) bool {
