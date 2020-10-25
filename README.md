@@ -24,9 +24,9 @@ Flags:
   -v    verbose
 Tasks:
   build       go build
-  ci          CI build
+  ci          CI build pipeline
   clean       remove files created during build
-  dev         dev build
+  dev         dev build pipeline
   diff        git diff
   fmt         gofumports
   install     install build tools

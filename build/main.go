@@ -67,7 +67,7 @@ func main() {
 	// pipelines:
 	dev := tasks.MustRegister(taskflow.Task{
 		Name:        "dev",
-		Description: "dev build",
+		Description: "dev build pipeline",
 		Dependencies: taskflow.Deps{
 			clean,
 			install,
@@ -81,7 +81,7 @@ func main() {
 
 	tasks.MustRegister(taskflow.Task{
 		Name:        "ci",
-		Description: "CI build",
+		Description: "CI build pipeline",
 		Dependencies: taskflow.Deps{
 			dev,
 			diff,
