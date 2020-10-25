@@ -15,7 +15,11 @@ This package aims to simplify creation of build pipelines in Go instead of using
 
 Take a look at the dogfooding [build pipeline](build/main.go). 
 
-Clone this repo and execute: `go run ./build/. -v dev`.
+Clone this repo and execute: 
+
+```shell
+go run ./build/. -h
+```
 
 ## FAQ
 
