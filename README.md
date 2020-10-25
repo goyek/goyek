@@ -13,12 +13,59 @@ This package aims to simplify creation of build pipelines in Go instead of using
 
 ## Usage
 
-Take a look at the dogfooding [build pipeline](build/main.go). 
+Take a look at the dogfooding [build pipeline](build/main.go).
 
-Clone this repo and execute: 
+Clone this repo and execute:
 
 ```shell
-go run ./build/. -h
+$ go run ./build/. -h
+Usage: [flag(s)] task(s)
+Flags:
+  -v    verbose
+Tasks:
+  build       go build
+  ci          CI build
+  clean       remove files created during build
+  dev         dev build
+  diff        git diff
+  fmt         gofumports
+  install     install build tools
+  lint        golangci-lint-lintports
+  mod-tidy    go mod tidy
+  test        go test with race detector and code covarage
+
+$ go run ./build/. dev
+PASS
+
+$ go run ./build/. -v dev
+===== TASK  clean
+removed coverage.html
+removed coverage.out
+----- PASS: clean (0.00s)
+===== TASK  install
+Exec: go install mvdan.cc/gofumpt/gofumports
+Exec: go install github.com/golangci/golangci-lint/cmd/golangci-lint
+----- PASS: install (0.34s)
+===== TASK  build
+Exec: go build -o /dev/null ./...
+----- PASS: build (0.42s)
+===== TASK  fmt
+Exec: gofumports -l -w -local github.com/pellared/taskflow .
+----- PASS: fmt (0.04s)
+===== TASK  lint
+Exec: golangci-lint run
+----- PASS: lint (0.29s)
+===== TASK  test
+Exec: go test -race -covermode=atomic -coverprofile=coverage.out ./...
+ok      github.com/pellared/taskflow    0.030s  coverage: 65.0% of statements
+?       github.com/pellared/taskflow/build      [no test files]
+Exec: go tool cover -html=coverage.out -o coverage.html
+----- PASS: test (0.51s)
+===== TASK  mod-tidy
+Exec: go mod tidy
+Exec: go mod tidy
+----- PASS: mod-tidy (0.16s)
+PASS
 ```
 
 Tired of writing `go run ./build/.` each time? Just add an alias to your shell. For example by adding the line below to `~/.bash_aliases`:
