@@ -36,7 +36,6 @@ linters:
     - dogsled
     - dupl
     - exportloopref
-    - funlen
     - gochecknoglobals
     - gochecknoinits
     - gocognit
@@ -74,6 +73,7 @@ linters:
     # - wsl
     # - goerr113
     # - godox
+    # - funlen
 
 issues:
   # enable issues excluded by default 
