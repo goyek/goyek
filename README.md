@@ -21,6 +21,12 @@ Clone this repo and execute:
 go run ./build/. -h
 ```
 
+Tired of writing `go run ./build/.` each time? Just add an alias to your shell. For example by adding the line below to `~/.bash_aliases`:
+
+```
+alias gake='go run ./build/.'
+```
+
 ## FAQ
 
 ### Is taskflow stable
