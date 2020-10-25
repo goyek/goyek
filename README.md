@@ -5,20 +5,23 @@
 [![Build Status](https://img.shields.io/github/workflow/status/pellared/taskflow/build)](https://github.com/pellared/taskflow/actions?query=workflow%3Abuild+branch%3Amaster)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pellared/taskflow)](https://goreportcard.com/report/github.com/pellared/taskflow)
 
-This package aims to simplify creation of task-based workflows in Go.
-It can be used to create build pipelines in pure Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
-
-Take a look at the dogfooding [build pipeline](build/main.go). Example usage: `go run ./build/. -v dev`.
+This package aims to simplify creation of build pipelines in Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
 
 `Star` this repository if you find it valuable and worth maintaining.
 
 `Watch` this repository to get notified about new releases, issues, etc.
 
+## Usage
+
+Take a look at the dogfooding [build pipeline](build/main.go). 
+
+Clone this repo and execute: `go run ./build/. -v dev`.
+
 ## FAQ
 
 ### Is taskflow stable
 
-No, it is experimental phase. I am open to any feedback.
+No, it is in experimental phase. I am open to any feedback.
 
 ### Why not to use Make
 
@@ -41,9 +44,10 @@ This results in following benefits:
 
 - It is easy to debug. Like a regular Go application.
 - Tasks and helpers are testable. See [exec_test.go](exec_test.go).
-- Easy to create reusable tasks or helpers.
-- API similar to [testing](https://golang.org/pkg/testing) so it is possible to use e.g. [testify](https://github.com/stretchr/testify) for assertions.
-- Less magical. Pure Go code. No build tags or special names for functions.
+- Reusing tasks is easy and readable. Just create a function which registers common tasks. Mage does it in a [hacky way](https://magefile.org/importing/).
+- API similar to [testing](https://golang.org/pkg/testing) so it is possible to use e.g. [testify](https://github.com/stretchr/testify) for asserting.
+
+To sum up, **taskflow** is not magical. Write regular Go code. No build tags or special names for functions.
 
 ## Credits
 
