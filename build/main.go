@@ -109,7 +109,7 @@ func taskInstall(tf *taskflow.TF) {
 }
 
 func taskBuild(tf *taskflow.TF) {
-	err := tf.Exec("", nil, "go", "build", "-o", "/dev/null", "./...")
+	err := tf.Exec("", nil, "go", "build", "./...")
 	assert.NoError(tf, err, "go build failed")
 }
 
