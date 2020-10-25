@@ -14,25 +14,25 @@ func TestExec_success(t *testing.T) {
 	r := Runner{
 		Out: sb,
 		Command: func(tf *TF) {
-			err = Exec(tf, "", nil, "git", "help")
+			err = tf.Exec("", nil, "go", "version")
 		},
 	}
 
 	r.Run()
 
-	require.NoError(t, err, "should pass, everyone has git")
-	assert.Contains(t, sb.String(), "usage: git")
+	require.NoError(t, err, "should pass")
+	assert.Contains(t, sb.String(), "go version go1.")
 }
 
 func TestExec_error(t *testing.T) {
 	var err error
 	r := Runner{
 		Command: func(tf *TF) {
-			err = Exec(tf, "", nil, "git", "wrong")
+			err = tf.Exec("", nil, "go", "wrong")
 		},
 	}
 
 	r.Run()
 
-	assert.Error(t, err, "should error, bad git command")
+	assert.Error(t, err, "should error, bad go command")
 }
