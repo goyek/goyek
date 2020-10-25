@@ -95,7 +95,7 @@ func (f *Taskflow) Main() {
 	}()
 
 	// execute tasks
-	if err := f.Execute(ctx, tasks...); err != nil {
+	if err := f.Run(ctx, tasks...); err != nil {
 		fmt.Fprintln(cli.Output(), err)
 		if err == ErrTaskNotRegistered {
 			usage()
@@ -105,7 +105,7 @@ func (f *Taskflow) Main() {
 	fmt.Fprintln(cli.Output(), "PASS")
 }
 
-func (f *Taskflow) Execute(ctx context.Context, taskNames ...string) error {
+func (f *Taskflow) Run(ctx context.Context, taskNames ...string) error {
 	// validate
 	for _, name := range taskNames {
 		if !f.isRegistered(name) {
@@ -116,38 +116,38 @@ func (f *Taskflow) Execute(ctx context.Context, taskNames ...string) error {
 	// run recursive execution
 	executedTasks := map[string]bool{}
 	for _, name := range taskNames {
-		if err := f.execute(ctx, name, executedTasks); err != nil {
+		if err := f.run(ctx, name, executedTasks); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (f *Taskflow) MustExecute(ctx context.Context, taskNames ...string) {
-	err := f.Execute(ctx, taskNames...)
+func (f *Taskflow) MustRun(ctx context.Context, taskNames ...string) {
+	err := f.Run(ctx, taskNames...)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (f *Taskflow) execute(ctx context.Context, name string, executed map[string]bool) error {
+func (f *Taskflow) run(ctx context.Context, name string, executed map[string]bool) error {
 	task := f.tasks[name]
 	if executed[name] {
 		return nil
 	}
 	for _, dep := range task.Dependencies {
-		if err := f.execute(ctx, dep.name, executed); err != nil {
+		if err := f.run(ctx, dep.name, executed); err != nil {
 			return err
 		}
 	}
-	if !f.run(ctx, task) {
+	if !f.runTask(ctx, task) {
 		return ErrTaskFail
 	}
 	executed[name] = true
 	return nil
 }
 
-func (f *Taskflow) run(ctx context.Context, task Task) bool {
+func (f *Taskflow) runTask(ctx context.Context, task Task) bool {
 	if task.Command == nil {
 		return true
 	}

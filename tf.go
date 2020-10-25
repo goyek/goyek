@@ -69,7 +69,3 @@ func (tf *TF) SkipNow() {
 	tf.skipped = true
 	runtime.Goexit()
 }
-
-func (tf *TF) Passed() bool {
-	return !tf.failed && !tf.skipped
-}

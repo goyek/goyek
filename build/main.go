@@ -13,6 +13,7 @@ import (
 func main() {
 	tasks := &taskflow.Taskflow{}
 
+	// tasks:
 	clean := tasks.MustRegister(taskflow.Task{
 		Name:        "clean",
 		Description: "remove files created during build",
@@ -25,6 +26,7 @@ func main() {
 		Command:     taskTest,
 	})
 
+	// pipelines:
 	tasks.MustRegister(taskflow.Task{
 		Name:         "dev",
 		Description:  "dev build",
