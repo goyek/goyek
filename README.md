@@ -47,7 +47,7 @@ Exec: go install mvdan.cc/gofumpt/gofumports
 Exec: go install github.com/golangci/golangci-lint/cmd/golangci-lint
 ----- PASS: install (0.34s)
 ===== TASK  build
-Exec: go build -o /dev/null ./...
+Exec: go build ./...
 ----- PASS: build (0.42s)
 ===== TASK  fmt
 Exec: gofumports -l -w -local github.com/pellared/taskflow .
