@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sort"
 	"text/tabwriter"
 )
 
@@ -18,9 +19,16 @@ func (f *Taskflow) Main() {
 		fmt.Fprintf(cli.Output(), "Usage: [flag(s)] task(s)\n")
 		fmt.Fprintf(cli.Output(), "Flags:\n")
 		cli.PrintDefaults()
+
 		fmt.Fprintf(cli.Output(), "Tasks:\n")
 		w := tabwriter.NewWriter(cli.Output(), 1, 1, 4, ' ', 0)
-		for _, t := range f.tasks {
+		keys := make([]string, 0, len(f.tasks))
+		for k := range f.tasks {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			t := f.tasks[k]
 			fmt.Fprintf(w, "  %s\t%s\n", t.Name, t.Description)
 		}
 		w.Flush()
