@@ -6,7 +6,7 @@
         {
             "label": "dev",
             "type": "shell",
-            "command": "make dev",
+            "command": "go run ./build/. dev",
             "problemMatcher": [
                 "$go"
             ],
