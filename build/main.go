@@ -20,6 +20,18 @@ func main() {
 		Command:     taskClean,
 	})
 
+	install := tasks.MustRegister(taskflow.Task{
+		Name:        "install",
+		Description: "install build tools",
+		Command:     taskInstall,
+	})
+
+	build := tasks.MustRegister(taskflow.Task{
+		Name:        "build",
+		Description: "go build",
+		Command:     taskBuild,
+	})
+
 	test := tasks.MustRegister(taskflow.Task{
 		Name:        "test",
 		Description: "go test with race detector and code covarage",
@@ -28,9 +40,14 @@ func main() {
 
 	// pipelines:
 	tasks.MustRegister(taskflow.Task{
-		Name:         "dev",
-		Description:  "dev build",
-		Dependencies: taskflow.Deps{clean, test},
+		Name:        "dev",
+		Description: "dev build",
+		Dependencies: taskflow.Deps{
+			clean,
+			install,
+			build,
+			test,
+		},
 	})
 
 	tasks.Main()
@@ -44,6 +61,18 @@ func taskClean(tf *taskflow.TF) {
 		assert.NoError(tf, err, "failed to remove %s", file)
 		tf.Logf("removed %s", file)
 	}
+}
+
+func taskInstall(tf *taskflow.TF) {
+	err := tf.Exec("tools", nil, "go", "install", "mvdan.cc/gofumpt/gofumports")
+	assert.NoError(tf, err, "install gofumports failed")
+	err = tf.Exec("tools", nil, "go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
+	assert.NoError(tf, err, "install golangci-lint failed")
+}
+
+func taskBuild(tf *taskflow.TF) {
+	err := tf.Exec("", nil, "go", "build", "-o", "/dev/null", "./...")
+	assert.NoError(tf, err, "go build failed")
 }
 
 func taskTest(tf *taskflow.TF) {
