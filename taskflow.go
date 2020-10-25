@@ -94,7 +94,7 @@ func (f *Taskflow) Main() {
 		}
 	}()
 
-	// execute tasks
+	// run tasks
 	if err := f.Run(ctx, tasks...); err != nil {
 		fmt.Fprintln(cli.Output(), err)
 		if err == ErrTaskNotRegistered {
@@ -113,7 +113,7 @@ func (f *Taskflow) Run(ctx context.Context, taskNames ...string) error {
 		}
 	}
 
-	// run recursive execution
+	// recursive run
 	executedTasks := map[string]bool{}
 	for _, name := range taskNames {
 		if err := f.run(ctx, name, executedTasks); err != nil {
