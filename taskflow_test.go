@@ -173,13 +173,46 @@ func Test_task_panics(t *testing.T) {
 		Output: ioutil.Discard,
 	}
 	tasks.MustRegister(taskflow.Task{
-		Name: "task-1",
+		Name: "task",
 		Command: func(tf *taskflow.TF) {
 			panic("panicked!")
 		},
 	})
 
-	err := tasks.Run(ctx, "task-1")
+	err := tasks.Run(ctx, "task")
 
 	assert.Error(t, err, "should return error from first task")
+}
+
+func Test_cancelation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
+	}
+	tasks.MustRegister(taskflow.Task{
+		Name: "task",
+	})
+
+	err := tasks.Run(ctx, "task")
+
+	assert.Equal(t, context.Canceled, err, "should return error canceled")
+}
+
+func Test_cancelation_during_last_task(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
+	}
+	tasks.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			cancel()
+		},
+	})
+
+	err := tasks.Run(ctx, "task")
+
+	assert.Equal(t, context.Canceled, err, "should return error canceled")
 }

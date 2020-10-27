@@ -87,7 +87,14 @@ func (f *Taskflow) run(ctx context.Context, name string, executed map[string]boo
 			return err
 		}
 	}
-	if !f.runTask(ctx, task) {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	passed := f.runTask(ctx, task)
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if !passed {
 		return ErrTaskFail
 	}
 	executed[name] = true
@@ -99,8 +106,6 @@ func (f *Taskflow) runTask(ctx context.Context, task Task) bool {
 		return true
 	}
 
-	// TODO:
-	// 1. Handle cancelation via ctx. New state? Check how go test does it.
 	w := f.output()
 	if !f.Verbose {
 		w = &strings.Builder{}
