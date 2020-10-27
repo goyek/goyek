@@ -18,7 +18,7 @@ Take a look at the dogfooding [build pipeline](build/main.go).
 Clone this repo and execute:
 
 ```shell
-$ go run ./build/. -h
+$ go run ./build -h
 Usage: [flag(s)] task(s)
 Flags:
   -v    verbose
@@ -34,10 +34,10 @@ Tasks:
   mod-tidy    go mod tidy
   test        go test with race detector and code covarage
 
-$ go run ./build/. dev
-PASS
+$ go run ./build dev
+ok     1.199s
 
-$ go run ./build/. -v dev
+$ go run ./build -v dev
 ===== TASK  clean
 removed coverage.html
 removed coverage.out
@@ -45,33 +45,33 @@ removed coverage.out
 ===== TASK  install
 Exec: go install mvdan.cc/gofumpt/gofumports
 Exec: go install github.com/golangci/golangci-lint/cmd/golangci-lint
------ PASS: install (0.34s)
+----- PASS: install (0.21s)
 ===== TASK  build
 Exec: go build ./...
------ PASS: build (0.42s)
+----- PASS: build (0.25s)
 ===== TASK  fmt
 Exec: gofumports -l -w -local github.com/pellared/taskflow .
------ PASS: fmt (0.04s)
+----- PASS: fmt (0.03s)
 ===== TASK  lint
 Exec: golangci-lint run
------ PASS: lint (0.29s)
+----- PASS: lint (0.19s)
 ===== TASK  test
 Exec: go test -race -covermode=atomic -coverprofile=coverage.out ./...
-ok      github.com/pellared/taskflow    0.030s  coverage: 65.0% of statements
+ok      github.com/pellared/taskflow    0.029s  coverage: 67.3% of statements
 ?       github.com/pellared/taskflow/build      [no test files]
 Exec: go tool cover -html=coverage.out -o coverage.html
------ PASS: test (0.51s)
+----- PASS: test (0.39s)
 ===== TASK  mod-tidy
 Exec: go mod tidy
 Exec: go mod tidy
------ PASS: mod-tidy (0.16s)
-PASS
+----- PASS: mod-tidy (0.13s)
+ok      1.207s
 ```
 
-Tired of writing `go run ./build/.` each time? Just add an alias to your shell. For example by adding the line below to `~/.bash_aliases`:
+Tired of writing `go run ./build` each time? Just add an alias to your shell. For example by adding the line below to `~/.bash_aliases`:
 
 ```shell
-alias gake='go run ./build/.'
+alias gake='go run ./build'
 ```
 
 ## FAQ
@@ -84,11 +84,9 @@ No, it is in experimental phase. I am open to any feedback.
 
 While [Make](https://www.gnu.org/software/make/) is currently de facto standard it has some pitfalls:
 
-- Requires to learn Make (which is not so easy).
+- Requires to learn Make which is not so easy.
 - It is hard to develop a Makefile which is truly cross-platform.
-- Debugging and testing Make targets is not easy.
-
-Probably a better explanation can be found [here](https://github.com/magefile/mage#why).
+- Debugging and testing Make targets is not fun.
 
 ### Why not to use Mage
 
