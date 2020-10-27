@@ -1,18 +1,20 @@
-package taskflow
+package taskflow_test
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/pellared/taskflow"
 )
 
 func TestExec_success(t *testing.T) {
 	sb := &strings.Builder{}
 	var err error
-	r := Runner{
+	r := taskflow.Runner{
 		Out: sb,
-		Command: func(tf *TF) {
+		Command: func(tf *taskflow.TF) {
 			err = tf.Exec("", nil, "go", "version")
 		},
 	}
@@ -26,8 +28,8 @@ func TestExec_success(t *testing.T) {
 
 func TestExec_error(t *testing.T) {
 	var err error
-	r := Runner{
-		Command: func(tf *TF) {
+	r := taskflow.Runner{
+		Command: func(tf *taskflow.TF) {
 			err = tf.Exec("", nil, "go", "wrong")
 		},
 	}
