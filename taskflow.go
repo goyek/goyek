@@ -101,29 +101,37 @@ func (f *Taskflow) runTask(ctx context.Context, task Task) bool {
 
 	// TODO:
 	// 1. Handle cancelation via ctx. New state? Check how go test does it.
-	// 2. Handle writer streaming for verbose mode.
-	sb := &strings.Builder{}
+	w := f.output()
+	if !f.Verbose {
+		w = &strings.Builder{}
+	}
 
-	sb.WriteString(reportTaskStart(task.Name))
+	_, err := io.WriteString(w, reportTaskStart(task.Name))
+	if err != nil {
+		panic(err)
+	}
 
 	runner := Runner{
 		Ctx:     ctx,
 		Name:    task.Name,
 		Command: task.Command,
-		Out:     sb,
+		Out:     w,
 	}
 	result := runner.Run()
 
 	switch {
 	default:
-		sb.WriteString(reportTaskEnd("PASS", task.Name, result.Duration()))
+		_, err = io.WriteString(w, reportTaskEnd("PASS", task.Name, result.Duration()))
 	case result.Failed():
-		sb.WriteString(reportTaskEnd("FAIL", task.Name, result.Duration()))
+		_, err = io.WriteString(w, reportTaskEnd("FAIL", task.Name, result.Duration()))
 	case result.Skipped():
-		sb.WriteString(reportTaskEnd("SKIP", task.Name, result.Duration()))
+		_, err = io.WriteString(w, reportTaskEnd("SKIP", task.Name, result.Duration()))
+	}
+	if err != nil {
+		panic(err)
 	}
 
-	if f.Verbose || result.failed {
+	if sb, ok := w.(*strings.Builder); ok && result.failed {
 		if _, err := io.Copy(f.output(), strings.NewReader(sb.String())); err != nil {
 			panic(err)
 		}
