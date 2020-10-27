@@ -98,6 +98,50 @@ func Test_dependency_failure(t *testing.T) {
 	assert.Equal(t, []int{11, 0, 0}, got(), "should execute task 1")
 }
 
+func Test_fail(t *testing.T) {
+	ctx := context.Background()
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
+	}
+	failed := false
+	tasks.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			defer func() {
+				failed = tf.Failed()
+			}()
+			tf.Fatalf("failing")
+		},
+	})
+
+	err := tasks.Run(ctx, "task")
+
+	assert.Error(t, err, "should return error")
+	assert.True(t, failed, "tf.Failed() should return true")
+}
+
+func Test_skip(t *testing.T) {
+	ctx := context.Background()
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
+	}
+	skipped := false
+	tasks.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			defer func() {
+				skipped = tf.Skipped()
+			}()
+			tf.Skipf("skipping")
+		},
+	})
+
+	err := tasks.Run(ctx, "task")
+
+	assert.NoError(t, err, "should pass")
+	assert.True(t, skipped, "tf.Skipped() should return true")
+}
+
 func Test_task_panics(t *testing.T) {
 	ctx := context.Background()
 	tasks := &taskflow.Taskflow{
