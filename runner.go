@@ -14,7 +14,29 @@ type Runner struct {
 	Out     io.Writer
 }
 
-func (r Runner) Run() *TF {
+type RunResult struct {
+	failed   bool
+	skipped  bool
+	duration time.Duration
+}
+
+func (r RunResult) Failed() bool {
+	return r.failed
+}
+
+func (r RunResult) Skipped() bool {
+	return r.skipped
+}
+
+func (r RunResult) Passed() bool {
+	return !r.failed && !r.skipped
+}
+
+func (r RunResult) Duration() time.Duration {
+	return r.duration
+}
+
+func (r Runner) Run() RunResult {
 	ctx := context.Background()
 	if r.Ctx != nil {
 		ctx = r.Ctx
@@ -28,18 +50,23 @@ func (r Runner) Run() *TF {
 		writer = r.Out
 	}
 
-	tf := &TF{
-		ctx:    ctx,
-		name:   name,
-		writer: writer,
-	}
-	finished := make(chan struct{})
+	finished := make(chan RunResult)
 	go func() {
-		defer close(finished)
+		tf := &TF{
+			ctx:    ctx,
+			name:   name,
+			writer: writer,
+		}
 		from := time.Now()
+		defer func() {
+			result := RunResult{
+				failed:   tf.failed,
+				skipped:  tf.skipped,
+				duration: time.Since(from),
+			}
+			finished <- result
+		}()
 		r.Command(tf)
-		tf.duration = time.Since(from)
 	}()
-	<-finished
-	return tf
+	return <-finished
 }

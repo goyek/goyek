@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestExec_success(t *testing.T) {
@@ -18,10 +17,11 @@ func TestExec_success(t *testing.T) {
 		},
 	}
 
-	r.Run()
+	result := r.Run()
 
-	require.NoError(t, err, "should pass")
+	assert.NoError(t, err, "should pass")
 	assert.Contains(t, sb.String(), "go version go1.")
+	assert.True(t, result.Passed(), "task should pass")
 }
 
 func TestExec_error(t *testing.T) {

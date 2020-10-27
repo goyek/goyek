@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"io"
 	"runtime"
-	"time"
 )
 
 type TF struct {
-	ctx      context.Context
-	name     string
-	writer   io.Writer
-	failed   bool
-	skipped  bool
-	duration time.Duration
+	ctx     context.Context
+	name    string
+	writer  io.Writer
+	failed  bool
+	skipped bool
 }
 
 func (tf *TF) Context() context.Context {

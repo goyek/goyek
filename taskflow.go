@@ -113,24 +113,24 @@ func (f *Taskflow) runTask(ctx context.Context, task Task) bool {
 		Command: task.Command,
 		Out:     sb,
 	}
-	tf := runner.Run()
+	result := runner.Run()
 
 	switch {
 	default:
-		sb.WriteString(reportTaskEnd("PASS", task.Name, tf.duration))
-	case tf.failed:
-		sb.WriteString(reportTaskEnd("FAIL", task.Name, tf.duration))
-	case tf.skipped:
-		sb.WriteString(reportTaskEnd("SKIP", task.Name, tf.duration))
+		sb.WriteString(reportTaskEnd("PASS", task.Name, result.Duration()))
+	case result.Failed():
+		sb.WriteString(reportTaskEnd("FAIL", task.Name, result.Duration()))
+	case result.Skipped():
+		sb.WriteString(reportTaskEnd("SKIP", task.Name, result.Duration()))
 	}
 
-	if f.Verbose || tf.failed {
+	if f.Verbose || result.failed {
 		if _, err := io.Copy(f.output(), strings.NewReader(sb.String())); err != nil {
 			panic(err)
 		}
 	}
 
-	return !tf.failed
+	return !result.failed
 }
 
 func (f *Taskflow) isRegistered(name string) bool {
