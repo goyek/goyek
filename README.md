@@ -12,8 +12,6 @@ This package aims to simplify creation of build pipelines in Go instead of using
 
 `Star` this repository if you find it valuable and worth maintaining.
 
-`Watch` this repository to get notified about new releases, issues, etc.
-
 ## Usage
 
 Take a look at the dogfooding [build pipeline](build/main.go).
