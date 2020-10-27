@@ -12,7 +12,7 @@ import (
 
 var (
 	ErrTaskNotRegistered = errors.New("task provided but not registered")
-	ErrTaskFail          = errors.New("FAIL")
+	ErrTaskFail          = errors.New("task failed")
 )
 
 type Taskflow struct {
@@ -68,13 +68,6 @@ func (f *Taskflow) Run(ctx context.Context, taskNames ...string) error {
 		}
 	}
 	return nil
-}
-
-func (f *Taskflow) MustRun(ctx context.Context, taskNames ...string) {
-	err := f.Run(ctx, taskNames...)
-	if err != nil {
-		panic(err)
-	}
 }
 
 func (f *Taskflow) run(ctx context.Context, name string, executed map[string]bool) error {

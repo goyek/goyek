@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"sort"
 	"text/tabwriter"
+	"time"
 )
 
 func (f *Taskflow) Main() {
@@ -47,8 +48,7 @@ func (f *Taskflow) Main() {
 	}
 
 	// trap Ctrl+C and call cancel on the context
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -60,12 +60,15 @@ func (f *Taskflow) Main() {
 	}()
 
 	// run tasks
-	if err := f.Run(ctx, tasks...); err != nil {
-		fmt.Fprintln(cli.Output(), err)
+	from := time.Now()
+	err := f.Run(ctx, tasks...)
+	duration := time.Since(from)
+	if err != nil {
+		fmt.Fprintf(cli.Output(), "%v\t%.3fs\n", err, duration.Seconds())
 		if err == ErrTaskNotRegistered {
 			usage()
 		}
 		os.Exit(1)
 	}
-	fmt.Fprintln(cli.Output(), "PASS")
+	fmt.Fprintf(cli.Output(), "ok\t%.3fs\n", duration.Seconds())
 }

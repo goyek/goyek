@@ -115,13 +115,16 @@ func Test_successful(t *testing.T) {
 		return []int{executed1, executed2, executed3}
 	}
 
-	tasks.MustRun(ctx, "task-1")
+	err := tasks.Run(ctx, "task-1")
+	require.NoError(t, err, "first execution should pass")
 	require.Equal(t, []int{1, 0, 0}, got(), "should execute task 1")
 
-	tasks.MustRun(ctx, "task-2")
+	err = tasks.Run(ctx, "task-2")
+	require.NoError(t, err, "second execution should pass")
 	require.Equal(t, []int{2, 1, 0}, got(), "should execute task 1 and 2")
 
-	tasks.MustRun(ctx, "task-1", "task-2", "task-3")
+	err = tasks.Run(ctx, "task-1", "task-2", "task-3")
+	require.NoError(t, err, "third execution should pass")
 	require.Equal(t, []int{3, 2, 1}, got(), "should execute task 1 and 2 and 3")
 }
 
@@ -215,4 +218,18 @@ func Test_cancelation_during_last_task(t *testing.T) {
 	err := tasks.Run(ctx, "task")
 
 	assert.Equal(t, context.Canceled, err, "should return error canceled")
+}
+
+func Test_empty_command(t *testing.T) {
+	ctx := context.Background()
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
+	}
+	tasks.MustRegister(taskflow.Task{
+		Name: "task",
+	})
+
+	err := tasks.Run(ctx, "task")
+
+	assert.NoError(t, err, "should pass")
 }
