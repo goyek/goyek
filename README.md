@@ -7,6 +7,8 @@
 
 This package aims to simplify creation of build pipelines in Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
 
+**taskflow** API is mainly inspired by [testing](https://golang.org/pkg/testing) and [flag](https://golang.org/pkg/flag) packages.
+
 `Star` this repository if you find it valuable and worth maintaining.
 
 `Watch` this repository to get notified about new releases, issues, etc.
@@ -103,14 +105,6 @@ This results in following benefits:
 - API similar to [testing](https://golang.org/pkg/testing) so it is possible to use e.g. [testify](https://github.com/stretchr/testify) for asserting.
 
 To sum up, **taskflow** is not magical. Write regular Go code. No build tags or special names for functions.
-
-## Credits
-
-**taskflow** is mainly inspired by:
-
-- [Mage](https://github.com/magefile/mage),
-- [testing](https://golang.org/pkg/testing),
-- [flag](https://golang.org/pkg/flag).
 
 ## Contributing
 
