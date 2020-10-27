@@ -59,6 +59,9 @@ func (r Runner) Run() RunResult {
 		}
 		from := time.Now()
 		defer func() {
+			if r := recover(); r != nil {
+				tf.Errorf("panic: %v", r)
+			}
 			result := RunResult{
 				failed:   tf.failed,
 				skipped:  tf.skipped,

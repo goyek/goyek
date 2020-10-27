@@ -102,7 +102,6 @@ func (f *Taskflow) runTask(ctx context.Context, task Task) bool {
 	// TODO:
 	// 1. Handle cancelation via ctx. New state? Check how go test does it.
 	// 2. Handle writer streaming for verbose mode.
-	// 3. Handle panics.
 	sb := &strings.Builder{}
 
 	sb.WriteString(reportTaskStart(task.Name))

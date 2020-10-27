@@ -166,3 +166,20 @@ func Test_dependency_failure(t *testing.T) {
 	assert.Error(t, err, "should return error from first task")
 	assert.Equal(t, []int{11, 0, 0}, got(), "should execute task 1")
 }
+
+func Test_task_panics(t *testing.T) {
+	ctx := context.Background()
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
+	}
+	tasks.MustRegister(taskflow.Task{
+		Name: "task-1",
+		Command: func(tf *taskflow.TF) {
+			panic("panicked!")
+		},
+	})
+
+	err := tasks.Run(ctx, "task-1")
+
+	assert.Error(t, err, "should return error from first task")
+}
