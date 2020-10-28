@@ -32,7 +32,7 @@ func (tf *TF) Name() string {
 	return tf.name
 }
 
-// Output returns the io.Output used to print output.
+// Output returns the io.Writer used to print output.
 func (tf *TF) Output() io.Writer {
 	return tf.writer
 }
