@@ -1,3 +1,68 @@
+/*
+Package taskflow helps implementing build automation.
+It is intended to be used in concert with the "go run" command,
+to run a program which implements the build pipeline (called taskflow).
+A taskflow consists of a set of registered tasks.
+A task has a name, can have a defined command, which is a function with signature
+	func (*taskflow.TF)
+and can have dependencies (already defined tasks).
+
+When the taskflow is executed for given tasks,
+then the tasks' commands are run in the order defined by the dependencies.
+The tasks dependencies are run in a recusrive manner, however each is going to be run at most once.
+
+The taskflow is interupted in case a command fails.
+Within these functions, use the Error, Fail or related methods to signal failure.
+
+A simple build automation looks like this:
+
+	tasks := &taskflow.Taskflow{}
+
+	fmt := tasks.MustRegister(taskflow.Task{
+		Name:        "fmt",
+		Description: "go fmt",
+		Command: func(tf *taskflow.TF) {
+			if err := tf.Exec("", nil,
+				"go", "fmt", "./..."); err != nil {
+				tf.Errorf("go fmt: %v", err)
+			}
+		},
+	})
+
+	test := tasks.MustRegister(taskflow.Task{
+		Name:        "test",
+		Description: "go test with race detector and code covarage",
+		Command: func(tf *taskflow.TF) {
+			if err := tf.Exec("", nil,
+				"go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."); err != nil {
+				tf.Errorf("go test: %v", err)
+			}
+			if err := tf.Exec("", nil,
+				"go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html"); err != nil {
+				tf.Errorf("go tool cover: %v", err)
+			}
+		},
+	})
+
+	tasks.MustRegister(taskflow.Task{
+		Name:        "all",
+		Description: "build pipeline",
+		Dependencies: taskflow.Deps{
+			fmt,
+			test,
+		},
+	})
+
+	tasks.Main()
+
+Executing
+	go run . all
+will first execute "go fmt" and "go test" afterwards.
+
+Executing
+	go run . -h
+prints usage.
+*/
 package taskflow
 
 import (
