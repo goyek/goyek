@@ -27,24 +27,13 @@ func main() {
 	fmt := tasks.MustRegister(taskflow.Task{
 		Name:        "fmt",
 		Description: "go fmt",
-		Command: func(tf *taskflow.TF) {
-			if err := tf.Exec("", nil, "go", "fmt", "./..."); err != nil {
-				tf.Errorf("go fmt: %v", err)
-			}
-		},
+		Command:     taskFmt,
 	})
 
 	test := tasks.MustRegister(taskflow.Task{
 		Name:        "test",
 		Description: "go test with race detector and code covarage",
-		Command: func(tf *taskflow.TF) {
-			if err := tf.Exec("", nil, "go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."); err != nil {
-				tf.Errorf("go test: %v", err)
-			}
-			if err := tf.Exec("", nil, "go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html"); err != nil {
-				tf.Errorf("go tool cover: %v", err)
-			}
-		},
+		Command:     taskTest,
 	})
 
 	tasks.MustRegister(taskflow.Task{
@@ -57,6 +46,21 @@ func main() {
 	})
 
 	tasks.Main()
+}
+
+func taskFmt(tf *taskflow.TF) {
+	if err := tf.Exec("", nil, "go", "fmt", "./..."); err != nil {
+		tf.Errorf("go fmt: %v", err)
+	}
+}
+
+func taskTest(tf *taskflow.TF) {
+	if err := tf.Exec("", nil, "go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."); err != nil {
+		tf.Errorf("go test: %v", err)
+	}
+	if err := tf.Exec("", nil, "go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html"); err != nil {
+		tf.Errorf("go tool cover: %v", err)
+	}
 }
 ```
 
