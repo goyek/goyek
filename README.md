@@ -115,6 +115,7 @@ While [Make](https://www.gnu.org/software/make/) is currently de facto standard,
 
 However, if you (and your team) know Make and are happy with it, do not change it.
 Make is very powerful and a lot of stuff can be made a lot faster, if you know how to use it.
+
 **taskflow** is intended to be simpler and easier to learn, while still being able to handle most use cases.
 
 ### Why not to use Mage
