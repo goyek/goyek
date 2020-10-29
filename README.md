@@ -28,8 +28,7 @@ func main() {
 		Name:        "fmt",
 		Description: "go fmt",
 		Command: func(tf *taskflow.TF) {
-			if err := tf.Exec("", nil,
-				"go", "fmt", "./..."); err != nil {
+			if err := tf.Exec("", nil, "go", "fmt", "./..."); err != nil {
 				tf.Errorf("go fmt: %v", err)
 			}
 		},
@@ -39,12 +38,10 @@ func main() {
 		Name:        "test",
 		Description: "go test with race detector and code covarage",
 		Command: func(tf *taskflow.TF) {
-			if err := tf.Exec("", nil,
-				"go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."); err != nil {
+			if err := tf.Exec("", nil, "go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."); err != nil {
 				tf.Errorf("go test: %v", err)
 			}
-			if err := tf.Exec("", nil,
-				"go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html"); err != nil {
+			if err := tf.Exec("", nil, "go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html"); err != nil {
 				tf.Errorf("go tool cover: %v", err)
 			}
 		},
