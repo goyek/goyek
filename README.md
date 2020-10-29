@@ -64,7 +64,7 @@ func taskTest(tf *taskflow.TF) {
 }
 ```
 
-Execute:
+Sample usage:
 
 ```shell
 $ go run ./build -h
