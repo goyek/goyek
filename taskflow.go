@@ -13,55 +13,6 @@ The tasks dependencies are run in a recusrive manner, however each is going to b
 
 The taskflow is interupted in case a command fails.
 Within these functions, use the Error, Fail or related methods to signal failure.
-
-A simple build automation looks like this:
-
-	tasks := &taskflow.Taskflow{}
-
-	fmt := tasks.MustRegister(taskflow.Task{
-		Name:        "fmt",
-		Description: "go fmt",
-		Command: func(tf *taskflow.TF) {
-			if err := tf.Exec("", nil,
-				"go", "fmt", "./..."); err != nil {
-				tf.Errorf("go fmt: %v", err)
-			}
-		},
-	})
-
-	test := tasks.MustRegister(taskflow.Task{
-		Name:        "test",
-		Description: "go test with race detector and code covarage",
-		Command: func(tf *taskflow.TF) {
-			if err := tf.Exec("", nil,
-				"go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."); err != nil {
-				tf.Errorf("go test: %v", err)
-			}
-			if err := tf.Exec("", nil,
-				"go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html"); err != nil {
-				tf.Errorf("go tool cover: %v", err)
-			}
-		},
-	})
-
-	tasks.MustRegister(taskflow.Task{
-		Name:        "all",
-		Description: "build pipeline",
-		Dependencies: taskflow.Deps{
-			fmt,
-			test,
-		},
-	})
-
-	tasks.Main()
-
-Executing
-	go run . all
-will first execute "go fmt" and "go test" afterwards.
-
-Executing
-	go run . -h
-prints usage.
 */
 package taskflow
 

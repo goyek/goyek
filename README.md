@@ -12,11 +12,58 @@ This package aims to simplify creation of build pipelines in Go instead of using
 
 `Star` this repository if you find it valuable and worth maintaining.
 
-## Usage
+## Example
 
-Take a look at the dogfooding [build pipeline](build/main.go).
+Paste the following code to `build/main.go`:
 
-Clone this repo and execute:
+```go
+package main
+
+import "github.com/pellared/taskflow"
+
+func main() {
+	tasks := &taskflow.Taskflow{}
+
+	fmt := tasks.MustRegister(taskflow.Task{
+		Name:        "fmt",
+		Description: "go fmt",
+		Command: func(tf *taskflow.TF) {
+			if err := tf.Exec("", nil,
+				"go", "fmt", "./..."); err != nil {
+				tf.Errorf("go fmt: %v", err)
+			}
+		},
+	})
+
+	test := tasks.MustRegister(taskflow.Task{
+		Name:        "test",
+		Description: "go test with race detector and code covarage",
+		Command: func(tf *taskflow.TF) {
+			if err := tf.Exec("", nil,
+				"go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."); err != nil {
+				tf.Errorf("go test: %v", err)
+			}
+			if err := tf.Exec("", nil,
+				"go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html"); err != nil {
+				tf.Errorf("go tool cover: %v", err)
+			}
+		},
+	})
+
+	tasks.MustRegister(taskflow.Task{
+		Name:        "all",
+		Description: "build pipeline",
+		Dependencies: taskflow.Deps{
+			fmt,
+			test,
+		},
+	})
+
+	tasks.Main()
+}
+```
+
+Execute:
 
 ```shell
 $ go run ./build -h
@@ -24,49 +71,23 @@ Usage: [flag(s)] task(s)
 Flags:
   -v    verbose
 Tasks:
-  build       go build
-  ci          CI build pipeline
-  clean       remove files created during build
-  dev         dev build pipeline
-  diff        git diff
-  fmt         gofumports
-  install     install build tools
-  lint        golangci-lint-lintports
-  mod-tidy    go mod tidy
-  test        go test with race detector and code covarage
+  all     build pipeline
+  fmt     go fmt
+  test    go test with race detector and code covarage
 
 $ go run ./build dev
-ok     1.199s
+ok     0.453s
 
-$ go run ./build -v dev
-===== TASK  clean
-removed coverage.html
-removed coverage.out
------ PASS: clean (0.00s)
-===== TASK  install
-Exec: go install mvdan.cc/gofumpt/gofumports
-Exec: go install github.com/golangci/golangci-lint/cmd/golangci-lint
------ PASS: install (0.21s)
-===== TASK  build
-Exec: go build ./...
------ PASS: build (0.25s)
+$ go run ./build -v all
 ===== TASK  fmt
-Exec: gofumports -l -w -local github.com/pellared/taskflow .
------ PASS: fmt (0.03s)
-===== TASK  lint
-Exec: golangci-lint run
------ PASS: lint (0.19s)
+Exec: go fmt ./...
+----- PASS: fmt (0.06s)
 ===== TASK  test
 Exec: go test -race -covermode=atomic -coverprofile=coverage.out ./...
-ok      github.com/pellared/taskflow    0.029s  coverage: 67.3% of statements
-?       github.com/pellared/taskflow/build      [no test files]
+?       github.com/pellared/taskflow/example    [no test files]
 Exec: go tool cover -html=coverage.out -o coverage.html
------ PASS: test (0.39s)
-===== TASK  mod-tidy
-Exec: go mod tidy
-Exec: go mod tidy
------ PASS: mod-tidy (0.13s)
-ok      1.207s
+----- PASS: test (0.11s)
+ok      0.176s
 ```
 
 Tired of writing `go run ./build` each time? Just add an alias to your shell. For example by adding the line below to `~/.bash_aliases`:
@@ -74,6 +95,8 @@ Tired of writing `go run ./build` each time? Just add an alias to your shell. Fo
 ```shell
 alias gake='go run ./build'
 ```
+
+Additionally, take a look at the dogfooding [build pipeline](build/main.go).
 
 ## FAQ
 
