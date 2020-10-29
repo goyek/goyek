@@ -76,7 +76,7 @@ Tasks:
   fmt     go fmt
   test    go test with race detector and code covarage
 
-$ go run ./build dev
+$ go run ./build all
 ok     0.453s
 
 $ go run ./build -v all
