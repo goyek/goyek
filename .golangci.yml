@@ -77,4 +77,4 @@ linters:
 
 issues:
   # enable issues excluded by default 
-  # exclude-use-default: false // TODO: uncomment
+  exclude-use-default: false

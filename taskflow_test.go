@@ -14,7 +14,7 @@ import (
 func Test_successful(t *testing.T) {
 	ctx := context.Background()
 	tasks := &taskflow.Taskflow{
-		Output: ioutil.Discard,
+		Out: ioutil.Discard,
 	}
 	var executed1 int
 	task1 := tasks.MustRegister(taskflow.Task{
@@ -59,7 +59,7 @@ func Test_successful(t *testing.T) {
 func Test_dependency_failure(t *testing.T) {
 	ctx := context.Background()
 	tasks := &taskflow.Taskflow{
-		Output: ioutil.Discard,
+		Out: ioutil.Discard,
 	}
 	var executed1 int
 	task1 := tasks.MustRegister(taskflow.Task{
@@ -101,7 +101,7 @@ func Test_dependency_failure(t *testing.T) {
 func Test_fail(t *testing.T) {
 	ctx := context.Background()
 	tasks := &taskflow.Taskflow{
-		Output: ioutil.Discard,
+		Out: ioutil.Discard,
 	}
 	failed := false
 	tasks.MustRegister(taskflow.Task{
@@ -123,7 +123,7 @@ func Test_fail(t *testing.T) {
 func Test_skip(t *testing.T) {
 	ctx := context.Background()
 	tasks := &taskflow.Taskflow{
-		Output: ioutil.Discard,
+		Out: ioutil.Discard,
 	}
 	skipped := false
 	tasks.MustRegister(taskflow.Task{
@@ -145,7 +145,7 @@ func Test_skip(t *testing.T) {
 func Test_task_panics(t *testing.T) {
 	ctx := context.Background()
 	tasks := &taskflow.Taskflow{
-		Output: ioutil.Discard,
+		Out: ioutil.Discard,
 	}
 	tasks.MustRegister(taskflow.Task{
 		Name: "task",
@@ -163,7 +163,7 @@ func Test_cancelation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	tasks := &taskflow.Taskflow{
-		Output: ioutil.Discard,
+		Out: ioutil.Discard,
 	}
 	tasks.MustRegister(taskflow.Task{
 		Name: "task",
@@ -178,7 +178,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	tasks := &taskflow.Taskflow{
-		Output: ioutil.Discard,
+		Out: ioutil.Discard,
 	}
 	tasks.MustRegister(taskflow.Task{
 		Name: "task",
@@ -195,7 +195,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 func Test_empty_command(t *testing.T) {
 	ctx := context.Background()
 	tasks := &taskflow.Taskflow{
-		Output: ioutil.Discard,
+		Out: ioutil.Discard,
 	}
 	tasks.MustRegister(taskflow.Task{
 		Name: "task",

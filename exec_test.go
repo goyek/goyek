@@ -14,12 +14,11 @@ func TestExec_success(t *testing.T) {
 	var err error
 	r := taskflow.Runner{
 		Out: sb,
-		Command: func(tf *taskflow.TF) {
-			err = tf.Exec("", nil, "go", "version")
-		},
 	}
 
-	result := r.Run()
+	result := r.Run(func(tf *taskflow.TF) {
+		err = tf.Exec("", nil, "go", "version")
+	})
 
 	assert.NoError(t, err, "should pass")
 	assert.Contains(t, sb.String(), "go version go1.")
@@ -28,13 +27,11 @@ func TestExec_success(t *testing.T) {
 
 func TestExec_error(t *testing.T) {
 	var err error
-	r := taskflow.Runner{
-		Command: func(tf *taskflow.TF) {
-			err = tf.Exec("", nil, "go", "wrong")
-		},
-	}
+	r := taskflow.Runner{}
 
-	r.Run()
+	r.Run(func(tf *taskflow.TF) {
+		err = tf.Exec("", nil, "go", "wrong")
+	})
 
 	assert.Error(t, err, "should error, bad go command")
 }

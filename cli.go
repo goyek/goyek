@@ -11,10 +11,12 @@ import (
 	"time"
 )
 
+// Main parses the command-line arguments and runs the provided tasks.
+// The usage is printed when invalid arguments are passed.
 func (f *Taskflow) Main() {
-	// validate args
+	// parse args
 	cli := flag.NewFlagSet("", flag.ExitOnError)
-	cli.SetOutput(f.Output)
+	cli.SetOutput(f.Out)
 	verbose := cli.Bool("v", false, "verbose")
 	usage := func() {
 		fmt.Fprintf(cli.Output(), "Usage: [flag(s)] task(s)\n")
@@ -32,7 +34,9 @@ func (f *Taskflow) Main() {
 			t := f.tasks[k]
 			fmt.Fprintf(w, "  %s\t%s\n", t.Name, t.Description)
 		}
-		w.Flush()
+		if err := w.Flush(); err != nil {
+			panic(err)
+		}
 	}
 	cli.Usage = usage
 	cli.Parse(os.Args[1:]) //nolint // Ignore errors; FlagSet is set for ExitOnError.

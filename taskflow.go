@@ -27,21 +27,32 @@ import (
 )
 
 var (
+	// ErrTaskNotRegistered is the error returned if the the task
+	// that is requested to run is not registered.
 	ErrTaskNotRegistered = errors.New("task provided but not registered")
-	ErrTaskFail          = errors.New("task failed")
+
+	// ErrTaskFail is the error returned if a task command failed.
+	ErrTaskFail = errors.New("task failed")
 )
 
+// Taskflow is the root type of the package.
+// Use Register methods to register all tasks
+// and Run or Main method to execute provided tasks.
+// By default Taskflow prints to Stdout, but it can be change by setting Out.
 type Taskflow struct {
 	Verbose bool
-	Output  io.Writer
+	Out     io.Writer
 
 	tasks map[string]Task
 }
 
+// RegisteredTask represents a task that has been registered to a Taskflow.
+// It can be used as a dependency for another Task.
 type RegisteredTask struct {
 	name string
 }
 
+// Register registers the task.
 func (f *Taskflow) Register(task Task) (RegisteredTask, error) {
 	// validate
 	if task.Name == "" {
@@ -60,6 +71,7 @@ func (f *Taskflow) Register(task Task) (RegisteredTask, error) {
 	return RegisteredTask{name: task.Name}, nil
 }
 
+// MustRegister registers the task. It panics in case of any error.
 func (f *Taskflow) MustRegister(task Task) RegisteredTask {
 	dep, err := f.Register(task)
 	if err != nil {
@@ -68,6 +80,8 @@ func (f *Taskflow) MustRegister(task Task) RegisteredTask {
 	return dep
 }
 
+// Run runs provided tasks and all their dependencies.
+// Each task is executed at most once.
 func (f *Taskflow) Run(ctx context.Context, taskNames ...string) error {
 	// validate
 	for _, name := range taskNames {
@@ -126,12 +140,11 @@ func (f *Taskflow) runTask(ctx context.Context, task Task) bool {
 	}
 
 	runner := Runner{
-		Ctx:     ctx,
-		Name:    task.Name,
-		Command: task.Command,
-		Out:     w,
+		Ctx:  ctx,
+		Name: task.Name,
+		Out:  w,
 	}
-	result := runner.Run()
+	result := runner.Run(task.Command)
 
 	switch {
 	default:
@@ -163,10 +176,10 @@ func (f *Taskflow) isRegistered(name string) bool {
 }
 
 func (f *Taskflow) output() io.Writer {
-	if f.Output == nil {
+	if f.Out == nil {
 		return os.Stdout
 	}
-	return f.Output
+	return f.Out
 }
 
 func reportTaskStart(taskName string) string {

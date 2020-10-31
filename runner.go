@@ -7,36 +7,45 @@ import (
 	"time"
 )
 
+// Runner is used to run a Command.
 type Runner struct {
-	Command func(tf *TF)
-	Ctx     context.Context
-	Name    string
-	Out     io.Writer
+	Ctx  context.Context
+	Name string
+	Out  io.Writer
 }
 
+// RunResult contains the results of a Command run.
 type RunResult struct {
 	failed   bool
 	skipped  bool
 	duration time.Duration
 }
 
+// Failed returns true if a command failed.
+// Failure can be caused by invocation of Error, Fail or related methods or a panic.
 func (r RunResult) Failed() bool {
 	return r.failed
 }
 
+// Skipped returns true if a command was skipped.
+// Skip is casused by invocation of Skip or related methods.
 func (r RunResult) Skipped() bool {
 	return r.skipped
 }
 
+// Passed true if a command passed.
+// It means that it has not failed, nor skipped.
 func (r RunResult) Passed() bool {
 	return !r.failed && !r.skipped
 }
 
+// Duration returns the durations of the Command.
 func (r RunResult) Duration() time.Duration {
 	return r.duration
 }
 
-func (r Runner) Run() RunResult {
+// Run runs the command.
+func (r Runner) Run(command func(tf *TF)) RunResult {
 	ctx := context.Background()
 	if r.Ctx != nil {
 		ctx = r.Ctx
@@ -69,7 +78,7 @@ func (r Runner) Run() RunResult {
 			}
 			finished <- result
 		}()
-		r.Command(tf)
+		command(tf)
 	}()
 	return <-finished
 }
