@@ -8,8 +8,8 @@ A task has a name, can have a defined command, which is a function with signatur
 and can have dependencies (already defined tasks).
 
 When the taskflow is executed for given tasks,
-then the tasks' commands are run in the order defined by the dependencies.
-The tasks dependencies are run in a recusrive manner, however each is going to be run at most once.
+then the tasks' commands are run in the order defined by their dependencies.
+The task's dependencies are run in a recusrive manner, however each is going to be run at most once.
 
 The taskflow is interupted in case a command fails.
 Within these functions, use the Error, Fail or related methods to signal failure.
@@ -38,10 +38,10 @@ var (
 // Taskflow is the root type of the package.
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
-// By default Taskflow prints to Stdout, but it can be change by setting Out.
+// By default Taskflow prints to Stdout, but it can be change by setting Output.
 type Taskflow struct {
 	Verbose bool
-	Out     io.Writer
+	Output  io.Writer
 
 	tasks map[string]Task
 }
@@ -140,9 +140,9 @@ func (f *Taskflow) runTask(ctx context.Context, task Task) bool {
 	}
 
 	runner := Runner{
-		Ctx:  ctx,
-		Name: task.Name,
-		Out:  w,
+		Ctx:    ctx,
+		Name:   task.Name,
+		Output: w,
 	}
 	result := runner.Run(task.Command)
 
@@ -176,10 +176,10 @@ func (f *Taskflow) isRegistered(name string) bool {
 }
 
 func (f *Taskflow) output() io.Writer {
-	if f.Out == nil {
+	if f.Output == nil {
 		return os.Stdout
 	}
-	return f.Out
+	return f.Output
 }
 
 func reportTaskStart(taskName string) string {

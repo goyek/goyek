@@ -16,7 +16,7 @@ import (
 func (f *Taskflow) Main() {
 	// parse args
 	cli := flag.NewFlagSet("", flag.ExitOnError)
-	cli.SetOutput(f.Out)
+	cli.SetOutput(f.Output)
 	verbose := cli.Bool("v", false, "verbose")
 	usage := func() {
 		fmt.Fprintf(cli.Output(), "Usage: [flag(s)] task(s)\n")

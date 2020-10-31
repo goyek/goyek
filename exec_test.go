@@ -13,7 +13,7 @@ func TestExec_success(t *testing.T) {
 	sb := &strings.Builder{}
 	var err error
 	r := taskflow.Runner{
-		Out: sb,
+		Output: sb,
 	}
 
 	result := r.Run(func(tf *taskflow.TF) {

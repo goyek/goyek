@@ -9,9 +9,9 @@ import (
 
 // Runner is used to run a Command.
 type Runner struct {
-	Ctx  context.Context
-	Name string
-	Out  io.Writer
+	Ctx    context.Context
+	Name   string
+	Output io.Writer
 }
 
 // RunResult contains the results of a Command run.
@@ -55,8 +55,8 @@ func (r Runner) Run(command func(tf *TF)) RunResult {
 		name = r.Name
 	}
 	writer := ioutil.Discard
-	if r.Out != nil {
-		writer = r.Out
+	if r.Output != nil {
+		writer = r.Output
 	}
 
 	finished := make(chan RunResult)
