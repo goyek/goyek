@@ -52,7 +52,6 @@ linters:
     - goprintffuncname
     - gosec
     - interfacer
-    - lll
     - maligned
     - misspell
     - nakedret
@@ -74,6 +73,7 @@ linters:
     # - goerr113
     # - godox
     # - funlen
+    # - lll
 
 issues:
   # enable issues excluded by default 

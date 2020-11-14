@@ -6,9 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/pellared/taskflow"
 )
 
@@ -93,24 +90,32 @@ func main() {
 
 func taskClean(tf *taskflow.TF) {
 	files, err := filepath.Glob("coverage.*")
-	require.NoError(tf, err, "bad pattern")
+	if err != nil {
+		tf.Fatalf("glob failed: %v", err)
+	}
 	for _, file := range files {
 		err := os.Remove(file)
-		assert.NoError(tf, err, "failed to remove %s", file)
+		if err != nil {
+			tf.Errorf("failed to remove %s: %v", file, err)
+			continue
+		}
 		tf.Logf("removed %s", file)
 	}
 }
 
 func taskInstall(tf *taskflow.TF) {
-	err := tf.Exec("tools", nil, "go", "install", "mvdan.cc/gofumpt/gofumports")
-	assert.NoError(tf, err, "install gofumports failed")
-	err = tf.Exec("tools", nil, "go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
-	assert.NoError(tf, err, "install golangci-lint failed")
+	if err := tf.Exec("tools", nil, "go", "install", "mvdan.cc/gofumpt/gofumports"); err != nil {
+		tf.Errorf("go install gofumports: %v", err)
+	}
+	if err := tf.Exec("tools", nil, "go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint"); err != nil {
+		tf.Errorf("go install golangci-lint: %v", err)
+	}
 }
 
 func taskBuild(tf *taskflow.TF) {
-	err := tf.Exec("", nil, "go", "build", "./...")
-	assert.NoError(tf, err, "go build failed")
+	if err := tf.Exec("", nil, "go", "build", "./..."); err != nil {
+		tf.Errorf("go build: %v", err)
+	}
 }
 
 func taskFmt(tf *taskflow.TF) {
@@ -118,35 +123,42 @@ func taskFmt(tf *taskflow.TF) {
 }
 
 func taskLint(tf *taskflow.TF) {
-	err := tf.Exec("", nil, "golangci-lint", "run")
-	assert.NoError(tf, err, "linter failed")
+	if err := tf.Exec("", nil, "golangci-lint", "run"); err != nil {
+		tf.Errorf("golangci-lint: %v", err)
+	}
 }
 
 func taskTest(tf *taskflow.TF) {
-	err := tf.Exec("", nil, "go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./...")
-	assert.NoError(tf, err, "go test failed")
-	err = tf.Exec("", nil, "go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html")
-	assert.NoError(tf, err, "go tool cover failed")
+	if err := tf.Exec("", nil, "go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."); err != nil {
+		tf.Errorf("go test: %v", err)
+	}
+	if err := tf.Exec("", nil, "go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html"); err != nil {
+		tf.Errorf("go tool cover: %v", err)
+	}
 }
 
 func taskModTidy(tf *taskflow.TF) {
-	err := tf.Exec("", nil, "go", "mod", "tidy")
-	assert.NoError(tf, err, "go mod tidy failed for root")
-	err = tf.Exec("tools", nil, "go", "mod", "tidy")
-	assert.NoError(tf, err, "go mod tidy failed for tools")
+	if err := tf.Exec("", nil, "go", "mod", "tidy"); err != nil {
+		tf.Errorf("go mod tidy: %v", err)
+	}
+	if err := tf.Exec("tools", nil, "go", "mod", "tidy"); err != nil {
+		tf.Errorf("go mod tidy: %v", err)
+	}
 }
 
 func taskDiff(tf *taskflow.TF) {
-	err := tf.Exec("", nil, "git", "diff", "--exit-code")
-	assert.NoError(tf, err, "git diff failed")
+	if err := tf.Exec("", nil, "git", "diff", "--exit-code"); err != nil {
+		tf.Errorf("git diff: %v", err)
+	}
 
 	tf.Logf("Exec: git status --porcelain")
 	output := &strings.Builder{}
 	cmd := exec.CommandContext(tf.Context(), "git", "status", "--porcelain")
 	cmd.Stdout = output
 	cmd.Stderr = output
-	err = cmd.Run()
-	assert.NoError(tf, err, "git status --porcelain failed")
+	if err := cmd.Run(); err != nil {
+		tf.Errorf("git status --porcelain: %v", err)
+	}
 	res := output.String()
 	if res != "" {
 		tf.Logf(res)
