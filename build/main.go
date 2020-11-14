@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -151,17 +152,16 @@ func taskDiff(tf *taskflow.TF) {
 		tf.Errorf("git diff: %v", err)
 	}
 
+	sb := &strings.Builder{}
+	output := io.MultiWriter(tf.Output(), sb)
 	tf.Logf("Exec: git status --porcelain")
-	output := &strings.Builder{}
 	cmd := exec.CommandContext(tf.Context(), "git", "status", "--porcelain")
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Run(); err != nil {
 		tf.Errorf("git status --porcelain: %v", err)
 	}
-	res := output.String()
-	if res != "" {
-		tf.Logf(res)
-		tf.Errorf("git status --porcelain returned something")
+	if sb.Len() > 0 {
+		tf.Errorf("git status --porcelain returned output")
 	}
 }
