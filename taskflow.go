@@ -140,9 +140,10 @@ func (f *Taskflow) runTask(ctx context.Context, task Task) bool {
 	}
 
 	runner := Runner{
-		Ctx:    ctx,
-		Name:   task.Name,
-		Output: w,
+		Ctx:     ctx,
+		Name:    task.Name,
+		Verbose: f.Verbose,
+		Output:  w,
 	}
 	result := runner.Run(task.Command)
 

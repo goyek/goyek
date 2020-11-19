@@ -18,6 +18,7 @@ type TF struct {
 	ctx     context.Context
 	name    string
 	writer  io.Writer
+	verbose bool
 	failed  bool
 	skipped bool
 }
@@ -30,6 +31,11 @@ func (tf *TF) Context() context.Context {
 // Name returns the name of the running task.
 func (tf *TF) Name() string {
 	return tf.name
+}
+
+// Verbose returns if verbose mode was set.
+func (tf *TF) Verbose() bool {
+	return tf.verbose
 }
 
 // Output returns the io.Writer used to print output.
