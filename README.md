@@ -8,7 +8,7 @@
 
 This package aims to simplify creation of build pipelines in Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
 
-**taskflow** API is mainly inspired by [testing](https://golang.org/pkg/testing) and [flag](https://golang.org/pkg/flag) packages.
+**taskflow** API is mainly inspired by [testing](https://golang.org/pkg/testing), [http](https://golang.org/pkg/http) and [flag](https://golang.org/pkg/flag) packages.
 
 Check [Go Build Pipeline Demo](https://github.com/pellared/go-build-pipeline-demo) to compare **taskflow** with [Make](https://www.gnu.org/software/make/) and [Mage](https://github.com/magefile/mage).
 
