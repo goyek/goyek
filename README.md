@@ -12,6 +12,8 @@ This package aims to simplify creation of build pipelines in Go instead of using
 
 Check [Go Build Pipeline Demo](https://github.com/pellared/go-build-pipeline-demo) to compare **taskflow** with [Make](https://www.gnu.org/software/make/) and [Mage](https://github.com/magefile/mage).
 
+I am open to any feedback and contribution. Use [Discussions](https://github.com/pellared/taskflow/discussions) or write to me: *Robert Pajak* @ [Gophers Slack](https://invite.slack.golangbridge.org/).
+
 `Star` this repository if you find it valuable and worth maintaining.
 
 ## Example
@@ -105,7 +107,7 @@ Additionally, take a look at the dogfooding [build pipeline](build/main.go).
 
 ### Is taskflow stable
 
-No, it is in experimental phase. I am open to any feedback.
+No, it is in experimental phase.
 
 ### Why not to use Make
 
