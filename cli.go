@@ -26,7 +26,10 @@ func (f *Taskflow) Main() {
 		fmt.Fprintf(cli.Output(), "Tasks:\n")
 		w := tabwriter.NewWriter(cli.Output(), 1, 1, 4, ' ', 0)
 		keys := make([]string, 0, len(f.tasks))
-		for k := range f.tasks {
+		for k, task := range f.tasks {
+			if task.Description == "" {
+				continue
+			}
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
