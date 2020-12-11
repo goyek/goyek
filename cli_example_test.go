@@ -6,13 +6,9 @@ func Example() {
 	tasks := &taskflow.Taskflow{}
 
 	task1 := tasks.MustRegister(taskflow.Task{
-		Name: "task-1",
-		Command: func(tf *taskflow.TF) {
-			tf.Logf("exec sample")
-			if err := tf.Exec("", nil, "go", "version"); err != nil {
-				tf.Fatalf("go version: %v", err)
-			}
-		},
+		Name:        "task-1",
+		Description: "Print Go version",
+		Command:     taskflow.Exec("go", "version"),
 	})
 
 	task2 := tasks.MustRegister(taskflow.Task{
