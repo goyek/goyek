@@ -2,8 +2,6 @@ package main
 
 import (
 	"io"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/pellared/taskflow"
@@ -54,21 +52,8 @@ const toolsDir = "tools"
 func taskClean() taskflow.Task {
 	return taskflow.Task{
 		Name:        "clean",
-		Description: "remove files created during build",
-		Command: func(tf *taskflow.TF) {
-			files, err := filepath.Glob("coverage.*")
-			if err != nil {
-				tf.Fatalf("glob failed: %v", err)
-			}
-			for _, file := range files {
-				err := os.Remove(file)
-				if err != nil {
-					tf.Errorf("failed to remove %s: %v", file, err)
-					continue
-				}
-				tf.Logf("removed %s", file)
-			}
-		},
+		Description: "remove git ignored files",
+		Command:     taskflow.Exec("git", "clean", "-fX"),
 	}
 }
 
