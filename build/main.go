@@ -98,7 +98,7 @@ func taskFmt() taskflow.Task {
 func taskLint() taskflow.Task {
 	return taskflow.Task{
 		Name:        "lint",
-		Description: "golangci-lint-lintports",
+		Description: "golangci-lint",
 		Command:     taskflow.Exec("golangci-lint", "run"),
 	}
 }
