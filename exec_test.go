@@ -11,27 +11,20 @@ import (
 
 func TestExec_success(t *testing.T) {
 	sb := &strings.Builder{}
-	var err error
 	r := taskflow.Runner{
 		Output: sb,
 	}
 
-	result := r.Run(func(tf *taskflow.TF) {
-		err = tf.Exec("", nil, "go", "version")
-	})
+	got := r.Run(taskflow.Exec("go", "version"))
 
-	assert.NoError(t, err, "should pass")
-	assert.Contains(t, sb.String(), "go version go1.")
-	assert.True(t, result.Passed(), "task should pass")
+	assert.Contains(t, sb.String(), "go version go")
+	assert.True(t, got.Passed(), "task should pass")
 }
 
 func TestExec_error(t *testing.T) {
-	var err error
 	r := taskflow.Runner{}
 
-	r.Run(func(tf *taskflow.TF) {
-		err = tf.Exec("", nil, "go", "wrong")
-	})
+	got := r.Run(taskflow.Exec("go", "wrong"))
 
-	assert.Error(t, err, "should error, bad go command")
+	assert.True(t, got.Failed(), "task should fail")
 }

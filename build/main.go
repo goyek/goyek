@@ -3,7 +3,6 @@ package main
 import (
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -13,56 +12,17 @@ import (
 func main() {
 	tasks := &taskflow.Taskflow{}
 
-	// tasks:
-	clean := tasks.MustRegister(taskflow.Task{
-		Name:        "clean",
-		Description: "remove files created during build",
-		Command:     taskClean,
-	})
+	// tasks
+	clean := tasks.MustRegister(taskClean())
+	install := tasks.MustRegister(taskInstall())
+	build := tasks.MustRegister(taskBuild())
+	fmt := tasks.MustRegister(taskFmt())
+	lint := tasks.MustRegister(taskLint())
+	test := tasks.MustRegister(taskTest())
+	modTidy := tasks.MustRegister(taskModTidy())
+	diff := tasks.MustRegister(taskDiff())
 
-	install := tasks.MustRegister(taskflow.Task{
-		Name:        "install",
-		Description: "install build tools",
-		Command:     taskInstall,
-	})
-
-	build := tasks.MustRegister(taskflow.Task{
-		Name:        "build",
-		Description: "go build",
-		Command:     taskBuild,
-	})
-
-	fmt := tasks.MustRegister(taskflow.Task{
-		Name:        "fmt",
-		Description: "gofumports",
-		Command:     taskFmt,
-	})
-
-	lint := tasks.MustRegister(taskflow.Task{
-		Name:        "lint",
-		Description: "golangci-lint-lintports",
-		Command:     taskLint,
-	})
-
-	test := tasks.MustRegister(taskflow.Task{
-		Name:        "test",
-		Description: "go test with race detector and code covarage",
-		Command:     taskTest,
-	})
-
-	modTidy := tasks.MustRegister(taskflow.Task{
-		Name:        "mod-tidy",
-		Description: "go mod tidy",
-		Command:     taskModTidy,
-	})
-
-	diff := tasks.MustRegister(taskflow.Task{
-		Name:        "diff",
-		Description: "git diff",
-		Command:     taskDiff,
-	})
-
-	// pipelines:
+	// pipelines
 	dev := tasks.MustRegister(taskflow.Task{
 		Name:        "dev",
 		Description: "dev build pipeline",
@@ -89,79 +49,119 @@ func main() {
 	tasks.Main()
 }
 
-func taskClean(tf *taskflow.TF) {
-	files, err := filepath.Glob("coverage.*")
-	if err != nil {
-		tf.Fatalf("glob failed: %v", err)
-	}
-	for _, file := range files {
-		err := os.Remove(file)
-		if err != nil {
-			tf.Errorf("failed to remove %s: %v", file, err)
-			continue
-		}
-		tf.Logf("removed %s", file)
+const toolsDir = "tools"
+
+func taskClean() taskflow.Task {
+	return taskflow.Task{
+		Name:        "clean",
+		Description: "remove files created during build",
+		Command: func(tf *taskflow.TF) {
+			files, err := filepath.Glob("coverage.*")
+			if err != nil {
+				tf.Fatalf("glob failed: %v", err)
+			}
+			for _, file := range files {
+				err := os.Remove(file)
+				if err != nil {
+					tf.Errorf("failed to remove %s: %v", file, err)
+					continue
+				}
+				tf.Logf("removed %s", file)
+			}
+		},
 	}
 }
 
-func taskInstall(tf *taskflow.TF) {
-	if err := tf.Exec("tools", nil, "go", "install", "mvdan.cc/gofumpt/gofumports"); err != nil {
-		tf.Errorf("go install gofumports: %v", err)
-	}
-	if err := tf.Exec("tools", nil, "go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint"); err != nil {
-		tf.Errorf("go install golangci-lint: %v", err)
+func taskInstall() taskflow.Task {
+	return taskflow.Task{
+		Name:        "install",
+		Description: "install build tools",
+		Command: func(tf *taskflow.TF) {
+			installFmt := tf.Cmd("go", "install", "mvdan.cc/gofumpt/gofumports")
+			installFmt.Dir = toolsDir
+			if err := installFmt.Run(); err != nil {
+				tf.Errorf("go install gofumports: %v", err)
+			}
+
+			installLint := tf.Cmd("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
+			installLint.Dir = toolsDir
+			if err := installLint.Run(); err != nil {
+				tf.Errorf("go install golangci-lint: %v", err)
+			}
+		},
 	}
 }
 
-func taskBuild(tf *taskflow.TF) {
-	if err := tf.Exec("", nil, "go", "build", "./..."); err != nil {
-		tf.Errorf("go build: %v", err)
+func taskBuild() taskflow.Task {
+	return taskflow.Task{
+		Name:        "build",
+		Description: "go build",
+		Command:     taskflow.Exec("go", "build", "./..."),
 	}
 }
 
-func taskFmt(tf *taskflow.TF) {
-	tf.Exec("", nil, "gofumports", strings.Split("-l -w -local github.com/pellared/taskflow .", " ")...) //nolint // it is OK if it returns error
-}
-
-func taskLint(tf *taskflow.TF) {
-	if err := tf.Exec("", nil, "golangci-lint", "run"); err != nil {
-		tf.Errorf("golangci-lint: %v", err)
+func taskFmt() taskflow.Task {
+	return taskflow.Task{
+		Name:        "fmt",
+		Description: "gofumports",
+		Command: func(tf *taskflow.TF) {
+			tf.Cmd("gofumports", strings.Split("-l -w -local github.com/pellared/taskflow .", " ")...).Run() //nolint // it is OK if it returns error
+		},
 	}
 }
 
-func taskTest(tf *taskflow.TF) {
-	if err := tf.Exec("", nil, "go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."); err != nil {
-		tf.Errorf("go test: %v", err)
-	}
-	if err := tf.Exec("", nil, "go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html"); err != nil {
-		tf.Errorf("go tool cover: %v", err)
-	}
-}
-
-func taskModTidy(tf *taskflow.TF) {
-	if err := tf.Exec("", nil, "go", "mod", "tidy"); err != nil {
-		tf.Errorf("go mod tidy: %v", err)
-	}
-	if err := tf.Exec("tools", nil, "go", "mod", "tidy"); err != nil {
-		tf.Errorf("go mod tidy: %v", err)
+func taskLint() taskflow.Task {
+	return taskflow.Task{
+		Name:        "lint",
+		Description: "golangci-lint-lintports",
+		Command:     taskflow.Exec("golangci-lint", "run"),
 	}
 }
 
-func taskDiff(tf *taskflow.TF) {
-	if err := tf.Exec("", nil, "git", "diff", "--exit-code"); err != nil {
-		tf.Errorf("git diff: %v", err)
+func taskTest() taskflow.Task {
+	return taskflow.Task{
+		Name:        "test",
+		Description: "go test with race detector and code covarage",
+		Command:     taskflow.Exec("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."),
 	}
+}
 
-	sb := &strings.Builder{}
-	output := io.MultiWriter(tf.Output(), sb)
-	tf.Logf("Exec: git status --porcelain")
-	cmd := exec.CommandContext(tf.Context(), "git", "status", "--porcelain")
-	cmd.Stdout = output
-	cmd.Stderr = output
-	if err := cmd.Run(); err != nil {
-		tf.Errorf("git status --porcelain: %v", err)
+func taskModTidy() taskflow.Task {
+	return taskflow.Task{
+		Name:        "mod-tidy",
+		Description: "go mod tidy",
+		Command: func(tf *taskflow.TF) {
+			if err := tf.Cmd("go", "mod", "tidy").Run(); err != nil {
+				tf.Errorf("go mod tidy: %v", err)
+			}
+
+			toolsModTidy := tf.Cmd("go", "mod", "tidy")
+			toolsModTidy.Dir = toolsDir
+			if err := toolsModTidy.Run(); err != nil {
+				tf.Errorf("go mod tidy: %v", err)
+			}
+		},
 	}
-	if sb.Len() > 0 {
-		tf.Errorf("git status --porcelain returned output")
+}
+
+func taskDiff() taskflow.Task {
+	return taskflow.Task{
+		Name:        "diff",
+		Description: "git diff",
+		Command: func(tf *taskflow.TF) {
+			if err := tf.Cmd("git", "diff", "--exit-code").Run(); err != nil {
+				tf.Errorf("git diff: %v", err)
+			}
+
+			cmd := tf.Cmd("git", "status", "--porcelain")
+			sb := &strings.Builder{}
+			cmd.Stdout = io.MultiWriter(tf.Output(), sb)
+			if err := cmd.Run(); err != nil {
+				tf.Errorf("git status --porcelain: %v", err)
+			}
+			if sb.Len() > 0 {
+				tf.Errorf("git status --porcelain returned output")
+			}
+		},
 	}
 }
