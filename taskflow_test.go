@@ -224,3 +224,41 @@ func Test_verbose(t *testing.T) {
 	assert.Equal(t, 0, exitCode, "should pass")
 	assert.True(t, got, "should return proper Verbose value")
 }
+
+func Test_invalid_args(t *testing.T) {
+	ctx := context.Background()
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
+	}
+	tasks.MustRegister(taskflow.Task{
+		Name: "task",
+	})
+
+	testCases := []struct {
+		desc string
+		args []string
+	}{
+		{
+			desc: "missing task name",
+		},
+		{
+			desc: "bad flag",
+			args: []string{"-badflag", "task"},
+		},
+		{
+			desc: "bad task name",
+			args: []string{"badtask"},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.desc, func(t *testing.T) {
+			exitCode := tasks.Run(ctx, tc.args...)
+
+			assert.Equal(t, 2, exitCode, "should pass")
+		})
+	}
+}
+
+func Test(t *testing.T) {
+}
