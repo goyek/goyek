@@ -43,16 +43,16 @@ func Test_successful(t *testing.T) {
 		return []int{executed1, executed2, executed3}
 	}
 
-	err := tasks.Run(ctx, "task-1")
-	require.NoError(t, err, "first execution should pass")
+	exitCode := tasks.Run(ctx, "task-1")
+	require.Equal(t, 0, exitCode, "first execution should pass")
 	require.Equal(t, []int{1, 0, 0}, got(), "should execute task 1")
 
-	err = tasks.Run(ctx, "task-2")
-	require.NoError(t, err, "second execution should pass")
+	exitCode = tasks.Run(ctx, "task-2")
+	require.Equal(t, 0, exitCode, "second execution should pass")
 	require.Equal(t, []int{2, 1, 0}, got(), "should execute task 1 and 2")
 
-	err = tasks.Run(ctx, "task-1", "task-2", "task-3")
-	require.NoError(t, err, "third execution should pass")
+	exitCode = tasks.Run(ctx, "task-1", "task-2", "task-3")
+	require.Equal(t, 0, exitCode, "third execution should pass")
 	require.Equal(t, []int{3, 2, 1}, got(), "should execute task 1 and 2 and 3")
 }
 
@@ -92,9 +92,9 @@ func Test_dependency_failure(t *testing.T) {
 		return []int{executed1, executed2, executed3}
 	}
 
-	err := tasks.Run(ctx, "task-1", "task-2", "task-3")
+	exitCode := tasks.Run(ctx, "task-1", "task-2", "task-3")
 
-	assert.Error(t, err, "should return error from first task")
+	assert.Equal(t, 1, exitCode, "should return error from first task")
 	assert.Equal(t, []int{11, 0, 0}, got(), "should execute task 1")
 }
 
@@ -114,9 +114,9 @@ func Test_fail(t *testing.T) {
 		},
 	})
 
-	err := tasks.Run(ctx, "task")
+	exitCode := tasks.Run(ctx, "task")
 
-	assert.Error(t, err, "should return error")
+	assert.Equal(t, 1, exitCode, "should return error")
 	assert.True(t, failed, "tf.Failed() should return true")
 }
 
@@ -136,9 +136,9 @@ func Test_skip(t *testing.T) {
 		},
 	})
 
-	err := tasks.Run(ctx, "task")
+	exitCode := tasks.Run(ctx, "task")
 
-	assert.NoError(t, err, "should pass")
+	assert.Equal(t, 0, exitCode, "should pass")
 	assert.True(t, skipped, "tf.Skipped() should return true")
 }
 
@@ -154,9 +154,9 @@ func Test_task_panics(t *testing.T) {
 		},
 	})
 
-	err := tasks.Run(ctx, "task")
+	exitCode := tasks.Run(ctx, "task")
 
-	assert.Error(t, err, "should return error from first task")
+	assert.Equal(t, 1, exitCode, "should return error from first task")
 }
 
 func Test_cancelation(t *testing.T) {
@@ -169,9 +169,9 @@ func Test_cancelation(t *testing.T) {
 		Name: "task",
 	})
 
-	err := tasks.Run(ctx, "task")
+	exitCode := tasks.Run(ctx, "task")
 
-	assert.Equal(t, context.Canceled, err, "should return error canceled")
+	assert.Equal(t, 1, exitCode, "should return error canceled")
 }
 
 func Test_cancelation_during_last_task(t *testing.T) {
@@ -187,9 +187,9 @@ func Test_cancelation_during_last_task(t *testing.T) {
 		},
 	})
 
-	err := tasks.Run(ctx, "task")
+	exitCode := tasks.Run(ctx, "task")
 
-	assert.Equal(t, context.Canceled, err, "should return error canceled")
+	assert.Equal(t, 1, exitCode, "should return error canceled")
 }
 
 func Test_empty_command(t *testing.T) {
@@ -201,31 +201,64 @@ func Test_empty_command(t *testing.T) {
 		Name: "task",
 	})
 
-	err := tasks.Run(ctx, "task")
+	exitCode := tasks.Run(ctx, "task")
 
-	assert.NoError(t, err, "should pass")
+	assert.Equal(t, 0, exitCode, "should pass")
 }
 
 func Test_verbose(t *testing.T) {
-	verboseVals := []bool{false, true}
-
-	for _, verbose := range verboseVals {
-		ctx := context.Background()
-		tasks := &taskflow.Taskflow{
-			Output:  ioutil.Discard,
-			Verbose: verbose,
-		}
-		var got bool
-		tasks.MustRegister(taskflow.Task{
-			Name: "task",
-			Command: func(tf *taskflow.TF) {
-				got = tf.Verbose()
-			},
-		})
-
-		err := tasks.Run(ctx, "task")
-
-		assert.NoError(t, err, "should pass")
-		assert.Equal(t, verbose, got, "should return proper Verbose value")
+	ctx := context.Background()
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
 	}
+	var got bool
+	tasks.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			got = tf.Verbose()
+		},
+	})
+
+	exitCode := tasks.Run(ctx, "-v", "task")
+
+	assert.Equal(t, 0, exitCode, "should pass")
+	assert.True(t, got, "should return proper Verbose value")
+}
+
+func Test_invalid_args(t *testing.T) {
+	ctx := context.Background()
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
+	}
+	tasks.MustRegister(taskflow.Task{
+		Name: "task",
+	})
+
+	testCases := []struct {
+		desc string
+		args []string
+	}{
+		{
+			desc: "missing task name",
+		},
+		{
+			desc: "bad flag",
+			args: []string{"-badflag", "task"},
+		},
+		{
+			desc: "bad task name",
+			args: []string{"badtask"},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.desc, func(t *testing.T) {
+			exitCode := tasks.Run(ctx, tc.args...)
+
+			assert.Equal(t, 2, exitCode, "should pass")
+		})
+	}
+}
+
+func Test(t *testing.T) {
 }

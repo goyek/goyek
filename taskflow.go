@@ -19,20 +19,23 @@ package taskflow
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strings"
+	"text/tabwriter"
 	"time"
 )
 
-var (
-	// ErrTaskNotRegistered is the error returned if the the task
-	// that is requested to run is not registered.
-	ErrTaskNotRegistered = errors.New("task provided but not registered")
-
-	// ErrTaskFail is the error returned if a task command failed.
-	ErrTaskFail = errors.New("task failed")
+const (
+	// CodePass indicates that taskflow passed.
+	CodePass = 0
+	// CodeFailure indicates that taskflow failed.
+	CodeFailure = 1
+	// CodeInvalidArgs indicates that got invalid input.
+	CodeInvalidArgs = 2
 )
 
 // Taskflow is the root type of the package.
@@ -82,22 +85,69 @@ func (f *Taskflow) MustRegister(task Task) RegisteredTask {
 
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (f *Taskflow) Run(ctx context.Context, taskNames ...string) error {
+func (f *Taskflow) Run(ctx context.Context, args ...string) int {
+	// parse args
+	cli := flag.NewFlagSet("", flag.ContinueOnError)
+	cli.SetOutput(f.Output)
+	verbose := cli.Bool("v", false, "verbose")
+	usage := func() {
+		fmt.Fprintf(cli.Output(), "Usage: [flag(s)] task(s)\n")
+		fmt.Fprintf(cli.Output(), "Flags:\n")
+		cli.PrintDefaults()
+
+		fmt.Fprintf(cli.Output(), "Tasks:\n")
+		w := tabwriter.NewWriter(cli.Output(), 1, 1, 4, ' ', 0)
+		keys := make([]string, 0, len(f.tasks))
+		for k, task := range f.tasks {
+			if task.Description == "" {
+				continue
+			}
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			t := f.tasks[k]
+			fmt.Fprintf(w, "  %s\t%s\n", t.Name, t.Description)
+		}
+		if err := w.Flush(); err != nil {
+			panic(err)
+		}
+	}
+	cli.Usage = usage
+	if err := cli.Parse(args); err != nil {
+		fmt.Fprintln(cli.Output(), err)
+		return CodeInvalidArgs
+	}
+	if *verbose {
+		f.Verbose = true
+	}
+	tasks := cli.Args()
+	if len(tasks) == 0 {
+		fmt.Fprintln(cli.Output(), "no task provided")
+		usage()
+		return CodeInvalidArgs
+	}
+
 	// validate
-	for _, name := range taskNames {
+	for _, name := range tasks {
 		if !f.isRegistered(name) {
-			return ErrTaskNotRegistered
+			fmt.Fprintln(cli.Output(), "task provided but not registered")
+			usage()
+			return CodeInvalidArgs
 		}
 	}
 
 	// recursive run
+	from := time.Now()
 	executedTasks := map[string]bool{}
-	for _, name := range taskNames {
+	for _, name := range tasks {
 		if err := f.run(ctx, name, executedTasks); err != nil {
-			return err
+			fmt.Fprintf(cli.Output(), "%v\t%.3fs\n", err, time.Since(from).Seconds())
+			return CodeFailure
 		}
 	}
-	return nil
+	fmt.Fprintf(cli.Output(), "ok\t%.3fs\n", time.Since(from).Seconds())
+	return CodePass
 }
 
 func (f *Taskflow) run(ctx context.Context, name string, executed map[string]bool) error {
@@ -118,7 +168,7 @@ func (f *Taskflow) run(ctx context.Context, name string, executed map[string]boo
 		return err
 	}
 	if !passed {
-		return ErrTaskFail
+		return errors.New("task failed")
 	}
 	executed[name] = true
 	return nil
