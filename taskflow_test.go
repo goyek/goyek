@@ -207,25 +207,20 @@ func Test_empty_command(t *testing.T) {
 }
 
 func Test_verbose(t *testing.T) {
-	verboseVals := []bool{false, true}
-
-	for _, verbose := range verboseVals {
-		ctx := context.Background()
-		tasks := &taskflow.Taskflow{
-			Output:  ioutil.Discard,
-			Verbose: verbose,
-		}
-		var got bool
-		tasks.MustRegister(taskflow.Task{
-			Name: "task",
-			Command: func(tf *taskflow.TF) {
-				got = tf.Verbose()
-			},
-		})
-
-		exitCode := tasks.Run(ctx, "task")
-
-		assert.Equal(t, 0, exitCode, "should pass")
-		assert.Equal(t, verbose, got, "should return proper Verbose value")
+	ctx := context.Background()
+	tasks := &taskflow.Taskflow{
+		Output: ioutil.Discard,
 	}
+	var got bool
+	tasks.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			got = tf.Verbose()
+		},
+	})
+
+	exitCode := tasks.Run(ctx, "-v", "task")
+
+	assert.Equal(t, 0, exitCode, "should pass")
+	assert.True(t, got, "should return proper Verbose value")
 }
