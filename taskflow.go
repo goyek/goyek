@@ -131,7 +131,7 @@ func (f *Taskflow) Run(ctx context.Context, args ...string) int {
 	// validate
 	for _, name := range tasks {
 		if !f.isRegistered(name) {
-			fmt.Fprintln(cli.Output(), "task provided but not registered")
+			fmt.Fprintf(cli.Output(), "%s task is not registered\n", name)
 			usage()
 			return CodeInvalidArgs
 		}
