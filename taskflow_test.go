@@ -11,6 +11,54 @@ import (
 	"github.com/pellared/taskflow"
 )
 
+func Test_Register(t *testing.T) {
+	testCases := []struct {
+		desc  string
+		task  taskflow.Task
+		valid bool
+	}{
+		{
+			desc:  "good task name",
+			task:  taskflow.Task{Name: "my-task"},
+			valid: true,
+		},
+		{
+			desc:  "missing task name",
+			task:  taskflow.Task{},
+			valid: false,
+		},
+		{
+			desc:  "invalid dependency",
+			task:  taskflow.Task{Name: "my-task", Dependencies: taskflow.Deps{taskflow.RegisteredTask{}}},
+			valid: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			tasks := &taskflow.Taskflow{}
+
+			_, err := tasks.Register(tc.task)
+
+			if tc.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
+		})
+	}
+}
+
+func Test_Register_same_name(t *testing.T) {
+	tasks := &taskflow.Taskflow{}
+	task := taskflow.Task{Name: "task"}
+	_, err := tasks.Register(task)
+	require.NoError(t, err, "should be a valid task")
+
+	_, err = tasks.Register(task)
+
+	assert.Error(t, err, "should not be possible to register tasks with same name twice")
+}
+
 func Test_successful(t *testing.T) {
 	ctx := context.Background()
 	tasks := &taskflow.Taskflow{
@@ -251,7 +299,6 @@ func Test_invalid_args(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			exitCode := tasks.Run(ctx, tc.args...)
 

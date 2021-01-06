@@ -60,7 +60,6 @@ linters:
     - nolintlint
     - prealloc
     - rowserrcheck
-    - scopelint
     - sqlclosecheck
     - stylecheck
     - unconvert
@@ -74,6 +73,7 @@ linters:
     # - godox
     # - funlen
     # - lll
+    # - scopelint
 
 issues:
   # enable issues excluded by default 
