@@ -73,7 +73,7 @@ Sample usage:
 $ go run ./build -h
 Usage: [flag(s)] task(s)
 Flags:
-  -v    verbose
+  -v    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
 Tasks:
   all     build pipeline
   fmt     go fmt
@@ -101,6 +101,40 @@ alias gake='go run ./build'
 ```
 
 Additionally, take a look at the dogfooding [build pipeline](build/main.go).
+
+## Features
+
+### Task registration
+
+The registered tasks are required to have a non-empty name. For future compatibility, it is strongly suggested to use only the following characters: letters (`a-z` and `A-Z`), digits (`0-9`), underscode (`_`), hyphen (`-`). A task which a given name can be only registered once. 
+
+### Task dependencies
+
+During task registration it is possible to add a dependency to an already registered task. When taskflow is processed, it makes sure that the dependency is executed before current task is run. Take notice that each task will be executed at most once.
+
+### Task command
+
+Task command is a function which is executed when a task is executed.  It is not required to to set a command. Not having a command is very handy when registering "pipelines".
+
+### Task runner
+
+You can use [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner) for testing the execution of a single command. It may be handy e.g. during development of a new task, when debugging some issue or if you want to have a test suite for your reusable commands.
+
+### Verbose mode
+
+Verbose mode which works like for `go test`. When enabled, test output is streamed when go test -v is used. If disabled, only logs from failed task are send to output.
+
+Verbose mode for the whole task flow can be set via CLI flag by setting `-v` or by setting `Verbose` to `true` in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow) .
+
+It is also possible to set the Verbose mode for the [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner) which can be used when testing or debugging a single task's command.
+
+Use [`func (*TF) Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Verbose) to check if verbose mode was set within the task's command.
+
+### Helpers for running programs
+
+Use [`func Exec(name string, args ...string) func(*TF)`](https://pkg.go.dev/github.com/pellared/taskflow#Exec) to create a task's command which only runs a single program.
+
+Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Cmd) if within a task's command function when you want to execute more programs or you need more granular control.
 
 ## FAQ
 

@@ -89,7 +89,7 @@ func (f *Taskflow) Run(ctx context.Context, args ...string) int {
 	// parse args
 	cli := flag.NewFlagSet("", flag.ContinueOnError)
 	cli.SetOutput(f.Output)
-	verbose := cli.Bool("v", false, "verbose")
+	verbose := cli.Bool("v", false, "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.")
 	usage := func() {
 		fmt.Fprintf(cli.Output(), "Usage: [flag(s)] task(s)\n")
 		fmt.Fprintf(cli.Output(), "Flags:\n")
