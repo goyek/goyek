@@ -68,7 +68,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 			f.params[key] = val
 			continue
 		}
-		if !f.isRegistered(arg) {
+		if _, ok := f.tasks[arg]; !ok {
 			// task is not registered
 			fmt.Fprintf(f.output, "%s task is not registered\n", arg)
 			usage()
@@ -163,14 +163,6 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	}
 
 	return !result.failed
-}
-
-func (f *flowRunner) isRegistered(name string) bool {
-	if f.tasks == nil {
-		f.tasks = map[string]Task{}
-	}
-	_, ok := f.tasks[name]
-	return ok
 }
 
 func reportTaskStart(taskName string) string {
