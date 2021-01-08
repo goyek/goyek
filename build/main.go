@@ -8,20 +8,20 @@ import (
 )
 
 func main() {
-	tasks := &taskflow.Taskflow{}
+	flow := &taskflow.Taskflow{}
 
 	// tasks
-	clean := tasks.MustRegister(taskClean())
-	install := tasks.MustRegister(taskInstall())
-	build := tasks.MustRegister(taskBuild())
-	fmt := tasks.MustRegister(taskFmt())
-	lint := tasks.MustRegister(taskLint())
-	test := tasks.MustRegister(taskTest())
-	modTidy := tasks.MustRegister(taskModTidy())
-	diff := tasks.MustRegister(taskDiff())
+	clean := flow.MustRegister(taskClean())
+	install := flow.MustRegister(taskInstall())
+	build := flow.MustRegister(taskBuild())
+	fmt := flow.MustRegister(taskFmt())
+	lint := flow.MustRegister(taskLint())
+	test := flow.MustRegister(taskTest())
+	modTidy := flow.MustRegister(taskModTidy())
+	diff := flow.MustRegister(taskDiff())
 
 	// pipelines
-	dev := tasks.MustRegister(taskflow.Task{
+	dev := flow.MustRegister(taskflow.Task{
 		Name:        "dev",
 		Description: "dev build pipeline",
 		Dependencies: taskflow.Deps{
@@ -35,7 +35,7 @@ func main() {
 		},
 	})
 
-	tasks.MustRegister(taskflow.Task{
+	flow.MustRegister(taskflow.Task{
 		Name:        "ci",
 		Description: "CI build pipeline",
 		Dependencies: taskflow.Deps{
@@ -44,7 +44,7 @@ func main() {
 		},
 	})
 
-	tasks.Main()
+	flow.Main()
 }
 
 const toolsDir = "tools"

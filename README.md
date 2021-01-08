@@ -26,12 +26,12 @@ package main
 import "github.com/pellared/taskflow"
 
 func main() {
-	tasks := &taskflow.Taskflow{}
+	flow := &taskflow.Taskflow{}
 
-	fmt := tasks.MustRegister(taskFmt())
-	test := tasks.MustRegister(taskTest())
+	fmt := flow.MustRegister(taskFmt())
+	test := flow.MustRegister(taskTest())
 
-	tasks.MustRegister(taskflow.Task{
+	flow.MustRegister(taskflow.Task{
 		Name:        "all",
 		Description: "build pipeline",
 		Dependencies: taskflow.Deps{
@@ -40,7 +40,7 @@ func main() {
 		},
 	})
 
-	tasks.Main()
+	flow.Main()
 }
 
 func taskFmt() taskflow.Task {
