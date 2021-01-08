@@ -58,6 +58,14 @@ type RegisteredTask struct {
 // The default values set in the struct are overridden in Run method.
 type Params map[string]string
 
+// New return a valid instance of Taskflow with DefaultOutput and initized Params.
+func New() *Taskflow {
+	return &Taskflow{
+		Output: DefaultOutput,
+		Params: Params{},
+	}
+}
+
 // Register registers the task.
 func (f *Taskflow) Register(task Task) (RegisteredTask, error) {
 	// validate

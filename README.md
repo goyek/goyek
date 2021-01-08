@@ -26,7 +26,7 @@ package main
 import "github.com/pellared/taskflow"
 
 func main() {
-	flow := &taskflow.Taskflow{}
+	flow := taskflow.New()
 
 	fmt := flow.MustRegister(taskFmt())
 	test := flow.MustRegister(taskTest())

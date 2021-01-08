@@ -39,7 +39,7 @@ func Test_Register(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			flow := &taskflow.Taskflow{}
+			flow := taskflow.New()
 
 			_, err := flow.Register(tc.task)
 

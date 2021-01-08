@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	flow := &taskflow.Taskflow{}
+	flow := taskflow.New()
 
 	// tasks
 	clean := flow.MustRegister(taskClean())

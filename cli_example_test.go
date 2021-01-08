@@ -3,7 +3,7 @@ package taskflow_test
 import "github.com/pellared/taskflow"
 
 func Example() {
-	flow := &taskflow.Taskflow{}
+	flow := taskflow.New()
 
 	task1 := flow.MustRegister(taskflow.Task{
 		Name:        "task-1",
