@@ -104,7 +104,7 @@ func (f *Taskflow) Run(ctx context.Context, args ...string) int {
 
 	flow := &flowRunner{
 		output:  f.Output,
-		params:  f.Params,
+		params:  params,
 		tasks:   f.tasks,
 		verbose: f.Verbose,
 	}
