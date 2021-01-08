@@ -130,7 +130,7 @@ It is also possible to set the Verbose mode for the [`type Runner`](https://pkg.
 
 Use [`func (*TF) Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Verbose) to check if verbose mode was set within the task's command.
 
-# Parameters
+### Parameters
 
 The task commands can get the parameters using [`func (*TF) Params`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Params). 
 
