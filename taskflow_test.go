@@ -11,6 +11,10 @@ import (
 	"github.com/pellared/taskflow"
 )
 
+func init() {
+	taskflow.DefaultOutput = ioutil.Discard
+}
+
 func Test_Register(t *testing.T) {
 	testCases := []struct {
 		desc  string
@@ -61,9 +65,7 @@ func Test_Register_same_name(t *testing.T) {
 
 func Test_successful(t *testing.T) {
 	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	var executed1 int
 	task1 := flow.MustRegister(taskflow.Task{
 		Name: "task-1",
@@ -106,9 +108,7 @@ func Test_successful(t *testing.T) {
 
 func Test_dependency_failure(t *testing.T) {
 	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	var executed1 int
 	task1 := flow.MustRegister(taskflow.Task{
 		Name: "task-1",
@@ -148,9 +148,7 @@ func Test_dependency_failure(t *testing.T) {
 
 func Test_fail(t *testing.T) {
 	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	failed := false
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
@@ -170,9 +168,7 @@ func Test_fail(t *testing.T) {
 
 func Test_skip(t *testing.T) {
 	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	skipped := false
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
@@ -192,9 +188,7 @@ func Test_skip(t *testing.T) {
 
 func Test_task_panics(t *testing.T) {
 	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
@@ -210,9 +204,7 @@ func Test_task_panics(t *testing.T) {
 func Test_cancelation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
 	})
@@ -225,9 +217,7 @@ func Test_cancelation(t *testing.T) {
 func Test_cancelation_during_last_task(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
@@ -242,9 +232,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 
 func Test_empty_command(t *testing.T) {
 	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
 	})
@@ -256,9 +244,7 @@ func Test_empty_command(t *testing.T) {
 
 func Test_verbose(t *testing.T) {
 	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	var got bool
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
@@ -275,9 +261,7 @@ func Test_verbose(t *testing.T) {
 
 func Test_invalid_args(t *testing.T) {
 	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
 	})
@@ -310,7 +294,6 @@ func Test_invalid_args(t *testing.T) {
 func Test_params(t *testing.T) {
 	ctx := context.Background()
 	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
 		Params: taskflow.Params{
 			"x": "1",
 			"z": "0",
