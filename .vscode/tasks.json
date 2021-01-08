@@ -4,9 +4,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "dev",
+            "label": "all",
             "type": "shell",
-            "command": "go run ./build/. dev",
+            "command": "go run ./build all",
             "problemMatcher": [
                 "$go"
             ],
