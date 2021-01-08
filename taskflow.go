@@ -45,6 +45,7 @@ const (
 type Taskflow struct {
 	Verbose bool
 	Output  io.Writer
+	Params  Params
 
 	tasks map[string]Task
 }
@@ -54,6 +55,10 @@ type Taskflow struct {
 type RegisteredTask struct {
 	name string
 }
+
+// Params represents Taskflow parameters used within Taskflow.
+// The default values set in the struct are overridden in Run method.
+type Params map[string]string
 
 // Register registers the task.
 func (f *Taskflow) Register(task Task) (RegisteredTask, error) {
@@ -121,20 +126,30 @@ func (f *Taskflow) Run(ctx context.Context, args ...string) int {
 	if *verbose {
 		f.Verbose = true
 	}
-	tasks := cli.Args()
+
+	// parse non-flag args
+	var tasks []string
+	for _, arg := range cli.Args() {
+		if paramAssignmentIdx := strings.IndexRune(arg, '='); paramAssignmentIdx > 0 {
+			// parameter assignement via 'key=val'
+			key := arg[0:paramAssignmentIdx]
+			val := arg[paramAssignmentIdx+1:]
+			f.Params[key] = val
+			continue
+		}
+		if !f.isRegistered(arg) {
+			// task is not registered
+			fmt.Fprintf(cli.Output(), "%s task is not registered\n", arg)
+			usage()
+			return CodeInvalidArgs
+		}
+		tasks = append(tasks, arg)
+	}
+
 	if len(tasks) == 0 {
 		fmt.Fprintln(cli.Output(), "no task provided")
 		usage()
 		return CodeInvalidArgs
-	}
-
-	// validate
-	for _, name := range tasks {
-		if !f.isRegistered(name) {
-			fmt.Fprintf(cli.Output(), "%s task is not registered\n", name)
-			usage()
-			return CodeInvalidArgs
-		}
 	}
 
 	// recursive run
@@ -189,10 +204,17 @@ func (f *Taskflow) runTask(ctx context.Context, task Task) bool {
 		panic(err)
 	}
 
+	// copy Params to make sure that it cannot be modified by any task's command
+	params := make(Params, len(f.Params))
+	for k, v := range f.Params {
+		params[k] = v
+	}
+
 	runner := Runner{
 		Ctx:     ctx,
 		Name:    task.Name,
 		Verbose: f.Verbose,
+		Params:  params,
 		Output:  w,
 	}
 	result := runner.Run(task.Command)

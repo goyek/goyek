@@ -58,7 +58,6 @@ linters:
     - nestif
     - noctx
     - nolintlint
-    - prealloc
     - rowserrcheck
     - sqlclosecheck
     - stylecheck
@@ -74,6 +73,7 @@ linters:
     # - funlen
     # - lll
     # - scopelint
+    # - prealloc
 
 issues:
   # enable issues excluded by default 

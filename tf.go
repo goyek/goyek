@@ -18,6 +18,7 @@ type TF struct {
 	ctx     context.Context
 	name    string
 	writer  io.Writer
+	params  map[string]string
 	verbose bool
 	failed  bool
 	skipped bool
@@ -36,6 +37,11 @@ func (tf *TF) Name() string {
 // Verbose returns if verbose mode was set.
 func (tf *TF) Verbose() bool {
 	return tf.verbose
+}
+
+// Params returns the key-value string parameters.
+func (tf *TF) Params() map[string]string {
+	return tf.params
 }
 
 // Output returns the io.Writer used to print output.

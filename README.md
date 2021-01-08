@@ -71,7 +71,7 @@ Sample usage:
 
 ```shell
 $ go run ./build -h
-Usage: [flag(s)] task(s)
+Usage: [flag(s)] [key=val] task(s)
 Flags:
   -v    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
 Tasks:
@@ -106,7 +106,7 @@ Additionally, take a look at the dogfooding [build pipeline](build/main.go).
 
 ### Task registration
 
-The registered tasks are required to have a non-empty name. For future compatibility, it is strongly suggested to use only the following characters: letters (`a-z` and `A-Z`), digits (`0-9`), underscode (`_`), hyphen (`-`). A task which a given name can be only registered once. 
+The registered tasks are required to have a non-empty name. For future compatibility, it is strongly suggested to use only the following characters: letters (`a-z` and `A-Z`), digits (`0-9`), underscode (`_`), hyphen (`-`). Do not use equals character (`=`) as it is resvered for assigning parameters. A task which a given name can be only registered once. 
 
 ### Task dependencies
 
@@ -124,11 +124,19 @@ You can use [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runn
 
 Verbose mode which works like for `go test`. When enabled, test output is streamed when go test -v is used. If disabled, only logs from failed task are send to output.
 
-Verbose mode for the whole task flow can be set via CLI flag by setting `-v` or by setting `Verbose` to `true` in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow) .
+Verbose mode for the whole task flow can be set via CLI flag by setting `-v` or by setting `Verbose` to `true` in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
 
 It is also possible to set the Verbose mode for the [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner) which can be used when testing or debugging a single task's command.
 
 Use [`func (*TF) Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Verbose) to check if verbose mode was set within the task's command.
+
+# Parameters
+
+The task comamnds can get the parameters using [`func (*TF) Params`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Params). 
+
+The parameters are usally set via CLI using `key=val` syntax. They have to be set after CLI flags. For example `go run ./build -v ci=true all` would run the `all` task with `ci` parameter set to `"true"` in verbose mode.
+
+Default values can assigned by setting `Params` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
 
 ### Helpers for running programs
 

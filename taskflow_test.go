@@ -307,5 +307,30 @@ func Test_invalid_args(t *testing.T) {
 	}
 }
 
-func Test(t *testing.T) {
+func Test_params(t *testing.T) {
+	ctx := context.Background()
+	flow := &taskflow.Taskflow{
+		Output: ioutil.Discard,
+		Params: taskflow.Params{
+			"x": "1",
+			"z": "0",
+		},
+	}
+	var got map[string]string
+	flow.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			got = tf.Params()
+		},
+	})
+
+	exitCode := flow.Run(ctx, "y=2", "z=3", "task")
+
+	want := map[string]string{
+		"x": "1",
+		"y": "2",
+		"z": "3",
+	}
+	assert.Equal(t, 0, exitCode, "should pass")
+	assert.Equal(t, want, got, "should return proper parameters")
 }

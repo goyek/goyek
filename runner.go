@@ -12,6 +12,7 @@ type Runner struct {
 	Ctx     context.Context
 	Name    string
 	Output  io.Writer
+	Params  Params
 	Verbose bool
 }
 
@@ -68,6 +69,7 @@ func (r Runner) Run(command func(tf *TF)) RunResult {
 			name:    name,
 			writer:  writer,
 			verbose: verbose,
+			params:  r.Params,
 		}
 		from := time.Now()
 		defer func() {
