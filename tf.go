@@ -40,7 +40,7 @@ func (tf *TF) Verbose() bool {
 }
 
 // Params returns the key-value string parameters.
-func (tf *TF) Params() map[string]string {
+func (tf *TF) Params() Params {
 	return tf.params
 }
 

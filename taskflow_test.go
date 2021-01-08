@@ -316,7 +316,7 @@ func Test_params(t *testing.T) {
 			"z": "0",
 		},
 	}
-	var got map[string]string
+	var got taskflow.Params
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
@@ -326,7 +326,7 @@ func Test_params(t *testing.T) {
 
 	exitCode := flow.Run(ctx, "y=2", "z=3", "task")
 
-	want := map[string]string{
+	want := taskflow.Params{
 		"x": "1",
 		"y": "2",
 		"z": "3",
