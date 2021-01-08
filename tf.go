@@ -39,7 +39,7 @@ func (tf *TF) Verbose() bool {
 	return tf.verbose
 }
 
-// Params returns the key-value string parameters.
+// Params returns the key-value parameters.
 func (tf *TF) Params() Params {
 	return tf.params
 }
