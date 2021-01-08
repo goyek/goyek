@@ -132,11 +132,11 @@ Use [`func (*TF) Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Ve
 
 # Parameters
 
-The task comamnds can get the parameters using [`func (*TF) Params`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Params). 
+The task commands  can get the parameters using [`func (*TF) Params`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Params). 
 
-The parameters are usally set via CLI using `key=val` syntax. They have to be set after CLI flags. For example `go run ./build -v ci=true all` would run the `all` task with `ci` parameter set to `"true"` in verbose mode.
+The parameters can be set via CLI using `key=val` syntax after CLI flags. For example `go run ./build -v ci=true all` would run the `all` task with `ci` parameter set to `"true"` in verbose mode.
 
-Default values can assigned by setting `Params` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
+Default values can be assigned via `Params` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
 
 ### Helpers for running programs
 
