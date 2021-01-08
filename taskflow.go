@@ -126,6 +126,9 @@ func (f *Taskflow) Run(ctx context.Context, args ...string) int {
 	if *verbose {
 		f.Verbose = true
 	}
+	if f.Params == nil {
+		f.Params = Params{}
+	}
 
 	// parse non-flag args
 	var tasks []string
