@@ -22,7 +22,7 @@ type flowRunner struct {
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (f *flowRunner) Run(ctx context.Context, args []string) int {
-	// parse args
+	// prepare flag.FlagSet
 	cli := flag.NewFlagSet("", flag.ContinueOnError)
 	cli.SetOutput(f.output)
 	verbose := cli.Bool("v", false, "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.")
@@ -50,6 +50,8 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 		}
 	}
 	cli.Usage = usage
+
+	// parse args (flags)
 	if err := cli.Parse(args); err != nil {
 		fmt.Fprintln(cli.Output(), err)
 		return CodeInvalidArgs
@@ -58,7 +60,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 		f.verbose = true
 	}
 
-	// parse non-flag args
+	// parse non-flag args (tasks and parameters)
 	var tasks []string
 	for _, arg := range cli.Args() {
 		if paramAssignmentIdx := strings.IndexRune(arg, '='); paramAssignmentIdx > 0 {
