@@ -45,9 +45,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 			t := f.tasks[k]
 			fmt.Fprintf(w, "  %s\t%s\n", t.Name, t.Description)
 		}
-		if err := w.Flush(); err != nil {
-			panic(err)
-		}
+		w.Flush() //nolint // not checking errors when writting to output
 	}
 	cli.Usage = usage
 
@@ -131,11 +129,10 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		w = &strings.Builder{}
 	}
 
-	_, err := io.WriteString(w, reportTaskStart(task.Name))
-	if err != nil {
-		panic(err)
-	}
+	// report task start
+	fmt.Fprintf(w, "===== TASK  %s\n", task.Name)
 
+	// run task
 	runner := Runner{
 		Ctx:     ctx,
 		Name:    task.Name,
@@ -145,31 +142,19 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	}
 	result := runner.Run(task.Command)
 
+	// report task end
+	status := "PASS"
 	switch {
-	default:
-		_, err = io.WriteString(w, reportTaskEnd("PASS", task.Name, result.Duration()))
 	case result.Failed():
-		_, err = io.WriteString(w, reportTaskEnd("FAIL", task.Name, result.Duration()))
+		status = "FAIL"
 	case result.Skipped():
-		_, err = io.WriteString(w, reportTaskEnd("SKIP", task.Name, result.Duration()))
+		status = "SKIP"
 	}
-	if err != nil {
-		panic(err)
-	}
+	fmt.Fprintf(w, "----- %s: %s (%.2fs)\n", status, task.Name, result.Duration().Seconds())
 
 	if sb, ok := w.(*strings.Builder); ok && result.failed {
-		if _, err := io.Copy(f.output, strings.NewReader(sb.String())); err != nil {
-			panic(err)
-		}
+		io.Copy(f.output, strings.NewReader(sb.String())) //nolint // not checking errors when writting to output
 	}
 
 	return !result.failed
-}
-
-func reportTaskStart(taskName string) string {
-	return fmt.Sprintf("===== TASK  %s\n", taskName)
-}
-
-func reportTaskEnd(status string, taskName string, d time.Duration) string {
-	return fmt.Sprintf("----- %s: %s (%.2fs)\n", status, taskName, d.Seconds())
 }
