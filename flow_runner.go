@@ -134,11 +134,11 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 
 	// run task
 	runner := Runner{
-		Ctx:     ctx,
-		Name:    task.Name,
-		Verbose: f.verbose,
-		Params:  f.params,
-		Output:  w,
+		Ctx:      ctx,
+		TaskName: task.Name,
+		Verbose:  f.verbose,
+		Params:   f.params,
+		Output:   w,
 	}
 	result := runner.Run(task.Command)
 
