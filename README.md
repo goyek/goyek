@@ -18,7 +18,7 @@ I am open to any feedback and contribution. Use [Discussions](https://github.com
 
 ## Example
 
-Paste the following code to `build/main.go`:
+Paste the following code to `build/build.go`:
 
 ```go
 package main
@@ -100,7 +100,7 @@ Tired of writing `go run ./build` each time? Just add an alias to your shell. Fo
 alias gake='go run ./build'
 ```
 
-Additionally, take a look at the dogfooding [build pipeline](build/main.go).
+Additionally, take a look at the dogfooding [build pipeline](build/build.go).
 
 ## Features
 
