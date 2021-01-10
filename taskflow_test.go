@@ -63,6 +63,14 @@ func Test_Register_same_name(t *testing.T) {
 	assert.Error(t, err, "should not be possible to register tasks with same name twice")
 }
 
+func Test_MustRegister_panic(t *testing.T) {
+	flow := taskflow.New()
+
+	act := func() { flow.MustRegister(taskflow.Task{}) }
+
+	assert.Panics(t, act, "should panic because task name is empty")
+}
+
 func Test_successful(t *testing.T) {
 	ctx := context.Background()
 	flow := &taskflow.Taskflow{}
@@ -139,7 +147,7 @@ func Test_dependency_failure(t *testing.T) {
 		return []int{executed1, executed2, executed3}
 	}
 
-	exitCode := flow.Run(context.Background(), "task-1", "task-2", "task-3")
+	exitCode := flow.Run(context.Background(), "task-2", "task-3")
 
 	assert.Equal(t, 1, exitCode, "should return error from first task")
 	assert.Equal(t, []int{11, 0, 0}, got(), "should execute task 1")
@@ -253,10 +261,35 @@ func Test_verbose(t *testing.T) {
 	assert.True(t, got, "should return proper Verbose value")
 }
 
+func Test_name(t *testing.T) {
+	flow := &taskflow.Taskflow{}
+	taskName := "task"
+	var got string
+	flow.MustRegister(taskflow.Task{
+		Name: taskName,
+		Command: func(tf *taskflow.TF) {
+			got = tf.Name()
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "-v", "task")
+
+	assert.Equal(t, 0, exitCode, "should pass")
+	assert.Equal(t, taskName, got, "should return proper Name value")
+}
+
 func Test_invalid_args(t *testing.T) {
 	flow := &taskflow.Taskflow{}
 	flow.MustRegister(taskflow.Task{
-		Name: "task",
+		Name:        "c",
+		Description: "c task",
+	})
+	flow.MustRegister(taskflow.Task{
+		Name:        "a",
+		Description: "a task",
+	})
+	flow.MustRegister(taskflow.Task{
+		Name: "b",
 	})
 
 	testCases := []struct {
