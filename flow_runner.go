@@ -27,7 +27,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	cli.SetOutput(f.output)
 	verbose := cli.Bool("v", false, "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.")
 	usage := func() {
-		fmt.Fprintf(cli.Output(), "Usage: [flag(s)] task(s)\n")
+		fmt.Fprintf(cli.Output(), "Usage: [flag(s)] [key=val] task(s)\n")
 		fmt.Fprintf(cli.Output(), "Flags:\n")
 		cli.PrintDefaults()
 
@@ -53,7 +53,6 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 
 	// parse args (flags)
 	if err := cli.Parse(args); err != nil {
-		fmt.Fprintln(cli.Output(), err)
 		return CodeInvalidArgs
 	}
 	if *verbose {
@@ -72,7 +71,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 		}
 		if _, ok := f.tasks[arg]; !ok {
 			// task is not registered
-			fmt.Fprintf(f.output, "%s task is not registered\n", arg)
+			fmt.Fprintf(f.output, "task provided but not registered: %s\n", arg)
 			usage()
 			return CodeInvalidArgs
 		}
