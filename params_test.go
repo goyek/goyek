@@ -78,3 +78,30 @@ func Test_params_Int_invalid(t *testing.T) {
 	assert.Error(t, err, "should tell that it failed to parse the value")
 	assert.Zero(t, got, "should return proper parameter value")
 }
+
+func Test_params_Bool_valid(t *testing.T) {
+	tf := testTF(t, "x=true")
+
+	got, err := tf.Params().Bool("x")
+
+	assert.NoError(t, err, "should parse the value")
+	assert.Equal(t, true, got, "should return proper parameter value")
+}
+
+func Test_params_Bool_missing(t *testing.T) {
+	tf := testTF(t)
+
+	got, err := tf.Params().Bool("x")
+
+	assert.Equal(t, taskflow.ErrParamNotSet, err, "should tell that parameter was not set")
+	assert.Zero(t, got, "should return proper parameter value")
+}
+
+func Test_params_Bool_invalid(t *testing.T) {
+	tf := testTF(t, "x=abc")
+
+	got, err := tf.Params().Bool("x")
+
+	assert.Error(t, err, "should tell that it failed to parse the value")
+	assert.Zero(t, got, "should return proper parameter value")
+}

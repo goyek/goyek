@@ -23,3 +23,16 @@ func (p Params) Int(key string) (int, error) {
 	i, err := strconv.ParseInt(v, 0, strconv.IntSize)
 	return int(i), err
 }
+
+// Bool converts the parameter to bool.
+// It accepts 1, t, T, TRUE, true, True, 0, f, F, FALSE, false, False.
+// Any other value returns an error.
+// ErrParamNotSet error is returned if the parameter was not set.
+// *strconv.NumError error is returned if the parameter conversion failed.
+func (p Params) Bool(key string) (bool, error) {
+	v := p[key]
+	if v == "" {
+		return false, ErrParamNotSet
+	}
+	return strconv.ParseBool(v)
+}
