@@ -19,6 +19,9 @@ func (e *ParamError) Error() string {
 	return "taskflow: parameter " + strconv.Quote(e.Key) + ": " + e.Err.Error()
 }
 
+// Unwrap unpacks the wrapped error.
+func (e *ParamError) Unwrap() error { return e.Err }
+
 // IsParamNotSet returns a boolean indicating that a parameter is not set.
 func IsParamNotSet(err error) bool {
 	var e *ParamError
