@@ -11,6 +11,10 @@ import (
 	"github.com/pellared/taskflow"
 )
 
+func init() {
+	taskflow.DefaultOutput = ioutil.Discard
+}
+
 func Test_Register(t *testing.T) {
 	testCases := []struct {
 		desc  string
@@ -35,7 +39,7 @@ func Test_Register(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			flow := &taskflow.Taskflow{}
+			flow := taskflow.New()
 
 			_, err := flow.Register(tc.task)
 
@@ -59,11 +63,17 @@ func Test_Register_same_name(t *testing.T) {
 	assert.Error(t, err, "should not be possible to register tasks with same name twice")
 }
 
+func Test_MustRegister_panic(t *testing.T) {
+	flow := taskflow.New()
+
+	act := func() { flow.MustRegister(taskflow.Task{}) }
+
+	assert.Panics(t, act, "should panic because task name is empty")
+}
+
 func Test_successful(t *testing.T) {
 	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	var executed1 int
 	task1 := flow.MustRegister(taskflow.Task{
 		Name: "task-1",
@@ -105,10 +115,7 @@ func Test_successful(t *testing.T) {
 }
 
 func Test_dependency_failure(t *testing.T) {
-	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	var executed1 int
 	task1 := flow.MustRegister(taskflow.Task{
 		Name: "task-1",
@@ -140,17 +147,14 @@ func Test_dependency_failure(t *testing.T) {
 		return []int{executed1, executed2, executed3}
 	}
 
-	exitCode := flow.Run(ctx, "task-1", "task-2", "task-3")
+	exitCode := flow.Run(context.Background(), "task-2", "task-3")
 
 	assert.Equal(t, 1, exitCode, "should return error from first task")
 	assert.Equal(t, []int{11, 0, 0}, got(), "should execute task 1")
 }
 
 func Test_fail(t *testing.T) {
-	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	failed := false
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
@@ -162,17 +166,14 @@ func Test_fail(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(ctx, "task")
+	exitCode := flow.Run(context.Background(), "task")
 
 	assert.Equal(t, 1, exitCode, "should return error")
 	assert.True(t, failed, "tf.Failed() should return true")
 }
 
 func Test_skip(t *testing.T) {
-	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	skipped := false
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
@@ -184,17 +185,14 @@ func Test_skip(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(ctx, "task")
+	exitCode := flow.Run(context.Background(), "task")
 
 	assert.Equal(t, 0, exitCode, "should pass")
 	assert.True(t, skipped, "tf.Skipped() should return true")
 }
 
 func Test_task_panics(t *testing.T) {
-	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
@@ -202,7 +200,7 @@ func Test_task_panics(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(ctx, "task")
+	exitCode := flow.Run(context.Background(), "task")
 
 	assert.Equal(t, 1, exitCode, "should return error from first task")
 }
@@ -210,9 +208,7 @@ func Test_task_panics(t *testing.T) {
 func Test_cancelation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
 	})
@@ -225,9 +221,7 @@ func Test_cancelation(t *testing.T) {
 func Test_cancelation_during_last_task(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
@@ -241,24 +235,18 @@ func Test_cancelation_during_last_task(t *testing.T) {
 }
 
 func Test_empty_command(t *testing.T) {
-	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
 	})
 
-	exitCode := flow.Run(ctx, "task")
+	exitCode := flow.Run(context.Background(), "task")
 
 	assert.Equal(t, 0, exitCode, "should pass")
 }
 
 func Test_verbose(t *testing.T) {
-	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &taskflow.Taskflow{}
 	var got bool
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
@@ -267,19 +255,41 @@ func Test_verbose(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(ctx, "-v", "task")
+	exitCode := flow.Run(context.Background(), "-v", "task")
 
 	assert.Equal(t, 0, exitCode, "should pass")
 	assert.True(t, got, "should return proper Verbose value")
 }
 
-func Test_invalid_args(t *testing.T) {
-	ctx := context.Background()
-	flow := &taskflow.Taskflow{
-		Output: ioutil.Discard,
-	}
+func Test_name(t *testing.T) {
+	flow := &taskflow.Taskflow{}
+	taskName := "task"
+	var got string
 	flow.MustRegister(taskflow.Task{
-		Name: "task",
+		Name: taskName,
+		Command: func(tf *taskflow.TF) {
+			got = tf.Name()
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "-v", "task")
+
+	assert.Equal(t, 0, exitCode, "should pass")
+	assert.Equal(t, taskName, got, "should return proper Name value")
+}
+
+func Test_invalid_args(t *testing.T) {
+	flow := &taskflow.Taskflow{}
+	flow.MustRegister(taskflow.Task{
+		Name:        "c",
+		Description: "c task",
+	})
+	flow.MustRegister(taskflow.Task{
+		Name:        "a",
+		Description: "a task",
+	})
+	flow.MustRegister(taskflow.Task{
+		Name: "b",
 	})
 
 	testCases := []struct {
@@ -300,12 +310,51 @@ func Test_invalid_args(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			exitCode := flow.Run(ctx, tc.args...)
+			exitCode := flow.Run(context.Background(), tc.args...)
 
 			assert.Equal(t, 2, exitCode, "should pass")
 		})
 	}
 }
 
-func Test(t *testing.T) {
+func Test_params(t *testing.T) {
+	flow := &taskflow.Taskflow{}
+	var got taskflow.Params
+	flow.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			got = tf.Params()
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "x=1", "task")
+
+	want := taskflow.Params{
+		"x": "1",
+	}
+	assert.Equal(t, 0, exitCode, "should pass")
+	assert.Equal(t, want, got, "should return proper parameters")
+}
+
+func Test_default_params(t *testing.T) {
+	flow := taskflow.New()
+	flow.Params["x"] = "1"
+	flow.Params["z"] = "0"
+	var got taskflow.Params
+	flow.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			got = tf.Params()
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "y=2", "z=3", "task")
+
+	want := taskflow.Params{
+		"x": "1",
+		"y": "2",
+		"z": "3",
+	}
+	assert.Equal(t, 0, exitCode, "should pass")
+	assert.Equal(t, want, got, "should return proper parameters")
 }

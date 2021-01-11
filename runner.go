@@ -9,10 +9,11 @@ import (
 
 // Runner is used to run a Command.
 type Runner struct {
-	Ctx     context.Context
-	Name    string
-	Output  io.Writer
-	Verbose bool
+	Ctx      context.Context
+	TaskName string
+	Output   io.Writer
+	Params   Params
+	Verbose  bool
 }
 
 // RunResult contains the results of a Command run.
@@ -52,8 +53,8 @@ func (r Runner) Run(command func(tf *TF)) RunResult {
 		ctx = r.Ctx
 	}
 	name := "no-name"
-	if r.Name != "" {
-		name = r.Name
+	if r.TaskName != "" {
+		name = r.TaskName
 	}
 	writer := ioutil.Discard
 	if r.Output != nil {
@@ -68,6 +69,7 @@ func (r Runner) Run(command func(tf *TF)) RunResult {
 			name:    name,
 			writer:  writer,
 			verbose: verbose,
+			params:  r.Params,
 		}
 		from := time.Now()
 		defer func() {

@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	flow := &taskflow.Taskflow{}
+	flow := taskflow.New()
 
 	// tasks
 	clean := flow.MustRegister(taskClean())
@@ -20,10 +20,10 @@ func main() {
 	modTidy := flow.MustRegister(taskModTidy())
 	diff := flow.MustRegister(taskDiff())
 
-	// pipelines
-	dev := flow.MustRegister(taskflow.Task{
-		Name:        "dev",
-		Description: "dev build pipeline",
+	// pipeline
+	flow.MustRegister(taskflow.Task{
+		Name:        "all",
+		Description: "build pipeline",
 		Dependencies: taskflow.Deps{
 			clean,
 			install,
@@ -32,14 +32,6 @@ func main() {
 			lint,
 			test,
 			modTidy,
-		},
-	})
-
-	flow.MustRegister(taskflow.Task{
-		Name:        "ci",
-		Description: "CI build pipeline",
-		Dependencies: taskflow.Deps{
-			dev,
 			diff,
 		},
 	})
@@ -134,6 +126,10 @@ func taskDiff() taskflow.Task {
 		Name:        "diff",
 		Description: "git diff",
 		Command: func(tf *taskflow.TF) {
+			if tf.Params()["ci"] == "" {
+				tf.Skipf("ci param is not set, skipping")
+			}
+
 			if err := tf.Cmd("git", "diff", "--exit-code").Run(); err != nil {
 				tf.Errorf("git diff: %v", err)
 			}
