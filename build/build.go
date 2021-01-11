@@ -126,7 +126,9 @@ func taskDiff() taskflow.Task {
 		Name:        "diff",
 		Description: "git diff",
 		Command: func(tf *taskflow.TF) {
-			if tf.Params()["ci"] == "" {
+			if isCI, err := tf.Params().Bool("ci"); err != nil {
+				tf.Fatalf(err.Error())
+			} else if !isCI {
 				tf.Skipf("ci param is not set, skipping")
 			}
 
