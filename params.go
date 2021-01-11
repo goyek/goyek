@@ -6,20 +6,29 @@ import (
 	"time"
 )
 
-// ParamNotSetError records an error indicating that a parameter is not set.
-type ParamNotSetError struct {
-	Key string
+// ErrParamNotSet indicates that a parameter is not set.
+var ErrParamNotSet = errors.New("not set")
+
+// ParamError records an error during parameter conversion.
+type ParamError struct {
+	Key string // the parameter's key
+	Err error  // the reason the conversion failed (e.g. ErrParamNotSet, *strconv.NumError, etc.)
 }
 
-func (err *ParamNotSetError) Error() string {
-	return "parameter " + strconv.Quote(err.Key) + " is not set"
+func (e *ParamError) Error() string {
+	return "taskflow: parameter " + strconv.Quote(e.Key) + ": " + e.Err.Error()
 }
 
 // IsParamNotSet returns a boolean indicating that a parameter is not set.
-// It checks if ErrParamNotSet is present in the error chain.
 func IsParamNotSet(err error) bool {
-	var e *ParamNotSetError
-	return errors.As(err, &e)
+	var e *ParamError
+	return errors.As(err, &e) && e.Err == ErrParamNotSet
+}
+
+// IsParamInvalid returns a boolean indicating that a parameter has invalid syntax.
+func IsParamInvalid(err error) bool {
+	var e *ParamError
+	return errors.As(err, &e) && e.Err != ErrParamNotSet
 }
 
 // Params represents Taskflow parameters used within Taskflow.
@@ -32,10 +41,13 @@ type Params map[string]string
 func (p Params) Int(key string) (int, error) {
 	v := p[key]
 	if v == "" {
-		return 0, &ParamNotSetError{Key: key}
+		return 0, &ParamError{Key: key, Err: ErrParamNotSet}
 	}
 	i, err := strconv.ParseInt(v, 0, strconv.IntSize)
-	return int(i), err
+	if err != nil {
+		return 0, &ParamError{Key: key, Err: err}
+	}
+	return int(i), nil
 }
 
 // Bool converts the parameter to bool.
@@ -48,7 +60,11 @@ func (p Params) Bool(key string) (bool, error) {
 	if v == "" {
 		return false, nil
 	}
-	return strconv.ParseBool(v)
+	b, err := strconv.ParseBool(v)
+	if err != nil {
+		return false, &ParamError{Key: key, Err: err}
+	}
+	return b, nil
 }
 
 // Float64 converts the parameter to float64 accepting decimal and hexadecimal floating-point number syntax.
@@ -57,9 +73,13 @@ func (p Params) Bool(key string) (bool, error) {
 func (p Params) Float64(key string) (float64, error) {
 	v := p[key]
 	if v == "" {
-		return 0, &ParamNotSetError{Key: key}
+		return 0, &ParamError{Key: key, Err: ErrParamNotSet}
 	}
-	return strconv.ParseFloat(v, 64)
+	f, err := strconv.ParseFloat(v, 64)
+	if err != nil {
+		return 0, &ParamError{Key: key, Err: err}
+	}
+	return f, nil
 }
 
 // Duration converts the parameter to time.Duration using time.ParseDuration.
@@ -72,7 +92,11 @@ func (p Params) Float64(key string) (float64, error) {
 func (p Params) Duration(key string) (time.Duration, error) {
 	v := p[key]
 	if v == "" {
-		return 0, &ParamNotSetError{Key: key}
+		return 0, &ParamError{Key: key, Err: ErrParamNotSet}
 	}
-	return time.ParseDuration(v)
+	d, err := time.ParseDuration(v)
+	if err != nil {
+		return 0, &ParamError{Key: key, Err: err}
+	}
+	return d, nil
 }

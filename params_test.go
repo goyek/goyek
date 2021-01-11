@@ -76,7 +76,7 @@ func Test_params_Int_invalid(t *testing.T) {
 
 	got, err := tf.Params().Int("x")
 
-	assert.Error(t, err, "should tell that it failed to parse the value")
+	assert.True(t, taskflow.IsParamInvalid(err), "should tell that parameter was not set")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
@@ -121,7 +121,7 @@ func Test_params_Float64_missing(t *testing.T) {
 
 	got, err := tf.Params().Float64("x")
 
-	assert.EqualError(t, err, "parameter \"x\" is not set", "should tell that parameter was not set")
+	assert.EqualError(t, err, "taskflow: parameter \"x\": not set", "should tell that parameter was not set")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
