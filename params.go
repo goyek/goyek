@@ -22,18 +22,6 @@ func (e *ParamError) Error() string {
 // Unwrap unpacks the wrapped error.
 func (e *ParamError) Unwrap() error { return e.Err }
 
-// IsParamNotSet returns a boolean indicating that a parameter is not set.
-func IsParamNotSet(err error) bool {
-	var e *ParamError
-	return errors.As(err, &e) && e.Err == ErrParamNotSet
-}
-
-// IsParamInvalid returns a boolean indicating that a parameter has invalid syntax.
-func IsParamInvalid(err error) bool {
-	var e *ParamError
-	return errors.As(err, &e) && e.Err != ErrParamNotSet
-}
-
 // Params represents Taskflow parameters used within Taskflow.
 // The default values set in the struct are overridden in Run method.
 type Params map[string]string

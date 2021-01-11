@@ -2,6 +2,7 @@ package taskflow_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -67,7 +68,7 @@ func Test_params_Int_missing(t *testing.T) {
 
 	got, err := tf.Params().Int("x")
 
-	assert.True(t, taskflow.IsParamNotSet(err), "should tell that parameter was not set")
+	assert.True(t, errors.Is(err, taskflow.ErrParamNotSet), "should tell that parameter was not set")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
@@ -76,7 +77,7 @@ func Test_params_Int_invalid(t *testing.T) {
 
 	got, err := tf.Params().Int("x")
 
-	assert.True(t, taskflow.IsParamInvalid(err), "should tell that parameter was not set")
+	assert.False(t, errors.Is(err, taskflow.ErrParamNotSet), "should tell that it failed to parse the value")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
@@ -148,7 +149,7 @@ func Test_params_Duration_missing(t *testing.T) {
 
 	got, err := tf.Params().Duration("x")
 
-	assert.True(t, taskflow.IsParamNotSet(err), "should tell that parameter was not set")
+	assert.True(t, errors.Is(err, taskflow.ErrParamNotSet), "should tell that parameter was not set")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
