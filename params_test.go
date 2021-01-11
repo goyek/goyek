@@ -94,8 +94,8 @@ func Test_params_Bool_missing(t *testing.T) {
 
 	got, err := tf.Params().Bool("x")
 
-	assert.EqualError(t, err, "parameter \"x\" is not set", "should tell that parameter was not set")
-	assert.Zero(t, got, "should return proper parameter value")
+	assert.NoError(t, err, "should not return any error")
+	assert.Equal(t, false, got, "should return false as the default value")
 }
 
 func Test_params_Bool_invalid(t *testing.T) {
@@ -121,7 +121,7 @@ func Test_params_Float64_missing(t *testing.T) {
 
 	got, err := tf.Params().Float64("x")
 
-	assert.True(t, taskflow.IsParamNotSet(err), "should tell that parameter was not set")
+	assert.EqualError(t, err, "parameter \"x\" is not set", "should tell that parameter was not set")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
