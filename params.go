@@ -6,8 +6,21 @@ import (
 	"time"
 )
 
-// ErrParamNotSet indicates that a parameter is not set.
-var ErrParamNotSet = errors.New("parameter is not set")
+// ParamNotSetError records an error indicating that a parameter is not set.
+type ParamNotSetError struct {
+	Key string
+}
+
+func (err *ParamNotSetError) Error() string {
+	return "parameter " + strconv.Quote(err.Key) + " is not set"
+}
+
+// IsParamNotSet returns a boolean indicating that a parameter is not set.
+// It checks if ErrParamNotSet is present in the error chain.
+func IsParamNotSet(err error) bool {
+	var e *ParamNotSetError
+	return errors.As(err, &e)
+}
 
 // Params represents Taskflow parameters used within Taskflow.
 // The default values set in the struct are overridden in Run method.
@@ -19,7 +32,7 @@ type Params map[string]string
 func (p Params) Int(key string) (int, error) {
 	v := p[key]
 	if v == "" {
-		return 0, ErrParamNotSet
+		return 0, &ParamNotSetError{Key: key}
 	}
 	i, err := strconv.ParseInt(v, 0, strconv.IntSize)
 	return int(i), err
@@ -33,7 +46,7 @@ func (p Params) Int(key string) (int, error) {
 func (p Params) Bool(key string) (bool, error) {
 	v := p[key]
 	if v == "" {
-		return false, ErrParamNotSet
+		return false, &ParamNotSetError{Key: key}
 	}
 	return strconv.ParseBool(v)
 }
@@ -44,7 +57,7 @@ func (p Params) Bool(key string) (bool, error) {
 func (p Params) Float64(key string) (float64, error) {
 	v := p[key]
 	if v == "" {
-		return 0, ErrParamNotSet
+		return 0, &ParamNotSetError{Key: key}
 	}
 	return strconv.ParseFloat(v, 64)
 }
@@ -59,7 +72,7 @@ func (p Params) Float64(key string) (float64, error) {
 func (p Params) Duration(key string) (time.Duration, error) {
 	v := p[key]
 	if v == "" {
-		return 0, ErrParamNotSet
+		return 0, &ParamNotSetError{Key: key}
 	}
 	return time.ParseDuration(v)
 }

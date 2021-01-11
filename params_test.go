@@ -67,7 +67,7 @@ func Test_params_Int_missing(t *testing.T) {
 
 	got, err := tf.Params().Int("x")
 
-	assert.Equal(t, taskflow.ErrParamNotSet, err, "should tell that parameter was not set")
+	assert.True(t, taskflow.IsParamNotSet(err), "should tell that parameter was not set")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
@@ -94,7 +94,7 @@ func Test_params_Bool_missing(t *testing.T) {
 
 	got, err := tf.Params().Bool("x")
 
-	assert.Equal(t, taskflow.ErrParamNotSet, err, "should tell that parameter was not set")
+	assert.EqualError(t, err, "parameter \"x\" is not set", "should tell that parameter was not set")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
@@ -121,7 +121,7 @@ func Test_params_Float64_missing(t *testing.T) {
 
 	got, err := tf.Params().Float64("x")
 
-	assert.Equal(t, taskflow.ErrParamNotSet, err, "should tell that parameter was not set")
+	assert.True(t, taskflow.IsParamNotSet(err), "should tell that parameter was not set")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
@@ -148,7 +148,7 @@ func Test_params_Duration_missing(t *testing.T) {
 
 	got, err := tf.Params().Duration("x")
 
-	assert.Equal(t, taskflow.ErrParamNotSet, err, "should tell that parameter was not set")
+	assert.True(t, taskflow.IsParamNotSet(err), "should tell that parameter was not set")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
