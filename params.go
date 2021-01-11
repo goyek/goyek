@@ -12,7 +12,7 @@ var ErrParamNotSet = errors.New("parameter is not set")
 // The default values set in the struct are overridden in Run method.
 type Params map[string]string
 
-// Int converts the parameter to int using the same logic as flag package.
+// Int converts the parameter to int using the Go syntax for integer literals.
 // ErrParamNotSet error is returned if the parameter was not set.
 // *strconv.NumError error is returned if the parameter conversion failed.
 func (p Params) Int(key string) (int, error) {
