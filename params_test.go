@@ -43,13 +43,22 @@ func Test_params(t *testing.T) {
 	assert.Equal(t, want, got, "should return proper parameters")
 }
 
-func Test_params_Int_valid(t *testing.T) {
+func Test_params_Int_valid_dec(t *testing.T) {
 	tf := testTF(t, "x=10")
 
 	got, err := tf.Params().Int("x")
 
 	assert.NoError(t, err, "should parse the value")
 	assert.Equal(t, 10, got, "should return proper parameter value")
+}
+
+func Test_params_Int_valid_binary(t *testing.T) {
+	tf := testTF(t, "x=0b10")
+
+	got, err := tf.Params().Int("x")
+
+	assert.NoError(t, err, "should parse the value")
+	assert.Equal(t, 2, got, "should return proper parameter value")
 }
 
 func Test_params_Int_missing(t *testing.T) {
