@@ -36,3 +36,14 @@ func (p Params) Bool(key string) (bool, error) {
 	}
 	return strconv.ParseBool(v)
 }
+
+// Float64 converts the parameter to float accepting decimal and hexadecimal floating-point number syntax.
+// ErrParamNotSet error is returned if the parameter was not set.
+// *strconv.NumError error is returned if the parameter conversion failed.
+func (p Params) Float64(key string) (float64, error) {
+	v := p[key]
+	if v == "" {
+		return 0, ErrParamNotSet
+	}
+	return strconv.ParseFloat(v, 64)
+}
