@@ -3,6 +3,7 @@ package taskflow_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -128,6 +129,33 @@ func Test_params_Float64_invalid(t *testing.T) {
 	tf := testTF(t, "x=abc")
 
 	got, err := tf.Params().Float64("x")
+
+	assert.Error(t, err, "should tell that it failed to parse the value")
+	assert.Zero(t, got, "should return proper parameter value")
+}
+
+func Test_params_Duration_valid(t *testing.T) {
+	tf := testTF(t, "x=1m")
+
+	got, err := tf.Params().Duration("x")
+
+	assert.NoError(t, err, "should parse the value")
+	assert.Equal(t, time.Minute, got, "should return proper parameter value")
+}
+
+func Test_params_Duration_missing(t *testing.T) {
+	tf := testTF(t)
+
+	got, err := tf.Params().Duration("x")
+
+	assert.Equal(t, taskflow.ErrParamNotSet, err, "should tell that parameter was not set")
+	assert.Zero(t, got, "should return proper parameter value")
+}
+
+func Test_params_Duration_invalid(t *testing.T) {
+	tf := testTF(t, "x=abc")
+
+	got, err := tf.Params().Duration("x")
 
 	assert.Error(t, err, "should tell that it failed to parse the value")
 	assert.Zero(t, got, "should return proper parameter value")
