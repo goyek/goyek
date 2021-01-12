@@ -8,7 +8,7 @@ import (
 // ParamError records an error during parameter conversion.
 type ParamError struct {
 	Key string // the parameter's key
-	Err error  // the reason the conversion failed (e.g. ErrParamNotSet, *strconv.NumError, etc.)
+	Err error  // the reason the conversion failure, e.g. *strconv.NumError
 }
 
 func (e *ParamError) Error() string {
