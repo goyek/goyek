@@ -138,6 +138,8 @@ The parameters can be set via CLI using `key=val` syntax after CLI flags. For ex
 
 Default values can be assigned via `Params` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
 
+[`type Params`](https://pkg.go.dev/github.com/pellared/taskflow#Params) contains convenient conversion methods like [`func (p Params) Int(key string) (int, error)`](https://pkg.go.dev/github.com/pellared/taskflow#Params.Int).
+
 ### Helpers for running programs
 
 Use [`func Exec(name string, args ...string) func(*TF)`](https://pkg.go.dev/github.com/pellared/taskflow#Exec) to create a task's command which only runs a single program.
