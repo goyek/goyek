@@ -1,10 +1,12 @@
 # taskflow
+> Create build pipelines in Go
 
 [![go.dev](https://img.shields.io/badge/go.dev-reference-blue.svg)](https://pkg.go.dev/github.com/pellared/taskflow)
 [![go.mod](https://img.shields.io/github/go-mod/go-version/pellared/taskflow)](go.mod)
 [![Build Status](https://img.shields.io/github/workflow/status/pellared/taskflow/build)](https://github.com/pellared/taskflow/actions?query=workflow%3Abuild+branch%3Amaster)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pellared/taskflow)](https://goreportcard.com/report/github.com/pellared/taskflow)
 [![codecov](https://codecov.io/gh/pellared/taskflow/branch/master/graph/badge.svg)](https://codecov.io/gh/pellared/taskflow)
+
 
 This package aims to simplify the creation of build pipelines in Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
 
@@ -16,9 +18,12 @@ I am open to any feedback and contribution. Use [Discussions](https://github.com
 
 `Star` this repository if you find it valuable and worth maintaining.
 
+
 ## Example
 
-Paste the following code to `build/build.go`:
+Create a file in your project `build/build.go`.
+
+Copy and paste the content from below.
 
 ```go
 package main
@@ -78,10 +83,14 @@ Tasks:
   all     build pipeline
   fmt     go fmt
   test    go test with race detector and code covarage
+```
 
+```shell
 $ go run ./build all
 ok     0.453s
+```
 
+```shell
 $ go run ./build -v all
 ===== TASK  fmt
 Exec: go fmt ./...
@@ -94,27 +103,36 @@ Exec: go tool cover -html=coverage.out -o coverage.html
 ok      0.176s
 ```
 
-Tired of writing `go run ./build` each time? Just add an alias to your shell. For example by adding the line below to `~/.bash_aliases`:
+Tired of writing `go run ./build` each time? Just add an alias to your shell. For example, add the line below to `~/.bash_aliases`:
 
 ```shell
 alias gake='go run ./build'
 ```
 
-Additionally, take a look at the dogfooding [build pipeline](build/build.go).
+Additionally, take a look at this project's own build pipeline script - [build.go](build/build.go).
 
 ## Features
 
 ### Task registration
 
-The registered tasks are required to have a non-empty name. For future compatibility, it is strongly suggested to use only the following characters: letters (`a-z` and `A-Z`), digits (`0-9`), underscode (`_`), hyphen (`-`). Do not use equals character (`=`) as it is resvered for assigning parameters. A task which a given name can be only registered once. 
+The registered tasks are required to have a non-empty name. For future compatibility, it is strongly suggested to use only the following characters: 
+
+- letters (`a-z` and `A-Z`)
+- digits (`0-9`)
+- underscore (`_`)
+- hyphens (`-`)
+
+Do not use the equals sign (`=`) as it is used for assigning parameters. 
+
+A task with a given name can be only registered once. 
 
 ### Task dependencies
 
-During task registration it is possible to add a dependency to an already registered task. When taskflow is processed, it makes sure that the dependency is executed before current task is run. Take notice that each task will be executed at most once.
+During task registration it is possible to add a dependency to an already registered task. When taskflow is processed, it makes sure that the dependency is executed before the current task is run. Take note that each task will be executed at most once.
 
 ### Task command
 
-Task command is a function which is executed when a task is executed.  It is not required to to set a command. Not having a command is very handy when registering "pipelines".
+Task command is a function which is executed when a task is executed. It is not required to to set a command. Not having a command is very handy when registering "pipelines".
 
 ### Task runner
 
@@ -122,11 +140,11 @@ You can use [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runn
 
 ### Verbose mode
 
-Verbose mode which works like for `go test`. When enabled, test output is streamed when go test -v is used. If disabled, only logs from failed task are send to output.
+Verbose mode which works the same as for `go test`. When enabled, the test output will be streamed when `go test -v` is used. If disabled, only logs from failed task are send to the output.
 
-Verbose mode for the whole task flow can be set via CLI flag by setting `-v` or by setting `Verbose` to `true` in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
+Set verbose mode for the whole application using the `-v` CLI flag. Or set `Verbose` to `true` in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
 
-It is also possible to set the Verbose mode for the [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner) which can be used when testing or debugging a single task's command.
+It is also possible to set the Verbose mode for the [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner). That can be used when testing or debugging a single task's command.
 
 Use [`func (*TF) Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Verbose) to check if verbose mode was set within the task's command.
 
@@ -134,7 +152,7 @@ Use [`func (*TF) Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Ve
 
 The task commands can get the parameters using [`func (*TF) Params`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Params). 
 
-The parameters can be set via CLI using `key=val` syntax after CLI flags. For example `go run ./build -v ci=true all` would run the `all` task with `ci` parameter set to `"true"` in verbose mode.
+The parameters can be set via CLI using the `key=val` syntax after CLI flags. For example, `go run ./build -v ci=true all` would run the `all` task with `ci` parameter set to `"true"` in verbose mode.
 
 Default values can be assigned via `Params` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
 
@@ -152,26 +170,28 @@ Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.
 
 No, it is in experimental phase.
 
-### Why not to use Make
+### Why not use Make?
 
-While [Make](https://www.gnu.org/software/make/) is currently de facto standard, it has some pitfalls:
+While [Make](https://www.gnu.org/software/make/) is currently the _de facto_ standard, it has some pitfalls:
 
-- Requires to learn Make which is not so easy.
+- Requires to learn Make, which is not so easy.
 - It is hard to develop a Makefile which is truly cross-platform.
 - Debugging and testing Make targets is not fun.
 
 However, if you (and your team) know Make and are happy with it, do not change it.
+
 Make is very powerful and a lot of stuff can be made a lot faster, if you know how to use it.
 
 **taskflow** is intended to be simpler and easier to learn, while still being able to handle most use cases.
 
-### Why not to use Mage
+### Why not use Mage?
 
 **taskflow** is intended to be an alternative to [Mage](https://github.com/magefile/mage).
 
 [Mage](https://github.com/magefile/mage) is a framework/tool which magically discovers the [targets](https://magefile.org/targets/) from [magefiles](https://magefile.org/magefiles/).
 
 **taskflow** takes a different approach as it is a regular Go library (package).
+
 This results in following benefits:
 
 - It is easy to debug. Like a regular Go application.
@@ -181,7 +201,7 @@ This results in following benefits:
 
 To sum up, **taskflow** is not magical. Write regular Go code. No build tags or special names for functions.
 
-### Why not to use Task
+### Why not use Task?
 
 While [Task](https://taskfile.dev/) is simpler and easier to use than [Make](https://www.gnu.org/software/make/) it still has some problems:
 
@@ -190,7 +210,7 @@ While [Task](https://taskfile.dev/) is simpler and easier to use than [Make](htt
 - Harder to make some reusable tasks.
 - Requires to "install" the tool. **taskflow** leverages `go run` and Go Modules so that you can be sure that everyone uses the same version of **taskflow**.
 
-### Why not to use Bazel
+### Why not use Bazel?
 
 [Bazel](https://bazel.build/) is a very sophisticated tool which is [created to efficiently handle complex and long-running build pipelines](https://en.wikipedia.org/wiki/Bazel_(software)#Rationale). It requires the build target inputs and outputs to be fully specified. 
 
