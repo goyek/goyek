@@ -92,6 +92,27 @@ func (p Params) Duration(key string) (time.Duration, error) {
 	return d, nil
 }
 
+// Date converts the parameter to time.Time using time.Parse.
+// The layout defines the format by showing how the reference time,
+// defined to be
+//	Mon Jan 2 15:04:05 -0700 MST 2006
+// would be interpreted if it were the value; it serves as an example of
+// the input format. The same interpretation will then be made to the
+// input string.
+// Zero value is returned if the parameter was not set.
+// An error is also returned if the parameter conversion failed.
+func (p Params) Date(key string, layout string) (time.Time, error) {
+	v := p[key]
+	if v == "" {
+		return time.Time{}, nil
+	}
+	d, err := time.Parse(layout, v)
+	if err != nil {
+		return time.Time{}, &ParamError{Key: key, Err: err}
+	}
+	return d, nil
+}
+
 // ParseText parses the parameter and stores the result
 // in the value pointed to by v by using its UnmarshalText method.
 // If v is nil or not a pointer, ParseText returns an error.

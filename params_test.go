@@ -165,6 +165,33 @@ func Test_params_Duration_invalid(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
+func Test_params_Date_valid(t *testing.T) {
+	tf := testTF(t, "x=2000-03-05")
+
+	got, err := tf.Params().Date("x", "2006-01-02")
+
+	assert.NoError(t, err, "should parse the value")
+	assert.Equal(t, time.Date(2000, 3, 5, 0, 0, 0, 0, time.UTC), got, "should return proper parameter value")
+}
+
+func Test_params_Date_missing(t *testing.T) {
+	tf := testTF(t)
+
+	got, err := tf.Params().Date("x", "2006-01-02")
+
+	assert.NoError(t, err, "should not return any error")
+	assert.Zero(t, got, "should return proper parameter value")
+}
+
+func Test_params_Date_invalid(t *testing.T) {
+	tf := testTF(t, "x=abc")
+
+	got, err := tf.Params().Date("x", "2006-01-02")
+
+	assert.Error(t, err, "should tell that it failed to parse the value")
+	assert.Zero(t, got, "should return proper parameter value")
+}
+
 func Test_params_ParseText_valid(t *testing.T) {
 	tf := testTF(t, "x=2000-03-05T13:20:00Z")
 
