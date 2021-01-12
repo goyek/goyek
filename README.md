@@ -109,7 +109,7 @@ Tired of writing `go run ./build` each time? Just add an alias to your shell. Fo
 alias gake='go run ./build'
 ```
 
-Additionally, take a look at this project'ss own build pipeline script - [build.go](build/build.go).
+Additionally, take a look at this project's own build pipeline script - [build.go](build/build.go).
 
 ## Features
 
