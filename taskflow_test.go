@@ -2,7 +2,6 @@ package taskflow_test
 
 import (
 	"context"
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,10 +9,6 @@ import (
 
 	"github.com/pellared/taskflow"
 )
-
-func init() {
-	taskflow.DefaultOutput = ioutil.Discard
-}
 
 func Test_Register(t *testing.T) {
 	testCases := []struct {
@@ -245,39 +240,6 @@ func Test_empty_command(t *testing.T) {
 	assert.Equal(t, 0, exitCode, "should pass")
 }
 
-func Test_verbose(t *testing.T) {
-	flow := &taskflow.Taskflow{}
-	var got bool
-	flow.MustRegister(taskflow.Task{
-		Name: "task",
-		Command: func(tf *taskflow.TF) {
-			got = tf.Verbose()
-		},
-	})
-
-	exitCode := flow.Run(context.Background(), "-v", "task")
-
-	assert.Equal(t, 0, exitCode, "should pass")
-	assert.True(t, got, "should return proper Verbose value")
-}
-
-func Test_name(t *testing.T) {
-	flow := &taskflow.Taskflow{}
-	taskName := "task"
-	var got string
-	flow.MustRegister(taskflow.Task{
-		Name: taskName,
-		Command: func(tf *taskflow.TF) {
-			got = tf.Name()
-		},
-	})
-
-	exitCode := flow.Run(context.Background(), "-v", "task")
-
-	assert.Equal(t, 0, exitCode, "should pass")
-	assert.Equal(t, taskName, got, "should return proper Name value")
-}
-
 func Test_invalid_args(t *testing.T) {
 	flow := &taskflow.Taskflow{}
 	flow.MustRegister(taskflow.Task{
@@ -317,44 +279,27 @@ func Test_invalid_args(t *testing.T) {
 	}
 }
 
-func Test_params(t *testing.T) {
+func Test_name(t *testing.T) {
 	flow := &taskflow.Taskflow{}
-	var got taskflow.Params
+	taskName := "my-named-task"
+	var got string
 	flow.MustRegister(taskflow.Task{
-		Name: "task",
+		Name: taskName,
 		Command: func(tf *taskflow.TF) {
-			got = tf.Params()
+			got = tf.Name()
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "x=1", "task")
+	exitCode := flow.Run(context.Background(), "-v", taskName)
 
-	want := taskflow.Params{
-		"x": "1",
-	}
 	assert.Equal(t, 0, exitCode, "should pass")
-	assert.Equal(t, want, got, "should return proper parameters")
+	assert.Equal(t, taskName, got, "should return proper Name value")
 }
 
-func Test_default_params(t *testing.T) {
-	flow := taskflow.New()
-	flow.Params["x"] = "1"
-	flow.Params["z"] = "0"
-	var got taskflow.Params
-	flow.MustRegister(taskflow.Task{
-		Name: "task",
-		Command: func(tf *taskflow.TF) {
-			got = tf.Params()
-		},
-	})
+func Test_verbose(t *testing.T) {
+	tf := testTF(t, "-v")
 
-	exitCode := flow.Run(context.Background(), "y=2", "z=3", "task")
+	got := tf.Verbose()
 
-	want := taskflow.Params{
-		"x": "1",
-		"y": "2",
-		"z": "3",
-	}
-	assert.Equal(t, 0, exitCode, "should pass")
-	assert.Equal(t, want, got, "should return proper parameters")
+	assert.True(t, got, "should return proper Verbose value")
 }
