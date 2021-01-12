@@ -1,13 +1,9 @@
 package taskflow
 
 import (
-	"errors"
 	"strconv"
 	"time"
 )
-
-// ErrParamNotSet indicates that a parameter is not set.
-var ErrParamNotSet = errors.New("not set")
 
 // ParamError records an error during parameter conversion.
 type ParamError struct {
@@ -27,12 +23,12 @@ func (e *ParamError) Unwrap() error { return e.Err }
 type Params map[string]string
 
 // Int converts the parameter to int using the Go syntax for integer literals.
-// ErrParamNotSet error is returned if the parameter was not set.
+// 0 is returned if the parameter was not set.
 // *strconv.NumError error is returned if the parameter conversion failed.
 func (p Params) Int(key string) (int, error) {
 	v := p[key]
 	if v == "" {
-		return 0, &ParamError{Key: key, Err: ErrParamNotSet}
+		return 0, nil
 	}
 	i, err := strconv.ParseInt(v, 0, strconv.IntSize)
 	if err != nil {
@@ -59,12 +55,12 @@ func (p Params) Bool(key string) (bool, error) {
 }
 
 // Float64 converts the parameter to float64 accepting decimal and hexadecimal floating-point number syntax.
-// ErrParamNotSet error is returned if the parameter was not set.
+// 0 is returned if the parameter was not set.
 // *strconv.NumError error is returned if the parameter conversion failed.
 func (p Params) Float64(key string) (float64, error) {
 	v := p[key]
 	if v == "" {
-		return 0, &ParamError{Key: key, Err: ErrParamNotSet}
+		return 0, nil
 	}
 	f, err := strconv.ParseFloat(v, 64)
 	if err != nil {
@@ -78,12 +74,12 @@ func (p Params) Float64(key string) (float64, error) {
 // decimal numbers, each with optional fraction and a unit suffix,
 // such as "300ms", "-1.5h" or "2h45m".
 // Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
-// ErrParamNotSet error is returned if the parameter was not set.
+// 0 is returned if the parameter was not set.
 // An error is also returned if the parameter conversion failed.
 func (p Params) Duration(key string) (time.Duration, error) {
 	v := p[key]
 	if v == "" {
-		return 0, &ParamError{Key: key, Err: ErrParamNotSet}
+		return 0, nil
 	}
 	d, err := time.ParseDuration(v)
 	if err != nil {

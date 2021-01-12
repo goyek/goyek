@@ -3,6 +3,7 @@ package taskflow_test
 import (
 	"context"
 	"errors"
+	"strconv"
 	"testing"
 	"time"
 
@@ -68,7 +69,7 @@ func Test_params_Int_missing(t *testing.T) {
 
 	got, err := tf.Params().Int("x")
 
-	assert.True(t, errors.Is(err, taskflow.ErrParamNotSet), "should tell that parameter was not set")
+	assert.NoError(t, err, "should not return any error")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
@@ -77,7 +78,7 @@ func Test_params_Int_invalid(t *testing.T) {
 
 	got, err := tf.Params().Int("x")
 
-	assert.False(t, errors.Is(err, taskflow.ErrParamNotSet), "should tell that it failed to parse the value")
+	assert.Error(t, err, "should tell that it failed to parse the value")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
@@ -104,7 +105,7 @@ func Test_params_Bool_invalid(t *testing.T) {
 
 	got, err := tf.Params().Bool("x")
 
-	assert.Error(t, err, "should tell that it failed to parse the value")
+	assert.EqualError(t, err, "taskflow: parameter \"x\": strconv.ParseBool: parsing \"abc\": invalid syntax", "should tell that it failed to parse the value")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
@@ -122,7 +123,7 @@ func Test_params_Float64_missing(t *testing.T) {
 
 	got, err := tf.Params().Float64("x")
 
-	assert.EqualError(t, err, "taskflow: parameter \"x\": not set", "should tell that parameter was not set")
+	assert.NoError(t, err, "should not return any error")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
@@ -131,7 +132,8 @@ func Test_params_Float64_invalid(t *testing.T) {
 
 	got, err := tf.Params().Float64("x")
 
-	assert.Error(t, err, "should tell that it failed to parse the value")
+	var paramErr *strconv.NumError
+	assert.True(t, errors.As(err, &paramErr), "should tell that it failed to parse the value")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
@@ -149,7 +151,7 @@ func Test_params_Duration_missing(t *testing.T) {
 
 	got, err := tf.Params().Duration("x")
 
-	assert.True(t, errors.Is(err, taskflow.ErrParamNotSet), "should tell that parameter was not set")
+	assert.NoError(t, err, "should not return any error")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
