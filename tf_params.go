@@ -22,14 +22,13 @@ func (e *ParamError) Error() string {
 // Unwrap unpacks the wrapped error.
 func (e *ParamError) Unwrap() error { return e.Err }
 
-// Params represents Taskflow parameters used within Taskflow.
-// The default values set in the struct are overridden in Run method.
-type Params map[string]string
+// TFParams represents Taskflow parameters accessible in task's command.
+type TFParams map[string]string
 
 // Int converts the parameter to int using the Go syntax for integer literals.
 // 0 is returned if the parameter was not set.
 // *strconv.NumError error is returned if the parameter conversion failed.
-func (p Params) Int(key string) (int, error) {
+func (p TFParams) Int(key string) (int, error) {
 	v := p[key]
 	if v == "" {
 		return 0, nil
@@ -46,7 +45,7 @@ func (p Params) Int(key string) (int, error) {
 // False is returned if the parameter was not set.
 // Any other value returns an error.
 // *strconv.NumError error is returned if the parameter conversion failed.
-func (p Params) Bool(key string) (bool, error) {
+func (p TFParams) Bool(key string) (bool, error) {
 	v := p[key]
 	if v == "" {
 		return false, nil
@@ -61,7 +60,7 @@ func (p Params) Bool(key string) (bool, error) {
 // Float64 converts the parameter to float64 accepting decimal and hexadecimal floating-point number syntax.
 // 0 is returned if the parameter was not set.
 // *strconv.NumError error is returned if the parameter conversion failed.
-func (p Params) Float64(key string) (float64, error) {
+func (p TFParams) Float64(key string) (float64, error) {
 	v := p[key]
 	if v == "" {
 		return 0, nil
@@ -80,7 +79,7 @@ func (p Params) Float64(key string) (float64, error) {
 // Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 // 0 is returned if the parameter was not set.
 // An error is also returned if the parameter conversion failed.
-func (p Params) Duration(key string) (time.Duration, error) {
+func (p TFParams) Duration(key string) (time.Duration, error) {
 	v := p[key]
 	if v == "" {
 		return 0, nil
@@ -101,7 +100,7 @@ func (p Params) Duration(key string) (time.Duration, error) {
 // input string.
 // Zero value is returned if the parameter was not set.
 // An error is also returned if the parameter conversion failed.
-func (p Params) Date(key string, layout string) (time.Time, error) {
+func (p TFParams) Date(key string, layout string) (time.Time, error) {
 	v := p[key]
 	if v == "" {
 		return time.Time{}, nil
@@ -117,7 +116,7 @@ func (p Params) Date(key string, layout string) (time.Time, error) {
 // in the value pointed to by v by using its UnmarshalText method.
 // If v is nil or not a pointer, ParseText returns an error.
 // An error is also returned if unmarshalling failed.
-func (p Params) ParseText(key string, v encoding.TextUnmarshaler) error {
+func (p TFParams) ParseText(key string, v encoding.TextUnmarshaler) error {
 	if v == nil {
 		return &ParamError{Key: key, Err: errors.New("nil passed to ParseText")}
 	}
@@ -140,7 +139,7 @@ func (p Params) ParseText(key string, v encoding.TextUnmarshaler) error {
 // in the value pointed to by v by using json.Unmarshal.
 // If v is nil or not a pointer, ParseJSON returns an error.
 // An error is also returned if unmarshalling failed.
-func (p Params) ParseJSON(key string, v interface{}) error {
+func (p TFParams) ParseJSON(key string, v interface{}) error {
 	if v == nil {
 		return &ParamError{Key: key, Err: errors.New("nil passed to ParseJSON")}
 	}

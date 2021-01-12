@@ -1,4 +1,5 @@
 # taskflow
+
 > Create build pipelines in Go
 
 [![go.dev](https://img.shields.io/badge/go.dev-reference-blue.svg)](https://pkg.go.dev/github.com/pellared/taskflow)
@@ -6,7 +7,6 @@
 [![Build Status](https://img.shields.io/github/workflow/status/pellared/taskflow/build)](https://github.com/pellared/taskflow/actions?query=workflow%3Abuild+branch%3Amaster)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pellared/taskflow)](https://goreportcard.com/report/github.com/pellared/taskflow)
 [![codecov](https://codecov.io/gh/pellared/taskflow/branch/master/graph/badge.svg)](https://codecov.io/gh/pellared/taskflow)
-
 
 This package aims to simplify the creation of build pipelines in Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
 
@@ -17,7 +17,6 @@ Check [Go Build Pipeline Demo](https://github.com/pellared/go-build-pipeline-dem
 I am open to any feedback and contribution. Use [Discussions](https://github.com/pellared/taskflow/discussions) or write to me: *Robert Pajak* @ [Gophers Slack](https://invite.slack.golangbridge.org/).
 
 `Star` this repository if you find it valuable and worth maintaining.
-
 
 ## Example
 
@@ -115,16 +114,16 @@ Additionally, take a look at this project's own build pipeline script - [build.g
 
 ### Task registration
 
-The registered tasks are required to have a non-empty name. For future compatibility, it is strongly suggested to use only the following characters: 
+The registered tasks are required to have a non-empty name. For future compatibility, it is strongly suggested to use only the following characters:
 
 - letters (`a-z` and `A-Z`)
 - digits (`0-9`)
 - underscore (`_`)
 - hyphens (`-`)
 
-Do not use the equals sign (`=`) as it is used for assigning parameters. 
+Do not use the equals sign (`=`) as it is used for assigning parameters.
 
-A task with a given name can be only registered once. 
+A task with a given name can be only registered once.
 
 ### Task dependencies
 
@@ -136,27 +135,25 @@ Task command is a function which is executed when a task is executed. It is not 
 
 ### Task runner
 
-You can use [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner) for testing the execution of a single command. It may be handy e.g. during development of a new task, when debugging some issue or if you want to have a test suite for your reusable commands.
+You can use [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner) to execute a single command.
+
+It may be handy during development of a new task, when debugging some issue or if you want to have a test suite for reusable commands.
 
 ### Verbose mode
 
-Verbose mode which works the same as for `go test`. When enabled, the test output will be streamed when `go test -v` is used. If disabled, only logs from failed task are send to the output.
-
-Set verbose mode for the whole application using the `-v` CLI flag. Or set `Verbose` to `true` in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
-
-It is also possible to set the Verbose mode for the [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner). That can be used when testing or debugging a single task's command.
+Enable verbose output using the `-v` CLI flag. It works similar to `go test -v`. When enabled, the whole output will be streamed. If disabled, only logs from failed task are send to the output.
 
 Use [`func (*TF) Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Verbose) to check if verbose mode was set within the task's command.
 
 ### Parameters
 
-The task commands can get the parameters using [`func (*TF) Params`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Params). 
+The task commands can get the parameters using [`func (*TF) Params`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Params).
 
 The parameters can be set via CLI using the `key=val` syntax after CLI flags. For example, `go run ./build -v ci=true all` would run the `all` task with `ci` parameter set to `"true"` in verbose mode.
 
-Default values can be assigned via `Params` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
+[`type TFParams`](https://pkg.go.dev/github.com/pellared/taskflow#TFParams) contains convenient conversion methods like [`func (p TFParams) Int(key string) (int, error)`](https://pkg.go.dev/github.com/pellared/taskflow#TFParams.Int).
 
-[`type Params`](https://pkg.go.dev/github.com/pellared/taskflow#Params) contains convenient conversion methods like [`func (p Params) Int(key string) (int, error)`](https://pkg.go.dev/github.com/pellared/taskflow#Params.Int).
+Default values can be assigned via `Params` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
 
 ### Helpers for running programs
 
@@ -212,7 +209,7 @@ While [Task](https://taskfile.dev/) is simpler and easier to use than [Make](htt
 
 ### Why not use Bazel?
 
-[Bazel](https://bazel.build/) is a very sophisticated tool which is [created to efficiently handle complex and long-running build pipelines](https://en.wikipedia.org/wiki/Bazel_(software)#Rationale). It requires the build target inputs and outputs to be fully specified. 
+[Bazel](https://bazel.build/) is a very sophisticated tool which is [created to efficiently handle complex and long-running build pipelines](https://en.wikipedia.org/wiki/Bazel_(software)#Rationale). It requires the build target inputs and outputs to be fully specified.
 
 **taskflow** is just a simple library that is mainly supposed to create a build pipeline consisting of commands like `go vet`, `go test`, `go build`. However, take notice that **taskflow** is a library. Nothing prevents you from, for example, using [Mage's target package](https://pkg.go.dev/github.com/magefile/mage/target) to make your build pipeline more efficient.
 

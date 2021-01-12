@@ -23,14 +23,17 @@ var DefaultOutput io.Writer = os.Stdout
 // Taskflow is the root type of the package.
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
-// By default Taskflow prints to Stdout, but it can be change by setting Output.
 type Taskflow struct {
-	Output  io.Writer
-	Params  Params
-	Verbose bool
+	Output  io.Writer // output where text is printed; os.Stdout by default
+	Params  Params    // default parameters' values
+	Verbose bool      // when enabled, then the whole output will be always streamed
 
 	tasks map[string]Task
 }
+
+// Params represents Taskflow parameters used within Taskflow.
+// The default values set in the struct are overridden in Run method.
+type Params map[string]string
 
 // RegisteredTask represents a task that has been registered to a Taskflow.
 // It can be used as a dependency for another Task.
@@ -38,7 +41,7 @@ type RegisteredTask struct {
 	name string
 }
 
-// New return a valid instance of Taskflow with DefaultOutput and initized Params.
+// New return an instance of Taskflow with initialized fields.
 func New() *Taskflow {
 	return &Taskflow{
 		Output: DefaultOutput,

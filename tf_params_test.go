@@ -17,7 +17,7 @@ func Test_default_params(t *testing.T) {
 	flow := taskflow.New()
 	flow.Params["x"] = "1"
 	flow.Params["z"] = "0"
-	var got taskflow.Params
+	var got taskflow.TFParams
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
@@ -27,7 +27,7 @@ func Test_default_params(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "y=2", "z=3", "task")
 
-	want := taskflow.Params{
+	want := taskflow.TFParams{
 		"x": "1",
 		"y": "2",
 		"z": "3",
@@ -41,7 +41,7 @@ func Test_params(t *testing.T) {
 
 	got := tf.Params()
 
-	want := taskflow.Params{
+	want := taskflow.TFParams{
 		"x": "1",
 	}
 	assert.Equal(t, want, got, "should return proper parameters")
