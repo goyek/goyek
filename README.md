@@ -21,7 +21,9 @@ I am open to any feedback and contribution. Use [Discussions](https://github.com
 
 ## Example
 
-Paste the following code in `build/build.go`:
+Create a file in your project `build/build.go`.
+
+Copy and paste the content from below.
 
 ```go
 package main
@@ -126,11 +128,11 @@ A task with a given name can be only registered once.
 
 ### Task dependencies
 
-During task registration it is possible to add a dependency to an already registered task. When taskflow is processed, it makes sure that the dependency is executed before current task is run. Take notice that each task will be executed at most once.
+During task registration it is possible to add a dependency to an already registered task. When taskflow is processed, it makes sure that the dependency is executed before the current task is run. Take note that each task will be executed at most once.
 
 ### Task command
 
-Task command is a function which is executed when a task is executed.  It is not required to to set a command. Not having a command is very handy when registering "pipelines".
+Task command is a function which is executed when a task is executed. It is not required to to set a command. Not having a command is very handy when registering "pipelines".
 
 ### Task runner
 
@@ -138,11 +140,11 @@ You can use [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runn
 
 ### Verbose mode
 
-Verbose mode which works like for `go test`. When enabled, test output is streamed when go test -v is used. If disabled, only logs from failed task are send to output.
+Verbose mode which works the same as for `go test`. When enabled, the test output will be streamed when `go test -v` is used. If disabled, only logs from failed task are send to the output.
 
-Verbose mode for the whole task flow can be set via CLI flag by setting `-v` or by setting `Verbose` to `true` in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
+Set verbose mode for the whole application using the `-v` CLI flag. Or set `Verbose` to `true` in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
 
-It is also possible to set the Verbose mode for the [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner) which can be used when testing or debugging a single task's command.
+It is also possible to set the Verbose mode for the [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner). That can be used when testing or debugging a single task's command.
 
 Use [`func (*TF) Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Verbose) to check if verbose mode was set within the task's command.
 
@@ -150,7 +152,7 @@ Use [`func (*TF) Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Ve
 
 The task commands can get the parameters using [`func (*TF) Params`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Params). 
 
-The parameters can be set via CLI using `key=val` syntax after CLI flags. For example `go run ./build -v ci=true all` would run the `all` task with `ci` parameter set to `"true"` in verbose mode.
+The parameters can be set the via CLI using `key=val` syntax after CLI flags. For example, `go run ./build -v ci=true all` would run the `all` task with `ci` parameter set to `"true"` in verbose mode.
 
 Default values can be assigned via `Params` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
 
@@ -168,7 +170,7 @@ No, it is in experimental phase.
 
 ### Why not use Make?
 
-While [Make](https://www.gnu.org/software/make/) is currently the de facto standard, it has some pitfalls:
+While [Make](https://www.gnu.org/software/make/) is currently the _de facto_ standard, it has some pitfalls:
 
 - Requires to learn Make, which is not so easy.
 - It is hard to develop a Makefile which is truly cross-platform.
