@@ -165,51 +165,51 @@ func Test_params_Duration_invalid(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_UnmarshalText_valid(t *testing.T) {
+func Test_params_ParseText_valid(t *testing.T) {
 	tf := testTF(t, "x=2000-03-05T13:20:00Z")
 
 	var got time.Time
-	err := tf.Params().UnmarshalText("x", &got)
+	err := tf.Params().ParseText("x", &got)
 
 	assert.NoError(t, err, "should parse the value")
 	assert.Equal(t, time.Date(2000, 3, 5, 13, 20, 0, 0, time.UTC), got, "should return proper parameter value")
 }
 
-func Test_params_UnmarshalText_missing(t *testing.T) {
+func Test_params_ParseText_missing(t *testing.T) {
 	tf := testTF(t)
 
 	var got time.Time
-	err := tf.Params().UnmarshalText("x", &got)
+	err := tf.Params().ParseText("x", &got)
 
 	assert.NoError(t, err, "should not return any error")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_UnmarshalText_invalid(t *testing.T) {
+func Test_params_ParseText_invalid(t *testing.T) {
 	tf := testTF(t, "x=abc")
 
 	var got time.Time
-	err := tf.Params().UnmarshalText("x", &got)
+	err := tf.Params().ParseText("x", &got)
 
 	assert.Error(t, err, "should tell that it failed to parse the value")
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_UnmarshalText_nil(t *testing.T) {
-	tf := testTF(t, "x=abc")
+func Test_params_ParseText_nil(t *testing.T) {
+	tf := testTF(t, "x=2000-03-05T13:20:00Z")
 
 	var got encoding.TextUnmarshaler
-	err := tf.Params().UnmarshalText("x", got)
+	err := tf.Params().ParseText("x", got)
 
 	assert.Error(t, err, "should tell that it failed to parse the value")
 	assert.Nil(t, got, "should return proper parameter value")
 }
 
-func Test_params_UnmarshalText_non_ptr(t *testing.T) {
-	tf := testTF(t, "x=abc")
+func Test_params_ParseText_non_ptr(t *testing.T) {
+	tf := testTF(t, "x=2000-03-05T13:20:00Z")
 
 	var got nonPtrTextUnmarshaler
-	err := tf.Params().UnmarshalText("x", got)
+	err := tf.Params().ParseText("x", got)
 
 	assert.Error(t, err, "should tell that it failed to parse the value")
 	assert.Zero(t, got, "should return proper parameter value")
@@ -219,4 +219,56 @@ type nonPtrTextUnmarshaler struct{}
 
 func (nonPtrTextUnmarshaler) UnmarshalText([]byte) error {
 	return nil
+}
+
+func Test_params_ParseJSON_valid(t *testing.T) {
+	tf := testTF(t, `x={ "A" : "abc" }`)
+
+	var got x
+	err := tf.Params().ParseJSON("x", &got)
+
+	assert.NoError(t, err, "should parse the value")
+	assert.Equal(t, x{A: "abc"}, got, "should return proper parameter value")
+}
+
+func Test_params_ParseJSON_missing(t *testing.T) {
+	tf := testTF(t)
+
+	var got x
+	err := tf.Params().ParseJSON("x", &got)
+
+	assert.NoError(t, err, "should not return any error")
+	assert.Zero(t, got, "should return proper parameter value")
+}
+
+func Test_params_ParseJSON_invalid(t *testing.T) {
+	tf := testTF(t, "x=abc")
+
+	var got x
+	err := tf.Params().ParseJSON("x", &got)
+
+	assert.Error(t, err, "should tell that it failed to parse the value")
+	assert.Zero(t, got, "should return proper parameter value")
+}
+
+func Test_params_ParseJSON_nil(t *testing.T) {
+	tf := testTF(t, `x={ "A" : "abc" }`)
+
+	err := tf.Params().ParseJSON("x", nil)
+
+	assert.Error(t, err, "should tell that it failed to parse the value")
+}
+
+func Test_params_ParseJSON_non_ptr(t *testing.T) {
+	tf := testTF(t, `x={ "A" : "abc" }`)
+
+	var got x
+	err := tf.Params().ParseJSON("x", got)
+
+	assert.Error(t, err, "should tell that it failed to parse the value")
+	assert.Zero(t, got, "should return proper parameter value")
+}
+
+type x struct {
+	A string
 }

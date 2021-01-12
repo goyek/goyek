@@ -2,6 +2,7 @@ package taskflow
 
 import (
 	"encoding"
+	"encoding/json"
 	"errors"
 	"reflect"
 	"strconv"
@@ -91,17 +92,17 @@ func (p Params) Duration(key string) (time.Duration, error) {
 	return d, nil
 }
 
-// UnmarshalText parses the parameter and stores the result
+// ParseText parses the parameter and stores the result
 // in the value pointed to by v by using its UnmarshalText method.
-// If v is nil or not a pointer, Unmarshal returns an error.
-// An error is also returned if UnmarshalText failed.
-func (p Params) UnmarshalText(key string, v encoding.TextUnmarshaler) error {
+// If v is nil or not a pointer, ParseText returns an error.
+// An error is also returned if unmarshalling failed.
+func (p Params) ParseText(key string, v encoding.TextUnmarshaler) error {
 	if v == nil {
-		return &ParamError{Key: key, Err: errors.New("nil passed to UnmarshalText")}
+		return &ParamError{Key: key, Err: errors.New("nil passed to ParseText")}
 	}
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr {
-		return &ParamError{Key: key, Err: errors.New("non-pointer variable passed to UnmarshalText")}
+		return &ParamError{Key: key, Err: errors.New("non-pointer variable passed to ParseText")}
 	}
 
 	s := p[key]
@@ -109,6 +110,29 @@ func (p Params) UnmarshalText(key string, v encoding.TextUnmarshaler) error {
 		return nil
 	}
 	if err := v.UnmarshalText([]byte(s)); err != nil {
+		return &ParamError{Key: key, Err: err}
+	}
+	return nil
+}
+
+// ParseJSON parses the parameter and stores the result
+// in the value pointed to by v by using json.Unmarshal.
+// If v is nil or not a pointer, ParseJSON returns an error.
+// An error is also returned if unmarshalling failed.
+func (p Params) ParseJSON(key string, v interface{}) error {
+	if v == nil {
+		return &ParamError{Key: key, Err: errors.New("nil passed to ParseJSON")}
+	}
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Ptr {
+		return &ParamError{Key: key, Err: errors.New("non-pointer variable passed to ParseJSON")}
+	}
+
+	s := p[key]
+	if s == "" {
+		return nil
+	}
+	if err := json.Unmarshal([]byte(s), v); err != nil {
 		return &ParamError{Key: key, Err: err}
 	}
 	return nil
