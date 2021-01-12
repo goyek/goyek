@@ -1,6 +1,9 @@
 package taskflow
 
 import (
+	"encoding"
+	"errors"
+	"reflect"
 	"strconv"
 	"time"
 )
@@ -86,4 +89,27 @@ func (p Params) Duration(key string) (time.Duration, error) {
 		return 0, &ParamError{Key: key, Err: err}
 	}
 	return d, nil
+}
+
+// UnmarshalText parses the parameter and stores the result
+// in the value pointed to by v by using its UnmarshalText method.
+// If v is nil or not a pointer, Unmarshal returns an error.
+// An error is also returned if UnmarshalText failed.
+func (p Params) UnmarshalText(key string, v encoding.TextUnmarshaler) error {
+	if v == nil {
+		return &ParamError{Key: key, Err: errors.New("nil passed to UnmarshalText")}
+	}
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Ptr {
+		return &ParamError{Key: key, Err: errors.New("non-pointer variable passed to UnmarshalText")}
+	}
+
+	s := p[key]
+	if s == "" {
+		return nil
+	}
+	if err := v.UnmarshalText([]byte(s)); err != nil {
+		return &ParamError{Key: key, Err: err}
+	}
+	return nil
 }
