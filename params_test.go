@@ -2,6 +2,7 @@ package taskflow_test
 
 import (
 	"context"
+	"encoding"
 	"errors"
 	"strconv"
 	"testing"
@@ -162,4 +163,60 @@ func Test_params_Duration_invalid(t *testing.T) {
 
 	assert.Error(t, err, "should tell that it failed to parse the value")
 	assert.Zero(t, got, "should return proper parameter value")
+}
+
+func Test_params_UnmarshalText_valid(t *testing.T) {
+	tf := testTF(t, "x=2000-03-05T13:20:00Z")
+
+	var got time.Time
+	err := tf.Params().UnmarshalText("x", &got)
+
+	assert.NoError(t, err, "should parse the value")
+	assert.Equal(t, time.Date(2000, 3, 5, 13, 20, 0, 0, time.UTC), got, "should return proper parameter value")
+}
+
+func Test_params_UnmarshalText_missing(t *testing.T) {
+	tf := testTF(t)
+
+	var got time.Time
+	err := tf.Params().UnmarshalText("x", &got)
+
+	assert.NoError(t, err, "should not return any error")
+	assert.Zero(t, got, "should return proper parameter value")
+}
+
+func Test_params_UnmarshalText_invalid(t *testing.T) {
+	tf := testTF(t, "x=abc")
+
+	var got time.Time
+	err := tf.Params().UnmarshalText("x", &got)
+
+	assert.Error(t, err, "should tell that it failed to parse the value")
+	assert.Zero(t, got, "should return proper parameter value")
+}
+
+func Test_params_UnmarshalText_nil(t *testing.T) {
+	tf := testTF(t, "x=abc")
+
+	var got encoding.TextUnmarshaler
+	err := tf.Params().UnmarshalText("x", got)
+
+	assert.Error(t, err, "should tell that it failed to parse the value")
+	assert.Nil(t, got, "should return proper parameter value")
+}
+
+func Test_params_UnmarshalText_non_ptr(t *testing.T) {
+	tf := testTF(t, "x=abc")
+
+	var got nonPtrTextUnmarshaler
+	err := tf.Params().UnmarshalText("x", got)
+
+	assert.Error(t, err, "should tell that it failed to parse the value")
+	assert.Zero(t, got, "should return proper parameter value")
+}
+
+type nonPtrTextUnmarshaler struct{}
+
+func (nonPtrTextUnmarshaler) UnmarshalText([]byte) error {
+	return nil
 }
