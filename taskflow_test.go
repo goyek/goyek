@@ -306,8 +306,8 @@ func Test_verbose(t *testing.T) {
 
 func Test_params(t *testing.T) {
 	flow := taskflow.New()
-	flow.Params["x"] = "1"
-	flow.Params["z"] = "0"
+	flow.Params.SetInt("x", 1)
+	flow.Params["z"] = "abc"
 	var got taskflow.TFParams
 	flow.MustRegister(taskflow.Task{
 		Name: "task",

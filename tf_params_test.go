@@ -12,7 +12,7 @@ import (
 	"github.com/pellared/taskflow"
 )
 
-func Test_params_simple(t *testing.T) {
+func Test_TFParams_simple(t *testing.T) {
 	tf := testTF(t, "x=1")
 
 	got := tf.Params()
@@ -23,7 +23,7 @@ func Test_params_simple(t *testing.T) {
 	assert.Equal(t, want, got, "should return proper parameters")
 }
 
-func Test_params_Int_valid_dec(t *testing.T) {
+func Test_TFParams_Int_valid_dec(t *testing.T) {
 	tf := testTF(t, "x=10")
 
 	got, err := tf.Params().Int("x")
@@ -32,7 +32,7 @@ func Test_params_Int_valid_dec(t *testing.T) {
 	assert.Equal(t, 10, got, "should return proper parameter value")
 }
 
-func Test_params_Int_valid_binary(t *testing.T) {
+func Test_TFParams_Int_valid_binary(t *testing.T) {
 	tf := testTF(t, "x=0b10")
 
 	got, err := tf.Params().Int("x")
@@ -41,7 +41,7 @@ func Test_params_Int_valid_binary(t *testing.T) {
 	assert.Equal(t, 2, got, "should return proper parameter value")
 }
 
-func Test_params_Int_missing(t *testing.T) {
+func Test_TFParams_Int_missing(t *testing.T) {
 	tf := testTF(t)
 
 	got, err := tf.Params().Int("x")
@@ -50,7 +50,7 @@ func Test_params_Int_missing(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_Int_invalid(t *testing.T) {
+func Test_TFParams_Int_invalid(t *testing.T) {
 	tf := testTF(t, "x=abc")
 
 	got, err := tf.Params().Int("x")
@@ -59,7 +59,7 @@ func Test_params_Int_invalid(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_Bool_valid(t *testing.T) {
+func Test_TFParams_Bool_valid(t *testing.T) {
 	tf := testTF(t, "x=true")
 
 	got, err := tf.Params().Bool("x")
@@ -68,7 +68,7 @@ func Test_params_Bool_valid(t *testing.T) {
 	assert.Equal(t, true, got, "should return proper parameter value")
 }
 
-func Test_params_Bool_missing(t *testing.T) {
+func Test_TFParams_Bool_missing(t *testing.T) {
 	tf := testTF(t)
 
 	got, err := tf.Params().Bool("x")
@@ -77,7 +77,7 @@ func Test_params_Bool_missing(t *testing.T) {
 	assert.Equal(t, false, got, "should return false as the default value")
 }
 
-func Test_params_Bool_invalid(t *testing.T) {
+func Test_TFParams_Bool_invalid(t *testing.T) {
 	tf := testTF(t, "x=abc")
 
 	got, err := tf.Params().Bool("x")
@@ -86,7 +86,7 @@ func Test_params_Bool_invalid(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_Float64_valid(t *testing.T) {
+func Test_TFParams_Float64_valid(t *testing.T) {
 	tf := testTF(t, "x=1.2")
 
 	got, err := tf.Params().Float64("x")
@@ -95,7 +95,7 @@ func Test_params_Float64_valid(t *testing.T) {
 	assert.Equal(t, 1.2, got, "should return proper parameter value")
 }
 
-func Test_params_Float64_missing(t *testing.T) {
+func Test_TFParams_Float64_missing(t *testing.T) {
 	tf := testTF(t)
 
 	got, err := tf.Params().Float64("x")
@@ -104,7 +104,7 @@ func Test_params_Float64_missing(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_Float64_invalid(t *testing.T) {
+func Test_TFParams_Float64_invalid(t *testing.T) {
 	tf := testTF(t, "x=abc")
 
 	got, err := tf.Params().Float64("x")
@@ -114,7 +114,7 @@ func Test_params_Float64_invalid(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_Duration_valid(t *testing.T) {
+func Test_TFParams_Duration_valid(t *testing.T) {
 	tf := testTF(t, "x=1m")
 
 	got, err := tf.Params().Duration("x")
@@ -123,7 +123,7 @@ func Test_params_Duration_valid(t *testing.T) {
 	assert.Equal(t, time.Minute, got, "should return proper parameter value")
 }
 
-func Test_params_Duration_missing(t *testing.T) {
+func Test_TFParams_Duration_missing(t *testing.T) {
 	tf := testTF(t)
 
 	got, err := tf.Params().Duration("x")
@@ -132,7 +132,7 @@ func Test_params_Duration_missing(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_Duration_invalid(t *testing.T) {
+func Test_TFParams_Duration_invalid(t *testing.T) {
 	tf := testTF(t, "x=abc")
 
 	got, err := tf.Params().Duration("x")
@@ -141,7 +141,7 @@ func Test_params_Duration_invalid(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_Date_valid(t *testing.T) {
+func Test_TFParams_Date_valid(t *testing.T) {
 	tf := testTF(t, "x=2000-03-05")
 
 	got, err := tf.Params().Date("x", "2006-01-02")
@@ -150,7 +150,7 @@ func Test_params_Date_valid(t *testing.T) {
 	assert.Equal(t, time.Date(2000, 3, 5, 0, 0, 0, 0, time.UTC), got, "should return proper parameter value")
 }
 
-func Test_params_Date_missing(t *testing.T) {
+func Test_TFParams_Date_missing(t *testing.T) {
 	tf := testTF(t)
 
 	got, err := tf.Params().Date("x", "2006-01-02")
@@ -159,7 +159,7 @@ func Test_params_Date_missing(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_Date_invalid(t *testing.T) {
+func Test_TFParams_Date_invalid(t *testing.T) {
 	tf := testTF(t, "x=abc")
 
 	got, err := tf.Params().Date("x", "2006-01-02")
@@ -168,7 +168,7 @@ func Test_params_Date_invalid(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_ParseText_valid(t *testing.T) {
+func Test_TFParams_ParseText_valid(t *testing.T) {
 	tf := testTF(t, "x=2000-03-05T13:20:00Z")
 
 	var got time.Time
@@ -178,7 +178,7 @@ func Test_params_ParseText_valid(t *testing.T) {
 	assert.Equal(t, time.Date(2000, 3, 5, 13, 20, 0, 0, time.UTC), got, "should return proper parameter value")
 }
 
-func Test_params_ParseText_missing(t *testing.T) {
+func Test_TFParams_ParseText_missing(t *testing.T) {
 	tf := testTF(t)
 
 	var got time.Time
@@ -188,7 +188,7 @@ func Test_params_ParseText_missing(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_ParseText_invalid(t *testing.T) {
+func Test_TFParams_ParseText_invalid(t *testing.T) {
 	tf := testTF(t, "x=abc")
 
 	var got time.Time
@@ -198,7 +198,7 @@ func Test_params_ParseText_invalid(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_ParseText_nil(t *testing.T) {
+func Test_TFParams_ParseText_nil(t *testing.T) {
 	tf := testTF(t, "x=2000-03-05T13:20:00Z")
 
 	var got encoding.TextUnmarshaler
@@ -208,7 +208,7 @@ func Test_params_ParseText_nil(t *testing.T) {
 	assert.Nil(t, got, "should return proper parameter value")
 }
 
-func Test_params_ParseText_non_ptr(t *testing.T) {
+func Test_TFParams_ParseText_non_ptr(t *testing.T) {
 	tf := testTF(t, "x=2000-03-05T13:20:00Z")
 
 	var got nonPtrTextUnmarshaler
@@ -224,7 +224,7 @@ func (nonPtrTextUnmarshaler) UnmarshalText([]byte) error {
 	return nil
 }
 
-func Test_params_ParseJSON_valid(t *testing.T) {
+func Test_TFParams_ParseJSON_valid(t *testing.T) {
 	tf := testTF(t, `x={ "A" : "abc" }`)
 
 	var got x
@@ -234,7 +234,7 @@ func Test_params_ParseJSON_valid(t *testing.T) {
 	assert.Equal(t, x{A: "abc"}, got, "should return proper parameter value")
 }
 
-func Test_params_ParseJSON_missing(t *testing.T) {
+func Test_TFParams_ParseJSON_missing(t *testing.T) {
 	tf := testTF(t)
 
 	var got x
@@ -244,7 +244,7 @@ func Test_params_ParseJSON_missing(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_ParseJSON_invalid(t *testing.T) {
+func Test_TFParams_ParseJSON_invalid(t *testing.T) {
 	tf := testTF(t, "x=abc")
 
 	var got x
@@ -254,7 +254,7 @@ func Test_params_ParseJSON_invalid(t *testing.T) {
 	assert.Zero(t, got, "should return proper parameter value")
 }
 
-func Test_params_ParseJSON_nil(t *testing.T) {
+func Test_TFParams_ParseJSON_nil(t *testing.T) {
 	tf := testTF(t, `x={ "A" : "abc" }`)
 
 	err := tf.Params().ParseJSON("x", nil)
@@ -262,7 +262,7 @@ func Test_params_ParseJSON_nil(t *testing.T) {
 	assert.Error(t, err, "should tell that it failed to parse the value")
 }
 
-func Test_params_ParseJSON_non_ptr(t *testing.T) {
+func Test_TFParams_ParseJSON_non_ptr(t *testing.T) {
 	tf := testTF(t, `x={ "A" : "abc" }`)
 
 	var got x
