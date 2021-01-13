@@ -1,7 +1,6 @@
 package taskflow_test
 
 import (
-	"context"
 	"encoding"
 	"errors"
 	"strconv"
@@ -13,30 +12,7 @@ import (
 	"github.com/pellared/taskflow"
 )
 
-func Test_default_params(t *testing.T) {
-	flow := taskflow.New()
-	flow.Params["x"] = "1"
-	flow.Params["z"] = "0"
-	var got taskflow.TFParams
-	flow.MustRegister(taskflow.Task{
-		Name: "task",
-		Command: func(tf *taskflow.TF) {
-			got = tf.Params()
-		},
-	})
-
-	exitCode := flow.Run(context.Background(), "y=2", "z=3", "task")
-
-	want := taskflow.TFParams{
-		"x": "1",
-		"y": "2",
-		"z": "3",
-	}
-	assert.Equal(t, 0, exitCode, "should pass")
-	assert.Equal(t, want, got, "should return proper parameters")
-}
-
-func Test_params(t *testing.T) {
+func Test_params_simple(t *testing.T) {
 	tf := testTF(t, "x=1")
 
 	got := tf.Params()
