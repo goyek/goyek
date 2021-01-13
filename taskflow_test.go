@@ -303,3 +303,26 @@ func Test_verbose(t *testing.T) {
 
 	assert.True(t, got, "should return proper Verbose value")
 }
+
+func Test_params(t *testing.T) {
+	flow := taskflow.New()
+	flow.Params.SetInt("x", 1)
+	flow.Params["z"] = "abc"
+	var got taskflow.TFParams
+	flow.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			got = tf.Params()
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "y=2", "z=3", "task")
+
+	want := taskflow.TFParams{
+		"x": "1",
+		"y": "2",
+		"z": "3",
+	}
+	assert.Equal(t, 0, exitCode, "should pass")
+	assert.Equal(t, want, got, "should return proper parameters")
+}
