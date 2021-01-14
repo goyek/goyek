@@ -2,6 +2,7 @@ package taskflow_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -116,7 +117,7 @@ func Test_dependency_failure(t *testing.T) {
 		Name: "task-1",
 		Command: func(tf *taskflow.TF) {
 			executed1++
-			tf.Errorf("it still runs")
+			tf.Error("it still runs")
 			executed1 += 10
 			tf.FailNow()
 			executed1 += 100
@@ -157,7 +158,7 @@ func Test_fail(t *testing.T) {
 			defer func() {
 				failed = tf.Failed()
 			}()
-			tf.Fatalf("failing")
+			tf.Fatal("failing")
 		},
 	})
 
@@ -176,7 +177,7 @@ func Test_skip(t *testing.T) {
 			defer func() {
 				skipped = tf.Skipped()
 			}()
-			tf.Skipf("skipping")
+			tf.Skip("skipping")
 		},
 	})
 
@@ -277,6 +278,41 @@ func Test_invalid_args(t *testing.T) {
 			assert.Equal(t, 2, exitCode, "should pass")
 		})
 	}
+}
+
+func Test_printing(t *testing.T) {
+	sb := &strings.Builder{}
+	flow := &taskflow.Taskflow{
+		Output:  sb,
+		Verbose: true,
+	}
+	skipped := flow.MustRegister(taskflow.Task{
+		Name: "skipped",
+		Command: func(tf *taskflow.TF) {
+			tf.Skipf("Skipf %d", 0)
+		},
+	})
+	flow.MustRegister(taskflow.Task{
+		Name:         "failing",
+		Dependencies: taskflow.Deps{skipped},
+		Command: func(tf *taskflow.TF) {
+			tf.Log("Log", 1)
+			tf.Logf("Logf %d", 2)
+			tf.Error("Error", 3)
+			tf.Errorf("Errorf %d", 4)
+			tf.Fatalf("Fatalf %d", 5)
+		},
+	})
+	t.Log()
+
+	flow.Run(context.Background(), "failing")
+
+	assert.Contains(t, sb.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
+	assert.Contains(t, sb.String(), `Log 1
+Logf 2
+Error 3
+Errorf 4
+Fatalf 5`, "should contain proper output from \"failing\" task")
 }
 
 func Test_name(t *testing.T) {

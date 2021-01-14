@@ -129,7 +129,7 @@ func taskDiff() taskflow.Task {
 			if isCI, err := tf.Params().Bool("ci"); err != nil {
 				tf.Fatalf(err.Error())
 			} else if !isCI {
-				tf.Skipf("ci param is not set, skipping")
+				tf.Skip("ci param is not set, skipping")
 			}
 
 			if err := tf.Cmd("git", "diff", "--exit-code").Run(); err != nil {
@@ -143,7 +143,7 @@ func taskDiff() taskflow.Task {
 				tf.Errorf("git status --porcelain: %v", err)
 			}
 			if sb.Len() > 0 {
-				tf.Errorf("git status --porcelain returned output")
+				tf.Error("git status --porcelain returned output")
 			}
 		},
 	}

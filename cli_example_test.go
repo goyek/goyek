@@ -14,15 +14,15 @@ func Example() {
 	task2 := flow.MustRegister(taskflow.Task{
 		Name: "task-2",
 		Command: func(tf *taskflow.TF) {
-			tf.Skipf("skipping")
+			tf.Skip("skipping")
 		},
 	})
 
 	task3 := flow.MustRegister(taskflow.Task{
 		Name: "task-3",
 		Command: func(tf *taskflow.TF) {
-			tf.Errorf("hello from " + tf.Name())
-			tf.Logf("this will be printed")
+			tf.Error("hello from", tf.Name())
+			tf.Log("this will be printed")
 		},
 	})
 
