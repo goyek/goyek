@@ -4,8 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/pellared/taskflow"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/pellared/taskflow"
 )
 
 func Test_ParamError(t *testing.T) {
