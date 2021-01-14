@@ -126,6 +126,8 @@ Do not use the equals sign (`=`) as it is used for assigning parameters.
 
 A task with a given name can be only registered once.
 
+A task without description is not listed in taskflow's CLI usage.
+
 ### Task dependencies
 
 During task registration it is possible to add a dependency to an already registered task. When taskflow is processed, it makes sure that the dependency is executed before the current task is run. Take note that each task will be executed at most once.
