@@ -2,8 +2,6 @@ package taskflow_test
 
 import (
 	"encoding"
-	"errors"
-	"strconv"
 	"testing"
 	"time"
 
@@ -12,210 +10,277 @@ import (
 	"github.com/pellared/taskflow"
 )
 
-func Test_TFParams_simple(t *testing.T) {
-	tf := testTF(t, "x=1")
-
-	got := tf.Params()
-
-	want := taskflow.TFParams{
-		"x": "1",
+func Test_TFParams_String(t *testing.T) {
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "1",
+		},
 	}
-	assert.Equal(t, want, got, "should return proper parameters")
+	r.Run(func(tf *taskflow.TF) {
+		got := tf.Params().String("x")
+
+		assert.Equal(t, "1", got, "should return proper parameters")
+	})
 }
 
 func Test_TFParams_Int_valid_dec(t *testing.T) {
-	tf := testTF(t, "x=10")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "10",
+		},
+	}
+	r.Run(func(tf *taskflow.TF) {
+		got := tf.Params().Int("x")
 
-	got, err := tf.Params().Int("x")
-
-	assert.NoError(t, err, "should parse the value")
-	assert.Equal(t, 10, got, "should return proper parameter value")
+		assert.Equal(t, 10, got, "should return proper parameter value")
+	})
 }
 
 func Test_TFParams_Int_valid_binary(t *testing.T) {
-	tf := testTF(t, "x=0b10")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "0b10",
+		},
+	}
+	r.Run(func(tf *taskflow.TF) {
+		got := tf.Params().Int("x")
 
-	got, err := tf.Params().Int("x")
-
-	assert.NoError(t, err, "should parse the value")
-	assert.Equal(t, 2, got, "should return proper parameter value")
+		assert.Equal(t, 2, got, "should return proper parameter value")
+	})
 }
 
 func Test_TFParams_Int_missing(t *testing.T) {
-	tf := testTF(t)
+	r := taskflow.Runner{}
+	result := r.Run(func(tf *taskflow.TF) {
+		got := tf.Params().Int("x")
 
-	got, err := tf.Params().Int("x")
-
-	assert.NoError(t, err, "should not return any error")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Zero(t, got, "should return proper parameter value")
+	})
+	assert.True(t, result.Passed(), "the command should pass")
 }
 
 func Test_TFParams_Int_invalid(t *testing.T) {
-	tf := testTF(t, "x=abc")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "abc",
+		},
+	}
+	result := r.Run(func(tf *taskflow.TF) {
+		tf.Params().Int("x")
 
-	got, err := tf.Params().Int("x")
-
-	assert.Error(t, err, "should tell that it failed to parse the value")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Fail(t, "should not reach this line")
+	})
+	assert.True(t, result.Failed(), "the command should fail")
 }
 
 func Test_TFParams_Bool_valid(t *testing.T) {
-	tf := testTF(t, "x=true")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "true",
+		},
+	}
+	r.Run(func(tf *taskflow.TF) {
+		got := tf.Params().Bool("x")
 
-	got, err := tf.Params().Bool("x")
-
-	assert.NoError(t, err, "should parse the value")
-	assert.Equal(t, true, got, "should return proper parameter value")
+		assert.Equal(t, true, got, "should return proper parameter value")
+	})
 }
 
 func Test_TFParams_Bool_missing(t *testing.T) {
-	tf := testTF(t)
+	r := taskflow.Runner{}
+	result := r.Run(func(tf *taskflow.TF) {
+		got := tf.Params().Bool("x")
 
-	got, err := tf.Params().Bool("x")
-
-	assert.NoError(t, err, "should not return any error")
-	assert.Equal(t, false, got, "should return false as the default value")
+		assert.Equal(t, false, got, "should return false as the default value")
+	})
+	assert.True(t, result.Passed(), "the command should pass")
 }
 
 func Test_TFParams_Bool_invalid(t *testing.T) {
-	tf := testTF(t, "x=abc")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "abc",
+		},
+	}
+	result := r.Run(func(tf *taskflow.TF) {
+		tf.Params().Bool("x")
 
-	got, err := tf.Params().Bool("x")
-
-	assert.EqualError(t, err, "taskflow: parameter \"x\": strconv.ParseBool: parsing \"abc\": invalid syntax", "should tell that it failed to parse the value")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Fail(t, "should not reach this line")
+	})
+	assert.True(t, result.Failed(), "the command should fail")
 }
 
 func Test_TFParams_Float64_valid(t *testing.T) {
-	tf := testTF(t, "x=1.2")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "1.2",
+		},
+	}
+	r.Run(func(tf *taskflow.TF) {
+		got := tf.Params().Float64("x")
 
-	got, err := tf.Params().Float64("x")
-
-	assert.NoError(t, err, "should parse the value")
-	assert.Equal(t, 1.2, got, "should return proper parameter value")
+		assert.Equal(t, 1.2, got, "should return proper parameter value")
+	})
 }
 
 func Test_TFParams_Float64_missing(t *testing.T) {
-	tf := testTF(t)
+	r := taskflow.Runner{}
+	result := r.Run(func(tf *taskflow.TF) {
+		got := tf.Params().Float64("x")
 
-	got, err := tf.Params().Float64("x")
-
-	assert.NoError(t, err, "should not return any error")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Zero(t, got, "should return proper parameter value")
+	})
+	assert.True(t, result.Passed(), "the command should pass")
 }
 
 func Test_TFParams_Float64_invalid(t *testing.T) {
-	tf := testTF(t, "x=abc")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "abc",
+		},
+	}
+	result := r.Run(func(tf *taskflow.TF) {
+		tf.Params().Float64("x")
 
-	got, err := tf.Params().Float64("x")
-
-	var paramErr *strconv.NumError
-	assert.True(t, errors.As(err, &paramErr), "should tell that it failed to parse the value")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Fail(t, "should not reach this line")
+	})
+	assert.True(t, result.Failed(), "the command should fail")
 }
 
 func Test_TFParams_Duration_valid(t *testing.T) {
-	tf := testTF(t, "x=1m")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "1m",
+		},
+	}
+	r.Run(func(tf *taskflow.TF) {
+		got := tf.Params().Duration("x")
 
-	got, err := tf.Params().Duration("x")
-
-	assert.NoError(t, err, "should parse the value")
-	assert.Equal(t, time.Minute, got, "should return proper parameter value")
+		assert.Equal(t, time.Minute, got, "should return proper parameter value")
+	})
 }
 
 func Test_TFParams_Duration_missing(t *testing.T) {
-	tf := testTF(t)
+	r := taskflow.Runner{}
+	result := r.Run(func(tf *taskflow.TF) {
+		got := tf.Params().Duration("x")
 
-	got, err := tf.Params().Duration("x")
-
-	assert.NoError(t, err, "should not return any error")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Zero(t, got, "should return proper parameter value")
+	})
+	assert.True(t, result.Passed(), "the command should pass")
 }
 
 func Test_TFParams_Duration_invalid(t *testing.T) {
-	tf := testTF(t, "x=abc")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "abc",
+		},
+	}
+	result := r.Run(func(tf *taskflow.TF) {
+		tf.Params().Duration("x")
 
-	got, err := tf.Params().Duration("x")
-
-	assert.Error(t, err, "should tell that it failed to parse the value")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Fail(t, "should not reach this line")
+	})
+	assert.True(t, result.Failed(), "the command should fail")
 }
 
 func Test_TFParams_Date_valid(t *testing.T) {
-	tf := testTF(t, "x=2000-03-05")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "2000-03-05",
+		},
+	}
+	r.Run(func(tf *taskflow.TF) {
+		got := tf.Params().Date("x", "2006-01-02")
 
-	got, err := tf.Params().Date("x", "2006-01-02")
-
-	assert.NoError(t, err, "should parse the value")
-	assert.Equal(t, time.Date(2000, 3, 5, 0, 0, 0, 0, time.UTC), got, "should return proper parameter value")
+		assert.Equal(t, time.Date(2000, 3, 5, 0, 0, 0, 0, time.UTC), got, "should return proper parameter value")
+	})
 }
 
 func Test_TFParams_Date_missing(t *testing.T) {
-	tf := testTF(t)
+	r := taskflow.Runner{}
+	result := r.Run(func(tf *taskflow.TF) {
+		got := tf.Params().Date("x", "2006-01-02")
 
-	got, err := tf.Params().Date("x", "2006-01-02")
-
-	assert.NoError(t, err, "should not return any error")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Zero(t, got, "should return proper parameter value")
+	})
+	assert.True(t, result.Passed(), "the command should pass")
 }
 
 func Test_TFParams_Date_invalid(t *testing.T) {
-	tf := testTF(t, "x=abc")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "abc",
+		},
+	}
+	result := r.Run(func(tf *taskflow.TF) {
+		tf.Params().Date("x", "2006-01-02")
 
-	got, err := tf.Params().Date("x", "2006-01-02")
-
-	assert.Error(t, err, "should tell that it failed to parse the value")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Fail(t, "should not reach this line")
+	})
+	assert.True(t, result.Failed(), "the command should fail")
 }
 
 func Test_TFParams_ParseText_valid(t *testing.T) {
-	tf := testTF(t, "x=2000-03-05T13:20:00Z")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "2000-03-05T13:20:00Z",
+		},
+	}
+	r.Run(func(tf *taskflow.TF) {
+		var got time.Time
+		tf.Params().ParseText("x", &got)
 
-	var got time.Time
-	err := tf.Params().ParseText("x", &got)
-
-	assert.NoError(t, err, "should parse the value")
-	assert.Equal(t, time.Date(2000, 3, 5, 13, 20, 0, 0, time.UTC), got, "should return proper parameter value")
+		assert.Equal(t, time.Date(2000, 3, 5, 13, 20, 0, 0, time.UTC), got, "should return proper parameter value")
+	})
 }
 
 func Test_TFParams_ParseText_missing(t *testing.T) {
-	tf := testTF(t)
+	r := taskflow.Runner{}
+	result := r.Run(func(tf *taskflow.TF) {
+		var got time.Time
+		tf.Params().ParseText("x", &got)
 
-	var got time.Time
-	err := tf.Params().ParseText("x", &got)
-
-	assert.NoError(t, err, "should not return any error")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Zero(t, got, "should return proper parameter value")
+	})
+	assert.True(t, result.Passed(), "the command should pass")
 }
 
 func Test_TFParams_ParseText_invalid(t *testing.T) {
-	tf := testTF(t, "x=abc")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "abc",
+		},
+	}
+	result := r.Run(func(tf *taskflow.TF) {
+		var got time.Time
+		tf.Params().ParseText("x", &got)
 
-	var got time.Time
-	err := tf.Params().ParseText("x", &got)
-
-	assert.Error(t, err, "should tell that it failed to parse the value")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Fail(t, "should not reach this line")
+	})
+	assert.True(t, result.Failed(), "the command should fail")
 }
 
 func Test_TFParams_ParseText_nil(t *testing.T) {
-	tf := testTF(t, "x=2000-03-05T13:20:00Z")
+	r := taskflow.Runner{}
+	result := r.Run(func(tf *taskflow.TF) {
+		var got encoding.TextUnmarshaler
+		tf.Params().ParseText("x", got)
 
-	var got encoding.TextUnmarshaler
-	err := tf.Params().ParseText("x", got)
-
-	assert.Error(t, err, "should tell that it failed to parse the value")
-	assert.Nil(t, got, "should return proper parameter value")
+		assert.Fail(t, "should not reach this line")
+	})
+	assert.True(t, result.Failed(), "the command should fail")
 }
 
 func Test_TFParams_ParseText_non_ptr(t *testing.T) {
-	tf := testTF(t, "x=2000-03-05T13:20:00Z")
+	r := taskflow.Runner{}
+	result := r.Run(func(tf *taskflow.TF) {
+		var got nonPtrTextUnmarshaler
+		tf.Params().ParseText("x", got)
 
-	var got nonPtrTextUnmarshaler
-	err := tf.Params().ParseText("x", got)
-
-	assert.Error(t, err, "should tell that it failed to parse the value")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Fail(t, "should not reach this line")
+	})
+	assert.True(t, result.Failed(), "the command should fail")
 }
 
 type nonPtrTextUnmarshaler struct{}
@@ -225,51 +290,64 @@ func (nonPtrTextUnmarshaler) UnmarshalText([]byte) error {
 }
 
 func Test_TFParams_ParseJSON_valid(t *testing.T) {
-	tf := testTF(t, `x={ "A" : "abc" }`)
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": `x={ "A" : "abc" }`,
+		},
+	}
+	r.Run(func(tf *taskflow.TF) {
+		var got x
+		tf.Params().ParseJSON("x", &got)
 
-	var got x
-	err := tf.Params().ParseJSON("x", &got)
-
-	assert.NoError(t, err, "should parse the value")
-	assert.Equal(t, x{A: "abc"}, got, "should return proper parameter value")
+		assert.Equal(t, x{A: "abc"}, got, "should return proper parameter value")
+	})
 }
 
 func Test_TFParams_ParseJSON_missing(t *testing.T) {
-	tf := testTF(t)
+	r := taskflow.Runner{}
+	result := r.Run(func(tf *taskflow.TF) {
+		var got x
+		tf.Params().ParseJSON("x", &got)
 
-	var got x
-	err := tf.Params().ParseJSON("x", &got)
-
-	assert.NoError(t, err, "should not return any error")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Zero(t, got, "should return proper parameter value")
+	})
+	assert.True(t, result.Passed(), "the command should pass")
 }
 
 func Test_TFParams_ParseJSON_invalid(t *testing.T) {
-	tf := testTF(t, "x=abc")
+	r := taskflow.Runner{
+		Params: taskflow.Params{
+			"x": "abc",
+		},
+	}
+	result := r.Run(func(tf *taskflow.TF) {
+		var got x
+		tf.Params().ParseJSON("x", &got)
 
-	var got x
-	err := tf.Params().ParseJSON("x", &got)
-
-	assert.Error(t, err, "should tell that it failed to parse the value")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Fail(t, "should not reach this line")
+	})
+	assert.True(t, result.Failed(), "the command should fail")
 }
 
 func Test_TFParams_ParseJSON_nil(t *testing.T) {
-	tf := testTF(t, `x={ "A" : "abc" }`)
+	r := taskflow.Runner{}
+	result := r.Run(func(tf *taskflow.TF) {
+		tf.Params().ParseJSON("x", nil)
 
-	err := tf.Params().ParseJSON("x", nil)
-
-	assert.Error(t, err, "should tell that it failed to parse the value")
+		assert.Fail(t, "should not reach this line")
+	})
+	assert.True(t, result.Failed(), "the command should fail")
 }
 
 func Test_TFParams_ParseJSON_non_ptr(t *testing.T) {
-	tf := testTF(t, `x={ "A" : "abc" }`)
+	r := taskflow.Runner{}
+	result := r.Run(func(tf *taskflow.TF) {
+		var got x
+		tf.Params().ParseJSON("x", got)
 
-	var got x
-	err := tf.Params().ParseJSON("x", got)
-
-	assert.Error(t, err, "should tell that it failed to parse the value")
-	assert.Zero(t, got, "should return proper parameter value")
+		assert.Fail(t, "should not reach this line")
+	})
+	assert.True(t, result.Failed(), "the command should fail")
 }
 
 type x struct {
