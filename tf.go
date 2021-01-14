@@ -41,7 +41,10 @@ func (tf *TF) Verbose() bool {
 
 // Params returns the key-value parameters.
 func (tf *TF) Params() TFParams {
-	return tf.params
+	return TFParams{
+		params: tf.params,
+		tf:     tf,
+	}
 }
 
 // Output returns the io.Writer used to print output.

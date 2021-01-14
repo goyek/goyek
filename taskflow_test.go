@@ -2,6 +2,7 @@ package taskflow_test
 
 import (
 	"context"
+	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -10,6 +11,10 @@ import (
 
 	"github.com/pellared/taskflow"
 )
+
+func init() {
+	taskflow.DefaultOutput = ioutil.Discard
+}
 
 func Test_Register(t *testing.T) {
 	testCases := []struct {
@@ -326,17 +331,25 @@ func Test_name(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "-v", taskName)
+	exitCode := flow.Run(context.Background(), taskName)
 
 	assert.Equal(t, 0, exitCode, "should pass")
 	assert.Equal(t, taskName, got, "should return proper Name value")
 }
 
 func Test_verbose(t *testing.T) {
-	tf := testTF(t, "-v")
+	flow := &taskflow.Taskflow{}
+	var got bool
+	flow.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			got = tf.Verbose()
+		},
+	})
 
-	got := tf.Verbose()
+	exitCode := flow.Run(context.Background(), "-v", "task")
 
+	assert.Equal(t, 0, exitCode, "should pass")
 	assert.True(t, got, "should return proper Verbose value")
 }
 
@@ -354,11 +367,8 @@ func Test_params(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "y=2", "z=3", "task")
 
-	want := taskflow.TFParams{
-		"x": "1",
-		"y": "2",
-		"z": "3",
-	}
 	assert.Equal(t, 0, exitCode, "should pass")
-	assert.Equal(t, want, got, "should return proper parameters")
+	assert.Equal(t, "1", got.String("x"), "x param")
+	assert.Equal(t, 2, got.Int("y"), "y param")
+	assert.Equal(t, 3.0, got.Float64("z"), "z param")
 }
