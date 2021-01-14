@@ -2,7 +2,7 @@
 
 > Create build pipelines in Go
 
-[![go.dev](https://img.shields.io/badge/go.dev-reference-blue.svg)](https://pkg.go.dev/github.com/pellared/taskflow)
+[![Go Reference](https://pkg.go.dev/badge/github.com/pellared/taskflow.svg)](https://pkg.go.dev/github.com/pellared/taskflow)
 [![go.mod](https://img.shields.io/github/go-mod/go-version/pellared/taskflow)](go.mod)
 [![Build Status](https://img.shields.io/github/workflow/status/pellared/taskflow/build)](https://github.com/pellared/taskflow/actions?query=workflow%3Abuild+branch%3Amaster)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pellared/taskflow)](https://goreportcard.com/report/github.com/pellared/taskflow)
