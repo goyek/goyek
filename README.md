@@ -164,10 +164,6 @@ Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.
 
 ## FAQ
 
-### Is taskflow stable
-
-No, it is in experimental phase.
-
 ### Why not use Make?
 
 While [Make](https://www.gnu.org/software/make/) is currently the _de facto_ standard, it has some pitfalls:
