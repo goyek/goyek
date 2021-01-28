@@ -1,6 +1,6 @@
 module github.com/pellared/taskflow/build
 
-go 1.11
+go 1.15
 
 require (
 	github.com/golangci/golangci-lint v1.36.0
