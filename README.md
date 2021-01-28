@@ -20,6 +20,26 @@ I am open to any feedback and contribution. Use [Discussions](https://github.com
 
 `Star` this repository if you find it valuable and worth maintaining.
 
+Table of Contents:
+
+- [taskflow](#taskflow)
+	- [Example](#example)
+	- [Features](#features)
+		- [Task registration](#task-registration)
+		- [Task dependencies](#task-dependencies)
+		- [Task command](#task-command)
+		- [Task runner](#task-runner)
+		- [Verbose mode](#verbose-mode)
+		- [Parameters](#parameters)
+		- [Helpers for running programs](#helpers-for-running-programs)
+	- [Supported Go versions](#supported-go-versions)
+	- [FAQ](#faq)
+		- [Why not use Make?](#why-not-use-make)
+		- [Why not use Mage?](#why-not-use-mage)
+		- [Why not use Task?](#why-not-use-task)
+		- [Why not use Bazel?](#why-not-use-bazel)
+	- [Contributing](#contributing)
+
 ## Example
 
 Create a file in your project `build/build.go`.
