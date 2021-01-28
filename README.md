@@ -163,6 +163,10 @@ Use [`func Exec(name string, args ...string) func(*TF)`](https://pkg.go.dev/gith
 
 Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Cmd) if within a task's command function when you want to execute more programs or you need more granular control.
 
+## Supported Go versions
+
+Minimal required Go version is 1.10.
+
 ## FAQ
 
 ### Why not use Make?

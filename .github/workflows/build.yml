@@ -13,15 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - uses: actions/cache@v2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - uses: actions/setup-go@v2
         with:
-          go-version: 1.15
+          go-version: '1.15'
       - name: Build
         run: go run ./build -v ci=true all
       - name: Upload HTML coverage
@@ -33,3 +31,15 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           file: ./coverage.out
+  compatibility:
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: ['1.10', '1.11', '1.12', '1.13', '1.14', '1.15']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+      - run: go build
