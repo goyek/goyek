@@ -16,9 +16,27 @@ This package aims to simplify the creation of build pipelines in Go instead of u
 
 Check [Go Build Pipeline Demo](https://github.com/pellared/go-build-pipeline-demo) to compare **taskflow** with [Make](https://www.gnu.org/software/make/) and [Mage](https://github.com/magefile/mage).
 
-I am open to any feedback and contribution. Use [Discussions](https://github.com/pellared/taskflow/discussions) or write to me: *Robert Pajak* @ [Gophers Slack](https://invite.slack.golangbridge.org/).
-
 `Star` this repository if you find it valuable and worth maintaining.
+
+Table of Contents:
+
+- [taskflow](#taskflow)
+	- [Example](#example)
+	- [Features](#features)
+		- [Task registration](#task-registration)
+		- [Task dependencies](#task-dependencies)
+		- [Task command](#task-command)
+		- [Task runner](#task-runner)
+		- [Verbose mode](#verbose-mode)
+		- [Parameters](#parameters)
+		- [Helpers for running programs](#helpers-for-running-programs)
+	- [Supported Go versions](#supported-go-versions)
+	- [FAQ](#faq)
+		- [Why not use Make?](#why-not-use-make)
+		- [Why not use Mage?](#why-not-use-mage)
+		- [Why not use Task?](#why-not-use-task)
+		- [Why not use Bazel?](#why-not-use-bazel)
+	- [Contributing](#contributing)
 
 ## Example
 
@@ -217,4 +235,8 @@ While [Task](https://taskfile.dev/) is simpler and easier to use than [Make](htt
 
 ## Contributing
 
-Simply create an issue or a pull request.
+I am open to any feedback and contribution. 
+
+Use [Discussions](https://github.com/pellared/taskflow/discussions) or write to me: *Robert Pajak* @ [Gophers Slack](https://invite.slack.golangbridge.org/).
+
+You can also create an issue or a pull request.
