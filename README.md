@@ -5,9 +5,9 @@
 [![GitHub Release](https://img.shields.io/github/v/release/pellared/taskflow)](https://github.com/pellared/taskflow/releases)
 [![Go Reference](https://pkg.go.dev/badge/github.com/pellared/taskflow.svg)](https://pkg.go.dev/github.com/pellared/taskflow)
 [![go.mod](https://img.shields.io/github/go-mod/go-version/pellared/taskflow)](go.mod)
-[![Build Status](https://img.shields.io/github/workflow/status/pellared/taskflow/build)](https://github.com/pellared/taskflow/actions?query=workflow%3Abuild+branch%3Amaster)
+[![Build Status](https://img.shields.io/github/workflow/status/pellared/taskflow/build)](https://github.com/pellared/taskflow/actions?query=workflow%3Abuild+branch%3Amain)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pellared/taskflow)](https://goreportcard.com/report/github.com/pellared/taskflow)
-[![codecov](https://codecov.io/gh/pellared/taskflow/branch/master/graph/badge.svg)](https://codecov.io/gh/pellared/taskflow)
+[![codecov](https://codecov.io/gh/pellared/taskflow/branch/main/graph/badge.svg)](https://codecov.io/gh/pellared/taskflow)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
 This package aims to simplify the creation of build pipelines in Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
