@@ -2,6 +2,7 @@ package taskflow_test
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -321,29 +322,40 @@ Fatalf 5`, "should contain proper output from \"failing\" task")
 }
 
 func Test_concurrent_printing(t *testing.T) {
-	sb := &strings.Builder{}
-	flow := taskflow.Taskflow{
-		// Verbose: true,
-		Output: sb,
+	testCases := []struct {
+		verbose bool
+	}{
+		{verbose: false},
+		{verbose: true},
 	}
-	flow.MustRegister(taskflow.Task{
-		Name: "task",
-		Command: func(tf *taskflow.TF) {
-			ch := make(chan struct{})
-			go func() {
-				defer func() { ch <- struct{}{} }()
-				tf.Log("from child goroutine")
-			}()
-			tf.Log("from main goroutine")
-			<-ch
-		},
-	})
+	for _, tc := range testCases {
+		testName := fmt.Sprintf("Verbose:%v", tc.verbose)
+		t.Run(testName, func(t *testing.T) {
+			sb := &strings.Builder{}
+			flow := taskflow.Taskflow{
+				Verbose: tc.verbose,
+				Output:  sb,
+			}
+			flow.MustRegister(taskflow.Task{
+				Name: "task",
+				Command: func(tf *taskflow.TF) {
+					ch := make(chan struct{})
+					go func() {
+						defer func() { ch <- struct{}{} }()
+						tf.Log("from child goroutine")
+					}()
+					tf.Error("from main goroutine")
+					<-ch
+				},
+			})
 
-	exitCode := flow.Run(context.Background(), "task")
+			exitCode := flow.Run(context.Background(), "task")
 
-	assert.Equal(t, 0, exitCode, "should pass")
-	assert.Contains(t, sb.String(), "from child goroutine")
-	assert.Contains(t, sb.String(), "from main goroutine")
+			assert.Equal(t, taskflow.CodeFailure, exitCode, "should fail")
+			assert.Contains(t, sb.String(), "from child goroutine")
+			assert.Contains(t, sb.String(), "from main goroutine")
+		})
+	}
 }
 
 func Test_name(t *testing.T) {

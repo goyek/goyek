@@ -58,7 +58,7 @@ func (r Runner) Run(command func(tf *TF)) RunResult {
 	}
 	writer := ioutil.Discard
 	if r.Output != nil {
-		writer = r.Output
+		writer = &syncWriter{Writer: r.Output}
 	}
 	verbose := r.Verbose
 
