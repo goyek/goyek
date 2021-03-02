@@ -2,7 +2,7 @@
     // gopls
     "go.useLanguageServer": true,
     "gopls": {
-        "gofumpt": true,
+        "formatting.gofumpt": true
     },
     // golangci-lint  
     "go.lintTool": "golangci-lint",
