@@ -410,3 +410,20 @@ func Test_params(t *testing.T) {
 	assert.Equal(t, 2, got.Int("y"), "y param")
 	assert.Equal(t, 3.0, got.Float64("z"), "z param")
 }
+
+func Test_defaultTask(t *testing.T) {
+	flow := taskflow.New()
+	var got taskflow.TFParams
+	task := flow.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			got = tf.Params()
+		},
+	})
+	flow.DefaultTask = task
+
+	exitCode := flow.Run(context.Background(), "x=a")
+
+	assert.Equal(t, 0, exitCode, "should pass")
+	assert.Equal(t, "a", got.String("x"), "x param")
+}

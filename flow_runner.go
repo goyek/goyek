@@ -13,10 +13,11 @@ import (
 )
 
 type flowRunner struct {
-	output  io.Writer
-	params  Params
-	tasks   map[string]Task
-	verbose bool
+	output      io.Writer
+	params      Params
+	tasks       map[string]Task
+	verbose     bool
+	defaultTask RegisteredTask
 }
 
 // Run runs provided tasks and all their dependencies.
@@ -74,6 +75,11 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 			return CodeInvalidArgs
 		}
 		tasks = append(tasks, arg)
+	}
+
+	// set default task if none is provided
+	if len(tasks) == 0 && f.defaultTask.name != "" {
+		tasks = append(tasks, f.defaultTask.name)
 	}
 
 	if len(tasks) == 0 {
