@@ -25,12 +25,13 @@ Table of Contents:
 	- [Example](#example)
 	- [Features](#features)
 		- [Task registration](#task-registration)
-		- [Task dependencies](#task-dependencies)
 		- [Task command](#task-command)
-		- [Task runner](#task-runner)
-		- [Verbose mode](#verbose-mode)
-		- [Parameters](#parameters)
+		- [Task dependencies](#task-dependencies)
 		- [Helpers for running programs](#helpers-for-running-programs)
+		- [Verbose mode](#verbose-mode)
+		- [Default task](#default-task)
+		- [Parameters](#parameters)
+		- [Task runner](#task-runner)
 	- [Supported Go versions](#supported-go-versions)
 	- [FAQ](#faq)
 		- [Why not use Make?](#why-not-use-make)
@@ -148,25 +149,31 @@ A task with a given name can be only registered once.
 
 A task without description is not listed in taskflow's CLI usage.
 
-### Task dependencies
-
-During task registration it is possible to add a dependency to an already registered task. When taskflow is processed, it makes sure that the dependency is executed before the current task is run. Take note that each task will be executed at most once.
-
 ### Task command
 
 Task command is a function which is executed when a task is executed. It is not required to to set a command. Not having a command is very handy when registering "pipelines".
 
-### Task runner
+### Task dependencies
 
-You can use [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner) to execute a single command.
+During task registration it is possible to add a dependency to an already registered task. When taskflow is processed, it makes sure that the dependency is executed before the current task is run. Take note that each task will be executed at most once.
 
-It may be handy during development of a new task, when debugging some issue or if you want to have a test suite for reusable commands.
+### Helpers for running programs
+
+Use [`func Exec(name string, args ...string) func(*TF)`](https://pkg.go.dev/github.com/pellared/taskflow#Exec) to create a task's command which only runs a single program.
+
+Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Cmd) if within a task's command function when you want to execute more programs or you need more granular control.
 
 ### Verbose mode
 
 Enable verbose output using the `-v` CLI flag. It works similar to `go test -v`. When enabled, the whole output will be streamed. If disabled, only logs from failed task are send to the output.
 
 Use [`func (*TF) Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Verbose) to check if verbose mode was set within the task's command.
+
+### Default task
+
+Default task can be assigned via `DefaultTask` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
+
+When default task is set, then it is run if no task is provied via CLI.
 
 ### Parameters
 
@@ -176,11 +183,11 @@ Default values can be assigned via `Params` field in [`type Taskflow`](https://p
 
 The task's command can get the parameters using [`func (*TF) Params`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Params).
 
-### Helpers for running programs
+### Task runner
 
-Use [`func Exec(name string, args ...string) func(*TF)`](https://pkg.go.dev/github.com/pellared/taskflow#Exec) to create a task's command which only runs a single program.
+You can use [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner) to execute a single command.
 
-Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Cmd) if within a task's command function when you want to execute more programs or you need more granular control.
+It may be handy during development of a new task, when debugging some issue or if you want to have a test suite for reusable commands.
 
 ## Supported Go versions
 
@@ -236,7 +243,7 @@ While [Task](https://taskfile.dev/) is simpler and easier to use than [Make](htt
 
 ## Contributing
 
-I am open to any feedback and contribution. 
+I am open to any feedback and contribution.
 
 Use [Discussions](https://github.com/pellared/taskflow/discussions) or write to me: *Robert Pajak* @ [Gophers Slack](https://invite.slack.golangbridge.org/).
 

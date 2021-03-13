@@ -24,9 +24,10 @@ var DefaultOutput io.Writer = os.Stdout
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
 type Taskflow struct {
-	Output  io.Writer // output where text is printed; os.Stdout by default
-	Params  Params    // default parameters' values
-	Verbose bool      // when enabled, then the whole output will be always streamed
+	Output      io.Writer      // output where text is printed; os.Stdout by default
+	Params      Params         // default parameters' values
+	Verbose     bool           // when enabled, then the whole output will be always streamed
+	DefaultTask RegisteredTask // task which is run when non is explicitly provided
 
 	tasks map[string]Task
 }
@@ -86,10 +87,11 @@ func (f *Taskflow) Run(ctx context.Context, args ...string) int {
 	}
 
 	flow := &flowRunner{
-		output:  f.Output,
-		params:  params,
-		tasks:   f.tasks,
-		verbose: f.Verbose,
+		output:      f.Output,
+		params:      params,
+		tasks:       f.tasks,
+		verbose:     f.Verbose,
+		defaultTask: f.DefaultTask,
 	}
 
 	if flow.output == nil {

@@ -21,7 +21,7 @@ func main() {
 	diff := flow.MustRegister(taskDiff())
 
 	// pipeline
-	flow.MustRegister(taskflow.Task{
+	all := flow.MustRegister(taskflow.Task{
 		Name:        "all",
 		Description: "build pipeline",
 		Dependencies: taskflow.Deps{
@@ -36,6 +36,7 @@ func main() {
 		},
 	})
 
+	flow.DefaultTask = all
 	flow.Main()
 }
 
