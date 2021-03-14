@@ -250,8 +250,7 @@ func Test_empty_command(t *testing.T) {
 func Test_invalid_args(t *testing.T) {
 	flow := taskflow.New()
 	flow.MustRegister(taskflow.Task{
-		Name:        "task",
-		Description: "a task",
+		Name: "task",
 	})
 
 	testCases := []struct {
