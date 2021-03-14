@@ -47,6 +47,18 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 			fmt.Fprintf(w, "  %s\t%s\n", t.Name, t.Description)
 		}
 		w.Flush() //nolint // not checking errors when writting to output
+
+		if f.defaultTask.name != "" {
+			fmt.Fprintf(cli.Output(), "Default task: %s\n", f.defaultTask.name)
+		}
+
+		if len(f.params) > 0 {
+			fmt.Fprintf(cli.Output(), "Default parameters:\n")
+			for key, val := range f.params {
+				fmt.Fprintf(w, "  %s\t%s\n", key, val)
+			}
+			w.Flush() //nolint // not checking errors when writting to output
+		}
 	}
 	cli.Usage = usage
 

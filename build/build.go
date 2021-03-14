@@ -37,6 +37,7 @@ func main() {
 	})
 
 	flow.DefaultTask = all
+	flow.Params.SetBool("ci", false)
 	flow.Main()
 }
 
