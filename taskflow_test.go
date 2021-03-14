@@ -248,17 +248,10 @@ func Test_empty_command(t *testing.T) {
 }
 
 func Test_invalid_args(t *testing.T) {
-	flow := &taskflow.Taskflow{}
+	flow := taskflow.New()
 	flow.MustRegister(taskflow.Task{
-		Name:        "c",
-		Description: "c task",
-	})
-	flow.MustRegister(taskflow.Task{
-		Name:        "a",
+		Name:        "task",
 		Description: "a task",
-	})
-	flow.MustRegister(taskflow.Task{
-		Name: "b",
 	})
 
 	testCases := []struct {
@@ -281,9 +274,23 @@ func Test_invalid_args(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			exitCode := flow.Run(context.Background(), tc.args...)
 
-			assert.Equal(t, 2, exitCode, "should pass")
+			assert.Equal(t, 2, exitCode, "should return error bad args")
 		})
 	}
+}
+
+func Test_help(t *testing.T) {
+	flow := taskflow.New()
+	a := flow.MustRegister(taskflow.Task{
+		Name:        "a",
+		Description: "some task",
+	})
+	flow.DefaultTask = a
+	flow.Params.SetBool("fast", false)
+
+	exitCode := flow.Run(context.Background(), "-h")
+
+	assert.Equal(t, 2, exitCode, "should return error bad args")
 }
 
 func Test_printing(t *testing.T) {
