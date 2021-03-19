@@ -7,9 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/pellared/taskflow"
 )
 
@@ -46,9 +43,9 @@ func Test_Register(t *testing.T) {
 			_, err := flow.Register(tc.task)
 
 			if tc.valid {
-				assert.NoError(t, err)
+				assertNoError(t, err, "no error expected")
 			} else {
-				assert.Error(t, err)
+				assertError(t, err, "error expected")
 			}
 		})
 	}
@@ -58,11 +55,11 @@ func Test_Register_same_name(t *testing.T) {
 	flow := &taskflow.Taskflow{}
 	task := taskflow.Task{Name: "task"}
 	_, err := flow.Register(task)
-	require.NoError(t, err, "should be a valid task")
+	requireNoError(t, err, "should be a valid task")
 
 	_, err = flow.Register(task)
 
-	assert.Error(t, err, "should not be possible to register tasks with same name twice")
+	assertError(t, err, "should not be possible to register tasks with same name twice")
 }
 
 func Test_MustRegister_panic(t *testing.T) {
@@ -70,7 +67,7 @@ func Test_MustRegister_panic(t *testing.T) {
 
 	act := func() { flow.MustRegister(taskflow.Task{}) }
 
-	assert.Panics(t, act, "should panic because task name is empty")
+	assertPanics(t, act, "should panic because task name is empty")
 }
 
 func Test_successful(t *testing.T) {
@@ -104,16 +101,16 @@ func Test_successful(t *testing.T) {
 	}
 
 	exitCode := flow.Run(ctx, "task-1")
-	require.Equal(t, 0, exitCode, "first execution should pass")
-	require.Equal(t, []int{1, 0, 0}, got(), "should execute task 1")
+	requireEqual(t, 0, exitCode, "first execution should pass")
+	requireEqual(t, []int{1, 0, 0}, got(), "should execute task 1")
 
 	exitCode = flow.Run(ctx, "task-2")
-	require.Equal(t, 0, exitCode, "second execution should pass")
-	require.Equal(t, []int{2, 1, 0}, got(), "should execute task 1 and 2")
+	requireEqual(t, 0, exitCode, "second execution should pass")
+	requireEqual(t, []int{2, 1, 0}, got(), "should execute task 1 and 2")
 
 	exitCode = flow.Run(ctx, "task-1", "task-2", "task-3")
-	require.Equal(t, 0, exitCode, "third execution should pass")
-	require.Equal(t, []int{3, 2, 1}, got(), "should execute task 1 and 2 and 3")
+	requireEqual(t, 0, exitCode, "third execution should pass")
+	requireEqual(t, []int{3, 2, 1}, got(), "should execute task 1 and 2 and 3")
 }
 
 func Test_dependency_failure(t *testing.T) {
@@ -151,8 +148,8 @@ func Test_dependency_failure(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "task-2", "task-3")
 
-	assert.Equal(t, 1, exitCode, "should return error from first task")
-	assert.Equal(t, []int{11, 0, 0}, got(), "should execute task 1")
+	assertEqual(t, 1, exitCode, "should return error from first task")
+	assertEqual(t, []int{11, 0, 0}, got(), "should execute task 1")
 }
 
 func Test_fail(t *testing.T) {
@@ -170,8 +167,8 @@ func Test_fail(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "task")
 
-	assert.Equal(t, 1, exitCode, "should return error")
-	assert.True(t, failed, "tf.Failed() should return true")
+	assertEqual(t, 1, exitCode, "should return error")
+	assertTrue(t, failed, "tf.Failed() should return true")
 }
 
 func Test_skip(t *testing.T) {
@@ -189,8 +186,8 @@ func Test_skip(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "task")
 
-	assert.Equal(t, 0, exitCode, "should pass")
-	assert.True(t, skipped, "tf.Skipped() should return true")
+	assertEqual(t, 0, exitCode, "should pass")
+	assertTrue(t, skipped, "tf.Skipped() should return true")
 }
 
 func Test_task_panics(t *testing.T) {
@@ -204,7 +201,7 @@ func Test_task_panics(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "task")
 
-	assert.Equal(t, 1, exitCode, "should return error from first task")
+	assertEqual(t, 1, exitCode, "should return error from first task")
 }
 
 func Test_cancelation(t *testing.T) {
@@ -217,7 +214,7 @@ func Test_cancelation(t *testing.T) {
 
 	exitCode := flow.Run(ctx, "task")
 
-	assert.Equal(t, 1, exitCode, "should return error canceled")
+	assertEqual(t, 1, exitCode, "should return error canceled")
 }
 
 func Test_cancelation_during_last_task(t *testing.T) {
@@ -233,7 +230,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 
 	exitCode := flow.Run(ctx, "task")
 
-	assert.Equal(t, 1, exitCode, "should return error canceled")
+	assertEqual(t, 1, exitCode, "should return error canceled")
 }
 
 func Test_empty_command(t *testing.T) {
@@ -244,7 +241,7 @@ func Test_empty_command(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "task")
 
-	assert.Equal(t, 0, exitCode, "should pass")
+	assertEqual(t, 0, exitCode, "should pass")
 }
 
 func Test_invalid_args(t *testing.T) {
@@ -273,7 +270,7 @@ func Test_invalid_args(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			exitCode := flow.Run(context.Background(), tc.args...)
 
-			assert.Equal(t, 2, exitCode, "should return error bad args")
+			assertEqual(t, 2, exitCode, "should return error bad args")
 		})
 	}
 }
@@ -289,7 +286,7 @@ func Test_help(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "-h")
 
-	assert.Equal(t, 2, exitCode, "should return error bad args")
+	assertEqual(t, 2, exitCode, "should return error bad args")
 }
 
 func Test_printing(t *testing.T) {
@@ -319,8 +316,8 @@ func Test_printing(t *testing.T) {
 
 	flow.Run(context.Background(), "failing")
 
-	assert.Contains(t, sb.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
-	assert.Contains(t, sb.String(), `Log 1
+	assertContains(t, sb.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
+	assertContains(t, sb.String(), `Log 1
 Logf 2
 Error 3
 Errorf 4
@@ -357,9 +354,9 @@ func Test_concurrent_printing(t *testing.T) {
 
 			exitCode := flow.Run(context.Background(), "task")
 
-			assert.Equal(t, taskflow.CodeFailure, exitCode, "should fail")
-			assert.Contains(t, sb.String(), "from child goroutine")
-			assert.Contains(t, sb.String(), "from main goroutine")
+			assertEqual(t, taskflow.CodeFailure, exitCode, "should fail")
+			assertContains(t, sb.String(), "from child goroutine")
+			assertContains(t, sb.String(), "from main goroutine")
 		})
 	}
 }
@@ -377,8 +374,8 @@ func Test_name(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), taskName)
 
-	assert.Equal(t, 0, exitCode, "should pass")
-	assert.Equal(t, taskName, got, "should return proper Name value")
+	assertEqual(t, 0, exitCode, "should pass")
+	assertEqual(t, taskName, got, "should return proper Name value")
 }
 
 func Test_verbose(t *testing.T) {
@@ -393,8 +390,8 @@ func Test_verbose(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "-v", "task")
 
-	assert.Equal(t, 0, exitCode, "should pass")
-	assert.True(t, got, "should return proper Verbose value")
+	assertEqual(t, 0, exitCode, "should pass")
+	assertTrue(t, got, "should return proper Verbose value")
 }
 
 func Test_params(t *testing.T) {
@@ -411,10 +408,10 @@ func Test_params(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "y=2", "z=3", "task")
 
-	assert.Equal(t, 0, exitCode, "should pass")
-	assert.Equal(t, "1", got.String("x"), "x param")
-	assert.Equal(t, 2, got.Int("y"), "y param")
-	assert.Equal(t, 3.0, got.Float64("z"), "z param")
+	assertEqual(t, 0, exitCode, "should pass")
+	assertEqual(t, "1", got.String("x"), "x param")
+	assertEqual(t, 2, got.Int("y"), "y param")
+	assertEqual(t, 3.0, got.Float64("z"), "z param")
 }
 
 func Test_defaultTask(t *testing.T) {
@@ -430,6 +427,6 @@ func Test_defaultTask(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "x=a")
 
-	assert.Equal(t, 0, exitCode, "should pass")
-	assert.Equal(t, "a", got.String("x"), "x param")
+	assertEqual(t, 0, exitCode, "should pass")
+	assertEqual(t, "a", got.String("x"), "x param")
 }

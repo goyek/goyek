@@ -6,37 +6,79 @@ import (
 	"testing"
 )
 
-func assertTrue(t testing.TB, value bool, message string) {
+func failedMessage(message ...string) string {
+	if len(message) == 0 {
+		return "Failed"
+	}
+	return strings.Join(message, ",")
+}
+
+func assertTrue(t testing.TB, value bool, message ...string) {
 	if !value {
 		t.Helper()
-		t.Error(message)
+		t.Error(failedMessage(message...))
 	}
 }
 
-func assertContains(t testing.TB, value string, expected string) {
+func assertContains(t testing.TB, value string, expected string, message ...string) {
 	if !strings.Contains(value, expected) {
 		t.Helper()
-		t.Errorf("Have [%s], want [%s]", value, expected)
+		t.Errorf("%s, Have [%s], want [%s]", failedMessage(message...), value, expected)
 	}
 }
 
-func assertEqual(t testing.TB, expected interface{}, value interface{}, message string) {
+func requireEqual(t testing.TB, expected interface{}, value interface{}, message ...string) {
 	if !reflect.DeepEqual(value, expected) {
 		t.Helper()
-		t.Errorf("%s\nHave [%v], want [%v]", message, value, expected)
+		t.Errorf("%s\nHave [%v], want [%v]", failedMessage(message...), value, expected)
+		t.FailNow()
 	}
 }
 
-func assertNoError(t testing.TB, err error, message string) {
+func assertEqual(t testing.TB, expected interface{}, value interface{}, message ...string) {
+	if !reflect.DeepEqual(value, expected) {
+		t.Helper()
+		t.Errorf("%s\nHave [%v], want [%v]", failedMessage(message...), value, expected)
+	}
+}
+
+func requireNoError(t testing.TB, err error, message ...string) {
 	if err != nil {
 		t.Helper()
-		t.Errorf("%s\nHave [%v]", message, err)
+		t.Fatalf("%s\nHave [%v]", failedMessage(message...), err)
 	}
 }
 
-func assertError(t testing.TB, err error, message string) {
+func assertNoError(t testing.TB, err error, message ...string) {
+	if err != nil {
+		t.Helper()
+		t.Errorf("%s\nHave [%v]", failedMessage(message...), err)
+	}
+}
+
+func assertError(t testing.TB, err error, message ...string) {
 	if err == nil {
 		t.Helper()
-		t.Errorf("%s\n Have [%v]", message, err)
+		t.Errorf("%s\n Have [%v]", failedMessage(message...), err)
+	}
+}
+
+func assertPanics(t testing.TB, task func(), message ...string) {
+	tryPanic := func() bool {
+		didPanic := false
+		func() {
+			defer func() {
+				if info := recover(); info != nil {
+					didPanic = true
+				}
+			}()
+			task()
+		}()
+		return didPanic
+	}
+
+	if !tryPanic() {
+		t.Helper()
+		t.Errorf("%s", failedMessage(message...))
 	}
 }
