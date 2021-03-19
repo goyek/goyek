@@ -23,15 +23,14 @@ func assertTrue(t testing.TB, value bool, message ...string) {
 func assertContains(t testing.TB, value string, expected string, message ...string) {
 	if !strings.Contains(value, expected) {
 		t.Helper()
-		t.Errorf("%s, Have [%s], want [%s]", failedMessage(message...), value, expected)
+		t.Errorf("%s\nHave [%s], want [%s]", failedMessage(message...), value, expected)
 	}
 }
 
 func requireEqual(t testing.TB, expected interface{}, value interface{}, message ...string) {
 	if !reflect.DeepEqual(value, expected) {
 		t.Helper()
-		t.Errorf("%s\nHave [%v], want [%v]", failedMessage(message...), value, expected)
-		t.FailNow()
+		t.Fatalf("%s\nHave [%v], want [%v]", failedMessage(message...), value, expected)
 	}
 }
 
@@ -59,7 +58,7 @@ func assertNoError(t testing.TB, err error, message ...string) {
 func assertError(t testing.TB, err error, message ...string) {
 	if err == nil {
 		t.Helper()
-		t.Errorf("%s\n Have [%v]", failedMessage(message...), err)
+		t.Errorf("%s\nHave [%v]", failedMessage(message...), err)
 	}
 }
 
@@ -79,6 +78,6 @@ func assertPanics(t testing.TB, task func(), message ...string) {
 
 	if !tryPanic() {
 		t.Helper()
-		t.Errorf("%s", failedMessage(message...))
+		t.Error(failedMessage(message...))
 	}
 }
