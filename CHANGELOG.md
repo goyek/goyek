@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Make concurrent printing thread-safe.
 
-## [0.0.1] - 2021-01-14
+## [0.1.0] - 2021-01-14
 
 ### Added
 
