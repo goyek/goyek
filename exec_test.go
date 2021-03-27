@@ -4,8 +4,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/pellared/taskflow"
 )
 
@@ -17,8 +15,8 @@ func TestExec_success(t *testing.T) {
 
 	got := r.Run(taskflow.Exec("go", "version"))
 
-	assert.Contains(t, sb.String(), "go version go")
-	assert.True(t, got.Passed(), "task should pass")
+	assertContains(t, sb.String(), "go version go", "output should contain prefix of version report")
+	assertTrue(t, got.Passed(), "task should pass")
 }
 
 func TestExec_error(t *testing.T) {
@@ -26,5 +24,5 @@ func TestExec_error(t *testing.T) {
 
 	got := r.Run(taskflow.Exec("go", "wrong"))
 
-	assert.True(t, got.Failed(), "task should fail")
+	assertTrue(t, got.Failed(), "task should fail")
 }
