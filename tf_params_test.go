@@ -17,7 +17,7 @@ func Test_TFParams_String(t *testing.T) {
 	r.Run(func(tf *taskflow.TF) {
 		got := tf.Params().String("x")
 
-		assertEqual(t, "1", got, "should return proper parameters")
+		assertEqual(t, got, "1", "should return proper parameters")
 	})
 }
 
@@ -30,7 +30,7 @@ func Test_TFParams_Int_valid_dec(t *testing.T) {
 	r.Run(func(tf *taskflow.TF) {
 		got := tf.Params().Int("x")
 
-		assertEqual(t, 10, got, "should return proper parameter value")
+		assertEqual(t, got, 10, "should return proper parameter value")
 	})
 }
 
@@ -43,7 +43,7 @@ func Test_TFParams_Int_valid_binary(t *testing.T) {
 	r.Run(func(tf *taskflow.TF) {
 		got := tf.Params().Int("x")
 
-		assertEqual(t, 2, got, "should return proper parameter value")
+		assertEqual(t, got, 2, "should return proper parameter value")
 	})
 }
 
@@ -52,7 +52,7 @@ func Test_TFParams_Int_missing(t *testing.T) {
 	result := r.Run(func(tf *taskflow.TF) {
 		got := tf.Params().Int("x")
 
-		assertEqual(t, 0, got, "should return proper parameter value")
+		assertEqual(t, got, 0, "should return proper parameter value")
 	})
 	assertTrue(t, result.Passed(), "the command should pass")
 }
@@ -80,7 +80,7 @@ func Test_TFParams_Bool_valid(t *testing.T) {
 	r.Run(func(tf *taskflow.TF) {
 		got := tf.Params().Bool("x")
 
-		assertEqual(t, true, got, "should return proper parameter value")
+		assertEqual(t, got, true, "should return proper parameter value")
 	})
 }
 
@@ -89,7 +89,7 @@ func Test_TFParams_Bool_missing(t *testing.T) {
 	result := r.Run(func(tf *taskflow.TF) {
 		got := tf.Params().Bool("x")
 
-		assertEqual(t, false, got, "should return false as the default value")
+		assertEqual(t, got, false, "should return false as the default value")
 	})
 	assertTrue(t, result.Passed(), "the command should pass")
 }
@@ -117,7 +117,7 @@ func Test_TFParams_Float64_valid(t *testing.T) {
 	r.Run(func(tf *taskflow.TF) {
 		got := tf.Params().Float64("x")
 
-		assertEqual(t, 1.2, got, "should return proper parameter value")
+		assertEqual(t, got, 1.2, "should return proper parameter value")
 	})
 }
 
@@ -126,7 +126,7 @@ func Test_TFParams_Float64_missing(t *testing.T) {
 	result := r.Run(func(tf *taskflow.TF) {
 		got := tf.Params().Float64("x")
 
-		assertEqual(t, 0.0, got, "should return proper parameter value")
+		assertEqual(t, got, 0.0, "should return proper parameter value")
 	})
 	assertTrue(t, result.Passed(), "the command should pass")
 }
@@ -154,7 +154,7 @@ func Test_TFParams_Duration_valid(t *testing.T) {
 	r.Run(func(tf *taskflow.TF) {
 		got := tf.Params().Duration("x")
 
-		assertEqual(t, time.Minute, got, "should return proper parameter value")
+		assertEqual(t, got, time.Minute, "should return proper parameter value")
 	})
 }
 
@@ -163,7 +163,7 @@ func Test_TFParams_Duration_missing(t *testing.T) {
 	result := r.Run(func(tf *taskflow.TF) {
 		got := tf.Params().Duration("x")
 
-		assertEqual(t, time.Duration(0), got, "should return proper parameter value")
+		assertEqual(t, got, time.Duration(0), "should return proper parameter value")
 	})
 	assertTrue(t, result.Passed(), "the command should pass")
 }
@@ -191,7 +191,7 @@ func Test_TFParams_Date_valid(t *testing.T) {
 	r.Run(func(tf *taskflow.TF) {
 		got := tf.Params().Date("x", "2006-01-02")
 
-		assertEqual(t, time.Date(2000, 3, 5, 0, 0, 0, 0, time.UTC), got, "should return proper parameter value")
+		assertEqual(t, got, time.Date(2000, 3, 5, 0, 0, 0, 0, time.UTC), "should return proper parameter value")
 	})
 }
 
@@ -200,7 +200,7 @@ func Test_TFParams_Date_missing(t *testing.T) {
 	result := r.Run(func(tf *taskflow.TF) {
 		got := tf.Params().Date("x", "2006-01-02")
 
-		assertEqual(t, time.Time{}, got, "should return proper parameter value")
+		assertEqual(t, got, time.Time{}, "should return proper parameter value")
 	})
 	assertTrue(t, result.Passed(), "the command should pass")
 }
@@ -229,7 +229,7 @@ func Test_TFParams_ParseText_valid(t *testing.T) {
 		var got time.Time
 		tf.Params().ParseText("x", &got)
 
-		assertEqual(t, time.Date(2000, 3, 5, 13, 20, 0, 0, time.UTC), got, "should return proper parameter value")
+		assertEqual(t, got, time.Date(2000, 3, 5, 13, 20, 0, 0, time.UTC), "should return proper parameter value")
 	})
 }
 
@@ -239,7 +239,7 @@ func Test_TFParams_ParseText_missing(t *testing.T) {
 		var got time.Time
 		tf.Params().ParseText("x", &got)
 
-		assertEqual(t, time.Time{}, got, "should return proper parameter value")
+		assertEqual(t, got, time.Time{}, "should return proper parameter value")
 	})
 	assertTrue(t, result.Passed(), "the command should pass")
 }
@@ -297,7 +297,7 @@ func Test_TFParams_ParseJSON_valid(t *testing.T) {
 		var got x
 		tf.Params().ParseJSON("x", &got)
 
-		assertEqual(t, x{A: "abc"}, got, "should return proper parameter value")
+		assertEqual(t, got, x{A: "abc"}, "should return proper parameter value")
 	})
 }
 
@@ -307,7 +307,7 @@ func Test_TFParams_ParseJSON_missing(t *testing.T) {
 		var got x
 		tf.Params().ParseJSON("x", &got)
 
-		assertEqual(t, x{}, got, "should return proper parameter value")
+		assertEqual(t, got, x{}, "should return proper parameter value")
 	})
 	assertTrue(t, result.Passed(), "the command should pass")
 }

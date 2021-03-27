@@ -14,7 +14,7 @@ func Test_Params_SetInt(t *testing.T) {
 	params.SetInt("x", 1)
 	got := params["x"]
 
-	assertEqual(t, "1", got, "should return proper parameter value")
+	assertEqual(t, got, "1", "should return proper parameter value")
 }
 
 func Test_Params_SetBool(t *testing.T) {
@@ -23,7 +23,7 @@ func Test_Params_SetBool(t *testing.T) {
 	params.SetBool("x", true)
 	got := params["x"]
 
-	assertEqual(t, "true", got, "should return proper parameter value")
+	assertEqual(t, got, "true", "should return proper parameter value")
 }
 
 func Test_Params_SetDuration(t *testing.T) {
@@ -32,7 +32,7 @@ func Test_Params_SetDuration(t *testing.T) {
 	params.SetDuration("x", time.Second)
 	got := params["x"]
 
-	assertEqual(t, "1s", got, "should return proper parameter value")
+	assertEqual(t, got, "1s", "should return proper parameter value")
 }
 
 func Test_Params_SetDate(t *testing.T) {
@@ -41,7 +41,7 @@ func Test_Params_SetDate(t *testing.T) {
 	params.SetDate("x", time.Date(2000, 3, 5, 0, 0, 0, 0, time.UTC), "2006-01-02")
 	got := params["x"]
 
-	assertEqual(t, "2000-03-05", got, "should return proper parameter value")
+	assertEqual(t, got, "2000-03-05", "should return proper parameter value")
 }
 
 func Test_Params_SetText_valid(t *testing.T) {
@@ -51,7 +51,7 @@ func Test_Params_SetText_valid(t *testing.T) {
 	got := params["x"]
 
 	assertNoError(t, err, "should not return any error")
-	assertEqual(t, "2000-03-05T13:20:00Z", got, "should return proper parameter value")
+	assertEqual(t, got, "2000-03-05T13:20:00Z", "should return proper parameter value")
 }
 
 type badTextMarshaler struct{}
@@ -67,7 +67,7 @@ func Test_Params_SetText_invalid(t *testing.T) {
 	got := params["x"]
 
 	assertError(t, err, "should tell that it failed to parse the value")
-	assertEqual(t, "", got, "should return proper parameter value")
+	assertEqual(t, got, "", "should return proper parameter value")
 }
 
 func Test_Params_SetText_nil(t *testing.T) {
@@ -77,7 +77,7 @@ func Test_Params_SetText_nil(t *testing.T) {
 	got := params["x"]
 
 	assertError(t, err, "should tell that it failed to parse the value")
-	assertEqual(t, "", got, "should return proper parameter value")
+	assertEqual(t, got, "", "should return proper parameter value")
 }
 
 func Test_Params_SetJSON_valid(t *testing.T) {
@@ -87,7 +87,7 @@ func Test_Params_SetJSON_valid(t *testing.T) {
 	got := params["x"]
 
 	assertNoError(t, err, "should not return any error")
-	assertEqual(t, "{\"A\":\"abc\"}", got, "should return proper parameter value")
+	assertEqual(t, got, "{\"A\":\"abc\"}", "should return proper parameter value")
 }
 
 type badJSONMarshaler struct{}
@@ -103,7 +103,7 @@ func Test_Params_SetJSON_invalid(t *testing.T) {
 	got := params["x"]
 
 	assertError(t, err, "should tell that it failed to parse the value")
-	assertEqual(t, "", got, "should return proper parameter value")
+	assertEqual(t, got, "", "should return proper parameter value")
 }
 
 func Test_Params_SetJSON_nil(t *testing.T) {
@@ -113,5 +113,5 @@ func Test_Params_SetJSON_nil(t *testing.T) {
 	got := params["x"]
 
 	assertError(t, err, "should tell that it failed to parse the value")
-	assertEqual(t, "", got, "should return proper parameter value")
+	assertEqual(t, got, "", "should return proper parameter value")
 }
