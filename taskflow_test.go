@@ -355,8 +355,8 @@ func Test_concurrent_printing(t *testing.T) {
 			exitCode := flow.Run(context.Background(), "task")
 
 			assertEqual(t, taskflow.CodeFailure, exitCode, "should fail")
-			assertContains(t, sb.String(), "from child goroutine")
-			assertContains(t, sb.String(), "from main goroutine")
+			assertContains(t, sb.String(), "from child goroutine", "should contain log from child goroutine")
+			assertContains(t, sb.String(), "from main goroutine", "should contain log from main goroutine")
 		})
 	}
 }

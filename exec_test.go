@@ -15,7 +15,7 @@ func TestExec_success(t *testing.T) {
 
 	got := r.Run(taskflow.Exec("go", "version"))
 
-	assertContains(t, sb.String(), "go version go")
+	assertContains(t, sb.String(), "go version go", "output should contain prefix of version report")
 	assertTrue(t, got.Passed(), "task should pass")
 }
 

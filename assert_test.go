@@ -6,63 +6,56 @@ import (
 	"testing"
 )
 
-func failedMessage(message ...string) string {
-	if len(message) == 0 {
-		return "Failed"
-	}
-	return strings.Join(message, ",")
-}
-
-func assertTrue(t testing.TB, got bool, message ...string) {
+func assertTrue(t testing.TB, got bool, msg string) {
 	if !got {
 		t.Helper()
-		t.Error(failedMessage(message...))
+		t.Errorf("%s\ngot: [%v], want: [true]", msg, got)
 	}
 }
 
-func assertContains(t testing.TB, got string, want string, message ...string) {
+func assertContains(t testing.TB, got string, want string, msg string) {
 	if !strings.Contains(got, want) {
 		t.Helper()
-		t.Errorf("%s\ngot: [%s], want: [%s]", failedMessage(message...), got, want)
+		t.Errorf("%s\ngot: [%s], should contain: [%s]", msg, got, want)
 	}
 }
 
-func requireEqual(t testing.TB, want interface{}, got interface{}, message ...string) {
+func requireEqual(t testing.TB, want interface{}, got interface{}, msg string) {
 	if !reflect.DeepEqual(got, want) {
 		t.Helper()
-		t.Fatalf("%s\ngot: [%v], want: [%v]", failedMessage(message...), got, want)
+		t.Fatalf("%s\ngot: [%v], want: [%v]", msg, got, want)
 	}
 }
 
-func assertEqual(t testing.TB, want interface{}, got interface{}, message ...string) {
+func assertEqual(t testing.TB, want interface{}, got interface{}, msg string) {
 	if !reflect.DeepEqual(got, want) {
 		t.Helper()
-		t.Errorf("%s\ngot: [%v], want: [%v]", failedMessage(message...), got, want)
+		t.Errorf("%s\ngot: [%v], want: [%v]", msg, got, want)
 	}
 }
 
-func requireNoError(t testing.TB, got error, message ...string) {
+func requireNoError(t testing.TB, got error, msg string) {
 	if got != nil {
 		t.Helper()
-		t.Fatalf("%s\ngot: [%v]", failedMessage(message...), got)
+		t.Fatalf("%s\ngot: [%v], want: [nil]", msg, got)
 	}
 }
 
-func assertNoError(t testing.TB, got error, message ...string) {
+func assertNoError(t testing.TB, got error, msg string) {
 	if got != nil {
 		t.Helper()
-		t.Errorf("%s\ngot: [%v]", failedMessage(message...), got)
+		t.Errorf("%s\ngot: [%v], want: [nil]", msg, got)
 	}
 }
 
-func assertError(t testing.TB, got error, message ...string) {
+func assertError(t testing.TB, got error, msg string) {
 	if got == nil {
 		t.Helper()
-		t.Errorf("%s\ngot: [%v]", failedMessage(message...), got)
+		t.Errorf("%s\ngot: [%v], want: [!nil]", msg, got)
 	}
 }
 
-func assertPanics(t testing.TB, task func(), message ...string) {
+func assertPanics(t testing.TB, task func(), msg string) {
 	tryPanic := func() bool {
 		didPanic := false
 		func() {
@@ -78,6 +71,6 @@ func assertPanics(t testing.TB, task func(), message ...string) {
 
 	if !tryPanic() {
 		t.Helper()
-		t.Error(failedMessage(message...))
+		t.Errorf("%s\ndid not panic, but expected to do so", msg)
 	}
 }
