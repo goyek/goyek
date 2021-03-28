@@ -1,4 +1,4 @@
-module github.com/pellared/taskflow/build
+module github.com/pellared/taskflow/tools
 
 go 1.15
 
