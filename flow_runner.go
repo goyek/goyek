@@ -32,7 +32,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 		f.flags.String(param.Name, param.Default, param.Usage)
 	}
 	usage := func() {
-		fmt.Fprintf(f.flags.Output(), "Usage: [flag(s)] [key=val] task(s)\n")
+		fmt.Fprintf(f.flags.Output(), "Usage: [flag(s)] task(s)\n")
 		fmt.Fprintf(f.flags.Output(), "Flags:\n")
 		f.flags.PrintDefaults()
 
