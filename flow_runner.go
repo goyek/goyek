@@ -48,7 +48,16 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 		sort.Strings(keys)
 		for _, k := range keys {
 			t := f.tasks[k]
-			fmt.Fprintf(w, "  %s\t%s\n", t.Name, t.Description)
+			params := make([]string, len(t.Parameters))
+			for i, param := range t.Parameters {
+				params[i] = param.Name()
+			}
+			sort.Strings(params)
+			paramsText := ""
+			if len(params) > 0 {
+				paramsText = "; -" + strings.Join(params, " -")
+			}
+			fmt.Fprintf(w, "  %s\t%s%s\n", t.Name, t.Description, paramsText)
 		}
 		w.Flush() //nolint // not checking errors when writting to output
 
