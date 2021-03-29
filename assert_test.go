@@ -14,6 +14,7 @@ func assertTrue(t testing.TB, got bool, msg string) {
 	t.Errorf("%s\ngot: [%v], want: [true]", msg, got)
 }
 
+//nolint: unparam // used in only one case, the parameter is the same
 func assertFalse(t testing.TB, got bool, msg string) {
 	if !got {
 		return
