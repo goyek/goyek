@@ -277,12 +277,16 @@ func Test_invalid_args(t *testing.T) {
 
 func Test_help(t *testing.T) {
 	flow := taskflow.New()
+	flow.MustConfigure(taskflow.Parameter{
+		Name:    "fast",
+		Default: "false",
+		Usage:   "simulates fast-lane processing",
+	})
 	a := flow.MustRegister(taskflow.Task{
 		Name:        "a",
 		Description: "some task",
 	})
 	flow.DefaultTask = a
-	flow.Params.SetBool("fast", false)
 
 	exitCode := flow.Run(context.Background(), "-h")
 
@@ -396,37 +400,55 @@ func Test_verbose(t *testing.T) {
 
 func Test_params(t *testing.T) {
 	flow := taskflow.New()
-	flow.Params.SetInt("x", 1)
-	flow.Params["z"] = "abc"
+	xParam := flow.MustConfigure(taskflow.Parameter{
+		Name:    "x",
+		Default: "1",
+	})
+	zParam := flow.MustConfigure(taskflow.Parameter{
+		Name:    "z",
+		Default: "abc",
+	})
 	var got taskflow.TFParams
 	flow.MustRegister(taskflow.Task{
-		Name: "task",
+		Name:       "task",
+		Parameters: []taskflow.RegisteredParam{xParam, zParam},
 		Command: func(tf *taskflow.TF) {
 			got = tf.Params()
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "y=2", "z=3", "task")
+	exitCode := flow.Run(context.Background(), "-z=3", "task")
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertEqual(t, got.String("x"), "1", "x param")
-	assertEqual(t, got.Int("y"), 2, "y param")
 	assertEqual(t, got.Float64("z"), 3.0, "z param")
+}
+
+func Test_invalid_params(t *testing.T) {
+	flow := taskflow.New()
+	flow.MustRegister(taskflow.Task{
+		Name:    "task",
+		Command: func(tf *taskflow.TF) {},
+	})
+
+	exitCode := flow.Run(context.Background(), "-z=3", "task")
+
+	assertEqual(t, taskflow.CodeInvalidArgs, exitCode, "should fail because of unknown parameter")
 }
 
 func Test_defaultTask(t *testing.T) {
 	flow := taskflow.New()
-	var got taskflow.TFParams
+	taskRan := false
 	task := flow.MustRegister(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
-			got = tf.Params()
+			taskRan = true
 		},
 	})
 	flow.DefaultTask = task
 
-	exitCode := flow.Run(context.Background(), "x=a")
+	exitCode := flow.Run(context.Background())
 
 	assertEqual(t, exitCode, 0, "should pass")
-	assertEqual(t, got.String("x"), "a", "x param")
+	assertTrue(t, taskRan, "task should have run")
 }

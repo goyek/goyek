@@ -14,7 +14,8 @@ import (
 
 type flowRunner struct {
 	output      io.Writer
-	params      Params
+	params      map[string]Parameter
+	flags       *flag.FlagSet
 	tasks       map[string]Task
 	verbose     bool
 	defaultTask RegisteredTask
@@ -24,16 +25,19 @@ type flowRunner struct {
 // Each task is executed at most once.
 func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	// prepare flag.FlagSet
-	cli := flag.NewFlagSet("", flag.ContinueOnError)
-	cli.SetOutput(f.output)
-	verbose := cli.Bool("v", false, "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.")
+	f.flags = flag.NewFlagSet("", flag.ContinueOnError)
+	f.flags.SetOutput(f.output)
+	verbose := f.flags.Bool("v", false, "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.")
+	for _, param := range f.params {
+		f.flags.String(param.Name, param.Default, param.Usage)
+	}
 	usage := func() {
-		fmt.Fprintf(cli.Output(), "Usage: [flag(s)] [key=val] task(s)\n")
-		fmt.Fprintf(cli.Output(), "Flags:\n")
-		cli.PrintDefaults()
+		fmt.Fprintf(f.flags.Output(), "Usage: [flag(s)] [key=val] task(s)\n")
+		fmt.Fprintf(f.flags.Output(), "Flags:\n")
+		f.flags.PrintDefaults()
 
-		fmt.Fprintf(cli.Output(), "Tasks:\n")
-		w := tabwriter.NewWriter(cli.Output(), 1, 1, 4, ' ', 0)
+		fmt.Fprintf(f.flags.Output(), "Tasks:\n")
+		w := tabwriter.NewWriter(f.flags.Output(), 1, 1, 4, ' ', 0)
 		keys := make([]string, 0, len(f.tasks))
 		for k, task := range f.tasks {
 			if task.Description == "" {
@@ -49,21 +53,13 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 		w.Flush() //nolint // not checking errors when writting to output
 
 		if f.defaultTask.name != "" {
-			fmt.Fprintf(cli.Output(), "Default task: %s\n", f.defaultTask.name)
-		}
-
-		if len(f.params) > 0 {
-			fmt.Fprintf(cli.Output(), "Default parameters:\n")
-			for key, val := range f.params {
-				fmt.Fprintf(w, "  %s\t%s\n", key, val)
-			}
-			w.Flush() //nolint // not checking errors when writting to output
+			fmt.Fprintf(f.flags.Output(), "Default task: %s\n", f.defaultTask.name)
 		}
 	}
-	cli.Usage = usage
+	f.flags.Usage = usage
 
 	// parse args (flags)
-	if err := cli.Parse(args); err != nil {
+	if err := f.flags.Parse(args); err != nil {
 		return CodeInvalidArgs
 	}
 	if *verbose {
@@ -72,14 +68,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 
 	// parse non-flag args (tasks and parameters)
 	var tasks []string
-	for _, arg := range cli.Args() {
-		if paramAssignmentIdx := strings.IndexRune(arg, '='); paramAssignmentIdx > 0 {
-			// parameter assignement via 'key=val'
-			key := arg[0:paramAssignmentIdx]
-			val := arg[paramAssignmentIdx+1:]
-			f.params[key] = val
-			continue
-		}
+	for _, arg := range f.flags.Args() {
 		if _, ok := f.tasks[arg]; !ok {
 			// task is not registered
 			fmt.Fprintf(f.output, "task provided but not registered: %s\n", arg)
@@ -95,7 +84,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	}
 
 	if len(tasks) == 0 {
-		fmt.Fprintln(cli.Output(), "no task provided")
+		fmt.Fprintln(f.flags.Output(), "no task provided")
 		usage()
 		return CodeInvalidArgs
 	}
@@ -105,11 +94,11 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	executedTasks := map[string]bool{}
 	for _, name := range tasks {
 		if err := f.run(ctx, name, executedTasks); err != nil {
-			fmt.Fprintf(cli.Output(), "%v\t%.3fs\n", err, time.Since(from).Seconds())
+			fmt.Fprintf(f.flags.Output(), "%v\t%.3fs\n", err, time.Since(from).Seconds())
 			return CodeFailure
 		}
 	}
-	fmt.Fprintf(cli.Output(), "ok\t%.3fs\n", time.Since(from).Seconds())
+	fmt.Fprintf(f.flags.Output(), "ok\t%.3fs\n", time.Since(from).Seconds())
 	return CodePass
 }
 
@@ -150,12 +139,16 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	// report task start
 	fmt.Fprintf(w, "===== TASK  %s\n", task.Name)
 
+	params := make(map[string]string)
+	for _, param := range task.Parameters {
+		params[param.name] = f.flags.Lookup(param.name).Value.String()
+	}
 	// run task
 	runner := Runner{
 		Ctx:      ctx,
 		TaskName: task.Name,
 		Verbose:  f.verbose,
-		Params:   f.params,
+		Params:   params,
 		Output:   w,
 	}
 	result := runner.Run(task.Command)

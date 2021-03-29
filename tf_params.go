@@ -17,14 +17,18 @@ type TFParams struct {
 
 // String returns the parameter as a string.
 func (p TFParams) String(key string) string {
-	return p.params[key]
+	value, exists := p.params[key]
+	if !exists {
+		p.tf.Fatal(&ParamError{Key: key, Err: errors.New("parameter not registered")})
+	}
+	return value
 }
 
 // Int converts the parameter to int using the Go syntax for integer literals.
 // It fails the task if the conversion failed.
 // 0 is returned if the parameter was not set.
 func (p TFParams) Int(key string) int {
-	v := p.params[key]
+	v := p.String(key)
 	if v == "" {
 		return 0
 	}
@@ -40,7 +44,7 @@ func (p TFParams) Int(key string) int {
 // False is returned if the parameter was not set.
 // It accepts 1, t, T, TRUE, true, True, 0, f, F, FALSE, false, False.
 func (p TFParams) Bool(key string) bool {
-	v := p.params[key]
+	v := p.String(key)
 	if v == "" {
 		return false
 	}
@@ -55,7 +59,7 @@ func (p TFParams) Bool(key string) bool {
 // It fails the task if the conversion failed.
 // 0 is returned if the parameter was not set.
 func (p TFParams) Float64(key string) float64 {
-	v := p.params[key]
+	v := p.String(key)
 	if v == "" {
 		return 0
 	}
@@ -74,7 +78,7 @@ func (p TFParams) Float64(key string) float64 {
 // such as "300ms", "-1.5h" or "2h45m".
 // Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 func (p TFParams) Duration(key string) time.Duration {
-	v := p.params[key]
+	v := p.String(key)
 	if v == "" {
 		return 0
 	}
@@ -95,7 +99,7 @@ func (p TFParams) Duration(key string) time.Duration {
 // the input format. The same interpretation will then be made to the
 // input string.
 func (p TFParams) Date(key string, layout string) time.Time {
-	v := p.params[key]
+	v := p.String(key)
 	if v == "" {
 		return time.Time{}
 	}
@@ -118,7 +122,7 @@ func (p TFParams) ParseText(key string, v encoding.TextUnmarshaler) {
 		p.tf.Fatal(&ParamError{Key: key, Err: errors.New("non-pointer variable passed to ParseText")})
 	}
 
-	s := p.params[key]
+	s := p.String(key)
 	if s == "" {
 		return
 	}
@@ -139,7 +143,7 @@ func (p TFParams) ParseJSON(key string, v interface{}) {
 		p.tf.Fatal(&ParamError{Key: key, Err: errors.New("non-pointer variable passed to ParseJSON")})
 	}
 
-	s := p.params[key]
+	s := p.String(key)
 	if s == "" {
 		return
 	}

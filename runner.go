@@ -12,7 +12,7 @@ type Runner struct {
 	Ctx      context.Context
 	TaskName string
 	Output   io.Writer
-	Params   Params
+	Params   map[string]string
 	Verbose  bool
 }
 

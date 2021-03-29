@@ -25,16 +25,19 @@ var DefaultOutput io.Writer = os.Stdout
 // and Run or Main method to execute provided tasks.
 type Taskflow struct {
 	Output      io.Writer      // output where text is printed; os.Stdout by default
-	Params      Params         // default parameters' values
 	Verbose     bool           // when enabled, then the whole output will be always streamed
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
 
-	tasks map[string]Task
+	params map[string]Parameter
+	tasks  map[string]Task
 }
 
-// Params represents Taskflow parameters used within Taskflow.
-// The default values set in the struct are overridden in Run method.
-type Params map[string]string
+// Parameter represents the general information of a parameter for one or more tasks.
+type Parameter struct {
+	Name    string
+	Default string
+	Usage   string
+}
 
 // RegisteredTask represents a task that has been registered to a Taskflow.
 // It can be used as a dependency for another Task.
@@ -42,12 +45,46 @@ type RegisteredTask struct {
 	name string
 }
 
+// RegisteredParam represents a parameter that has been registered to a Taskflow.
+// It can be used as a parameter for a Task.
+type RegisteredParam struct {
+	name string
+}
+
+// Name returns the key of the parameter.
+func (p RegisteredParam) Name() string {
+	return p.name
+}
+
 // New return an instance of Taskflow with initialized fields.
 func New() *Taskflow {
 	return &Taskflow{
 		Output: DefaultOutput,
-		Params: Params{},
 	}
+}
+
+// Configure adds the given parameter to the set of parameters.
+func (f *Taskflow) Configure(param Parameter) (RegisteredParam, error) {
+	if param.Name == "" {
+		return RegisteredParam{}, errors.New("parameter name cannot be empty")
+	}
+	if _, exists := f.params[param.Name]; exists {
+		return RegisteredParam{}, fmt.Errorf("%s parameter was already registered", param.Name)
+	}
+	if f.params == nil {
+		f.params = make(map[string]Parameter)
+	}
+	f.params[param.Name] = param
+	return RegisteredParam{name: param.Name}, nil
+}
+
+// MustConfigure adds the given parameter to the set of parameters. It panics in case of any error.
+func (f *Taskflow) MustConfigure(param Parameter) RegisteredParam {
+	reg, err := f.Configure(param)
+	if err != nil {
+		panic(err)
+	}
+	return reg
 }
 
 // Register registers the task.
@@ -81,14 +118,9 @@ func (f *Taskflow) MustRegister(task Task) RegisteredTask {
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (f *Taskflow) Run(ctx context.Context, args ...string) int {
-	params := make(Params, len(f.Params))
-	for k, v := range f.Params {
-		params[k] = v
-	}
-
 	flow := &flowRunner{
 		output:      f.Output,
-		params:      params,
+		params:      f.params,
 		tasks:       f.tasks,
 		verbose:     f.Verbose,
 		defaultTask: f.DefaultTask,

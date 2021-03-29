@@ -8,6 +8,7 @@ type Task struct {
 	Description  string
 	Command      func(tf *TF)
 	Dependencies Deps
+	Parameters   []RegisteredParam
 }
 
 // Deps represents an collection of registered Tasks.

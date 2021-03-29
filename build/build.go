@@ -10,6 +10,12 @@ import (
 func main() {
 	flow := taskflow.New()
 
+	ci := flow.MustConfigure(taskflow.Parameter{
+		Name:    "ci",
+		Default: "false",
+		Usage:   "Whether CI is calling the build script",
+	})
+
 	// tasks
 	clean := flow.MustRegister(taskClean())
 	install := flow.MustRegister(taskInstall())
@@ -18,7 +24,7 @@ func main() {
 	lint := flow.MustRegister(taskLint())
 	test := flow.MustRegister(taskTest())
 	modTidy := flow.MustRegister(taskModTidy())
-	diff := flow.MustRegister(taskDiff())
+	diff := flow.MustRegister(taskDiff(ci))
 
 	// pipeline
 	all := flow.MustRegister(taskflow.Task{
@@ -37,7 +43,6 @@ func main() {
 	})
 
 	flow.DefaultTask = all
-	flow.Params.SetBool("ci", false)
 	flow.Main()
 }
 
@@ -123,12 +128,13 @@ func taskModTidy() taskflow.Task {
 	}
 }
 
-func taskDiff() taskflow.Task {
+func taskDiff(ci taskflow.RegisteredParam) taskflow.Task {
 	return taskflow.Task{
 		Name:        "diff",
 		Description: "git diff",
+		Parameters:  []taskflow.RegisteredParam{ci},
 		Command: func(tf *taskflow.TF) {
-			if !tf.Params().Bool("ci") {
+			if !tf.Params().Bool(ci.Name()) {
 				tf.Skip("ci param is not set, skipping")
 			}
 
