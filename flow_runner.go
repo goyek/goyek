@@ -33,10 +33,6 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 			valuesByFlag["-"+string(param.info.Short)] = value
 		}
 	}
-	knownTasks := make(map[string]struct{})
-	for _, task := range f.tasks {
-		knownTasks[task.Name] = struct{}{}
-	}
 	usageRequested := false
 
 	var argHandler func(string) error
@@ -53,15 +49,11 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	var tasks []string
 
 	argHandler = func(arg string) error {
-		if _, isTask := knownTasks[arg]; isTask {
+		if _, isTask := f.tasks[arg]; isTask {
 			tasks = append(tasks, arg)
 			return nil
 		}
-		if (arg == "-h") || (arg == "--help") || (arg == "help") {
-			usageRequested = true
-			return nil
-		}
-		split := strings.Split(arg, "=")
+		split := strings.SplitN(arg, "=", 2)
 		if value, isFlag := valuesByFlag[split[0]]; isFlag {
 			if len(split) > 1 {
 				return value.Set(split[1])
@@ -70,6 +62,11 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 				return value.Set("")
 			}
 			handleNextArgFor(value)
+			return nil
+		}
+		// If they haven't been overridden above, provide usage for common queries
+		if (arg == "-h") || (arg == "--help") || (arg == "help") {
+			usageRequested = true
 			return nil
 		}
 		fmt.Fprintf(f.output, "unknown argument: %s\n", arg)
