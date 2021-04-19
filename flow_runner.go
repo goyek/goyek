@@ -37,48 +37,6 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	for _, task := range f.tasks {
 		knownTasks[task.Name] = struct{}{}
 	}
-	usage := func() {
-		fmt.Fprintf(f.output, "Usage: [flag(s)] task(s)\n")
-		fmt.Fprintf(f.output, "Flags:\n")
-		w := tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
-		for _, param := range f.params {
-			shortInfo := ""
-			if param.info.Short != 0 {
-				shortInfo = "-" + string(param.info.Short)
-			}
-			fmt.Fprintf(w, "  %s\t--%s\t%s\n", shortInfo, param.info.Name, param.info.Usage)
-		}
-		w.Flush() //nolint // not checking errors when writing to output
-
-		fmt.Fprintf(f.output, "Tasks:\n")
-		w = tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
-		keys := make([]string, 0, len(f.tasks))
-		for k, task := range f.tasks {
-			if task.Description == "" {
-				continue
-			}
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		for _, k := range keys {
-			t := f.tasks[k]
-			params := make([]string, len(t.Parameters))
-			for i, param := range t.Parameters {
-				params[i] = param.Name()
-			}
-			sort.Strings(params)
-			paramsText := ""
-			if len(params) > 0 {
-				paramsText = "; -" + strings.Join(params, " -")
-			}
-			fmt.Fprintf(w, "  %s\t%s%s\n", t.Name, t.Description, paramsText)
-		}
-		w.Flush() //nolint // not checking errors when writing to output
-
-		if f.defaultTask.name != "" {
-			fmt.Fprintf(f.output, "Default task: %s\n", f.defaultTask.name)
-		}
-	}
 	usageRequested := false
 
 	var argHandler func(string) error
@@ -126,7 +84,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	}
 
 	if usageRequested {
-		usage()
+		printUsage(f)
 		return CodePass
 	}
 
@@ -137,7 +95,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 
 	if len(tasks) == 0 {
 		fmt.Fprintln(f.output, "no task provided")
-		usage()
+		printUsage(f)
 		return CodeInvalidArgs
 	}
 
@@ -235,4 +193,47 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	measuredRunner.Run(measuredCommand)
 
 	return !failed
+}
+
+func printUsage(f *flowRunner) {
+	fmt.Fprintf(f.output, "Usage: [flag(s)] task(s)\n")
+	fmt.Fprintf(f.output, "Flags:\n")
+	w := tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
+	for _, param := range f.params {
+		shortInfo := ""
+		if param.info.Short != 0 {
+			shortInfo = "-" + string(param.info.Short)
+		}
+		fmt.Fprintf(w, "  %s\t--%s\t%s\n", shortInfo, param.info.Name, param.info.Usage)
+	}
+	w.Flush() //nolint // not checking errors when writing to output
+
+	fmt.Fprintf(f.output, "Tasks:\n")
+	w = tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
+	keys := make([]string, 0, len(f.tasks))
+	for k, task := range f.tasks {
+		if task.Description == "" {
+			continue
+		}
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		t := f.tasks[k]
+		params := make([]string, len(t.Parameters))
+		for i, param := range t.Parameters {
+			params[i] = param.Name()
+		}
+		sort.Strings(params)
+		paramsText := ""
+		if len(params) > 0 {
+			paramsText = "; -" + strings.Join(params, " -")
+		}
+		fmt.Fprintf(w, "  %s\t%s%s\n", t.Name, t.Description, paramsText)
+	}
+	w.Flush() //nolint // not checking errors when writing to output
+
+	if f.defaultTask.name != "" {
+		fmt.Fprintf(f.output, "Default task: %s\n", f.defaultTask.name)
+	}
 }
