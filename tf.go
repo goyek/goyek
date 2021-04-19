@@ -2,6 +2,7 @@ package taskflow
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"runtime"
@@ -15,13 +16,13 @@ import (
 // All methods must be called only from the goroutine running the
 // Command function.
 type TF struct {
-	ctx     context.Context
-	name    string
-	writer  io.Writer
-	params  map[string]string
-	verbose bool
-	failed  bool
-	skipped bool
+	ctx         context.Context
+	name        string
+	writer      io.Writer
+	paramValues map[string]flag.Value
+	verbose     bool
+	failed      bool
+	skipped     bool
 }
 
 // Context returns the taskflows' run context.
@@ -37,14 +38,6 @@ func (tf *TF) Name() string {
 // Verbose returns if verbose mode was set.
 func (tf *TF) Verbose() bool {
 	return tf.verbose
-}
-
-// Params returns the key-value parameters.
-func (tf *TF) Params() TFParams {
-	return TFParams{
-		params: tf.params,
-		tf:     tf,
-	}
 }
 
 // Output returns the io.Writer used to print output.

@@ -3,6 +3,7 @@ package taskflow
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -28,15 +29,19 @@ type Taskflow struct {
 	Verbose     bool           // when enabled, then the whole output will be always streamed
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
 
-	params map[string]Parameter
+	params map[string]parameter
 	tasks  map[string]Task
 }
 
-// Parameter represents the general information of a parameter for one or more tasks.
-type Parameter struct {
-	Name    string
-	Default string
-	Usage   string
+type parameter struct {
+	info     ParameterInfo
+	register func(*flag.FlagSet)
+}
+
+// ParameterInfo represents the general information of a parameter for one or more tasks.
+type ParameterInfo struct {
+	Name  string
+	Usage string
 }
 
 // RegisteredTask represents a task that has been registered to a Taskflow.
@@ -56,6 +61,65 @@ func (p RegisteredParam) Name() string {
 	return p.name
 }
 
+func (p RegisteredParam) value(tf *TF) Value {
+	value, existing := tf.paramValues[p.name]
+	if !existing {
+		tf.Fatal(&ParamError{Key: p.name, Err: errors.New("parameter not registered")})
+	}
+	return value
+}
+
+// Value represents an instance of a generic parameter.
+// It deliberately matches the signature of type flag.Value as it is used for the
+// underlying implementation.
+type Value interface {
+	String() string
+	Set(string) error
+}
+
+// ValueParam represents a registered parameter based on a generic implementation.
+type ValueParam struct {
+	RegisteredParam
+}
+
+// Get returns the concrete instance of the generic parameter in the given flow.
+func (p ValueParam) Get(tf *TF) Value {
+	return p.value(tf)
+}
+
+// BoolParam represents a registered boolean parameter.
+type BoolParam struct {
+	RegisteredParam
+}
+
+// Get returns the boolean value of the parameter in the given flow.
+func (p BoolParam) Get(tf *TF) bool {
+	value := p.value(tf)
+	return value.(flag.Getter).Get().(bool)
+}
+
+// IntParam represents a registered integer parameter.
+type IntParam struct {
+	RegisteredParam
+}
+
+// Get returns the integer value of the parameter in the given flow.
+func (p IntParam) Get(tf *TF) int {
+	value := p.value(tf)
+	return value.(flag.Getter).Get().(int)
+}
+
+// StringParam represents a registered string parameter.
+type StringParam struct {
+	RegisteredParam
+}
+
+// Get returns the string value of the parameter in the given flow.
+func (p StringParam) Get(tf *TF) string {
+	value := p.value(tf)
+	return value.(flag.Getter).Get().(string)
+}
+
 // New return an instance of Taskflow with initialized fields.
 func New() *Taskflow {
 	return &Taskflow{
@@ -63,28 +127,53 @@ func New() *Taskflow {
 	}
 }
 
-// Configure adds the given parameter to the set of parameters.
-func (f *Taskflow) Configure(param Parameter) (RegisteredParam, error) {
-	if param.Name == "" {
-		return RegisteredParam{}, errors.New("parameter name cannot be empty")
-	}
-	if _, exists := f.params[param.Name]; exists {
-		return RegisteredParam{}, fmt.Errorf("%s parameter was already registered", param.Name)
-	}
-	if f.params == nil {
-		f.params = make(map[string]Parameter)
-	}
-	f.params[param.Name] = param
-	return RegisteredParam{name: param.Name}, nil
+// ConfigureValue registers a generic parameter that is defined by the calling code.
+// Use this variant in case the primitive-specific implementations cannot cover the parameter.
+func (f *Taskflow) ConfigureValue(newValue func() Value, info ParameterInfo) ValueParam {
+	f.configure(func(set *flag.FlagSet) {
+		set.Var(newValue(), info.Name, info.Usage)
+	}, info)
+	return ValueParam{RegisteredParam{name: info.Name}}
 }
 
-// MustConfigure adds the given parameter to the set of parameters. It panics in case of any error.
-func (f *Taskflow) MustConfigure(param Parameter) RegisteredParam {
-	reg, err := f.Configure(param)
-	if err != nil {
-		panic(err)
+// ConfigureBool registers a boolean parameter.
+func (f *Taskflow) ConfigureBool(defaultValue bool, info ParameterInfo) BoolParam {
+	f.configure(func(set *flag.FlagSet) {
+		set.Bool(info.Name, defaultValue, info.Usage)
+	}, info)
+	return BoolParam{RegisteredParam{name: info.Name}}
+}
+
+// ConfigureInt registers an integer parameter.
+func (f *Taskflow) ConfigureInt(defaultValue int, info ParameterInfo) IntParam {
+	f.configure(func(set *flag.FlagSet) {
+		set.Int(info.Name, defaultValue, info.Usage)
+	}, info)
+	return IntParam{RegisteredParam{name: info.Name}}
+}
+
+// ConfigureString registers a string parameter.
+func (f *Taskflow) ConfigureString(defaultValue string, info ParameterInfo) StringParam {
+	f.configure(func(set *flag.FlagSet) {
+		set.String(info.Name, defaultValue, info.Usage)
+	}, info)
+	return StringParam{RegisteredParam{name: info.Name}}
+}
+
+func (f *Taskflow) configure(register func(*flag.FlagSet), info ParameterInfo) {
+	if info.Name == "" {
+		panic("parameter name cannot be empty")
 	}
-	return reg
+	if _, exists := f.params[info.Name]; exists {
+		panic(fmt.Sprintf("%s parameter was already registered", info.Name))
+	}
+	if f.params == nil {
+		f.params = make(map[string]parameter)
+	}
+	f.params[info.Name] = parameter{
+		info:     info,
+		register: register,
+	}
 }
 
 // Register registers the task.

@@ -2,6 +2,7 @@ package taskflow
 
 import (
 	"context"
+	"flag"
 	"io"
 	"io/ioutil"
 	"time"
@@ -9,11 +10,11 @@ import (
 
 // Runner is used to run a Command.
 type Runner struct {
-	Ctx      context.Context
-	TaskName string
-	Output   io.Writer
-	Params   map[string]string
-	Verbose  bool
+	Ctx         context.Context
+	TaskName    string
+	Output      io.Writer
+	ParamValues map[string]flag.Value
+	Verbose     bool
 }
 
 // RunResult contains the results of a Command run.
@@ -65,11 +66,11 @@ func (r Runner) Run(command func(tf *TF)) RunResult {
 	finished := make(chan RunResult)
 	go func() {
 		tf := &TF{
-			ctx:     ctx,
-			name:    name,
-			writer:  writer,
-			verbose: verbose,
-			params:  r.Params,
+			ctx:         ctx,
+			name:        name,
+			writer:      writer,
+			verbose:     verbose,
+			paramValues: r.ParamValues,
 		}
 		from := time.Now()
 		defer func() {

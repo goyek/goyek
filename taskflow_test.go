@@ -277,10 +277,9 @@ func Test_invalid_args(t *testing.T) {
 
 func Test_help(t *testing.T) {
 	flow := taskflow.New()
-	flow.MustConfigure(taskflow.Parameter{
-		Name:    "fast",
-		Default: "false",
-		Usage:   "simulates fast-lane processing",
+	flow.ConfigureBool(false, taskflow.ParameterInfo{
+		Name:  "fast",
+		Usage: "simulates fast-lane processing",
 	})
 	a := flow.MustRegister(taskflow.Task{
 		Name:        "a",
@@ -400,28 +399,28 @@ func Test_verbose(t *testing.T) {
 
 func Test_params(t *testing.T) {
 	flow := taskflow.New()
-	xParam := flow.MustConfigure(taskflow.Parameter{
-		Name:    "x",
-		Default: "1",
+	xParam := flow.ConfigureInt(1, taskflow.ParameterInfo{
+		Name: "x",
 	})
-	zParam := flow.MustConfigure(taskflow.Parameter{
-		Name:    "z",
-		Default: "abc",
+	zParam := flow.ConfigureString("abc", taskflow.ParameterInfo{
+		Name: "z",
 	})
-	var got taskflow.TFParams
+	var gotX int
+	var gotZ string
 	flow.MustRegister(taskflow.Task{
 		Name:       "task",
-		Parameters: []taskflow.RegisteredParam{xParam, zParam},
+		Parameters: []taskflow.RegisteredParam{xParam.RegisteredParam, zParam.RegisteredParam},
 		Command: func(tf *taskflow.TF) {
-			got = tf.Params()
+			gotX = xParam.Get(tf)
+			gotZ = zParam.Get(tf)
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "-z=3", "task")
+	exitCode := flow.Run(context.Background(), "-z=xyz", "task")
 
 	assertEqual(t, exitCode, 0, "should pass")
-	assertEqual(t, got.String("x"), "1", "x param")
-	assertEqual(t, got.Float64("z"), 3.0, "z param")
+	assertEqual(t, gotX, 1, "x param")
+	assertEqual(t, gotZ, "xyz", "z param")
 }
 
 func Test_invalid_params(t *testing.T) {

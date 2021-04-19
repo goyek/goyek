@@ -10,10 +10,9 @@ import (
 func main() {
 	flow := taskflow.New()
 
-	ci := flow.MustConfigure(taskflow.Parameter{
-		Name:    "ci",
-		Default: "false",
-		Usage:   "Whether CI is calling the build script",
+	ci := flow.ConfigureBool(false, taskflow.ParameterInfo{
+		Name:  "ci",
+		Usage: "Whether CI is calling the build script",
 	})
 
 	// tasks
@@ -128,13 +127,13 @@ func taskModTidy() taskflow.Task {
 	}
 }
 
-func taskDiff(ci taskflow.RegisteredParam) taskflow.Task {
+func taskDiff(ci taskflow.BoolParam) taskflow.Task {
 	return taskflow.Task{
 		Name:        "diff",
 		Description: "git diff",
-		Parameters:  []taskflow.RegisteredParam{ci},
+		Parameters:  []taskflow.RegisteredParam{ci.RegisteredParam},
 		Command: func(tf *taskflow.TF) {
-			if !tf.Params().Bool(ci.Name()) {
+			if !ci.Get(tf) {
 				tf.Skip("ci param is not set, skipping")
 			}
 

@@ -14,7 +14,7 @@ import (
 
 type flowRunner struct {
 	output      io.Writer
-	params      map[string]Parameter
+	params      map[string]parameter
 	flags       *flag.FlagSet
 	tasks       map[string]Task
 	verbose     bool
@@ -29,7 +29,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	f.flags.SetOutput(f.output)
 	verbose := f.flags.Bool("v", false, "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.")
 	for _, param := range f.params {
-		f.flags.String(param.Name, param.Default, param.Usage)
+		param.register(f.flags)
 	}
 	usage := func() {
 		fmt.Fprintf(f.flags.Output(), "Usage: [flag(s)] task(s)\n")
@@ -148,17 +148,17 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	// report task start
 	fmt.Fprintf(w, "===== TASK  %s\n", task.Name)
 
-	params := make(map[string]string)
+	params := make(map[string]flag.Value)
 	for _, param := range task.Parameters {
-		params[param.name] = f.flags.Lookup(param.name).Value.String()
+		params[param.name] = f.flags.Lookup(param.name).Value
 	}
 	// run task
 	runner := Runner{
-		Ctx:      ctx,
-		TaskName: task.Name,
-		Verbose:  f.verbose,
-		Params:   params,
-		Output:   w,
+		Ctx:         ctx,
+		TaskName:    task.Name,
+		Verbose:     f.verbose,
+		ParamValues: params,
+		Output:      w,
 	}
 	result := runner.Run(task.Command)
 
