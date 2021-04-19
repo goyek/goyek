@@ -50,7 +50,6 @@ linters:
     - goprintffuncname
     - gosec
     - interfacer
-    - maligned
     - misspell
     - nakedret
     - nestif
