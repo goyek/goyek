@@ -2,6 +2,7 @@ package taskflow_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -386,31 +387,63 @@ func Test_name(t *testing.T) {
 	assertEqual(t, got, taskName, "should return proper Name value")
 }
 
+type arrayValue []string
+
+func (value *arrayValue) Set(s string) error {
+	return json.Unmarshal([]byte(s), value)
+}
+
+func (value *arrayValue) Get() interface{} { return []string(*value) }
+
+func (value *arrayValue) String() string {
+	b, _ := json.Marshal(value)
+	return string(b)
+}
+
+func (value *arrayValue) IsBool() bool { return false }
+
 func Test_params(t *testing.T) {
 	flow := taskflow.New()
-	xParam := flow.ConfigureInt(1, taskflow.ParameterInfo{
-		Name: "x",
+	boolParam := flow.ConfigureBool(true, taskflow.ParameterInfo{
+		Name: "bool",
 	})
-	zParam := flow.ConfigureString("abc", taskflow.ParameterInfo{
-		Name:  "zFlag",
-		Short: 'z',
+	intParam := flow.ConfigureInt(1, taskflow.ParameterInfo{
+		Name: "int",
 	})
-	var gotX int
-	var gotZ string
+	stringParam := flow.ConfigureString("abc", taskflow.ParameterInfo{
+		Name:  "string",
+		Short: 's',
+	})
+	arrayParam := flow.ConfigureValue(func() taskflow.Value { return &arrayValue{} }, taskflow.ParameterInfo{
+		Name: "array",
+	})
+	var gotBool bool
+	var gotInt int
+	var gotString string
+	var gotArray []string
 	flow.MustRegister(taskflow.Task{
-		Name:       "task",
-		Parameters: []taskflow.RegisteredParam{xParam.RegisteredParam, zParam.RegisteredParam},
+		Name: "task",
+		Parameters: []taskflow.RegisteredParam{
+			boolParam.RegisteredParam,
+			intParam.RegisteredParam,
+			stringParam.RegisteredParam,
+			arrayParam.RegisteredParam,
+		},
 		Command: func(tf *taskflow.TF) {
-			gotX = xParam.Get(tf)
-			gotZ = zParam.Get(tf)
+			gotBool = boolParam.Get(tf)
+			gotInt = intParam.Get(tf)
+			gotString = stringParam.Get(tf)
+			gotArray = arrayParam.Get(tf).([]string)
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "-z=xyz", "task")
+	exitCode := flow.Run(context.Background(), "--bool=false", "--int", "9001", "-s", "xyz", "--array", "[\"a\", \"b\"]", "task")
 
 	assertEqual(t, exitCode, 0, "should pass")
-	assertEqual(t, gotX, 1, "x param")
-	assertEqual(t, gotZ, "xyz", "z param")
+	assertEqual(t, gotBool, false, "bool param")
+	assertEqual(t, gotInt, 9001, "int param")
+	assertEqual(t, gotString, "xyz", "string param")
+	assertEqual(t, gotArray, []string{"a", "b"}, "array param")
 }
 
 func Test_invalid_params(t *testing.T) {
@@ -423,6 +456,21 @@ func Test_invalid_params(t *testing.T) {
 	exitCode := flow.Run(context.Background(), "-z=3", "task")
 
 	assertEqual(t, taskflow.CodeInvalidArgs, exitCode, "should fail because of unknown parameter")
+}
+
+func Test_unregistered_params(t *testing.T) {
+	foreignParam := taskflow.New().ConfigureBool(false, taskflow.ParameterInfo{Name: "foreign"})
+	flow := taskflow.New()
+	flow.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			foreignParam.Get(tf)
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "task")
+
+	assertEqual(t, taskflow.CodeFailure, exitCode, "should fail because of unregistered parameter")
 }
 
 func Test_defaultTask(t *testing.T) {
