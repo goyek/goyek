@@ -201,7 +201,13 @@ func printUsage(f *flowRunner) {
 	fmt.Fprintf(f.output, "Usage: [flag(s)] task(s)\n")
 	fmt.Fprintf(f.output, "Flags:\n")
 	w := tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
-	for _, param := range f.params {
+	keys := make([]string, 0, len(f.params))
+	for key := range f.params {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		param := f.params[key]
 		fmt.Fprintf(w, "  %s\t%s\tDefault: %s\t%s\n",
 			param.info.shortFlag(), param.info.longFlag(), param.newValue().String(), param.info.Usage)
 	}
@@ -209,7 +215,7 @@ func printUsage(f *flowRunner) {
 
 	fmt.Fprintf(f.output, "Tasks:\n")
 	w = tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
-	keys := make([]string, 0, len(f.tasks))
+	keys = make([]string, 0, len(f.tasks))
 	for k, task := range f.tasks {
 		if task.Description == "" {
 			continue
