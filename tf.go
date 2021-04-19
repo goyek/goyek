@@ -2,7 +2,6 @@ package taskflow
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"io"
 	"runtime"
@@ -19,7 +18,7 @@ type TF struct {
 	ctx         context.Context
 	name        string
 	writer      io.Writer
-	paramValues map[string]flag.Value
+	paramValues map[string]Value
 	failed      bool
 	skipped     bool
 }

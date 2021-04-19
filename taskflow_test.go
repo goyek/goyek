@@ -289,7 +289,7 @@ func Test_help(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "-h")
 
-	assertEqual(t, exitCode, 2, "should return error bad args")
+	assertEqual(t, exitCode, taskflow.CodePass, "should return OK")
 }
 
 func Test_printing(t *testing.T) {
@@ -317,7 +317,7 @@ func Test_printing(t *testing.T) {
 	})
 	t.Log()
 
-	flow.Run(context.Background(), "-"+verboseParam.Name(), "failing")
+	flow.Run(context.Background(), "--"+verboseParam.Name(), "failing")
 
 	assertContains(t, sb.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
 	assertContains(t, sb.String(), `Log 1
@@ -357,7 +357,7 @@ func Test_concurrent_printing(t *testing.T) {
 
 			var args []string
 			if tc.verbose {
-				args = append(args, "-"+verboseParam.Name())
+				args = append(args, "--"+verboseParam.Name())
 			}
 			args = append(args, "task")
 			exitCode := flow.Run(context.Background(), args...)
@@ -392,7 +392,8 @@ func Test_params(t *testing.T) {
 		Name: "x",
 	})
 	zParam := flow.ConfigureString("abc", taskflow.ParameterInfo{
-		Name: "z",
+		Name:  "zFlag",
+		Short: 'z',
 	})
 	var gotX int
 	var gotZ string

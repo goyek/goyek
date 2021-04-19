@@ -2,7 +2,6 @@ package taskflow
 
 import (
 	"context"
-	"flag"
 	"io"
 	"io/ioutil"
 	"time"
@@ -13,7 +12,7 @@ type Runner struct {
 	Ctx         context.Context
 	TaskName    string
 	Output      io.Writer
-	ParamValues map[string]flag.Value
+	ParamValues map[string]Value
 }
 
 // RunResult contains the results of a Command run.

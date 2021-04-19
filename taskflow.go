@@ -3,7 +3,6 @@ package taskflow
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -49,37 +48,38 @@ func New() *Taskflow {
 // ConfigureValue registers a generic parameter that is defined by the calling code.
 // Use this variant in case the primitive-specific implementations cannot cover the parameter.
 func (f *Taskflow) ConfigureValue(newValue func() Value, info ParameterInfo) ValueParam {
-	f.configure(func(set *flag.FlagSet) {
-		set.Var(newValue(), info.Name, info.Usage)
-	}, info)
+	f.configure(newValue, info)
 	return ValueParam{RegisteredParam{name: info.Name}}
 }
 
 // ConfigureBool registers a boolean parameter.
 func (f *Taskflow) ConfigureBool(defaultValue bool, info ParameterInfo) BoolParam {
-	f.configure(func(set *flag.FlagSet) {
-		set.Bool(info.Name, defaultValue, info.Usage)
+	f.configure(func() Value {
+		value := boolValue(defaultValue)
+		return &value
 	}, info)
 	return BoolParam{RegisteredParam{name: info.Name}}
 }
 
 // ConfigureInt registers an integer parameter.
 func (f *Taskflow) ConfigureInt(defaultValue int, info ParameterInfo) IntParam {
-	f.configure(func(set *flag.FlagSet) {
-		set.Int(info.Name, defaultValue, info.Usage)
+	f.configure(func() Value {
+		value := intValue(defaultValue)
+		return &value
 	}, info)
 	return IntParam{RegisteredParam{name: info.Name}}
 }
 
 // ConfigureString registers a string parameter.
 func (f *Taskflow) ConfigureString(defaultValue string, info ParameterInfo) StringParam {
-	f.configure(func(set *flag.FlagSet) {
-		set.String(info.Name, defaultValue, info.Usage)
+	f.configure(func() Value {
+		value := stringValue(defaultValue)
+		return &value
 	}, info)
 	return StringParam{RegisteredParam{name: info.Name}}
 }
 
-func (f *Taskflow) configure(register func(*flag.FlagSet), info ParameterInfo) {
+func (f *Taskflow) configure(newValue func() Value, info ParameterInfo) {
 	if info.Name == "" {
 		panic("parameter name cannot be empty")
 	}
@@ -91,7 +91,7 @@ func (f *Taskflow) configure(register func(*flag.FlagSet), info ParameterInfo) {
 	}
 	f.params[info.Name] = parameter{
 		info:     info,
-		register: register,
+		newValue: newValue,
 	}
 }
 
