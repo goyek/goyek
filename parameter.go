@@ -17,6 +17,17 @@ type ParameterInfo struct {
 	Usage string
 }
 
+func (info ParameterInfo) longFlag() string {
+	return "--" + info.Name
+}
+
+func (info ParameterInfo) shortFlag() string {
+	if info.Short == 0 {
+		return ""
+	}
+	return "-" + string(info.Short)
+}
+
 // Value represents an instance of a generic parameter.
 type Value interface {
 	// String returns the current value formatted as string.

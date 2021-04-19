@@ -28,9 +28,10 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	for _, param := range f.params {
 		value := param.newValue()
 		f.paramValues[param.info.Name] = value
-		valuesByFlag["--"+param.info.Name] = value
-		if param.info.Short != 0 {
-			valuesByFlag["-"+string(param.info.Short)] = value
+		valuesByFlag[param.info.longFlag()] = value
+		shortFlag := param.info.shortFlag()
+		if len(shortFlag) > 0 {
+			valuesByFlag[shortFlag] = value
 		}
 	}
 	usageRequested := false
@@ -201,11 +202,7 @@ func printUsage(f *flowRunner) {
 	fmt.Fprintf(f.output, "Flags:\n")
 	w := tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
 	for _, param := range f.params {
-		shortInfo := ""
-		if param.info.Short != 0 {
-			shortInfo = "-" + string(param.info.Short)
-		}
-		fmt.Fprintf(w, "  %s\t--%s\t%s\n", shortInfo, param.info.Name, param.info.Usage)
+		fmt.Fprintf(w, "  %s\t%s\t%s\n", param.info.shortFlag(), param.info.longFlag(), param.info.Usage)
 	}
 	w.Flush() //nolint // not checking errors when writing to output
 
