@@ -14,7 +14,6 @@ type Runner struct {
 	TaskName    string
 	Output      io.Writer
 	ParamValues map[string]flag.Value
-	Verbose     bool
 }
 
 // RunResult contains the results of a Command run.
@@ -61,7 +60,6 @@ func (r Runner) Run(command func(tf *TF)) RunResult {
 	if r.Output != nil {
 		writer = &syncWriter{Writer: r.Output}
 	}
-	verbose := r.Verbose
 
 	finished := make(chan RunResult)
 	go func() {
@@ -69,7 +67,6 @@ func (r Runner) Run(command func(tf *TF)) RunResult {
 			ctx:         ctx,
 			name:        name,
 			writer:      writer,
-			verbose:     verbose,
 			paramValues: r.ParamValues,
 		}
 		from := time.Now()

@@ -10,6 +10,7 @@ import (
 func main() {
 	flow := taskflow.New()
 
+	taskflow.VerboseParam(flow)
 	ci := flow.ConfigureBool(false, taskflow.ParameterInfo{
 		Name:  "ci",
 		Usage: "Whether CI is calling the build script",

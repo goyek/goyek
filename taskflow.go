@@ -26,7 +26,7 @@ var DefaultOutput io.Writer = os.Stdout
 // and Run or Main method to execute provided tasks.
 type Taskflow struct {
 	Output      io.Writer      // output where text is printed; os.Stdout by default
-	Verbose     bool           // when enabled, then the whole output will be always streamed
+	Verbose     *BoolParam     // when enabled, then the whole output will be always streamed
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
 
 	params map[string]parameter

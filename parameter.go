@@ -85,3 +85,13 @@ func (p StringParam) Get(tf *TF) string {
 	value := p.value(tf)
 	return value.(flag.Getter).Get().(string)
 }
+
+// VerboseParam registers a boolean parameter that controls verbose output.
+func VerboseParam(flow *Taskflow) BoolParam {
+	param := flow.ConfigureBool(false, ParameterInfo{
+		Name:  "v",
+		Usage: "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.",
+	})
+	flow.Verbose = &param
+	return param
+}

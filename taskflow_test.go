@@ -295,9 +295,9 @@ func Test_help(t *testing.T) {
 func Test_printing(t *testing.T) {
 	sb := &strings.Builder{}
 	flow := &taskflow.Taskflow{
-		Output:  sb,
-		Verbose: true,
+		Output: sb,
 	}
+	verboseParam := taskflow.VerboseParam(flow)
 	skipped := flow.MustRegister(taskflow.Task{
 		Name: "skipped",
 		Command: func(tf *taskflow.TF) {
@@ -317,7 +317,7 @@ func Test_printing(t *testing.T) {
 	})
 	t.Log()
 
-	flow.Run(context.Background(), "failing")
+	flow.Run(context.Background(), "-"+verboseParam.Name(), "failing")
 
 	assertContains(t, sb.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
 	assertContains(t, sb.String(), `Log 1
@@ -339,9 +339,9 @@ func Test_concurrent_printing(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			sb := &strings.Builder{}
 			flow := taskflow.Taskflow{
-				Verbose: tc.verbose,
-				Output:  sb,
+				Output: sb,
 			}
+			verboseParam := taskflow.VerboseParam(&flow)
 			flow.MustRegister(taskflow.Task{
 				Name: "task",
 				Command: func(tf *taskflow.TF) {
@@ -355,7 +355,12 @@ func Test_concurrent_printing(t *testing.T) {
 				},
 			})
 
-			exitCode := flow.Run(context.Background(), "task")
+			var args []string
+			if tc.verbose {
+				args = append(args, "-"+verboseParam.Name())
+			}
+			args = append(args, "task")
+			exitCode := flow.Run(context.Background(), args...)
 
 			assertEqual(t, exitCode, taskflow.CodeFailure, "should fail")
 			assertContains(t, sb.String(), "from child goroutine", "should contain log from child goroutine")
@@ -379,22 +384,6 @@ func Test_name(t *testing.T) {
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertEqual(t, got, taskName, "should return proper Name value")
-}
-
-func Test_verbose(t *testing.T) {
-	flow := &taskflow.Taskflow{}
-	var got bool
-	flow.MustRegister(taskflow.Task{
-		Name: "task",
-		Command: func(tf *taskflow.TF) {
-			got = tf.Verbose()
-		},
-	})
-
-	exitCode := flow.Run(context.Background(), "-v", "task")
-
-	assertEqual(t, exitCode, 0, "should pass")
-	assertTrue(t, got, "should return proper Verbose value")
 }
 
 func Test_params(t *testing.T) {

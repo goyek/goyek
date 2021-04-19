@@ -17,7 +17,7 @@ type flowRunner struct {
 	params      map[string]parameter
 	flags       *flag.FlagSet
 	tasks       map[string]Task
-	verbose     bool
+	verbose     *BoolParam
 	defaultTask RegisteredTask
 }
 
@@ -27,7 +27,6 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	// prepare flag.FlagSet
 	f.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	f.flags.SetOutput(f.output)
-	verbose := f.flags.Bool("v", false, "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.")
 	for _, param := range f.params {
 		param.register(f.flags)
 	}
@@ -70,9 +69,6 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	// parse args (flags)
 	if err := f.flags.Parse(args); err != nil {
 		return CodeInvalidArgs
-	}
-	if *verbose {
-		f.verbose = true
 	}
 
 	// parse non-flag args (tasks and parameters)
@@ -140,41 +136,56 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		return true
 	}
 
-	w := f.output
-	if !f.verbose {
-		w = &strings.Builder{}
-	}
-
-	// report task start
-	fmt.Fprintf(w, "===== TASK  %s\n", task.Name)
-
-	params := make(map[string]flag.Value)
+	paramValues := make(map[string]flag.Value)
 	for _, param := range task.Parameters {
-		params[param.name] = f.flags.Lookup(param.name).Value
+		paramValues[param.name] = f.flags.Lookup(param.name).Value
 	}
-	// run task
-	runner := Runner{
+	if f.verbose != nil {
+		paramValues[f.verbose.Name()] = f.flags.Lookup(f.verbose.Name()).Value
+	}
+
+	failed := false
+	measuredCommand := func(tf *TF) {
+		w := tf.Output()
+		if (f.verbose == nil) || !f.verbose.Get(tf) {
+			w = &strings.Builder{}
+		}
+
+		// report task start
+		fmt.Fprintf(w, "===== TASK  %s\n", tf.Name())
+
+		// run task
+		runner := Runner{
+			Ctx:         tf.Context(),
+			TaskName:    tf.Name(),
+			ParamValues: tf.paramValues,
+			Output:      w,
+		}
+		result := runner.Run(task.Command)
+
+		// report task end
+		status := "PASS"
+		switch {
+		case result.Failed():
+			status = "FAIL"
+			failed = true
+		case result.Skipped():
+			status = "SKIP"
+		}
+		fmt.Fprintf(w, "----- %s: %s (%.2fs)\n", status, tf.Name(), result.Duration().Seconds())
+
+		if sb, ok := w.(*strings.Builder); ok && result.failed {
+			io.Copy(tf.Output(), strings.NewReader(sb.String())) //nolint // not checking errors when writting to output
+		}
+	}
+
+	measuredRunner := Runner{
 		Ctx:         ctx,
 		TaskName:    task.Name,
-		Verbose:     f.verbose,
-		ParamValues: params,
-		Output:      w,
+		ParamValues: paramValues,
+		Output:      f.output,
 	}
-	result := runner.Run(task.Command)
+	measuredRunner.Run(measuredCommand)
 
-	// report task end
-	status := "PASS"
-	switch {
-	case result.Failed():
-		status = "FAIL"
-	case result.Skipped():
-		status = "SKIP"
-	}
-	fmt.Fprintf(w, "----- %s: %s (%.2fs)\n", status, task.Name, result.Duration().Seconds())
-
-	if sb, ok := w.(*strings.Builder); ok && result.failed {
-		io.Copy(f.output, strings.NewReader(sb.String())) //nolint // not checking errors when writting to output
-	}
-
-	return !result.failed
+	return !failed
 }
