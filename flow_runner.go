@@ -55,14 +55,15 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 		}
 		split := strings.SplitN(arg, "=", 2)
 		if value, isFlag := valuesByFlag[split[0]]; isFlag {
-			if len(split) > 1 {
+			switch {
+			case len(split) > 1:
 				return value.Set(split[1])
-			}
-			if value.IsBool() {
+			case value.IsBool():
 				return value.Set("")
+			default:
+				handleNextArgFor(value)
+				return nil
 			}
-			handleNextArgFor(value)
-			return nil
 		}
 		// If they haven't been overridden above, provide usage for common queries
 		if (arg == "-h") || (arg == "--help") || (arg == "help") {
@@ -96,7 +97,10 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 		return CodeInvalidArgs
 	}
 
-	// recursive run
+	return f.runTasks(ctx, tasks)
+}
+
+func (f *flowRunner) runTasks(ctx context.Context, tasks []string) int {
 	from := time.Now()
 	executedTasks := map[string]bool{}
 	for _, name := range tasks {
@@ -149,7 +153,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	failed := false
 	measuredCommand := func(tf *TF) {
 		w := tf.Output()
-		if (f.verbose == nil) || !f.verbose.Get(tf) {
+		if (f.verbose != nil) && !f.verbose.Get(tf) {
 			w = &strings.Builder{}
 		}
 
