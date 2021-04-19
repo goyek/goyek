@@ -202,7 +202,8 @@ func printUsage(f *flowRunner) {
 	fmt.Fprintf(f.output, "Flags:\n")
 	w := tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
 	for _, param := range f.params {
-		fmt.Fprintf(w, "  %s\t%s\t%s\n", param.info.shortFlag(), param.info.longFlag(), param.info.Usage)
+		fmt.Fprintf(w, "  %s\t%s\tDefault: %s\t%s\n",
+			param.info.shortFlag(), param.info.longFlag(), param.newValue().String(), param.info.Usage)
 	}
 	w.Flush() //nolint // not checking errors when writing to output
 
