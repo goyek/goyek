@@ -458,6 +458,18 @@ func Test_invalid_params(t *testing.T) {
 	assertEqual(t, taskflow.CodeInvalidArgs, exitCode, "should fail because of unknown parameter")
 }
 
+func Test_param_registration_error_empty_name(t *testing.T) {
+	flow := taskflow.New()
+	assertPanics(t, func() { flow.ConfigureBool(false, taskflow.ParameterInfo{Name: ""}) }, "empty name")
+}
+
+func Test_param_registration_error_double_name(t *testing.T) {
+	flow := taskflow.New()
+	info := taskflow.ParameterInfo{Name: "double"}
+	flow.ConfigureBool(false, info)
+	assertPanics(t, func() { flow.ConfigureBool(false, info) }, "double name")
+}
+
 func Test_unregistered_params(t *testing.T) {
 	foreignParam := taskflow.New().ConfigureBool(false, taskflow.ParameterInfo{Name: "foreign"})
 	flow := taskflow.New()
