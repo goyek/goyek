@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Task parameters need to be registered, both with `Taskflow.Configure*()` and `Task.Parameters`.
+
 ## [0.2.0] - 2021-03-14
 
 ### Added

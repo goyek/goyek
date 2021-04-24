@@ -56,6 +56,7 @@ import "github.com/pellared/taskflow"
 func main() {
 	flow := taskflow.New()
 
+	taskflow.VerboseParam(flow)
 	fmt := flow.MustRegister(taskFmt())
 	test := flow.MustRegister(taskTest())
 
@@ -94,14 +95,15 @@ func taskTest() taskflow.Task {
 	}
 }
 ```
+(This code can also be found in `examples/typical-ci/main.go`) 
 
 Sample usage:
 
 ```shell
 $ go run ./build -h
-Usage: [flag(s)] [key=val] task(s)
+Usage: [flag(s)] task(s)
 Flags:
-  -v    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
+  -v    --verbose    Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
 Tasks:
   all     build pipeline
   fmt     go fmt
@@ -167,23 +169,45 @@ Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.
 
 ### Verbose mode
 
-Enable verbose output using the `-v` CLI flag. It works similar to `go test -v`. When enabled, the whole output will be streamed. If disabled, only logs from failed task are send to the output.
+In verbose mode, the whole output will be streamed. If disabled, only logs from failed task are send to the output.
 
-Use [`func (*TF) Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Verbose) to check if verbose mode was set within the task's command.
+By default, verbose mode is turned off.
+It can be enabled by registering a boolean parameter and assigning it to the field `Taskflow.Verbose`.
+
+This is also provided via the convenience function `taskflow.VerboseParam(*taskflow.Taskflow)`, which needs to be explicitly called.
+The convenience function registers a boolean parameter `verbose`, short `v`, and assigns it to the `Taskflow` field.
+This then works similar to `go test -v`. 
+
+You can then also re-use the registered parameter to check if verbose mode was set within the task's command.
 
 ### Default task
 
 Default task can be assigned via `DefaultTask` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
 
-When default task is set, then it is run if no task is provied via CLI.
+When default task is set, then it is run if no task is provided via CLI.
 
 ### Parameters
 
-The parameters can be set via CLI using the `key=val` syntax after CLI flags. For example, `go run ./build -v ci=true all` would run the `all` task with `ci` parameter set to `"true"` in verbose mode.
+The parameters can be set via CLI using flag syntax. Flags must be registered in "long form", and have an optional short form using only one letter.
 
-Default values can be assigned via `Params` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
+On the CLI, flags can be set in the following ways:
+* `--longName simple` - for simple single-word values
+* `--longName "value with blanks"`
+* `--longName="value with blanks"`
+* `--booleanParam` - setting boolean parameters implicitly to `true`
+* `-l simple` - using short form; Short form also allows assignment via equals.
 
-The task's command can get the parameters using [`func (*TF) Params`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Params).
+For example, `go run ./build -v --ci all` would run the `all` task with `ci` parameter set to `"true"` in verbose mode.
+
+Parameters must first be registered via [`func (*Taskflow) ConfigureValue`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.ConfigureValue), or one of the provided primitive functions like `ConfigureString`.
+
+After registration, tasks need to specify which parameters they will read.
+Do this by assigning the `RegisteredParameter` from the registration result to the [`Task Parameters`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Parameters) field.
+If a task tries to retrieve the value from an unregistered parameter, the task will fail. 
+
+With registration is done, the task's command can retrieve the parameter value using `Get(*TF)` from the respective `RegisteredParameter`, returned from the registration call during the task's `Command` execution.
+
+See `examples/string-param/main.go` for a full parameter example.
 
 ### Task runner
 
