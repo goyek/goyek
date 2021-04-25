@@ -145,7 +145,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 
 	paramValues := make(map[string]Value)
 	for _, param := range task.Parameters {
-		paramValues[param.name] = f.paramValues[param.name]
+		paramValues[param.Name()] = f.paramValues[param.Name()]
 	}
 	if f.verbose != nil {
 		paramValues[f.verbose.Name()] = f.paramValues[f.verbose.Name()]

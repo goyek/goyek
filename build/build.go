@@ -132,7 +132,7 @@ func taskDiff(ci taskflow.BoolParam) taskflow.Task {
 	return taskflow.Task{
 		Name:        "diff",
 		Description: "git diff",
-		Parameters:  []taskflow.RegisteredParam{ci.RegisteredParam},
+		Parameters:  taskflow.Params{ci},
 		Command: func(tf *taskflow.TF) {
 			if !ci.Get(tf) {
 				tf.Skip("ci param is not set, skipping")

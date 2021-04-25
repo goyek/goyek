@@ -28,7 +28,7 @@ func taskShow(exampleParam taskflow.StringParam) taskflow.Task {
 	return taskflow.Task{
 		Name:        "show",
 		Description: "Showcases a registered parameter",
-		Parameters:  []taskflow.RegisteredParam{exampleParam.RegisteredParam},
+		Parameters:  taskflow.Params{exampleParam},
 		Command: func(tf *taskflow.TF) {
 			tf.Log("Parameter named '" + exampleParam.Name() + "', value '" + exampleParam.Get(tf) + "'")
 		},

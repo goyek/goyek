@@ -423,11 +423,11 @@ func Test_params(t *testing.T) {
 	var gotArray []string
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
-		Parameters: []taskflow.RegisteredParam{
-			boolParam.RegisteredParam,
-			intParam.RegisteredParam,
-			stringParam.RegisteredParam,
-			arrayParam.RegisteredParam,
+		Parameters: taskflow.Params{
+			boolParam,
+			intParam,
+			stringParam,
+			arrayParam,
 		},
 		Command: func(tf *taskflow.TF) {
 			gotBool = boolParam.Get(tf)
