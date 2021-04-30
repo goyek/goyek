@@ -2,6 +2,7 @@ package taskflow_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -277,24 +278,28 @@ func Test_invalid_args(t *testing.T) {
 
 func Test_help(t *testing.T) {
 	flow := taskflow.New()
+	fastParam := flow.ConfigureBool(false, taskflow.ParameterInfo{
+		Name:  "fast",
+		Usage: "simulates fast-lane processing",
+	})
 	a := flow.MustRegister(taskflow.Task{
 		Name:        "a",
+		Parameters:  taskflow.Params{fastParam},
 		Description: "some task",
 	})
 	flow.DefaultTask = a
-	flow.Params.SetBool("fast", false)
 
 	exitCode := flow.Run(context.Background(), "-h")
 
-	assertEqual(t, exitCode, 2, "should return error bad args")
+	assertEqual(t, exitCode, taskflow.CodePass, "should return OK")
 }
 
 func Test_printing(t *testing.T) {
 	sb := &strings.Builder{}
 	flow := &taskflow.Taskflow{
-		Output:  sb,
-		Verbose: true,
+		Output: sb,
 	}
+	verboseParam := taskflow.VerboseParam(flow)
 	skipped := flow.MustRegister(taskflow.Task{
 		Name: "skipped",
 		Command: func(tf *taskflow.TF) {
@@ -314,7 +319,7 @@ func Test_printing(t *testing.T) {
 	})
 	t.Log()
 
-	flow.Run(context.Background(), "failing")
+	flow.Run(context.Background(), "--"+verboseParam.Name(), "failing")
 
 	assertContains(t, sb.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
 	assertContains(t, sb.String(), `Log 1
@@ -336,9 +341,9 @@ func Test_concurrent_printing(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			sb := &strings.Builder{}
 			flow := taskflow.Taskflow{
-				Verbose: tc.verbose,
-				Output:  sb,
+				Output: sb,
 			}
+			verboseParam := taskflow.VerboseParam(&flow)
 			flow.MustRegister(taskflow.Task{
 				Name: "task",
 				Command: func(tf *taskflow.TF) {
@@ -352,7 +357,12 @@ func Test_concurrent_printing(t *testing.T) {
 				},
 			})
 
-			exitCode := flow.Run(context.Background(), "task")
+			var args []string
+			if tc.verbose {
+				args = append(args, "--"+verboseParam.Name())
+			}
+			args = append(args, "task")
+			exitCode := flow.Run(context.Background(), args...)
 
 			assertEqual(t, exitCode, taskflow.CodeFailure, "should fail")
 			assertContains(t, sb.String(), "from child goroutine", "should contain log from child goroutine")
@@ -378,55 +388,127 @@ func Test_name(t *testing.T) {
 	assertEqual(t, got, taskName, "should return proper Name value")
 }
 
-func Test_verbose(t *testing.T) {
-	flow := &taskflow.Taskflow{}
-	var got bool
-	flow.MustRegister(taskflow.Task{
-		Name: "task",
-		Command: func(tf *taskflow.TF) {
-			got = tf.Verbose()
-		},
-	})
+type arrayValue []string
 
-	exitCode := flow.Run(context.Background(), "-v", "task")
-
-	assertEqual(t, exitCode, 0, "should pass")
-	assertTrue(t, got, "should return proper Verbose value")
+func (value *arrayValue) Set(s string) error {
+	return json.Unmarshal([]byte(s), value)
 }
+
+func (value *arrayValue) Get() interface{} { return []string(*value) }
+
+func (value *arrayValue) String() string {
+	b, _ := json.Marshal(value)
+	return string(b)
+}
+
+func (value *arrayValue) IsBool() bool { return false }
 
 func Test_params(t *testing.T) {
 	flow := taskflow.New()
-	flow.Params.SetInt("x", 1)
-	flow.Params["z"] = "abc"
-	var got taskflow.TFParams
+	boolParam := flow.ConfigureBool(true, taskflow.ParameterInfo{
+		Name: "bool",
+	})
+	intParam := flow.ConfigureInt(1, taskflow.ParameterInfo{
+		Name: "int",
+	})
+	stringParam := flow.ConfigureString("abc", taskflow.ParameterInfo{
+		Name:  "string",
+		Short: 's',
+	})
+	arrayParam := flow.ConfigureValue(func() taskflow.Value { return &arrayValue{} }, taskflow.ParameterInfo{
+		Name: "array",
+	})
+	var gotBool bool
+	var gotInt int
+	var gotString string
+	var gotArray []string
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
+		Parameters: taskflow.Params{
+			boolParam,
+			intParam,
+			stringParam,
+			arrayParam,
+		},
 		Command: func(tf *taskflow.TF) {
-			got = tf.Params()
+			gotBool = boolParam.Get(tf)
+			gotInt = intParam.Get(tf)
+			gotString = stringParam.Get(tf)
+			gotArray = arrayParam.Get(tf).([]string)
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "y=2", "z=3", "task")
+	exitCode := flow.Run(context.Background(), "--bool=false", "--int", "9001", "-s", "xyz", "--array", "[\"a\", \"b\"]", "task")
 
 	assertEqual(t, exitCode, 0, "should pass")
-	assertEqual(t, got.String("x"), "1", "x param")
-	assertEqual(t, got.Int("y"), 2, "y param")
-	assertEqual(t, got.Float64("z"), 3.0, "z param")
+	assertEqual(t, gotBool, false, "bool param")
+	assertEqual(t, gotInt, 9001, "int param")
+	assertEqual(t, gotString, "xyz", "string param")
+	assertEqual(t, gotArray, []string{"a", "b"}, "array param")
+}
+
+func Test_invalid_params(t *testing.T) {
+	flow := taskflow.New()
+	flow.MustRegister(taskflow.Task{
+		Name:    "task",
+		Command: func(tf *taskflow.TF) {},
+	})
+
+	exitCode := flow.Run(context.Background(), "-z=3", "task")
+
+	assertEqual(t, exitCode, taskflow.CodeInvalidArgs, "should fail because of unknown parameter")
+}
+
+func Test_unused_params(t *testing.T) {
+	flow := taskflow.New()
+	flow.DefaultTask = flow.MustRegister(taskflow.Task{Name: "task", Command: func(tf *taskflow.TF) {}})
+	flow.ConfigureBool(false, taskflow.ParameterInfo{Name: "unused"})
+
+	exitCode := flow.Run(context.Background())
+
+	assertEqual(t, exitCode, taskflow.CodeUnusedParams, "should fail because of unused parameter")
+}
+
+func Test_param_registration_error_empty_name(t *testing.T) {
+	flow := taskflow.New()
+	assertPanics(t, func() { flow.ConfigureBool(false, taskflow.ParameterInfo{Name: ""}) }, "empty name")
+}
+
+func Test_param_registration_error_double_name(t *testing.T) {
+	flow := taskflow.New()
+	info := taskflow.ParameterInfo{Name: "double"}
+	flow.ConfigureBool(false, info)
+	assertPanics(t, func() { flow.ConfigureBool(false, info) }, "double name")
+}
+
+func Test_unregistered_params(t *testing.T) {
+	foreignParam := taskflow.New().ConfigureBool(false, taskflow.ParameterInfo{Name: "foreign"})
+	flow := taskflow.New()
+	flow.MustRegister(taskflow.Task{
+		Name: "task",
+		Command: func(tf *taskflow.TF) {
+			foreignParam.Get(tf)
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "task")
+
+	assertEqual(t, taskflow.CodeFailure, exitCode, "should fail because of unregistered parameter")
 }
 
 func Test_defaultTask(t *testing.T) {
 	flow := taskflow.New()
-	var got taskflow.TFParams
+	taskRan := false
 	task := flow.MustRegister(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
-			got = tf.Params()
+			taskRan = true
 		},
 	})
 	flow.DefaultTask = task
 
-	exitCode := flow.Run(context.Background(), "x=a")
+	exitCode := flow.Run(context.Background())
 
 	assertEqual(t, exitCode, 0, "should pass")
-	assertEqual(t, got.String("x"), "a", "x param")
+	assertTrue(t, taskRan, "task should have run")
 }

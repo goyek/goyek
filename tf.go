@@ -15,13 +15,12 @@ import (
 // All methods must be called only from the goroutine running the
 // Command function.
 type TF struct {
-	ctx     context.Context
-	name    string
-	writer  io.Writer
-	params  map[string]string
-	verbose bool
-	failed  bool
-	skipped bool
+	ctx         context.Context
+	name        string
+	writer      io.Writer
+	paramValues map[string]Value
+	failed      bool
+	skipped     bool
 }
 
 // Context returns the taskflows' run context.
@@ -32,19 +31,6 @@ func (tf *TF) Context() context.Context {
 // Name returns the name of the running task.
 func (tf *TF) Name() string {
 	return tf.name
-}
-
-// Verbose returns if verbose mode was set.
-func (tf *TF) Verbose() bool {
-	return tf.verbose
-}
-
-// Params returns the key-value parameters.
-func (tf *TF) Params() TFParams {
-	return TFParams{
-		params: tf.params,
-		tf:     tf,
-	}
 }
 
 // Output returns the io.Writer used to print output.

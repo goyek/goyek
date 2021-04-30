@@ -13,8 +13,10 @@ const (
 	CodePass = 0
 	// CodeFailure indicates that taskflow failed.
 	CodeFailure = 1
-	// CodeInvalidArgs indicates that got invalid input.
+	// CodeInvalidArgs indicates that taskflow got invalid input.
 	CodeInvalidArgs = 2
+	// CodeUnusedParams indicates that at least one parameter is unused.
+	CodeUnusedParams = 3
 )
 
 // DefaultOutput is the default output used by Taskflow if it is not set.
@@ -25,16 +27,12 @@ var DefaultOutput io.Writer = os.Stdout
 // and Run or Main method to execute provided tasks.
 type Taskflow struct {
 	Output      io.Writer      // output where text is printed; os.Stdout by default
-	Params      Params         // default parameters' values
-	Verbose     bool           // when enabled, then the whole output will be always streamed
+	Verbose     *BoolParam     // when enabled, then the whole output will be always streamed
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
 
-	tasks map[string]Task
+	params map[string]parameter
+	tasks  map[string]Task
 }
-
-// Params represents Taskflow parameters used within Taskflow.
-// The default values set in the struct are overridden in Run method.
-type Params map[string]string
 
 // RegisteredTask represents a task that has been registered to a Taskflow.
 // It can be used as a dependency for another Task.
@@ -46,7 +44,56 @@ type RegisteredTask struct {
 func New() *Taskflow {
 	return &Taskflow{
 		Output: DefaultOutput,
-		Params: Params{},
+	}
+}
+
+// ConfigureValue registers a generic parameter that is defined by the calling code.
+// Use this variant in case the primitive-specific implementations cannot cover the parameter.
+func (f *Taskflow) ConfigureValue(newValue func() Value, info ParameterInfo) ValueParam {
+	f.configure(newValue, info)
+	return ValueParam{param{name: info.Name}}
+}
+
+// ConfigureBool registers a boolean parameter.
+func (f *Taskflow) ConfigureBool(defaultValue bool, info ParameterInfo) BoolParam {
+	f.configure(func() Value {
+		value := boolValue(defaultValue)
+		return &value
+	}, info)
+	return BoolParam{param{name: info.Name}}
+}
+
+// ConfigureInt registers an integer parameter.
+func (f *Taskflow) ConfigureInt(defaultValue int, info ParameterInfo) IntParam {
+	f.configure(func() Value {
+		value := intValue(defaultValue)
+		return &value
+	}, info)
+	return IntParam{param{name: info.Name}}
+}
+
+// ConfigureString registers a string parameter.
+func (f *Taskflow) ConfigureString(defaultValue string, info ParameterInfo) StringParam {
+	f.configure(func() Value {
+		value := stringValue(defaultValue)
+		return &value
+	}, info)
+	return StringParam{param{name: info.Name}}
+}
+
+func (f *Taskflow) configure(newValue func() Value, info ParameterInfo) {
+	if info.Name == "" {
+		panic("parameter name cannot be empty")
+	}
+	if _, exists := f.params[info.Name]; exists {
+		panic(fmt.Sprintf("%s parameter was already registered", info.Name))
+	}
+	if f.params == nil {
+		f.params = make(map[string]parameter)
+	}
+	f.params[info.Name] = parameter{
+		info:     info,
+		newValue: newValue,
 	}
 }
 
@@ -81,14 +128,9 @@ func (f *Taskflow) MustRegister(task Task) RegisteredTask {
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (f *Taskflow) Run(ctx context.Context, args ...string) int {
-	params := make(Params, len(f.Params))
-	for k, v := range f.Params {
-		params[k] = v
-	}
-
 	flow := &flowRunner{
 		output:      f.Output,
-		params:      params,
+		params:      f.params,
 		tasks:       f.tasks,
 		verbose:     f.Verbose,
 		defaultTask: f.DefaultTask,
