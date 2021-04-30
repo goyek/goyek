@@ -232,7 +232,7 @@ func printUsage(f *flowRunner) {
 		sort.Strings(params)
 		paramsText := ""
 		if len(params) > 0 {
-			paramsText = "; -" + strings.Join(params, " -")
+			paramsText = "; --" + strings.Join(params, " --")
 		}
 		fmt.Fprintf(w, "  %s\t%s%s\n", t.Name, t.Description, paramsText)
 	}
