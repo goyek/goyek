@@ -193,7 +193,7 @@ It may be handy during development of a new task, when debugging some issue or i
 
 ## Supported Go versions
 
-Minimal required Go version is 1.10.
+Minimal supported Go version is 1.11.
 
 ## FAQ
 
