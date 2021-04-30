@@ -44,16 +44,22 @@ type Value interface {
 
 // RegisteredParam represents a parameter that has been registered to a Taskflow.
 // It can be used as a parameter for a Task.
-type RegisteredParam struct {
+type RegisteredParam interface {
+	Name() string
+	value(tf *TF) Value
+}
+
+// param is a helper struct for implementing concrete parameter types.
+type param struct {
 	name string
 }
 
 // Name returns the key of the parameter.
-func (p RegisteredParam) Name() string {
+func (p param) Name() string {
 	return p.name
 }
 
-func (p RegisteredParam) value(tf *TF) Value {
+func (p param) value(tf *TF) Value {
 	value, existing := tf.paramValues[p.name]
 	if !existing {
 		tf.Fatal(&ParamError{Key: p.name, Err: errors.New("parameter not registered")})
@@ -63,7 +69,7 @@ func (p RegisteredParam) value(tf *TF) Value {
 
 // ValueParam represents a registered parameter based on a generic implementation.
 type ValueParam struct {
-	RegisteredParam
+	param
 }
 
 // Get returns the concrete instance of the generic value in the given flow.
@@ -94,7 +100,7 @@ func (value *boolValue) IsBool() bool { return true }
 
 // BoolParam represents a registered boolean parameter.
 type BoolParam struct {
-	RegisteredParam
+	param
 }
 
 // Get returns the boolean value of the parameter in the given flow.
@@ -122,7 +128,7 @@ func (value *intValue) IsBool() bool { return false }
 
 // IntParam represents a registered integer parameter.
 type IntParam struct {
-	RegisteredParam
+	param
 }
 
 // Get returns the integer value of the parameter in the given flow.
@@ -146,7 +152,7 @@ func (value *stringValue) IsBool() bool { return false }
 
 // StringParam represents a registered string parameter.
 type StringParam struct {
-	RegisteredParam
+	param
 }
 
 // Get returns the string value of the parameter in the given flow.

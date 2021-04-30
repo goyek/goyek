@@ -49,7 +49,7 @@ func New() *Taskflow {
 // Use this variant in case the primitive-specific implementations cannot cover the parameter.
 func (f *Taskflow) ConfigureValue(newValue func() Value, info ParameterInfo) ValueParam {
 	f.configure(newValue, info)
-	return ValueParam{RegisteredParam{name: info.Name}}
+	return ValueParam{param{name: info.Name}}
 }
 
 // ConfigureBool registers a boolean parameter.
@@ -58,7 +58,7 @@ func (f *Taskflow) ConfigureBool(defaultValue bool, info ParameterInfo) BoolPara
 		value := boolValue(defaultValue)
 		return &value
 	}, info)
-	return BoolParam{RegisteredParam{name: info.Name}}
+	return BoolParam{param{name: info.Name}}
 }
 
 // ConfigureInt registers an integer parameter.
@@ -67,7 +67,7 @@ func (f *Taskflow) ConfigureInt(defaultValue int, info ParameterInfo) IntParam {
 		value := intValue(defaultValue)
 		return &value
 	}, info)
-	return IntParam{RegisteredParam{name: info.Name}}
+	return IntParam{param{name: info.Name}}
 }
 
 // ConfigureString registers a string parameter.
@@ -76,7 +76,7 @@ func (f *Taskflow) ConfigureString(defaultValue string, info ParameterInfo) Stri
 		value := stringValue(defaultValue)
 		return &value
 	}, info)
-	return StringParam{RegisteredParam{name: info.Name}}
+	return StringParam{param{name: info.Name}}
 }
 
 func (f *Taskflow) configure(newValue func() Value, info ParameterInfo) {

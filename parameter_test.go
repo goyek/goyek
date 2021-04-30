@@ -11,7 +11,7 @@ import (
 func runTaskflowWith(flow *taskflow.Taskflow, param taskflow.RegisteredParam, cmd func(*taskflow.TF), args []string) int {
 	flow.MustRegister(taskflow.Task{
 		Name:        "task",
-		Parameters:  []taskflow.RegisteredParam{param},
+		Parameters:  taskflow.Params{param},
 		Command:     cmd,
 		Description: "Sample task for parameter tests",
 	})
@@ -46,7 +46,7 @@ func Test_bool_param(t *testing.T) {
 				Short: 'b',
 			})
 			var got bool
-			exitCode := runTaskflowWith(flow, param.RegisteredParam, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)
+			exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)
 
 			assertEqual(t, exitCode, tc.exitCode, "exit code should match")
 			assertEqual(t, got, tc.value, "value should match")
@@ -59,7 +59,7 @@ func Test_bool_param_help(t *testing.T) {
 	param := flow.ConfigureBool(true, taskflow.ParameterInfo{
 		Name: "bool",
 	})
-	exitCode := runTaskflowWith(flow, param.RegisteredParam, func(tf *taskflow.TF) {}, []string{"-h"})
+	exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) {}, []string{"-h"})
 
 	assertEqual(t, exitCode, 0, "exit code should be OK")
 }
@@ -90,7 +90,7 @@ func Test_int_param(t *testing.T) {
 				Short: 'i',
 			})
 			var got int
-			exitCode := runTaskflowWith(flow, param.RegisteredParam, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)
+			exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)
 
 			assertEqual(t, exitCode, tc.exitCode, "exit code should match")
 			assertEqual(t, got, tc.value, "value should match")
@@ -103,7 +103,7 @@ func Test_int_param_help(t *testing.T) {
 	param := flow.ConfigureInt(123, taskflow.ParameterInfo{
 		Name: "int",
 	})
-	exitCode := runTaskflowWith(flow, param.RegisteredParam, func(tf *taskflow.TF) {}, []string{"-h"})
+	exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) {}, []string{"-h"})
 
 	assertEqual(t, exitCode, 0, "exit code should be OK")
 }
@@ -132,7 +132,7 @@ func Test_string_param(t *testing.T) {
 				Short: 's',
 			})
 			var got string
-			exitCode := runTaskflowWith(flow, param.RegisteredParam, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)
+			exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)
 
 			assertEqual(t, exitCode, tc.exitCode, "exit code should match")
 			assertEqual(t, got, tc.value, "value should match")
@@ -145,7 +145,7 @@ func Test_string_param_help(t *testing.T) {
 	param := flow.ConfigureString("abc", taskflow.ParameterInfo{
 		Name: "string",
 	})
-	exitCode := runTaskflowWith(flow, param.RegisteredParam, func(tf *taskflow.TF) {}, []string{"-h"})
+	exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) {}, []string{"-h"})
 
 	assertEqual(t, exitCode, 0, "exit code should be OK")
 }
