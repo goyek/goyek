@@ -276,4 +276,4 @@ I am open to any feedback and contribution.
 
 Use [Discussions](https://github.com/pellared/taskflow/discussions) or write to me: *Robert Pajak* @ [Gophers Slack](https://invite.slack.golangbridge.org/).
 
-You can also create an issue or a pull request.
+You can also create an issue, or a pull request.
