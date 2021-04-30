@@ -1,3 +1,3 @@
 module github.com/pellared/taskflow
 
-go 1.10
+go 1.11
