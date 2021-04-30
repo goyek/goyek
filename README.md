@@ -171,11 +171,12 @@ Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.
 
 In verbose mode, the whole output will be streamed. If disabled, only logs from failed task are send to the output.
 
-By default, verbose mode is turned off.
-It can be enabled by registering a boolean parameter and assigning it to the field `Taskflow.Verbose`.
+By default, verbose mode is turned on.
+It can be controlled by registering a boolean parameter and assigning it to the field `Taskflow.Verbose`.
 
 This is also provided via the convenience function `taskflow.VerboseParam(*taskflow.Taskflow)`, which needs to be explicitly called.
 The convenience function registers a boolean parameter `verbose`, short `v`, and assigns it to the `Taskflow` field.
+This parameter defaults to `false` by default, so as soon as this parameter is registered, verbose mode has to be explicitly enabled via the CLI.
 This then works similar to `go test -v`. 
 
 You can then also re-use the registered parameter to check if verbose mode was set within the task's command.
