@@ -23,6 +23,11 @@ type flowRunner struct {
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (f *flowRunner) Run(ctx context.Context, args []string) int {
+	if unusedParams := f.unusedParams(); len(unusedParams) > 0 {
+		fmt.Fprintf(f.output, "unused parameters: %v\n", unusedParams)
+		return CodeUnusedParams
+	}
+
 	f.paramValues = make(map[string]Value)
 	valuesByFlag := make(map[string]Value)
 	for _, param := range f.params {
@@ -195,6 +200,26 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	measuredRunner.Run(measuredCommand)
 
 	return !failed
+}
+
+func (f *flowRunner) unusedParams() []string {
+	remainingParams := make(map[string]struct{})
+	for key := range f.params {
+		remainingParams[key] = struct{}{}
+	}
+	if f.verbose != nil {
+		delete(remainingParams, f.verbose.Name())
+	}
+	for _, task := range f.tasks {
+		for _, param := range task.Parameters {
+			delete(remainingParams, param.Name())
+		}
+	}
+	unusedParams := make([]string, 0, len(remainingParams))
+	for key := range remainingParams {
+		unusedParams = append(unusedParams, key)
+	}
+	return unusedParams
 }
 
 func printUsage(f *flowRunner) {

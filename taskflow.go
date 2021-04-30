@@ -13,8 +13,10 @@ const (
 	CodePass = 0
 	// CodeFailure indicates that taskflow failed.
 	CodeFailure = 1
-	// CodeInvalidArgs indicates that got invalid input.
+	// CodeInvalidArgs indicates that taskflow got invalid input.
 	CodeInvalidArgs = 2
+	// CodeUnusedParams indicates that at least one parameter is unused.
+	CodeUnusedParams = 3
 )
 
 // DefaultOutput is the default output used by Taskflow if it is not set.

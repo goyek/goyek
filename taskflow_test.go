@@ -278,12 +278,13 @@ func Test_invalid_args(t *testing.T) {
 
 func Test_help(t *testing.T) {
 	flow := taskflow.New()
-	flow.ConfigureBool(false, taskflow.ParameterInfo{
+	fastParam := flow.ConfigureBool(false, taskflow.ParameterInfo{
 		Name:  "fast",
 		Usage: "simulates fast-lane processing",
 	})
 	a := flow.MustRegister(taskflow.Task{
 		Name:        "a",
+		Parameters:  taskflow.Params{fastParam},
 		Description: "some task",
 	})
 	flow.DefaultTask = a
@@ -455,7 +456,17 @@ func Test_invalid_params(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "-z=3", "task")
 
-	assertEqual(t, taskflow.CodeInvalidArgs, exitCode, "should fail because of unknown parameter")
+	assertEqual(t, exitCode, taskflow.CodeInvalidArgs, "should fail because of unknown parameter")
+}
+
+func Test_unused_params(t *testing.T) {
+	flow := taskflow.New()
+	flow.DefaultTask = flow.MustRegister(taskflow.Task{Name: "task", Command: func(tf *taskflow.TF) {}})
+	flow.ConfigureBool(false, taskflow.ParameterInfo{Name: "unused"})
+
+	exitCode := flow.Run(context.Background())
+
+	assertEqual(t, exitCode, taskflow.CodeUnusedParams, "should fail because of unused parameter")
 }
 
 func Test_param_registration_error_empty_name(t *testing.T) {

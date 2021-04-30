@@ -210,6 +210,8 @@ With registration is done, the task's command can retrieve the parameter value u
 
 See `examples/string-param/main.go` for a full parameter example.
 
+Tasks cannot be registered with unknown parameters. Taskflow will fail execution if there are unused parameters.
+
 ### Task runner
 
 You can use [`type Runner`](https://pkg.go.dev/github.com/pellared/taskflow#Runner) to execute a single command.
