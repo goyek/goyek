@@ -24,8 +24,7 @@ type flowRunner struct {
 // Each task is executed at most once.
 func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	if unusedParams := f.unusedParams(); len(unusedParams) > 0 {
-		fmt.Fprintf(f.output, "unused parameters: %v\n", unusedParams)
-		return CodeUnusedParams
+		panic(fmt.Sprintf("unused parameters: %v\n", unusedParams))
 	}
 
 	f.paramValues = make(map[string]Value)

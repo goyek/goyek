@@ -464,9 +464,7 @@ func Test_unused_params(t *testing.T) {
 	flow.DefaultTask = flow.MustRegister(taskflow.Task{Name: "task", Command: func(tf *taskflow.TF) {}})
 	flow.RegisterBoolParam(false, taskflow.ParameterInfo{Name: "unused"})
 
-	exitCode := flow.Run(context.Background())
-
-	assertEqual(t, exitCode, taskflow.CodeUnusedParams, "should fail because of unused parameter")
+	assertPanics(t, func() { flow.Run(context.Background()) }, "should fail because of unused parameter")
 }
 
 func Test_param_registration_error_empty_name(t *testing.T) {
