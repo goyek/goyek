@@ -120,6 +120,7 @@ func Test_string_param(t *testing.T) {
 		{defaultValue: "abc", args: []string{"-s=def"}, value: "def"},
 		{defaultValue: "abc", args: []string{"-s", "ghi"}, value: "ghi"},
 		{defaultValue: "abc", args: []string{"-s=jkl=mno"}, value: "jkl=mno"},
+		{defaultValue: "abc", args: []string{"-s", "param 'that \" may 'need' some \"escaping'"}, value: "param 'that \" may 'need' some \"escaping'"},
 	}
 
 	for index, tc := range tt {
