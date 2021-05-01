@@ -175,7 +175,7 @@ By default, verbose mode is turned on.
 It can be controlled by registering a boolean parameter and assigning it to the field [`Taskflow.Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.Verbose).
 
 This is also provided via the convenience function [`taskflow.VerboseParam(*taskflow.Taskflow)`](https://pkg.go.dev/github.com/pellared/taskflow#VerboseParam), which needs to be explicitly called.
-The convenience function registers a boolean parameter `verbose`, short `v`, and assigns it to the `Taskflow` field.
+The convenience function registers a boolean parameter `verbose`, short `v`, and assigns it to the [`Taskflow.Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.Verbose) field.
 This parameter defaults to `false`, so as soon as this parameter is registered, verbose mode has to be explicitly enabled via the CLI.
 This then works similar to `go test -v`. 
 
@@ -203,14 +203,14 @@ For example, `go run ./build -v --ci all` would run the `all` task with `verbose
 Parameters must first be registered via [`func (*Taskflow) ConfigureValue`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.ConfigureValue), or one of the provided methods like `ConfigureString`.
 
 After registration, tasks need to specify which parameters they will read.
-Do this by assigning the `RegisteredParameter` from the registration result to the [`Task Parameters`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Parameters) field.
+Do this by assigning the [`RegisteredParameter`](https://pkg.go.dev/github.com/pellared/taskflow#RegisteredParameter) from the registration result to the [`Task.Parameters`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Parameters) field.
 If a task tries to retrieve the value from an unregistered parameter, the task will fail. 
 
 When registration is done, the task's command can retrieve the parameter value using `Get(*TF)` from the respective `RegisteredParameter`, returned from the registration call during the task's `Command` execution.
 
 See `examples/string-param/main.go` for a full parameter example.
 
-Tasks cannot be registered with unknown parameters. Taskflow will fail execution if there are unused parameters.
+Taskflow will fail execution if there are unused parameters.
 
 ### Task runner
 

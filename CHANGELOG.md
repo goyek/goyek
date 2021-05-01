@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Drop official support for Go 1.10. ([#44](https://github.com/pellared/taskflow/pull/44))
 - Task parameters need to be registered, both with `Taskflow.Configure*()` and `Task.Parameters`.
+- Default behaviour of verbosity changed.
 
 ## [0.2.0](https://github.com/pellared/taskflow/compare/v0.1.1...v0.2.0) - 2021-03-14
 
