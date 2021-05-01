@@ -31,6 +31,8 @@ func (info ParameterInfo) shortFlag() string {
 // Value represents an instance of a generic parameter.
 type Value interface {
 	// String returns the current value formatted as string.
+	// The returned format should be in a single line, representing the parameter
+	// as it could be provided on the command line.
 	String() string
 	// IsBool marks parameters that do not explicitly need to be set a value.
 	// Set will be called in case the flag is not explicitly parameterized.

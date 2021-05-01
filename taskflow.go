@@ -49,6 +49,9 @@ func New() *Taskflow {
 
 // RegisterValueParam registers a generic parameter that is defined by the calling code.
 // Use this variant in case the primitive-specific implementations cannot cover the parameter.
+//
+// The value is provided via a factory function since Taskflow could be executed multiple times,
+// requiring a new Value instance each time.
 func (f *Taskflow) RegisterValueParam(newValue func() Value, info ParameterInfo) ValueParam {
 	f.registerParam(newValue, info)
 	return ValueParam{param{name: info.Name}}
