@@ -166,7 +166,7 @@ func (p StringParam) Get(tf *TF) string {
 //
 // This is a convenience function for a common functionality.
 func VerboseParam(flow *Taskflow) BoolParam {
-	param := flow.ConfigureBool(false, ParameterInfo{
+	param := flow.RegisterBoolParam(false, ParameterInfo{
 		Name:  "verbose",
 		Short: 'v',
 		Usage: "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.",

@@ -47,41 +47,41 @@ func New() *Taskflow {
 	}
 }
 
-// ConfigureValue registers a generic parameter that is defined by the calling code.
+// RegisterValueParam registers a generic parameter that is defined by the calling code.
 // Use this variant in case the primitive-specific implementations cannot cover the parameter.
-func (f *Taskflow) ConfigureValue(newValue func() Value, info ParameterInfo) ValueParam {
-	f.configure(newValue, info)
+func (f *Taskflow) RegisterValueParam(newValue func() Value, info ParameterInfo) ValueParam {
+	f.registerParam(newValue, info)
 	return ValueParam{param{name: info.Name}}
 }
 
-// ConfigureBool registers a boolean parameter.
-func (f *Taskflow) ConfigureBool(defaultValue bool, info ParameterInfo) BoolParam {
-	f.configure(func() Value {
+// RegisterBoolParam registers a boolean parameter.
+func (f *Taskflow) RegisterBoolParam(defaultValue bool, info ParameterInfo) BoolParam {
+	f.registerParam(func() Value {
 		value := boolValue(defaultValue)
 		return &value
 	}, info)
 	return BoolParam{param{name: info.Name}}
 }
 
-// ConfigureInt registers an integer parameter.
-func (f *Taskflow) ConfigureInt(defaultValue int, info ParameterInfo) IntParam {
-	f.configure(func() Value {
+// RegisterIntParam registers an integer parameter.
+func (f *Taskflow) RegisterIntParam(defaultValue int, info ParameterInfo) IntParam {
+	f.registerParam(func() Value {
 		value := intValue(defaultValue)
 		return &value
 	}, info)
 	return IntParam{param{name: info.Name}}
 }
 
-// ConfigureString registers a string parameter.
-func (f *Taskflow) ConfigureString(defaultValue string, info ParameterInfo) StringParam {
-	f.configure(func() Value {
+// RegisterStringParam registers a string parameter.
+func (f *Taskflow) RegisterStringParam(defaultValue string, info ParameterInfo) StringParam {
+	f.registerParam(func() Value {
 		value := stringValue(defaultValue)
 		return &value
 	}, info)
 	return StringParam{param{name: info.Name}}
 }
 
-func (f *Taskflow) configure(newValue func() Value, info ParameterInfo) {
+func (f *Taskflow) registerParam(newValue func() Value, info ParameterInfo) {
 	if info.Name == "" {
 		panic("parameter name cannot be empty")
 	}

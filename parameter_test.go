@@ -41,7 +41,7 @@ func Test_bool_param(t *testing.T) {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
 			flow := taskflow.New()
-			param := flow.ConfigureBool(tc.defaultValue, taskflow.ParameterInfo{
+			param := flow.RegisterBoolParam(tc.defaultValue, taskflow.ParameterInfo{
 				Name:  "bool",
 				Short: 'b',
 			})
@@ -56,7 +56,7 @@ func Test_bool_param(t *testing.T) {
 
 func Test_bool_param_help(t *testing.T) {
 	flow := taskflow.New()
-	param := flow.ConfigureBool(true, taskflow.ParameterInfo{
+	param := flow.RegisterBoolParam(true, taskflow.ParameterInfo{
 		Name: "bool",
 	})
 	exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) {}, []string{"-h"})
@@ -85,7 +85,7 @@ func Test_int_param(t *testing.T) {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
 			flow := taskflow.New()
-			param := flow.ConfigureInt(tc.defaultValue, taskflow.ParameterInfo{
+			param := flow.RegisterIntParam(tc.defaultValue, taskflow.ParameterInfo{
 				Name:  "int",
 				Short: 'i',
 			})
@@ -100,7 +100,7 @@ func Test_int_param(t *testing.T) {
 
 func Test_int_param_help(t *testing.T) {
 	flow := taskflow.New()
-	param := flow.ConfigureInt(123, taskflow.ParameterInfo{
+	param := flow.RegisterIntParam(123, taskflow.ParameterInfo{
 		Name: "int",
 	})
 	exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) {}, []string{"-h"})
@@ -127,7 +127,7 @@ func Test_string_param(t *testing.T) {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
 			flow := taskflow.New()
-			param := flow.ConfigureString(tc.defaultValue, taskflow.ParameterInfo{
+			param := flow.RegisterStringParam(tc.defaultValue, taskflow.ParameterInfo{
 				Name:  "string",
 				Short: 's',
 			})
@@ -142,7 +142,7 @@ func Test_string_param(t *testing.T) {
 
 func Test_string_param_help(t *testing.T) {
 	flow := taskflow.New()
-	param := flow.ConfigureString("abc", taskflow.ParameterInfo{
+	param := flow.RegisterStringParam("abc", taskflow.ParameterInfo{
 		Name: "string",
 	})
 	exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) {}, []string{"-h"})

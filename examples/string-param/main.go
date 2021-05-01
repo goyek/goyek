@@ -14,7 +14,7 @@ func main() {
 	flow := taskflow.New()
 
 	taskflow.VerboseParam(flow)
-	exampleParam := flow.ConfigureString("default-value", taskflow.ParameterInfo{
+	exampleParam := flow.RegisterStringParam("default-value", taskflow.ParameterInfo{
 		Name:  "example",
 		Short: 'e',
 		Usage: "An example parameter",
@@ -40,7 +40,7 @@ func taskShow(exampleParam taskflow.StringParam) taskflow.Task {
 
 func taskSecond(flow *taskflow.Taskflow, exampleParam taskflow.StringParam) taskflow.Task {
 	// The following is a "private" parameter, only available to this task.
-	specialParam := flow.ConfigureString("special-default", taskflow.ParameterInfo{
+	specialParam := flow.RegisterStringParam("special-default", taskflow.ParameterInfo{
 		Name:  "special",
 		Short: 's',
 		Usage: "Another example parameter",
