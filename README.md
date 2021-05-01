@@ -24,29 +24,29 @@ Check [Go Build Pipeline Demo](https://github.com/pellared/go-build-pipeline-dem
 Table of Contents:
 
 - [taskflow](#taskflow)
-	- [Example](#example)
-	- [Features](#features)
-		- [Task registration](#task-registration)
-		- [Task command](#task-command)
-		- [Task dependencies](#task-dependencies)
-		- [Helpers for running programs](#helpers-for-running-programs)
-		- [Verbose mode](#verbose-mode)
-		- [Default task](#default-task)
-		- [Parameters](#parameters)
-		- [Task runner](#task-runner)
-	- [Supported Go versions](#supported-go-versions)
-	- [FAQ](#faq)
-		- [Why not use Make?](#why-not-use-make)
-		- [Why not use Mage?](#why-not-use-mage)
-		- [Why not use Task?](#why-not-use-task)
-		- [Why not use Bazel?](#why-not-use-bazel)
-	- [Contributing](#contributing)
+  - [Example](#example)
+  - [Features](#features)
+    - [Task registration](#task-registration)
+    - [Task command](#task-command)
+    - [Task dependencies](#task-dependencies)
+    - [Helpers for running programs](#helpers-for-running-programs)
+    - [Verbose mode](#verbose-mode)
+    - [Default task](#default-task)
+    - [Parameters](#parameters)
+    - [Task runner](#task-runner)
+  - [Supported Go versions](#supported-go-versions)
+  - [FAQ](#faq)
+    - [Why not use Make?](#why-not-use-make)
+    - [Why not use Mage?](#why-not-use-mage)
+    - [Why not use Task?](#why-not-use-task)
+    - [Why not use Bazel?](#why-not-use-bazel)
+  - [Contributing](#contributing)
 
 ## Example
 
 Create a file in your project `build/build.go`.
 
-Copy and paste the content from below.
+Copy and paste the content from below (this code can also be found in [examples/basic/main.go](examples/basic/main.go)).
 
 ```go
 package main
@@ -95,7 +95,6 @@ func taskTest() taskflow.Task {
 	}
 }
 ```
-(This code can also be found in `examples/typical-ci/main.go`) 
 
 Sample usage:
 
@@ -177,7 +176,7 @@ It can be controlled by registering a boolean parameter and assigning it to the 
 This is also provided via the convenience function [`taskflow.VerboseParam(*taskflow.Taskflow)`](https://pkg.go.dev/github.com/pellared/taskflow#VerboseParam), which needs to be explicitly called.
 The convenience function registers a boolean parameter `verbose`, short `v`, and assigns it to the [`Taskflow.Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.Verbose) field.
 This parameter defaults to `false`, so as soon as this parameter is registered, verbose mode has to be explicitly enabled via the CLI.
-This then works similar to `go test -v`. 
+This then works similar to `go test -v`.
 
 You can also reuse the registered parameter to check if verbose mode was set within a task's command.
 
@@ -192,11 +191,12 @@ When default task is set, then it is run if no task is provided via CLI.
 The parameters can be set via CLI using flag syntax. Flags must be registered in "long form", and have an optional short form using only one letter.
 
 On the CLI, flags can be set in the following ways:
-* `--longName simple` - for simple single-word values
-* `--longName "value with blanks"`
-* `--longName="value with blanks"`
-* `--booleanParam` - setting boolean parameters implicitly to `true`
-* `-l simple` - using short form
+
+- `--longName simple` - for simple single-word values
+- `--longName "value with blanks"`
+- `--longName="value with blanks"`
+- `--booleanParam` - setting boolean parameters implicitly to `true`
+- `-l simple` - using short form
 
 For example, `go run ./build -v --ci all` would run the `all` task with `verbose` and `ci` parameters both set to `"true"`.
 
@@ -204,11 +204,11 @@ Parameters must first be registered via [`func (*Taskflow) ConfigureValue`](http
 
 After registration, tasks need to specify which parameters they will read.
 Do this by assigning the [`RegisteredParameter`](https://pkg.go.dev/github.com/pellared/taskflow#RegisteredParameter) from the registration result to the [`Task.Parameters`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Parameters) field.
-If a task tries to retrieve the value from an unregistered parameter, the task will fail. 
+If a task tries to retrieve the value from an unregistered parameter, the task will fail.
 
 When registration is done, the task's command can retrieve the parameter value using `Get(*TF)` from the respective `RegisteredParameter`, returned from the registration call during the task's `Command` execution.
 
-See `examples/string-param/main.go` for a full parameter example.
+See [examples/parameters/main.go](examples/parameters/main.go) for a full parameter example.
 
 Taskflow will fail execution if there are unused parameters.
 

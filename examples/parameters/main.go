@@ -1,3 +1,9 @@
+// Example program for parameters, showcasing the following:
+// Sharing of parameters, "private" parameters, and complex parameters encoded in JSON.
+// This example also registers the "verbose" parameter, in order to provide output in the task.
+// Execute `go run ./main.go -v --shared "hello world"` as a first example.
+// Execute `go run ./main.go -h"` to see all details.
+
 package main
 
 import (
@@ -7,12 +13,6 @@ import (
 
 	"github.com/pellared/taskflow"
 )
-
-// Example program for parameters, showcasing the following:
-// Sharing of parameters, "private" parameters, and complex parameters encoded in JSON.
-// This example also registers the "verbose" parameter, in order to provide output in the task.
-// Execute `go run ./main.go -v --shared "hello world"` as a first example.
-// Execute `go run ./main.go -h"` to see all details.
 
 func main() {
 	flow := taskflow.New()
