@@ -100,7 +100,7 @@ Sample usage:
 
 ```shell
 $ go run ./build -h
-Usage: [flag(s)] task(s)
+Usage: [flag(s) | task(s)]...
 Flags:
   -v    --verbose    Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
 Tasks:

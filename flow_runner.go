@@ -223,7 +223,7 @@ func (f *flowRunner) unusedParams() []string {
 }
 
 func printUsage(f *flowRunner) {
-	fmt.Fprintf(f.output, "Usage: [flag(s)] task(s)\n")
+	fmt.Fprintf(f.output, "Usage: [flag(s) | task(s)]...\n")
 	fmt.Fprintf(f.output, "Flags:\n")
 	w := tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
 	keys := make([]string, 0, len(f.params))
