@@ -151,14 +151,18 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	for _, param := range task.Parameters {
 		paramValues[param.Name()] = f.paramValues[param.Name()]
 	}
+
+	verbose := true // by default print everything (verbose)
 	if f.verbose != nil {
-		paramValues[f.verbose.Name()] = f.paramValues[f.verbose.Name()]
+		// if verbose flag is registered then check its value
+		value, existing := f.paramValues[f.verbose.Name()]
+		verbose = existing && value.Get().(bool)
 	}
 
 	failed := false
 	measuredCommand := func(tf *TF) {
 		w := tf.Output()
-		if (f.verbose != nil) && !f.verbose.Get(tf) {
+		if !verbose {
 			w = &strings.Builder{}
 		}
 
