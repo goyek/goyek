@@ -173,7 +173,7 @@ In verbose mode, the whole output will be streamed. If disabled, only logs from 
 By default, verbose mode is turned on.
 It can be controlled by registering a boolean parameter and assigning it to the field [`Taskflow.Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.Verbose).
 
-This is also provided via the convenience function [`taskflow.VerboseParam(*taskflow.Taskflow)`](https://pkg.go.dev/github.com/pellared/taskflow#VerboseParam), which needs to be explicitly called.
+This is also provided via the convenience function [`taskflow.VerboseParam(flow *taskflow.Taskflow) BoolParam`](https://pkg.go.dev/github.com/pellared/taskflow#VerboseParam), which needs to be explicitly called.
 The convenience function registers a boolean parameter `verbose`, short `v`, and assigns it to the [`Taskflow.Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.Verbose) field.
 This parameter defaults to `false`, so as soon as this parameter is registered, verbose mode has to be explicitly enabled via the CLI.
 This then works similar to `go test -v`.
@@ -182,7 +182,7 @@ You can also reuse the registered parameter to check if verbose mode was set wit
 
 ### Default task
 
-Default task can be assigned via `DefaultTask` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
+Default task can be assigned via [`Taskflow.DefaultTask`]((https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.DefaultTask)) field.
 
 When default task is set, then it is run if no task is provided via CLI.
 
@@ -198,19 +198,19 @@ On the CLI, flags can be set in the following ways:
 - `--booleanParam` - setting boolean parameters implicitly to `true`
 - `-l simple` - using short form
 
-For example, `go run ./build -v --ci all` would run the `all` task with `verbose` and `ci` parameters both set to `"true"`.
+For example, `go run ./build -v --ci all` would run the `all` task with `verbose` and `ci` bool parameters both set to `true`.
 
-Parameters must first be registered via [`func (*Taskflow) ConfigureValue`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.ConfigureValue), or one of the provided methods like `ConfigureString`.
+Parameters must first be registered via [`func (f *Taskflow) RegisterValueParam(newValue func() Value, info ParameterInfo) ValueParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterValueParam), or one of the provided methods like `RegisterStringParam`.
 
 After registration, tasks need to specify which parameters they will read.
 Do this by assigning the [`RegisteredParameter`](https://pkg.go.dev/github.com/pellared/taskflow#RegisteredParameter) from the registration result to the [`Task.Parameters`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Parameters) field.
 If a task tries to retrieve the value from an unregistered parameter, the task will fail.
 
-When registration is done, the task's command can retrieve the parameter value using `Get(*TF)` from the respective `RegisteredParameter`, returned from the registration call during the task's `Command` execution.
+When registration is done, the task's command can retrieve the parameter value using `Get(*TF)` method from the respective `RegisteredParameter` type, returned from the registration call during the task's `Command` execution.
 
-See [examples/parameters/main.go](examples/parameters/main.go) for a full parameter example.
+See [examples/parameters/main.go](examples/parameters/main.go) for a detailed example.
 
-Taskflow will fail execution if there are unused parameters.
+`Taskflow` will fail execution if there are unused parameters.
 
 ### Task runner
 
