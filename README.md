@@ -172,14 +172,14 @@ Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.
 In verbose mode, the whole output will be streamed. If disabled, only logs from failed task are send to the output.
 
 By default, verbose mode is turned on.
-It can be controlled by registering a boolean parameter and assigning it to the field `Taskflow.Verbose`.
+It can be controlled by registering a boolean parameter and assigning it to the field [`Taskflow.Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.Verbose).
 
-This is also provided via the convenience function `taskflow.VerboseParam(*taskflow.Taskflow)`, which needs to be explicitly called.
+This is also provided via the convenience function [`taskflow.VerboseParam(*taskflow.Taskflow)`](https://pkg.go.dev/github.com/pellared/taskflow#VerboseParam), which needs to be explicitly called.
 The convenience function registers a boolean parameter `verbose`, short `v`, and assigns it to the `Taskflow` field.
-This parameter defaults to `false` by default, so as soon as this parameter is registered, verbose mode has to be explicitly enabled via the CLI.
+This parameter defaults to `false`, so as soon as this parameter is registered, verbose mode has to be explicitly enabled via the CLI.
 This then works similar to `go test -v`. 
 
-You can then also re-use the registered parameter to check if verbose mode was set within the task's command.
+You can also reuse the registered parameter to check if verbose mode was set within a task's command.
 
 ### Default task
 
@@ -196,17 +196,17 @@ On the CLI, flags can be set in the following ways:
 * `--longName "value with blanks"`
 * `--longName="value with blanks"`
 * `--booleanParam` - setting boolean parameters implicitly to `true`
-* `-l simple` - using short form; Short form also allows assignment via equals.
+* `-l simple` - using short form
 
-For example, `go run ./build -v --ci all` would run the `all` task with `ci` parameter set to `"true"` in verbose mode.
+For example, `go run ./build -v --ci all` would run the `all` task with `verbose` and `ci` parameters both set to `"true"`.
 
-Parameters must first be registered via [`func (*Taskflow) ConfigureValue`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.ConfigureValue), or one of the provided primitive functions like `ConfigureString`.
+Parameters must first be registered via [`func (*Taskflow) ConfigureValue`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.ConfigureValue), or one of the provided methods like `ConfigureString`.
 
 After registration, tasks need to specify which parameters they will read.
 Do this by assigning the `RegisteredParameter` from the registration result to the [`Task Parameters`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Parameters) field.
 If a task tries to retrieve the value from an unregistered parameter, the task will fail. 
 
-With registration is done, the task's command can retrieve the parameter value using `Get(*TF)` from the respective `RegisteredParameter`, returned from the registration call during the task's `Command` execution.
+When registration is done, the task's command can retrieve the parameter value using `Get(*TF)` from the respective `RegisteredParameter`, returned from the registration call during the task's `Command` execution.
 
 See `examples/string-param/main.go` for a full parameter example.
 
