@@ -113,14 +113,13 @@ func Test_string_param(t *testing.T) {
 		defaultValue string
 		args         []string
 
-		exitCode int
-		value    string
+		value string
 	}{
-		{defaultValue: "abc", args: []string{}, exitCode: taskflow.CodePass, value: "abc"},
-		{defaultValue: "abc", args: []string{"--string", "xyz"}, exitCode: taskflow.CodePass, value: "xyz"},
-		{defaultValue: "abc", args: []string{"-s=def"}, exitCode: taskflow.CodePass, value: "def"},
-		{defaultValue: "abc", args: []string{"-s", "ghi"}, exitCode: taskflow.CodePass, value: "ghi"},
-		{defaultValue: "abc", args: []string{"-s=jkl=mno"}, exitCode: taskflow.CodePass, value: "jkl=mno"},
+		{defaultValue: "abc", args: []string{}, value: "abc"},
+		{defaultValue: "abc", args: []string{"--string", "xyz"}, value: "xyz"},
+		{defaultValue: "abc", args: []string{"-s=def"}, value: "def"},
+		{defaultValue: "abc", args: []string{"-s", "ghi"}, value: "ghi"},
+		{defaultValue: "abc", args: []string{"-s=jkl=mno"}, value: "jkl=mno"},
 	}
 
 	for index, tc := range tt {
@@ -134,7 +133,7 @@ func Test_string_param(t *testing.T) {
 			var got string
 			exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)
 
-			assertEqual(t, exitCode, tc.exitCode, "exit code should match")
+			assertEqual(t, exitCode, taskflow.CodePass, "exit code should match")
 			assertEqual(t, got, tc.value, "value should match")
 		})
 	}
