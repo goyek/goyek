@@ -146,7 +146,7 @@ The registered tasks are required to have a non-empty name. For future compatibi
 - underscore (`_`)
 - hyphens (`-`)
 
-Do not use the equals sign (`=`) as it is used for assigning parameters.
+Do not begin the task name with `-` sign as it is used for assigning parameters.
 
 A task with a given name can be only registered once.
 
