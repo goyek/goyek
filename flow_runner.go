@@ -239,7 +239,6 @@ func printUsage(f *flowRunner) {
 	w.Flush() //nolint // not checking errors when writing to output
 
 	fmt.Fprintf(f.output, "Tasks:\n")
-	w = tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
 	keys = make([]string, 0, len(f.tasks))
 	for k, task := range f.tasks {
 		if task.Description == "" {
