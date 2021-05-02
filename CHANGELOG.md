@@ -8,13 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/pellared/taskflow/compare/v0.2.0...HEAD)
 
 This release contains multiple breaking changes for both the CLI and the Go API.
-The biggest change is redesign of parameters API so they have to be explictly registered.
-Moreover the parameters are set in CLI using the flag syntax.
+
+The biggest change is the redesign of parameters API so they have to be explicitly registered.
+It makes the usage of parameters more controlled and provides a better help output.
+Moreover, the parameters are set in CLI using the flag syntax.
 
 ### Added
 
 - Help is printed when `-h`, `--help` or `help` is passsed.
 - Help contains parameters' information.
+- The tasks and parameters can be passed via CLI in any order.
 - `Taskflow.Run` panics in case a registered parameter is not assigned to any task.
 
 ### Changed
