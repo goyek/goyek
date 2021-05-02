@@ -319,7 +319,7 @@ func Test_printing(t *testing.T) {
 	})
 	t.Log()
 
-	flow.Run(context.Background(), "--"+verboseParam.Name(), "failing")
+	flow.Run(context.Background(), "-"+verboseParam.Name(), "failing")
 
 	assertContains(t, sb.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
 	assertContains(t, sb.String(), `Log 1
@@ -359,7 +359,7 @@ func Test_concurrent_printing(t *testing.T) {
 
 			var args []string
 			if tc.verbose {
-				args = append(args, "--"+verboseParam.Name())
+				args = append(args, "-"+verboseParam.Name())
 			}
 			args = append(args, "task")
 			exitCode := flow.Run(context.Background(), args...)
@@ -406,14 +406,13 @@ func (value *arrayValue) IsBool() bool { return false }
 func Test_params(t *testing.T) {
 	flow := taskflow.New()
 	boolParam := flow.RegisterBoolParam(true, taskflow.ParameterInfo{
-		Name: "bool",
+		Name: "b",
 	})
 	intParam := flow.RegisterIntParam(1, taskflow.ParameterInfo{
-		Name: "int",
+		Name: "i",
 	})
 	stringParam := flow.RegisterStringParam("abc", taskflow.ParameterInfo{
-		Name:  "string",
-		Short: 's',
+		Name: "s",
 	})
 	arrayParam := flow.RegisterValueParam(func() taskflow.Value { return &arrayValue{} }, taskflow.ParameterInfo{
 		Name: "array",
@@ -438,7 +437,7 @@ func Test_params(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "--bool=false", "--int", "9001", "-s", "xyz", "--array", "[\"a\", \"b\"]", "task")
+	exitCode := flow.Run(context.Background(), "-b=false", "-i", "9001", "-s", "xyz", "-array", "[\"a\", \"b\"]", "task")
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertEqual(t, gotBool, false, "bool param")

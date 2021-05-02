@@ -13,19 +13,7 @@ type parameter struct {
 // ParameterInfo represents the general information of a parameter for one or more tasks.
 type ParameterInfo struct {
 	Name  string
-	Short rune
 	Usage string
-}
-
-func (info ParameterInfo) longFlag() string {
-	return "--" + info.Name
-}
-
-func (info ParameterInfo) shortFlag() string {
-	if info.Short == 0 {
-		return ""
-	}
-	return "-" + string(info.Short)
 }
 
 // Value represents an instance of a generic parameter.
@@ -169,8 +157,7 @@ func (p StringParam) Get(tf *TF) string {
 // This is a convenience function for a common functionality.
 func VerboseParam(flow *Taskflow) BoolParam {
 	param := flow.RegisterBoolParam(false, ParameterInfo{
-		Name:  "verbose",
-		Short: 'v',
+		Name:  "v",
 		Usage: "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.",
 	})
 	flow.Verbose = &param

@@ -1,7 +1,7 @@
 // Example program for parameters, showcasing the following:
 // Sharing of parameters, "private" parameters, and complex parameters encoded in JSON.
 // This example also registers the "verbose" parameter, in order to provide output in the task.
-// Execute `go run ./main.go -v --shared "hello world"` as a first example.
+// Execute `go run ./main.go -v -shared "hello world"` as a first example.
 // Execute `go run ./main.go -h"` to see all details.
 
 package main
@@ -20,7 +20,6 @@ func main() {
 	taskflow.VerboseParam(flow)
 	sharedParam := flow.RegisterStringParam("default-value", taskflow.ParameterInfo{
 		Name:  "shared",
-		Short: 's',
 		Usage: "An example parameter shared between tasks",
 	})
 
@@ -47,7 +46,6 @@ func taskSecond(flow *taskflow.Taskflow, sharedParam taskflow.StringParam) taskf
 	// The following is a "private" parameter, only available to this task.
 	privateParam := flow.RegisterStringParam("special-default", taskflow.ParameterInfo{
 		Name:  "private",
-		Short: 'p',
 		Usage: "A task-specific parameter",
 	})
 	return taskflow.Task{
@@ -95,7 +93,7 @@ func (value *complexParamValue) IsBool() bool {
 
 // taskComplexParam showcases complex parameters, JSON encoded.
 //
-// Execute `go run ./main.go -v complex --json "{\"stringValue\":\"abc\"}"` as an example.
+// Execute `go run ./main.go -v complex -json "{\"stringValue\":\"abc\"}"` as an example.
 func taskComplexParam(flow *taskflow.Taskflow) taskflow.Task {
 	privateParam := flow.RegisterValueParam(func() taskflow.Value {
 		param := complexParamValue{

@@ -21,7 +21,7 @@ jobs:
         with:
           go-version: '1.16'
       - name: Build
-        run: go run ./build -v --ci all
+        run: go run ./build all -v -ci
       - name: Upload HTML coverage
         uses: actions/upload-artifact@v2
         with:

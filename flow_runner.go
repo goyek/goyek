@@ -28,15 +28,9 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	}
 
 	f.paramValues = make(map[string]Value)
-	valuesByFlag := make(map[string]Value)
 	for _, param := range f.params {
 		value := param.newValue()
 		f.paramValues[param.info.Name] = value
-		valuesByFlag[param.info.longFlag()] = value
-		shortFlag := param.info.shortFlag()
-		if len(shortFlag) > 0 {
-			valuesByFlag[shortFlag] = value
-		}
 	}
 	usageRequested := false
 
@@ -58,19 +52,22 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 			tasks = append(tasks, arg)
 			return nil
 		}
-		split := strings.SplitN(arg, "=", 2)
-		if value, isFlag := valuesByFlag[split[0]]; isFlag {
-			switch {
-			case len(split) > 1:
-				return value.Set(split[1])
-			case value.IsBool():
-				return value.Set("")
-			default:
-				handleNextArgFor(value)
-				return nil
+		if arg[0] == '-' {
+			// parase parameters
+			split := strings.SplitN(arg[1:], "=", 2)
+			if value, isFlag := f.paramValues[split[0]]; isFlag {
+				switch {
+				case len(split) > 1:
+					return value.Set(split[1])
+				case value.IsBool():
+					return value.Set("")
+				default:
+					handleNextArgFor(value)
+					return nil
+				}
 			}
 		}
-		// If they haven't been overridden above, provide usage for common queries
+		// if they haven't been overridden above, provide usage for common queries
 		if (arg == "-h") || (arg == "--help") || (arg == "help") {
 			usageRequested = true
 			return nil
@@ -226,6 +223,10 @@ func (f *flowRunner) unusedParams() []string {
 }
 
 func printUsage(f *flowRunner) {
+	flagName := func(paramName string) string {
+		return "-" + paramName
+	}
+
 	fmt.Fprintf(f.output, "Usage: [flag(s) | task(s)]...\n")
 	fmt.Fprintf(f.output, "Flags:\n")
 	w := tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
@@ -236,8 +237,7 @@ func printUsage(f *flowRunner) {
 	sort.Strings(keys)
 	for _, key := range keys {
 		param := f.params[key]
-		fmt.Fprintf(w, "  %s\t%s\tDefault: %s\t%s\n",
-			param.info.shortFlag(), param.info.longFlag(), param.newValue().String(), param.info.Usage)
+		fmt.Fprintf(w, "  %s\tDefault: %s\t%s\n", flagName(param.info.Name), param.newValue().String(), param.info.Usage)
 	}
 	w.Flush() //nolint // not checking errors when writing to output
 
@@ -254,12 +254,12 @@ func printUsage(f *flowRunner) {
 		t := f.tasks[k]
 		params := make([]string, len(t.Parameters))
 		for i, param := range t.Parameters {
-			params[i] = param.Name()
+			params[i] = flagName(param.Name())
 		}
 		sort.Strings(params)
 		paramsText := ""
 		if len(params) > 0 {
-			paramsText = "; --" + strings.Join(params, " --")
+			paramsText = "; " + strings.Join(params, " ")
 		}
 		fmt.Fprintf(w, "  %s\t%s%s\n", t.Name, t.Description, paramsText)
 	}

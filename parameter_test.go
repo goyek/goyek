@@ -29,7 +29,6 @@ func Test_bool_param(t *testing.T) {
 		value    bool
 	}{
 		{defaultValue: false, args: []string{}, exitCode: taskflow.CodePass, value: false},
-		{defaultValue: false, args: []string{"--bool"}, exitCode: taskflow.CodePass, value: true},
 		{defaultValue: false, args: []string{"-b"}, exitCode: taskflow.CodePass, value: true},
 		{defaultValue: true, args: []string{"-b=false"}, exitCode: taskflow.CodePass, value: false},
 
@@ -42,8 +41,7 @@ func Test_bool_param(t *testing.T) {
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
 			flow := taskflow.New()
 			param := flow.RegisterBoolParam(tc.defaultValue, taskflow.ParameterInfo{
-				Name:  "bool",
-				Short: 'b',
+				Name: "b",
 			})
 			var got bool
 			exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)
@@ -73,7 +71,7 @@ func Test_int_param(t *testing.T) {
 		value    int
 	}{
 		{defaultValue: 1, args: []string{}, exitCode: taskflow.CodePass, value: 1},
-		{defaultValue: 1, args: []string{"--int"}, exitCode: taskflow.CodePass, value: 1},
+		{defaultValue: 1, args: []string{"-i"}, exitCode: taskflow.CodePass, value: 1},
 		{defaultValue: 1, args: []string{"-i=123"}, exitCode: taskflow.CodePass, value: 123},
 		{defaultValue: 1, args: []string{"-i", "456"}, exitCode: taskflow.CodePass, value: 456},
 
@@ -86,8 +84,7 @@ func Test_int_param(t *testing.T) {
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
 			flow := taskflow.New()
 			param := flow.RegisterIntParam(tc.defaultValue, taskflow.ParameterInfo{
-				Name:  "int",
-				Short: 'i',
+				Name: "i",
 			})
 			var got int
 			exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)
@@ -116,7 +113,6 @@ func Test_string_param(t *testing.T) {
 		value string
 	}{
 		{defaultValue: "abc", args: []string{}, value: "abc"},
-		{defaultValue: "abc", args: []string{"--string", "xyz"}, value: "xyz"},
 		{defaultValue: "abc", args: []string{"-s=def"}, value: "def"},
 		{defaultValue: "abc", args: []string{"-s", "ghi"}, value: "ghi"},
 		{defaultValue: "abc", args: []string{"-s=jkl=mno"}, value: "jkl=mno"},
@@ -128,8 +124,7 @@ func Test_string_param(t *testing.T) {
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
 			flow := taskflow.New()
 			param := flow.RegisterStringParam(tc.defaultValue, taskflow.ParameterInfo{
-				Name:  "string",
-				Short: 's',
+				Name: "s",
 			})
 			var got string
 			exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)

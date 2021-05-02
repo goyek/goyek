@@ -105,7 +105,7 @@ Sample usage:
 $ go run ./build -h
 Usage: [flag(s) | task(s)]...
 Flags:
-  -v    --verbose    Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
+  -v    Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
 Tasks:
   all     build pipeline
   fmt     go fmt
@@ -191,17 +191,18 @@ When the default task is set, then it is run if no task is provided via CLI.
 
 ### Parameters
 
-The parameters can be set via CLI using flag syntax. Flags must be registered in a long form, and have an optional short form using only one letter.
+The parameters can be set via CLI using flag syntax.
 
 On the CLI, flags can be set in the following ways:
 
-- `--longName simple` - for simple single-word values
-- `--longName "value with blanks"`
-- `--longName="value with blanks"`
-- `--booleanParam` - setting boolean parameters implicitly to `true`
-- `-l simple` - using short form
+- `-param simple` - for simple single-word values
+- `-param "value with blanks"`
+- `-param="value with blanks"`
+- `-param` - setting boolean parameters implicitly to `true`
 
-For example, `go run ./build -v --ci all` would run the `all` task with `verbose` and `ci` bool parameters both set to `true`.
+For example, `go run ./build test -v -pkg ./...` would run the `test` task
+with `v` bool parameter (verbose mode) set to `true`,
+and `pkg` string parameter set to `"./..."`.
 
 Parameters must first be registered via [`func (f *Taskflow) RegisterValueParam(newValue func() Value, info ParameterInfo) ValueParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterValueParam), or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterStringParam).
 
