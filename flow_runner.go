@@ -16,7 +16,7 @@ type flowRunner struct {
 	params      map[string]paramValueFactory
 	paramValues map[string]ParamValue
 	tasks       map[string]Task
-	verbose     *BoolParam
+	verbose     BoolParam
 	defaultTask RegisteredTask
 }
 
@@ -149,12 +149,9 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		paramValues[param.Name()] = f.paramValues[param.Name()]
 	}
 
-	verbose := true // by default print everything (verbose)
-	if f.verbose != nil {
-		// if verbose flag is registered then check its value
-		value, existing := f.paramValues[f.verbose.Name()]
-		verbose = existing && value.Get().(bool)
-	}
+	// if verbose flag is registered then check its value
+	verboseParamVal, ok := f.paramValues[f.verbose.Name()]
+	verbose := ok && verboseParamVal.Get().(bool)
 
 	failed := false
 	measuredCommand := func(tf *TF) {
@@ -207,9 +204,7 @@ func (f *flowRunner) unusedParams() []string {
 	for key := range f.params {
 		remainingParams[key] = struct{}{}
 	}
-	if f.verbose != nil {
-		delete(remainingParams, f.verbose.Name())
-	}
+	delete(remainingParams, f.verbose.Name())
 	for _, task := range f.tasks {
 		for _, param := range task.Params {
 			delete(remainingParams, param.Name())

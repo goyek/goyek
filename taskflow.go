@@ -136,13 +136,13 @@ func (f *Taskflow) Register(task Task) RegisteredTask {
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (f *Taskflow) Run(ctx context.Context, args ...string) int {
-	f.VerboseParam() // make sure that verbose parameter is registered
+	// make sure that verbose parameter is registered
 
 	flow := &flowRunner{
 		output:      f.Output,
 		params:      f.params,
 		tasks:       f.tasks,
-		verbose:     f.verbose,
+		verbose:     f.VerboseParam(),
 		defaultTask: f.DefaultTask,
 	}
 
