@@ -167,13 +167,13 @@ Use [`func (f *Taskflow) VerboseParam() BoolParam`](https://pkg.go.dev/github.co
 
 ### Default task
 
-Default task can be assigned via [`Taskflow.DefaultTask`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.DefaultTask) field.
+Default task can be assigned via the [`Taskflow.DefaultTask`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.DefaultTask) field.
 
 When the default task is set, then it is run if no task is provided via CLI.
 
 ### Parameters
 
-The parameters can be set via CLI using flag syntax.
+The parameters can be set via CLI using the flag syntax.
 
 On the CLI, flags can be set in the following ways:
 
