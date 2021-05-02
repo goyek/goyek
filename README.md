@@ -171,7 +171,7 @@ Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.
 
 ### Verbose mode
 
-In verbose mode, the whole output will be streamed. If disabled, only logs from failed task are send to the output.
+Verbose mode streams all logs to the output. If it is disabled, only logs from failed task are send to the output.
 
 By default, verbose mode is turned on.
 It can be controlled by registering a boolean parameter and assigning it to the field [`Taskflow.Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.Verbose).
