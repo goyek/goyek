@@ -191,7 +191,7 @@ When the default task is set, then it is run if no task is provided via CLI.
 
 ### Parameters
 
-The parameters can be set via CLI using flag syntax. Flags must be registered in "long form", and have an optional short form using only one letter.
+The parameters can be set via CLI using flag syntax. Flags must be registered in a long form, and have an optional short form using only one letter.
 
 On the CLI, flags can be set in the following ways:
 
