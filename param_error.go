@@ -1,4 +1,4 @@
-package taskflow
+package goyek
 
 import "strconv"
 
@@ -9,7 +9,7 @@ type ParamError struct {
 }
 
 func (e *ParamError) Error() string {
-	return "taskflow: parameter " + strconv.Quote(e.Key) + ": " + e.Err.Error()
+	return "goyek: parameter " + strconv.Quote(e.Key) + ": " + e.Err.Error()
 }
 
 // Unwrap unpacks the wrapped error.

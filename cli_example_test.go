@@ -1,34 +1,34 @@
-package taskflow_test
+package goyek_test
 
-import "github.com/pellared/taskflow"
+import "github.com/goyek/goyek"
 
 func Example() {
-	flow := taskflow.New()
+	flow := goyek.New()
 
-	task1 := flow.Register(taskflow.Task{
+	task1 := flow.Register(goyek.Task{
 		Name:    "task-1",
 		Usage:   "Print Go version",
-		Command: taskflow.Exec("go", "version"),
+		Command: goyek.Exec("go", "version"),
 	})
 
-	task2 := flow.Register(taskflow.Task{
+	task2 := flow.Register(goyek.Task{
 		Name: "task-2",
-		Command: func(tf *taskflow.TF) {
+		Command: func(tf *goyek.TF) {
 			tf.Skip("skipping")
 		},
 	})
 
-	task3 := flow.Register(taskflow.Task{
+	task3 := flow.Register(goyek.Task{
 		Name: "task-3",
-		Command: func(tf *taskflow.TF) {
+		Command: func(tf *goyek.TF) {
 			tf.Error("hello from", tf.Name())
 			tf.Log("this will be printed")
 		},
 	})
 
-	flow.Register(taskflow.Task{
+	flow.Register(goyek.Task{
 		Name: "all",
-		Deps: taskflow.Deps{task1, task2, task3},
+		Deps: goyek.Deps{task1, task2, task3},
 	})
 
 	flow.Main()

@@ -1,17 +1,17 @@
 package main
 
-import "github.com/pellared/taskflow"
+import "github.com/goyek/goyek"
 
 func main() {
-	flow := taskflow.New()
+	flow := goyek.New()
 
 	hello := flow.Register(taskHello())
 	fmt := flow.Register(taskFmt())
 
-	flow.Register(taskflow.Task{
+	flow.Register(goyek.Task{
 		Name:  "all",
 		Usage: "build pipeline",
-		Deps: taskflow.Deps{
+		Deps: goyek.Deps{
 			hello,
 			fmt,
 		},
@@ -20,20 +20,20 @@ func main() {
 	flow.Main()
 }
 
-func taskHello() taskflow.Task {
-	return taskflow.Task{
+func taskHello() goyek.Task {
+	return goyek.Task{
 		Name:  "hello",
 		Usage: "demonstration",
-		Command: func(tf *taskflow.TF) {
+		Command: func(tf *goyek.TF) {
 			tf.Log("Hello world!")
 		},
 	}
 }
 
-func taskFmt() taskflow.Task {
-	return taskflow.Task{
+func taskFmt() goyek.Task {
+	return goyek.Task{
 		Name:    "fmt",
 		Usage:   "go fmt",
-		Command: taskflow.Exec("go", "fmt", "./..."),
+		Command: goyek.Exec("go", "fmt", "./..."),
 	}
 }

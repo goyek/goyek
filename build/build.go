@@ -4,13 +4,13 @@ import (
 	"io"
 	"strings"
 
-	"github.com/pellared/taskflow"
+	"github.com/goyek/goyek"
 )
 
 func main() {
-	flow := taskflow.New()
+	flow := goyek.New()
 
-	ci := flow.RegisterBoolParam(false, taskflow.ParamInfo{
+	ci := flow.RegisterBoolParam(false, goyek.ParamInfo{
 		Name:  "ci",
 		Usage: "Whether CI is calling the build script",
 	})
@@ -26,10 +26,10 @@ func main() {
 	diff := flow.Register(taskDiff(ci))
 
 	// pipeline
-	all := flow.Register(taskflow.Task{
+	all := flow.Register(goyek.Task{
 		Name:  "all",
 		Usage: "build pipeline",
-		Deps: taskflow.Deps{
+		Deps: goyek.Deps{
 			clean,
 			install,
 			build,
@@ -47,19 +47,19 @@ func main() {
 
 const toolsDir = "tools"
 
-func taskClean() taskflow.Task {
-	return taskflow.Task{
+func taskClean() goyek.Task {
+	return goyek.Task{
 		Name:    "clean",
 		Usage:   "remove git ignored files",
-		Command: taskflow.Exec("git", "clean", "-fX"),
+		Command: goyek.Exec("git", "clean", "-fX"),
 	}
 }
 
-func taskInstall() taskflow.Task {
-	return taskflow.Task{
+func taskInstall() goyek.Task {
+	return goyek.Task{
 		Name:  "install",
 		Usage: "install build tools",
-		Command: func(tf *taskflow.TF) {
+		Command: func(tf *goyek.TF) {
 			installFmt := tf.Cmd("go", "install", "mvdan.cc/gofumpt/gofumports")
 			installFmt.Dir = toolsDir
 			if err := installFmt.Run(); err != nil {
@@ -75,45 +75,45 @@ func taskInstall() taskflow.Task {
 	}
 }
 
-func taskBuild() taskflow.Task {
-	return taskflow.Task{
+func taskBuild() goyek.Task {
+	return goyek.Task{
 		Name:    "build",
 		Usage:   "go build",
-		Command: taskflow.Exec("go", "build", "./..."),
+		Command: goyek.Exec("go", "build", "./..."),
 	}
 }
 
-func taskFmt() taskflow.Task {
-	return taskflow.Task{
+func taskFmt() goyek.Task {
+	return goyek.Task{
 		Name:  "fmt",
 		Usage: "gofumports",
-		Command: func(tf *taskflow.TF) {
-			tf.Cmd("gofumports", strings.Split("-l -w -local github.com/pellared/taskflow .", " ")...).Run() //nolint // it is OK if it returns error
+		Command: func(tf *goyek.TF) {
+			tf.Cmd("gofumports", strings.Split("-l -w -local github.com/goyek/goyek .", " ")...).Run() //nolint // it is OK if it returns error
 		},
 	}
 }
 
-func taskLint() taskflow.Task {
-	return taskflow.Task{
+func taskLint() goyek.Task {
+	return goyek.Task{
 		Name:    "lint",
 		Usage:   "golangci-lint",
-		Command: taskflow.Exec("golangci-lint", "run"),
+		Command: goyek.Exec("golangci-lint", "run"),
 	}
 }
 
-func taskTest() taskflow.Task {
-	return taskflow.Task{
+func taskTest() goyek.Task {
+	return goyek.Task{
 		Name:    "test",
 		Usage:   "go test with race detector and code covarage",
-		Command: taskflow.Exec("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."),
+		Command: goyek.Exec("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."),
 	}
 }
 
-func taskModTidy() taskflow.Task {
-	return taskflow.Task{
+func taskModTidy() goyek.Task {
+	return goyek.Task{
 		Name:  "mod-tidy",
 		Usage: "go mod tidy",
-		Command: func(tf *taskflow.TF) {
+		Command: func(tf *goyek.TF) {
 			if err := tf.Cmd("go", "mod", "tidy").Run(); err != nil {
 				tf.Errorf("go mod tidy: %v", err)
 			}
@@ -127,12 +127,12 @@ func taskModTidy() taskflow.Task {
 	}
 }
 
-func taskDiff(ci taskflow.BoolParam) taskflow.Task {
-	return taskflow.Task{
+func taskDiff(ci goyek.BoolParam) goyek.Task {
+	return goyek.Task{
 		Name:   "diff",
 		Usage:  "git diff",
-		Params: taskflow.Params{ci},
-		Command: func(tf *taskflow.TF) {
+		Params: goyek.Params{ci},
+		Command: func(tf *goyek.TF) {
 			if !ci.Get(tf) {
 				tf.Skip("ci param is not set, skipping")
 			}

@@ -1,4 +1,4 @@
-module github.com/pellared/taskflow/tools
+module github.com/goyek/goyek/tools
 
 go 1.15
 
