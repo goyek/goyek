@@ -17,7 +17,6 @@ func main() {
 
 	// tasks
 	clean := flow.Register(taskClean())
-	install := flow.Register(taskInstall())
 	build := flow.Register(taskBuild())
 	fmt := flow.Register(taskFmt())
 	lint := flow.Register(taskLint())
@@ -31,7 +30,6 @@ func main() {
 		Usage: "build pipeline",
 		Deps: goyek.Deps{
 			clean,
-			install,
 			build,
 			fmt,
 			lint,
@@ -55,26 +53,6 @@ func taskClean() goyek.Task {
 	}
 }
 
-func taskInstall() goyek.Task {
-	return goyek.Task{
-		Name:  "install",
-		Usage: "install build tools",
-		Command: func(tf *goyek.TF) {
-			installFmt := tf.Cmd("go", "install", "mvdan.cc/gofumpt/gofumports")
-			installFmt.Dir = toolsDir
-			if err := installFmt.Run(); err != nil {
-				tf.Errorf("go install gofumports: %v", err)
-			}
-
-			installLint := tf.Cmd("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
-			installLint.Dir = toolsDir
-			if err := installLint.Run(); err != nil {
-				tf.Errorf("go install golangci-lint: %v", err)
-			}
-		},
-	}
-}
-
 func taskBuild() goyek.Task {
 	return goyek.Task{
 		Name:    "build",
@@ -88,6 +66,11 @@ func taskFmt() goyek.Task {
 		Name:  "fmt",
 		Usage: "gofumports",
 		Command: func(tf *goyek.TF) {
+			installFmt := tf.Cmd("go", "install", "mvdan.cc/gofumpt/gofumports")
+			installFmt.Dir = toolsDir
+			if err := installFmt.Run(); err != nil {
+				tf.Errorf("go install gofumports: %v", err)
+			}
 			tf.Cmd("gofumports", strings.Split("-l -w -local github.com/goyek/goyek .", " ")...).Run() //nolint // it is OK if it returns error
 		},
 	}
@@ -95,9 +78,19 @@ func taskFmt() goyek.Task {
 
 func taskLint() goyek.Task {
 	return goyek.Task{
-		Name:    "lint",
-		Usage:   "golangci-lint",
-		Command: goyek.Exec("golangci-lint", "run"),
+		Name:  "lint",
+		Usage: "golangci-lint",
+		Command: func(tf *goyek.TF) {
+			installLint := tf.Cmd("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
+			installLint.Dir = toolsDir
+			if err := installLint.Run(); err != nil {
+				tf.Errorf("go install golangci-lint: %v", err)
+			}
+			lint := tf.Cmd("golangci-lint", "run")
+			if err := lint.Run(); err != nil {
+				tf.Errorf("golangci-lint run: %v", err)
+			}
+		},
 	}
 }
 
