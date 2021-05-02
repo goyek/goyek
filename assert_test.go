@@ -38,30 +38,6 @@ func assertEqual(t testing.TB, got interface{}, want interface{}, msg string) {
 	t.Errorf("%s\ngot: [%v], want: [%v]", msg, got, want)
 }
 
-func requireNoError(t testing.TB, got error, msg string) {
-	if got == nil {
-		return
-	}
-	t.Helper()
-	t.Fatalf("%s\ngot: [%v], want: [nil]", msg, got)
-}
-
-func assertNoError(t testing.TB, got error, msg string) {
-	if got == nil {
-		return
-	}
-	t.Helper()
-	t.Errorf("%s\ngot: [%v], want: [nil]", msg, got)
-}
-
-func assertError(t testing.TB, got error, msg string) {
-	if got != nil {
-		return
-	}
-	t.Helper()
-	t.Errorf("%s\ngot: [%v], want: [!nil]", msg, got)
-}
-
 func assertPanics(t testing.TB, fn func(), msg string) {
 	tryPanic := func() bool {
 		didPanic := false

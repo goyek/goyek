@@ -1,0 +1,12 @@
+# Default state for all rules
+default: true
+
+# hard-tabs
+MD010: false
+
+# line-length
+MD013: false
+
+# no-duplicate-header
+MD024:
+  siblings_only: true

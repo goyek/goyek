@@ -2,7 +2,6 @@ package taskflow
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -13,7 +12,7 @@ const (
 	CodePass = 0
 	// CodeFailure indicates that taskflow failed.
 	CodeFailure = 1
-	// CodeInvalidArgs indicates that got invalid input.
+	// CodeInvalidArgs indicates that taskflow got invalid input.
 	CodeInvalidArgs = 2
 )
 
@@ -24,17 +23,14 @@ var DefaultOutput io.Writer = os.Stdout
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
 type Taskflow struct {
-	Output      io.Writer      // output where text is printed; os.Stdout by default
-	Params      Params         // default parameters' values
-	Verbose     bool           // when enabled, then the whole output will be always streamed
+	Output io.Writer // output where text is printed; os.Stdout by default
+
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
 
-	tasks map[string]Task
+	verbose *BoolParam // when enabled, then the whole output will be always streamed
+	params  map[string]paramValueFactory
+	tasks   map[string]Task
 }
-
-// Params represents Taskflow parameters used within Taskflow.
-// The default values set in the struct are overridden in Run method.
-type Params map[string]string
 
 // RegisteredTask represents a task that has been registered to a Taskflow.
 // It can be used as a dependency for another Task.
@@ -46,51 +42,107 @@ type RegisteredTask struct {
 func New() *Taskflow {
 	return &Taskflow{
 		Output: DefaultOutput,
-		Params: Params{},
 	}
 }
 
-// Register registers the task.
-func (f *Taskflow) Register(task Task) (RegisteredTask, error) {
+// VerboseParam returns the out-of-the-box verbose parameter which controls the output behavior.
+func (f *Taskflow) VerboseParam() BoolParam {
+	if f.verbose == nil {
+		param := f.RegisterBoolParam(false, ParamInfo{
+			Name:  "v",
+			Usage: "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.",
+		})
+		f.verbose = &param
+	}
+
+	return *f.verbose
+}
+
+// RegisterValueParam registers a generic parameter that is defined by the calling code.
+// Use this variant in case the primitive-specific implementations cannot cover the parameter.
+//
+// The value is provided via a factory function since Taskflow could be executed multiple times,
+// requiring a new Value instance each time.
+func (f *Taskflow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam {
+	f.registerParam(newValue, info)
+	return ValueParam{param{name: info.Name}}
+}
+
+// RegisterBoolParam registers a boolean parameter.
+func (f *Taskflow) RegisterBoolParam(defaultValue bool, info ParamInfo) BoolParam {
+	f.registerParam(func() ParamValue {
+		value := boolValue(defaultValue)
+		return &value
+	}, info)
+	return BoolParam{param{name: info.Name}}
+}
+
+// RegisterIntParam registers an integer parameter.
+func (f *Taskflow) RegisterIntParam(defaultValue int, info ParamInfo) IntParam {
+	f.registerParam(func() ParamValue {
+		value := intValue(defaultValue)
+		return &value
+	}, info)
+	return IntParam{param{name: info.Name}}
+}
+
+// RegisterStringParam registers a string parameter.
+func (f *Taskflow) RegisterStringParam(defaultValue string, info ParamInfo) StringParam {
+	f.registerParam(func() ParamValue {
+		value := stringValue(defaultValue)
+		return &value
+	}, info)
+	return StringParam{param{name: info.Name}}
+}
+
+func (f *Taskflow) registerParam(newValue func() ParamValue, info ParamInfo) {
+	if info.Name == "" {
+		panic("parameter name cannot be empty")
+	}
+	if _, exists := f.params[info.Name]; exists {
+		panic(fmt.Sprintf("%s parameter was already registered", info.Name))
+	}
+	if f.params == nil {
+		f.params = make(map[string]paramValueFactory)
+	}
+	f.params[info.Name] = paramValueFactory{
+		info:     info,
+		newValue: newValue,
+	}
+}
+
+// Register registers the task. It panics in case of any error.
+func (f *Taskflow) Register(task Task) RegisteredTask {
 	// validate
 	if task.Name == "" {
-		return RegisteredTask{}, errors.New("task name cannot be empty")
+		panic("task name cannot be empty")
+	}
+	if task.Name[0] == '-' {
+		panic("task name cannot start with '-' sign")
 	}
 	if f.isRegistered(task.Name) {
-		return RegisteredTask{}, fmt.Errorf("%s task was already registered", task.Name)
+		panic(fmt.Sprintf("%s task was already registered", task.Name))
 	}
-	for _, dep := range task.Dependencies {
+	for _, dep := range task.Deps {
 		if !f.isRegistered(dep.name) {
-			return RegisteredTask{}, fmt.Errorf("invalid dependency %s", dep.name)
+			panic(fmt.Sprintf("invalid dependency %s", dep.name))
 		}
 	}
 
 	f.tasks[task.Name] = task
-	return RegisteredTask{name: task.Name}, nil
-}
-
-// MustRegister registers the task. It panics in case of any error.
-func (f *Taskflow) MustRegister(task Task) RegisteredTask {
-	dep, err := f.Register(task)
-	if err != nil {
-		panic(err)
-	}
-	return dep
+	return RegisteredTask{name: task.Name}
 }
 
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (f *Taskflow) Run(ctx context.Context, args ...string) int {
-	params := make(Params, len(f.Params))
-	for k, v := range f.Params {
-		params[k] = v
-	}
+	// make sure that verbose parameter is registered
 
 	flow := &flowRunner{
 		output:      f.Output,
-		params:      params,
+		params:      f.params,
 		tasks:       f.tasks,
-		verbose:     f.Verbose,
+		verbose:     f.VerboseParam(),
 		defaultTask: f.DefaultTask,
 	}
 

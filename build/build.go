@@ -10,21 +10,26 @@ import (
 func main() {
 	flow := taskflow.New()
 
+	ci := flow.RegisterBoolParam(false, taskflow.ParamInfo{
+		Name:  "ci",
+		Usage: "Whether CI is calling the build script",
+	})
+
 	// tasks
-	clean := flow.MustRegister(taskClean())
-	install := flow.MustRegister(taskInstall())
-	build := flow.MustRegister(taskBuild())
-	fmt := flow.MustRegister(taskFmt())
-	lint := flow.MustRegister(taskLint())
-	test := flow.MustRegister(taskTest())
-	modTidy := flow.MustRegister(taskModTidy())
-	diff := flow.MustRegister(taskDiff())
+	clean := flow.Register(taskClean())
+	install := flow.Register(taskInstall())
+	build := flow.Register(taskBuild())
+	fmt := flow.Register(taskFmt())
+	lint := flow.Register(taskLint())
+	test := flow.Register(taskTest())
+	modTidy := flow.Register(taskModTidy())
+	diff := flow.Register(taskDiff(ci))
 
 	// pipeline
-	all := flow.MustRegister(taskflow.Task{
-		Name:        "all",
-		Description: "build pipeline",
-		Dependencies: taskflow.Deps{
+	all := flow.Register(taskflow.Task{
+		Name:  "all",
+		Usage: "build pipeline",
+		Deps: taskflow.Deps{
 			clean,
 			install,
 			build,
@@ -37,7 +42,6 @@ func main() {
 	})
 
 	flow.DefaultTask = all
-	flow.Params.SetBool("ci", false)
 	flow.Main()
 }
 
@@ -45,16 +49,16 @@ const toolsDir = "tools"
 
 func taskClean() taskflow.Task {
 	return taskflow.Task{
-		Name:        "clean",
-		Description: "remove git ignored files",
-		Command:     taskflow.Exec("git", "clean", "-fX"),
+		Name:    "clean",
+		Usage:   "remove git ignored files",
+		Command: taskflow.Exec("git", "clean", "-fX"),
 	}
 }
 
 func taskInstall() taskflow.Task {
 	return taskflow.Task{
-		Name:        "install",
-		Description: "install build tools",
+		Name:  "install",
+		Usage: "install build tools",
 		Command: func(tf *taskflow.TF) {
 			installFmt := tf.Cmd("go", "install", "mvdan.cc/gofumpt/gofumports")
 			installFmt.Dir = toolsDir
@@ -73,16 +77,16 @@ func taskInstall() taskflow.Task {
 
 func taskBuild() taskflow.Task {
 	return taskflow.Task{
-		Name:        "build",
-		Description: "go build",
-		Command:     taskflow.Exec("go", "build", "./..."),
+		Name:    "build",
+		Usage:   "go build",
+		Command: taskflow.Exec("go", "build", "./..."),
 	}
 }
 
 func taskFmt() taskflow.Task {
 	return taskflow.Task{
-		Name:        "fmt",
-		Description: "gofumports",
+		Name:  "fmt",
+		Usage: "gofumports",
 		Command: func(tf *taskflow.TF) {
 			tf.Cmd("gofumports", strings.Split("-l -w -local github.com/pellared/taskflow .", " ")...).Run() //nolint // it is OK if it returns error
 		},
@@ -91,24 +95,24 @@ func taskFmt() taskflow.Task {
 
 func taskLint() taskflow.Task {
 	return taskflow.Task{
-		Name:        "lint",
-		Description: "golangci-lint",
-		Command:     taskflow.Exec("golangci-lint", "run"),
+		Name:    "lint",
+		Usage:   "golangci-lint",
+		Command: taskflow.Exec("golangci-lint", "run"),
 	}
 }
 
 func taskTest() taskflow.Task {
 	return taskflow.Task{
-		Name:        "test",
-		Description: "go test with race detector and code covarage",
-		Command:     taskflow.Exec("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."),
+		Name:    "test",
+		Usage:   "go test with race detector and code covarage",
+		Command: taskflow.Exec("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."),
 	}
 }
 
 func taskModTidy() taskflow.Task {
 	return taskflow.Task{
-		Name:        "mod-tidy",
-		Description: "go mod tidy",
+		Name:  "mod-tidy",
+		Usage: "go mod tidy",
 		Command: func(tf *taskflow.TF) {
 			if err := tf.Cmd("go", "mod", "tidy").Run(); err != nil {
 				tf.Errorf("go mod tidy: %v", err)
@@ -123,12 +127,13 @@ func taskModTidy() taskflow.Task {
 	}
 }
 
-func taskDiff() taskflow.Task {
+func taskDiff(ci taskflow.BoolParam) taskflow.Task {
 	return taskflow.Task{
-		Name:        "diff",
-		Description: "git diff",
+		Name:   "diff",
+		Usage:  "git diff",
+		Params: taskflow.Params{ci},
 		Command: func(tf *taskflow.TF) {
-			if !tf.Params().Bool("ci") {
+			if !ci.Get(tf) {
 				tf.Skip("ci param is not set, skipping")
 			}
 

@@ -13,6 +13,9 @@
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/pellared/taskflow)
 
+> :warning: The `main` branch contains **breaking changes**.
+> Here is the [**README for the latest release**](https://github.com/pellared/taskflow/blob/v0.2.0/README.md).
+
 This package aims to simplify the creation of build pipelines in Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
 
 **taskflow** API is mainly inspired by the [testing](https://golang.org/pkg/testing), [http](https://golang.org/pkg/http) and [flag](https://golang.org/pkg/flag) packages.
@@ -24,29 +27,27 @@ Check [Go Build Pipeline Demo](https://github.com/pellared/go-build-pipeline-dem
 Table of Contents:
 
 - [taskflow](#taskflow)
-	- [Example](#example)
-	- [Features](#features)
-		- [Task registration](#task-registration)
-		- [Task command](#task-command)
-		- [Task dependencies](#task-dependencies)
-		- [Helpers for running programs](#helpers-for-running-programs)
-		- [Verbose mode](#verbose-mode)
-		- [Default task](#default-task)
-		- [Parameters](#parameters)
-		- [Task runner](#task-runner)
-	- [Supported Go versions](#supported-go-versions)
-	- [FAQ](#faq)
-		- [Why not use Make?](#why-not-use-make)
-		- [Why not use Mage?](#why-not-use-mage)
-		- [Why not use Task?](#why-not-use-task)
-		- [Why not use Bazel?](#why-not-use-bazel)
-	- [Contributing](#contributing)
+  - [Example](#example)
+  - [Features](#features)
+    - [Task registration](#task-registration)
+    - [Task command](#task-command)
+    - [Task dependencies](#task-dependencies)
+    - [Helpers for running programs](#helpers-for-running-programs)
+    - [Verbose mode](#verbose-mode)
+    - [Default task](#default-task)
+    - [Parameters](#parameters)
+    - [Task runner](#task-runner)
+  - [Supported Go versions](#supported-go-versions)
+  - [FAQ](#faq)
+    - [Why not use Make?](#why-not-use-make)
+    - [Why not use Mage?](#why-not-use-mage)
+    - [Why not use Task?](#why-not-use-task)
+    - [Why not use Bazel?](#why-not-use-bazel)
+  - [Contributing](#contributing)
 
 ## Example
 
-Create a file in your project `build/build.go`.
-
-Copy and paste the content from below.
+Create a file in your project `build/build.go`. Copy and paste the content from below.
 
 ```go
 package main
@@ -56,41 +57,36 @@ import "github.com/pellared/taskflow"
 func main() {
 	flow := taskflow.New()
 
-	fmt := flow.MustRegister(taskFmt())
-	test := flow.MustRegister(taskTest())
+	hello := flow.Register(taskHello())
+	fmt := flow.Register(taskFmt())
 
-	flow.MustRegister(taskflow.Task{
-		Name:        "all",
-		Description: "build pipeline",
-		Dependencies: taskflow.Deps{
+	flow.Register(taskflow.Task{
+		Name:  "all",
+		Usage: "build pipeline",
+		Deps: taskflow.Deps{
+			hello,
 			fmt,
-			test,
 		},
 	})
 
 	flow.Main()
 }
 
-func taskFmt() taskflow.Task {
+func taskHello() taskflow.Task {
 	return taskflow.Task{
-		Name:        "fmt",
-		Description: "go fmt",
-		Command:     taskflow.Exec("go", "fmt", "./..."),
+		Name:  "hello",
+		Usage: "demonstration",
+		Command: func(tf *taskflow.TF) {
+			tf.Log("Hello world!")
+		},
 	}
 }
 
-func taskTest() taskflow.Task {
+func taskFmt() taskflow.Task {
 	return taskflow.Task{
-		Name:        "test",
-		Description: "go test with race detector and code covarage",
-		Command: func(tf *taskflow.TF) {
-			if err := tf.Cmd("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./...").Run(); err != nil {
-				tf.Errorf("go test: %v", err)
-			}
-			if err := tf.Cmd("go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html").Run(); err != nil {
-				tf.Errorf("go tool cover: %v", err)
-			}	
-		},
+		Name:    "fmt",
+		Usage:   "go fmt",
+		Command: taskflow.Exec("go", "fmt", "./..."),
 	}
 }
 ```
@@ -99,31 +95,29 @@ Sample usage:
 
 ```shell
 $ go run ./build -h
-Usage: [flag(s)] [key=val] task(s)
+Usage: [flag(s) | task(s)]...
 Flags:
-  -v    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
+  -v    Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
 Tasks:
-  all     build pipeline
-  fmt     go fmt
-  test    go test with race detector and code covarage
+  all      build pipeline
+  fmt      go fmt
+  hello    demonstration
 ```
 
 ```shell
 $ go run ./build all
-ok     0.453s
+ok     0.167s
 ```
 
 ```shell
-$ go run ./build -v all
+$ go run ./build all -v
+===== TASK  hello
+Hello world!
+----- PASS: hello (0.00s)
 ===== TASK  fmt
-Exec: go fmt ./...
------ PASS: fmt (0.06s)
-===== TASK  test
-Exec: go test -race -covermode=atomic -coverprofile=coverage.out ./...
-?       github.com/pellared/taskflow/example    [no test files]
-Exec: go tool cover -html=coverage.out -o coverage.html
------ PASS: test (0.11s)
-ok      0.176s
+Cmd: go fmt ./...
+----- PASS: fmt (0.18s)
+ok      0.183s
 ```
 
 Tired of writing `go run ./build` each time? Just add an alias to your shell. For example, add the line below to `~/.bash_aliases`:
@@ -132,7 +126,7 @@ Tired of writing `go run ./build` each time? Just add an alias to your shell. Fo
 alias gake='go run ./build'
 ```
 
-Additionally, take a look at [taskflow-example](https://github.com/pellared/taskflow-example) and this repository's own build pipeline script - [build/build.go](build/build.go).
+Additionally, take a look at [examples](examples) and this repository's own build pipeline script - [build/build.go](build/build.go).
 
 ## Features
 
@@ -145,7 +139,7 @@ The registered tasks are required to have a non-empty name. For future compatibi
 - underscore (`_`)
 - hyphens (`-`)
 
-Do not use the equals sign (`=`) as it is used for assigning parameters.
+Do not begin the task name with `-` sign as it is used for assigning parameters.
 
 A task with a given name can be only registered once.
 
@@ -167,23 +161,42 @@ Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.
 
 ### Verbose mode
 
-Enable verbose output using the `-v` CLI flag. It works similar to `go test -v`. When enabled, the whole output will be streamed. If disabled, only logs from failed task are send to the output.
+Enable verbose output using the `-v` CLI flag. It works similar to `go test -v`. Verbose mode streams all logs to the output. If it is disabled, only logs from failed task are send to the output.
 
-Use [`func (*TF) Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Verbose) to check if verbose mode was set within the task's command.
+Use [`func (f *Taskflow) VerboseParam() BoolParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.VerboseParam) if you need to check if verbose mode was set within a task's command.
 
 ### Default task
 
-Default task can be assigned via `DefaultTask` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
+Default task can be assigned via the [`Taskflow.DefaultTask`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.DefaultTask) field.
 
-When default task is set, then it is run if no task is provied via CLI.
+When the default task is set, then it is run if no task is provided via CLI.
 
 ### Parameters
 
-The parameters can be set via CLI using the `key=val` syntax after CLI flags. For example, `go run ./build -v ci=true all` would run the `all` task with `ci` parameter set to `"true"` in verbose mode.
+The parameters can be set via CLI using the flag syntax.
 
-Default values can be assigned via `Params` field in [`type Taskflow`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow).
+On the CLI, flags can be set in the following ways:
 
-The task's command can get the parameters using [`func (*TF) Params`](https://pkg.go.dev/github.com/pellared/taskflow#TF.Params).
+- `-param simple` - for simple single-word values
+- `-param "value with blanks"`
+- `-param="value with blanks"`
+- `-param` - setting boolean parameters implicitly to `true`
+
+For example, `go run ./build test -v -pkg ./...` would run the `test` task
+with `v` bool parameter (verbose mode) set to `true`,
+and `pkg` string parameter set to `"./..."`.
+
+Parameters must first be registered via [`func (f *Taskflow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterValueParam), or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterStringParam).
+
+After registration, tasks need to specify which parameters they will read.
+Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/pellared/taskflow#RegisteredParam) instance from the registration result to the [`Task.Params`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Params) field.
+If a task tries to retrieve the value from an unregistered parameter, the task will fail.
+
+When registration is done, the task's command can retrieve the parameter value using the `Get(*TF)` method from the registration result instance during the task's `Command` execution.
+
+See [examples/parameters/main.go](examples/parameters/main.go) for a detailed example.
+
+`Taskflow` will fail execution if there are unused parameters.
 
 ### Task runner
 
@@ -249,4 +262,4 @@ I am open to any feedback and contribution.
 
 Use [Discussions](https://github.com/pellared/taskflow/discussions) or write to me: *Robert Pajak* @ [Gophers Slack](https://invite.slack.golangbridge.org/).
 
-You can also create an issue or a pull request.
+You can also create an issue, or a pull request.
