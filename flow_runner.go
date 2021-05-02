@@ -13,8 +13,8 @@ import (
 
 type flowRunner struct {
 	output      io.Writer
-	params      map[string]parameter
-	paramValues map[string]Value
+	params      map[string]paramValueFactory
+	paramValues map[string]ParamValue
 	tasks       map[string]Task
 	verbose     *BoolParam
 	defaultTask RegisteredTask
@@ -27,7 +27,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 		panic(fmt.Sprintf("unused parameters: %v\n", unusedParams))
 	}
 
-	f.paramValues = make(map[string]Value)
+	f.paramValues = make(map[string]ParamValue)
 	for _, param := range f.params {
 		value := param.newValue()
 		f.paramValues[param.info.Name] = value
@@ -36,7 +36,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 
 	var argHandler func(string) error
 
-	handleNextArgFor := func(value Value) {
+	handleNextArgFor := func(value ParamValue) {
 		nextHandler := argHandler
 		argHandler = func(s string) error {
 			err := value.Set(s)
@@ -144,8 +144,8 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		return true
 	}
 
-	paramValues := make(map[string]Value)
-	for _, param := range task.Parameters {
+	paramValues := make(map[string]ParamValue)
+	for _, param := range task.Params {
 		paramValues[param.Name()] = f.paramValues[param.Name()]
 	}
 
@@ -211,7 +211,7 @@ func (f *flowRunner) unusedParams() []string {
 		delete(remainingParams, f.verbose.Name())
 	}
 	for _, task := range f.tasks {
-		for _, param := range task.Parameters {
+		for _, param := range task.Params {
 			delete(remainingParams, param.Name())
 		}
 	}
@@ -252,8 +252,8 @@ func printUsage(f *flowRunner) {
 	sort.Strings(keys)
 	for _, k := range keys {
 		t := f.tasks[k]
-		params := make([]string, len(t.Parameters))
-		for i, param := range t.Parameters {
+		params := make([]string, len(t.Params))
+		for i, param := range t.Params {
 			params[i] = flagName(param.Name())
 		}
 		sort.Strings(params)

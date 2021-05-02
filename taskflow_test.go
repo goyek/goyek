@@ -278,13 +278,13 @@ func Test_invalid_args(t *testing.T) {
 
 func Test_help(t *testing.T) {
 	flow := taskflow.New()
-	fastParam := flow.RegisterBoolParam(false, taskflow.ParameterInfo{
+	fastParam := flow.RegisterBoolParam(false, taskflow.ParamInfo{
 		Name:  "fast",
 		Usage: "simulates fast-lane processing",
 	})
 	a := flow.MustRegister(taskflow.Task{
 		Name:        "a",
-		Parameters:  taskflow.Params{fastParam},
+		Params:      taskflow.Params{fastParam},
 		Description: "some task",
 	})
 	flow.DefaultTask = a
@@ -403,16 +403,16 @@ func (value *arrayValue) IsBool() bool { return false }
 
 func Test_params(t *testing.T) {
 	flow := taskflow.New()
-	boolParam := flow.RegisterBoolParam(true, taskflow.ParameterInfo{
+	boolParam := flow.RegisterBoolParam(true, taskflow.ParamInfo{
 		Name: "b",
 	})
-	intParam := flow.RegisterIntParam(1, taskflow.ParameterInfo{
+	intParam := flow.RegisterIntParam(1, taskflow.ParamInfo{
 		Name: "i",
 	})
-	stringParam := flow.RegisterStringParam("abc", taskflow.ParameterInfo{
+	stringParam := flow.RegisterStringParam("abc", taskflow.ParamInfo{
 		Name: "s",
 	})
-	arrayParam := flow.RegisterValueParam(func() taskflow.Value { return &arrayValue{} }, taskflow.ParameterInfo{
+	arrayParam := flow.RegisterValueParam(func() taskflow.ParamValue { return &arrayValue{} }, taskflow.ParamInfo{
 		Name: "array",
 	})
 	var gotBool bool
@@ -421,7 +421,7 @@ func Test_params(t *testing.T) {
 	var gotArray []string
 	flow.MustRegister(taskflow.Task{
 		Name: "task",
-		Parameters: taskflow.Params{
+		Params: taskflow.Params{
 			boolParam,
 			intParam,
 			stringParam,
@@ -459,25 +459,25 @@ func Test_invalid_params(t *testing.T) {
 func Test_unused_params(t *testing.T) {
 	flow := taskflow.New()
 	flow.DefaultTask = flow.MustRegister(taskflow.Task{Name: "task", Command: func(tf *taskflow.TF) {}})
-	flow.RegisterBoolParam(false, taskflow.ParameterInfo{Name: "unused"})
+	flow.RegisterBoolParam(false, taskflow.ParamInfo{Name: "unused"})
 
 	assertPanics(t, func() { flow.Run(context.Background()) }, "should fail because of unused parameter")
 }
 
 func Test_param_registration_error_empty_name(t *testing.T) {
 	flow := taskflow.New()
-	assertPanics(t, func() { flow.RegisterBoolParam(false, taskflow.ParameterInfo{Name: ""}) }, "empty name")
+	assertPanics(t, func() { flow.RegisterBoolParam(false, taskflow.ParamInfo{Name: ""}) }, "empty name")
 }
 
 func Test_param_registration_error_double_name(t *testing.T) {
 	flow := taskflow.New()
-	info := taskflow.ParameterInfo{Name: "double"}
+	info := taskflow.ParamInfo{Name: "double"}
 	flow.RegisterBoolParam(false, info)
 	assertPanics(t, func() { flow.RegisterBoolParam(false, info) }, "double name")
 }
 
 func Test_unregistered_params(t *testing.T) {
-	foreignParam := taskflow.New().RegisterBoolParam(false, taskflow.ParameterInfo{Name: "foreign"})
+	foreignParam := taskflow.New().RegisterBoolParam(false, taskflow.ParamInfo{Name: "foreign"})
 	flow := taskflow.New()
 	flow.MustRegister(taskflow.Task{
 		Name: "task",

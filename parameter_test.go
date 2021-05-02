@@ -11,7 +11,7 @@ import (
 func runTaskflowWith(flow *taskflow.Taskflow, param taskflow.RegisteredParam, cmd func(*taskflow.TF), args []string) int {
 	flow.MustRegister(taskflow.Task{
 		Name:        "task",
-		Parameters:  taskflow.Params{param},
+		Params:      taskflow.Params{param},
 		Command:     cmd,
 		Description: "Sample task for parameter tests",
 	})
@@ -40,7 +40,7 @@ func Test_bool_param(t *testing.T) {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
 			flow := taskflow.New()
-			param := flow.RegisterBoolParam(tc.defaultValue, taskflow.ParameterInfo{
+			param := flow.RegisterBoolParam(tc.defaultValue, taskflow.ParamInfo{
 				Name: "b",
 			})
 			var got bool
@@ -54,7 +54,7 @@ func Test_bool_param(t *testing.T) {
 
 func Test_bool_param_help(t *testing.T) {
 	flow := taskflow.New()
-	param := flow.RegisterBoolParam(true, taskflow.ParameterInfo{
+	param := flow.RegisterBoolParam(true, taskflow.ParamInfo{
 		Name: "bool",
 	})
 	exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) {}, []string{"-h"})
@@ -83,7 +83,7 @@ func Test_int_param(t *testing.T) {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
 			flow := taskflow.New()
-			param := flow.RegisterIntParam(tc.defaultValue, taskflow.ParameterInfo{
+			param := flow.RegisterIntParam(tc.defaultValue, taskflow.ParamInfo{
 				Name: "i",
 			})
 			var got int
@@ -97,7 +97,7 @@ func Test_int_param(t *testing.T) {
 
 func Test_int_param_help(t *testing.T) {
 	flow := taskflow.New()
-	param := flow.RegisterIntParam(123, taskflow.ParameterInfo{
+	param := flow.RegisterIntParam(123, taskflow.ParamInfo{
 		Name: "int",
 	})
 	exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) {}, []string{"-h"})
@@ -123,7 +123,7 @@ func Test_string_param(t *testing.T) {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
 			flow := taskflow.New()
-			param := flow.RegisterStringParam(tc.defaultValue, taskflow.ParameterInfo{
+			param := flow.RegisterStringParam(tc.defaultValue, taskflow.ParamInfo{
 				Name: "s",
 			})
 			var got string
@@ -137,7 +137,7 @@ func Test_string_param(t *testing.T) {
 
 func Test_string_param_help(t *testing.T) {
 	flow := taskflow.New()
-	param := flow.RegisterStringParam("abc", taskflow.ParameterInfo{
+	param := flow.RegisterStringParam("abc", taskflow.ParamInfo{
 		Name: "string",
 	})
 	exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) {}, []string{"-h"})

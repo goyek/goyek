@@ -195,10 +195,10 @@ For example, `go run ./build test -v -pkg ./...` would run the `test` task
 with `v` bool parameter (verbose mode) set to `true`,
 and `pkg` string parameter set to `"./..."`.
 
-Parameters must first be registered via [`func (f *Taskflow) RegisterValueParam(newValue func() Value, info ParameterInfo) ValueParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterValueParam), or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterStringParam).
+Parameters must first be registered via [`func (f *Taskflow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterValueParam), or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterStringParam).
 
 After registration, tasks need to specify which parameters they will read.
-Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/pellared/taskflow#RegisteredParam) instance from the registration result to the [`Task.Parameters`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Parameters) field.
+Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/pellared/taskflow#RegisteredParam) instance from the registration result to the [`Task.Params`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Params) field.
 If a task tries to retrieve the value from an unregistered parameter, the task will fail.
 
 When registration is done, the task's command can retrieve the parameter value using the `Get(*TF)` method from the registration result instance during the task's `Command` execution.

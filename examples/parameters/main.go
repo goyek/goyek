@@ -17,7 +17,7 @@ import (
 func main() {
 	flow := taskflow.New()
 
-	sharedParam := flow.RegisterStringParam("default-value", taskflow.ParameterInfo{
+	sharedParam := flow.RegisterStringParam("default-value", taskflow.ParamInfo{
 		Name:  "shared",
 		Usage: "An example parameter shared between tasks",
 	})
@@ -34,7 +34,7 @@ func taskFirst(sharedParam taskflow.StringParam) taskflow.Task {
 	return taskflow.Task{
 		Name:        "first",
 		Description: "Showcases a simple parameter",
-		Parameters:  taskflow.Params{sharedParam},
+		Params:      taskflow.Params{sharedParam},
 		Command: func(tf *taskflow.TF) {
 			tf.Log("Shared parameter named '" + sharedParam.Name() + "', value '" + sharedParam.Get(tf) + "'")
 		},
@@ -43,14 +43,14 @@ func taskFirst(sharedParam taskflow.StringParam) taskflow.Task {
 
 func taskSecond(flow *taskflow.Taskflow, sharedParam taskflow.StringParam) taskflow.Task {
 	// The following is a "private" parameter, only available to this task.
-	privateParam := flow.RegisterStringParam("special-default", taskflow.ParameterInfo{
+	privateParam := flow.RegisterStringParam("special-default", taskflow.ParamInfo{
 		Name:  "private",
 		Usage: "A task-specific parameter",
 	})
 	return taskflow.Task{
 		Name:        "second",
 		Description: "Showcases shared and task-specific parameters",
-		Parameters:  taskflow.Params{sharedParam, privateParam},
+		Params:      taskflow.Params{sharedParam, privateParam},
 		Command: func(tf *taskflow.TF) {
 			tf.Log("Shared parameter named '" + sharedParam.Name() + "', value '" + sharedParam.Get(tf) + "'")
 			tf.Log("Private parameter named '" + privateParam.Name() + "', value '" + privateParam.Get(tf) + "'")
@@ -94,20 +94,20 @@ func (value *complexParamValue) IsBool() bool {
 //
 // Execute `go run ./main.go -v complex -json "{\"stringValue\":\"abc\"}"` as an example.
 func taskComplexParam(flow *taskflow.Taskflow) taskflow.Task {
-	privateParam := flow.RegisterValueParam(func() taskflow.Value {
+	privateParam := flow.RegisterValueParam(func() taskflow.ParamValue {
 		param := complexParamValue{
 			StringValue: "default",
 			IntValue:    123,
 		}
 		return &param
-	}, taskflow.ParameterInfo{
+	}, taskflow.ParamInfo{
 		Name:  "json",
 		Usage: "A complex parameter",
 	})
 	return taskflow.Task{
 		Name:        "complex",
 		Description: "Showcases complex parameters",
-		Parameters:  taskflow.Params{privateParam},
+		Params:      taskflow.Params{privateParam},
 		Command: func(tf *taskflow.TF) {
 			tf.Log("Private parameter named '" + privateParam.Name() +
 				"', value '" + fmt.Sprintf("%v", privateParam.Get(tf).(complexParam)) + "'")

@@ -10,7 +10,7 @@ import (
 func main() {
 	flow := taskflow.New()
 
-	ci := flow.RegisterBoolParam(false, taskflow.ParameterInfo{
+	ci := flow.RegisterBoolParam(false, taskflow.ParamInfo{
 		Name:  "ci",
 		Usage: "Whether CI is calling the build script",
 	})
@@ -131,7 +131,7 @@ func taskDiff(ci taskflow.BoolParam) taskflow.Task {
 	return taskflow.Task{
 		Name:        "diff",
 		Description: "git diff",
-		Parameters:  taskflow.Params{ci},
+		Params:      taskflow.Params{ci},
 		Command: func(tf *taskflow.TF) {
 			if !ci.Get(tf) {
 				tf.Skip("ci param is not set, skipping")

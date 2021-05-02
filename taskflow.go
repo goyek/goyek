@@ -29,7 +29,7 @@ type Taskflow struct {
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
 
 	verbose *BoolParam // when enabled, then the whole output will be always streamed
-	params  map[string]parameter
+	params  map[string]paramValueFactory
 	tasks   map[string]Task
 }
 
@@ -49,7 +49,7 @@ func New() *Taskflow {
 // VerboseParam returns the out-of-the-box verbose parameter which controls the output behavior.
 func (f *Taskflow) VerboseParam() BoolParam {
 	if f.verbose == nil {
-		param := f.RegisterBoolParam(false, ParameterInfo{
+		param := f.RegisterBoolParam(false, ParamInfo{
 			Name:  "v",
 			Usage: "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.",
 		})
@@ -64,14 +64,14 @@ func (f *Taskflow) VerboseParam() BoolParam {
 //
 // The value is provided via a factory function since Taskflow could be executed multiple times,
 // requiring a new Value instance each time.
-func (f *Taskflow) RegisterValueParam(newValue func() Value, info ParameterInfo) ValueParam {
+func (f *Taskflow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam {
 	f.registerParam(newValue, info)
 	return ValueParam{param{name: info.Name}}
 }
 
 // RegisterBoolParam registers a boolean parameter.
-func (f *Taskflow) RegisterBoolParam(defaultValue bool, info ParameterInfo) BoolParam {
-	f.registerParam(func() Value {
+func (f *Taskflow) RegisterBoolParam(defaultValue bool, info ParamInfo) BoolParam {
+	f.registerParam(func() ParamValue {
 		value := boolValue(defaultValue)
 		return &value
 	}, info)
@@ -79,8 +79,8 @@ func (f *Taskflow) RegisterBoolParam(defaultValue bool, info ParameterInfo) Bool
 }
 
 // RegisterIntParam registers an integer parameter.
-func (f *Taskflow) RegisterIntParam(defaultValue int, info ParameterInfo) IntParam {
-	f.registerParam(func() Value {
+func (f *Taskflow) RegisterIntParam(defaultValue int, info ParamInfo) IntParam {
+	f.registerParam(func() ParamValue {
 		value := intValue(defaultValue)
 		return &value
 	}, info)
@@ -88,15 +88,15 @@ func (f *Taskflow) RegisterIntParam(defaultValue int, info ParameterInfo) IntPar
 }
 
 // RegisterStringParam registers a string parameter.
-func (f *Taskflow) RegisterStringParam(defaultValue string, info ParameterInfo) StringParam {
-	f.registerParam(func() Value {
+func (f *Taskflow) RegisterStringParam(defaultValue string, info ParamInfo) StringParam {
+	f.registerParam(func() ParamValue {
 		value := stringValue(defaultValue)
 		return &value
 	}, info)
 	return StringParam{param{name: info.Name}}
 }
 
-func (f *Taskflow) registerParam(newValue func() Value, info ParameterInfo) {
+func (f *Taskflow) registerParam(newValue func() ParamValue, info ParamInfo) {
 	if info.Name == "" {
 		panic("parameter name cannot be empty")
 	}
@@ -104,9 +104,9 @@ func (f *Taskflow) registerParam(newValue func() Value, info ParameterInfo) {
 		panic(fmt.Sprintf("%s parameter was already registered", info.Name))
 	}
 	if f.params == nil {
-		f.params = make(map[string]parameter)
+		f.params = make(map[string]paramValueFactory)
 	}
-	f.params[info.Name] = parameter{
+	f.params[info.Name] = paramValueFactory{
 		info:     info,
 		newValue: newValue,
 	}

@@ -5,19 +5,19 @@ import (
 	"strconv"
 )
 
-type parameter struct {
-	info     ParameterInfo
-	newValue func() Value
+type paramValueFactory struct {
+	info     ParamInfo
+	newValue func() ParamValue
 }
 
-// ParameterInfo represents the general information of a parameter for one or more tasks.
-type ParameterInfo struct {
+// ParamInfo represents the general information of a parameter for one or more tasks.
+type ParamInfo struct {
 	Name  string
 	Usage string
 }
 
-// Value represents an instance of a generic parameter.
-type Value interface {
+// ParamValue represents an instance of a generic parameter.
+type ParamValue interface {
 	// String returns the current value formatted as string.
 	// The returned format should be in a single line, representing the parameter
 	// as it could be provided on the command line.
@@ -36,7 +36,7 @@ type Value interface {
 // It can be used as a parameter for a Task.
 type RegisteredParam interface {
 	Name() string
-	value(tf *TF) Value
+	value(tf *TF) ParamValue
 }
 
 // param is a helper struct for implementing concrete parameter types.
@@ -49,7 +49,7 @@ func (p param) Name() string {
 	return p.name
 }
 
-func (p param) value(tf *TF) Value {
+func (p param) value(tf *TF) ParamValue {
 	value, existing := tf.paramValues[p.name]
 	if !existing {
 		tf.Fatal(&ParamError{Key: p.name, Err: errors.New("parameter not registered")})

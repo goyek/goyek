@@ -12,7 +12,7 @@ type Runner struct {
 	Ctx         context.Context
 	TaskName    string
 	Output      io.Writer
-	ParamValues map[string]Value
+	ParamValues map[string]ParamValue
 }
 
 // RunResult contains the results of a Command run.

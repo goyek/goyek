@@ -18,7 +18,7 @@ type TF struct {
 	ctx         context.Context
 	name        string
 	writer      io.Writer
-	paramValues map[string]Value
+	paramValues map[string]ParamValue
 	failed      bool
 	skipped     bool
 }
