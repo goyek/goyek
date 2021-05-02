@@ -203,7 +203,7 @@ For example, `go run ./build -v --ci all` would run the `all` task with `verbose
 Parameters must first be registered via [`func (f *Taskflow) RegisterValueParam(newValue func() Value, info ParameterInfo) ValueParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterValueParam), or one of the provided methods like `RegisterStringParam`.
 
 After registration, tasks need to specify which parameters they will read.
-Do this by assigning the [`RegisteredParameter`](https://pkg.go.dev/github.com/pellared/taskflow#RegisteredParameter) from the registration result to the [`Task.Parameters`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Parameters) field.
+Do this by assigning the [`RegisteredParameter`](https://pkg.go.dev/github.com/pellared/taskflow#RegisteredParameter) instance from the registration result to the [`Task.Parameters`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Parameters) field.
 If a task tries to retrieve the value from an unregistered parameter, the task will fail.
 
 When registration is done, the task's command can retrieve the parameter value using `Get(*TF)` method from the respective `RegisteredParameter` type, returned from the registration call during the task's `Command` execution.
