@@ -13,6 +13,9 @@
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/pellared/taskflow)
 
+> :warning: The `main` branch contains **breaking changes**.
+> Here is the [**README for the latest release**](https://github.com/pellared/taskflow/blob/v0.2.0/README.md).
+
 This package aims to simplify the creation of build pipelines in Go instead of using scripts or [Make](https://www.gnu.org/software/make/).
 
 **taskflow** API is mainly inspired by the [testing](https://golang.org/pkg/testing), [http](https://golang.org/pkg/http) and [flag](https://golang.org/pkg/flag) packages.
@@ -24,23 +27,23 @@ Check [Go Build Pipeline Demo](https://github.com/pellared/go-build-pipeline-dem
 Table of Contents:
 
 - [taskflow](#taskflow)
-  - [Example](#example)
-  - [Features](#features)
-    - [Task registration](#task-registration)
-    - [Task command](#task-command)
-    - [Task dependencies](#task-dependencies)
-    - [Helpers for running programs](#helpers-for-running-programs)
-    - [Verbose mode](#verbose-mode)
-    - [Default task](#default-task)
-    - [Parameters](#parameters)
-    - [Task runner](#task-runner)
-  - [Supported Go versions](#supported-go-versions)
-  - [FAQ](#faq)
-    - [Why not use Make?](#why-not-use-make)
-    - [Why not use Mage?](#why-not-use-mage)
-    - [Why not use Task?](#why-not-use-task)
-    - [Why not use Bazel?](#why-not-use-bazel)
-  - [Contributing](#contributing)
+	- [Example](#example)
+	- [Features](#features)
+		- [Task registration](#task-registration)
+		- [Task command](#task-command)
+		- [Task dependencies](#task-dependencies)
+		- [Helpers for running programs](#helpers-for-running-programs)
+		- [Verbose mode](#verbose-mode)
+		- [Default task](#default-task)
+		- [Parameters](#parameters)
+		- [Task runner](#task-runner)
+	- [Supported Go versions](#supported-go-versions)
+	- [FAQ](#faq)
+		- [Why not use Make?](#why-not-use-make)
+		- [Why not use Mage?](#why-not-use-mage)
+		- [Why not use Task?](#why-not-use-task)
+		- [Why not use Bazel?](#why-not-use-bazel)
+	- [Contributing](#contributing)
 
 ## Example
 
