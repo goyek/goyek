@@ -22,7 +22,7 @@ type flowRunner struct {
 
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (f *flowRunner) Run(ctx context.Context, args []string) int {
+func (f *flowRunner) Run(ctx context.Context, args []string) int { //nolint:funlen // can be refactored later
 	if unusedParams := f.unusedParams(); len(unusedParams) > 0 {
 		panic(fmt.Sprintf("unused parameters: %v\n", unusedParams))
 	}

@@ -6,39 +6,40 @@ import (
 	"testing"
 )
 
-func assertTrue(t testing.TB, got bool, msg string) {
+func assertTrue(tb testing.TB, got bool, msg string) {
+	tb.Helper()
 	if got {
 		return
 	}
-	t.Helper()
-	t.Errorf("%s\ngot: [%v], want: [true]", msg, got)
+	tb.Errorf("%s\ngot: [%v], want: [true]", msg, got)
 }
 
-func assertContains(t testing.TB, got string, want string, msg string) {
+func assertContains(tb testing.TB, got string, want string, msg string) {
+	tb.Helper()
 	if strings.Contains(got, want) {
 		return
 	}
-	t.Helper()
-	t.Errorf("%s\ngot: [%s], should contain: [%s]", msg, got, want)
+	tb.Errorf("%s\ngot: [%s], should contain: [%s]", msg, got, want)
 }
 
-func requireEqual(t testing.TB, got interface{}, want interface{}, msg string) {
+func requireEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
+	tb.Helper()
 	if reflect.DeepEqual(got, want) {
 		return
 	}
-	t.Helper()
-	t.Fatalf("%s\ngot: [%v], want: [%v]", msg, got, want)
+	tb.Fatalf("%s\ngot: [%v], want: [%v]", msg, got, want)
 }
 
-func assertEqual(t testing.TB, got interface{}, want interface{}, msg string) {
+func assertEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
+	tb.Helper()
 	if reflect.DeepEqual(got, want) {
 		return
 	}
-	t.Helper()
-	t.Errorf("%s\ngot: [%v], want: [%v]", msg, got, want)
+	tb.Errorf("%s\ngot: [%v], want: [%v]", msg, got, want)
 }
 
-func assertPanics(t testing.TB, fn func(), msg string) {
+func assertPanics(tb testing.TB, fn func(), msg string) {
+	tb.Helper()
 	tryPanic := func() bool {
 		didPanic := false
 		func() {
@@ -55,6 +56,5 @@ func assertPanics(t testing.TB, fn func(), msg string) {
 	if tryPanic() {
 		return
 	}
-	t.Helper()
-	t.Errorf("%s\ndid not panic, but expected to do so", msg)
+	tb.Errorf("%s\ndid not panic, but expected to do so", msg)
 }

@@ -414,7 +414,7 @@ func Test_params(t *testing.T) {
 			gotBool = boolParam.Get(tf)
 			gotInt = intParam.Get(tf)
 			gotString = stringParam.Get(tf)
-			gotArray = arrayParam.Get(tf).([]string)
+			gotArray = arrayParam.Get(tf).([]string) //nolint:forcetypeassert // test code, it can panic
 		},
 	})
 
