@@ -13,6 +13,9 @@
 [![codecov](https://codecov.io/gh/goyek/goyek/branch/main/graph/badge.svg)](https://codecov.io/gh/goyek/goyek)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
+> :warning: The `main` branch contains **breaking changes**.
+> Here is the [**README for the latest release**](https://github.com/pellared/taskflow/blob/v0.2.0/README.md).
+
 Table of Contents:
 
 - [goyek](#goyek)
