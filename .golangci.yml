@@ -3,6 +3,8 @@ linters-settings:
     local-prefixes: github.com/goyek/goyek
   golint:
     min-confidence: 0.8
+  gocyclo:
+    min-complexity: 15
   govet:
     check-shadowing: true
   misspell:
