@@ -24,12 +24,13 @@ var DefaultOutput io.Writer = os.Stdout
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
 type Taskflow struct {
-	Output      io.Writer      // output where text is printed; os.Stdout by default
-	Verbose     *BoolParam     // when enabled, then the whole output will be always streamed
+	Output io.Writer // output where text is printed; os.Stdout by default
+
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
 
-	params map[string]parameter
-	tasks  map[string]Task
+	verbose *BoolParam // when enabled, then the whole output will be always streamed
+	params  map[string]parameter
+	tasks   map[string]Task
 }
 
 // RegisteredTask represents a task that has been registered to a Taskflow.
@@ -43,6 +44,19 @@ func New() *Taskflow {
 	return &Taskflow{
 		Output: DefaultOutput,
 	}
+}
+
+// VerboseParam returns the out-of-the-box verbose parameter which controls the output behavior.
+func (f *Taskflow) VerboseParam() BoolParam {
+	if f.verbose == nil {
+		param := f.RegisterBoolParam(false, ParameterInfo{
+			Name:  "v",
+			Usage: "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.",
+		})
+		f.verbose = &param
+	}
+
+	return *f.verbose
 }
 
 // RegisterValueParam registers a generic parameter that is defined by the calling code.
@@ -129,11 +143,13 @@ func (f *Taskflow) MustRegister(task Task) RegisteredTask {
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (f *Taskflow) Run(ctx context.Context, args ...string) int {
+	f.VerboseParam() // make sure that verbose parameter is registered
+
 	flow := &flowRunner{
 		output:      f.Output,
 		params:      f.params,
 		tasks:       f.tasks,
-		verbose:     f.Verbose,
+		verbose:     f.verbose,
 		defaultTask: f.DefaultTask,
 	}
 

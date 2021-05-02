@@ -17,7 +17,6 @@ import (
 func main() {
 	flow := taskflow.New()
 
-	taskflow.VerboseParam(flow)
 	sharedParam := flow.RegisterStringParam("default-value", taskflow.ParameterInfo{
 		Name:  "shared",
 		Usage: "An example parameter shared between tasks",

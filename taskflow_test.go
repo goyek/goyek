@@ -299,7 +299,6 @@ func Test_printing(t *testing.T) {
 	flow := &taskflow.Taskflow{
 		Output: sb,
 	}
-	verboseParam := taskflow.VerboseParam(flow)
 	skipped := flow.MustRegister(taskflow.Task{
 		Name: "skipped",
 		Command: func(tf *taskflow.TF) {
@@ -319,7 +318,7 @@ func Test_printing(t *testing.T) {
 	})
 	t.Log()
 
-	flow.Run(context.Background(), "-"+verboseParam.Name(), "failing")
+	flow.Run(context.Background(), "-v", "failing")
 
 	assertContains(t, sb.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
 	assertContains(t, sb.String(), `Log 1
@@ -343,7 +342,6 @@ func Test_concurrent_printing(t *testing.T) {
 			flow := taskflow.Taskflow{
 				Output: sb,
 			}
-			verboseParam := taskflow.VerboseParam(&flow)
 			flow.MustRegister(taskflow.Task{
 				Name: "task",
 				Command: func(tf *taskflow.TF) {
@@ -359,7 +357,7 @@ func Test_concurrent_printing(t *testing.T) {
 
 			var args []string
 			if tc.verbose {
-				args = append(args, "-"+verboseParam.Name())
+				args = append(args, "-v")
 			}
 			args = append(args, "task")
 			exitCode := flow.Run(context.Background(), args...)

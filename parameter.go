@@ -150,16 +150,3 @@ func (p StringParam) Get(tf *TF) string {
 	value := p.value(tf)
 	return value.Get().(string)
 }
-
-// VerboseParam registers a boolean parameter that controls verbose output and
-// assigns it to field Verbose of the given Taskflow instance.
-//
-// This is a convenience function for a common functionality.
-func VerboseParam(flow *Taskflow) BoolParam {
-	param := flow.RegisterBoolParam(false, ParameterInfo{
-		Name:  "v",
-		Usage: "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.",
-	})
-	flow.Verbose = &param
-	return param
-}

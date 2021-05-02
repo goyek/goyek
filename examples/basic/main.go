@@ -5,7 +5,6 @@ import "github.com/pellared/taskflow"
 func main() {
 	flow := taskflow.New()
 
-	taskflow.VerboseParam(flow)
 	fmt := flow.MustRegister(taskFmt())
 	test := flow.MustRegister(taskTest())
 

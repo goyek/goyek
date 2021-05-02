@@ -59,7 +59,6 @@ import "github.com/pellared/taskflow"
 func main() {
 	flow := taskflow.New()
 
-	taskflow.VerboseParam(flow)
 	fmt := flow.MustRegister(taskFmt())
 	test := flow.MustRegister(taskTest())
 
@@ -171,17 +170,9 @@ Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.
 
 ### Verbose mode
 
-Verbose mode streams all logs to the output. If it is disabled, only logs from failed task are send to the output.
+Enable verbose output using the `-v` CLI flag. It works similar to `go test -v`. Verbose mode streams all logs to the output. If it is disabled, only logs from failed task are send to the output.
 
-By default, the verbose mode is turned on.
-It can be controlled by registering a boolean parameter and assigning it to the field [`Taskflow.Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.Verbose).
-
-This is also provided via the convenience function [`taskflow.VerboseParam(flow *taskflow.Taskflow) BoolParam`](https://pkg.go.dev/github.com/pellared/taskflow#VerboseParam), which needs to be explicitly called.
-The convenience function registers a boolean parameter `verbose`, short `v`, and assigns it to the [`Taskflow.Verbose`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.Verbose) field.
-This parameter defaults to `false`, so as soon as this parameter is registered, verbose mode has to be explicitly enabled via the CLI.
-This then works similar to `go test -v`.
-
-You can also reuse the registered parameter to check if verbose mode was set within a task's command.
+Use [`func (f *Taskflow) VerboseParam() BoolParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.VerboseParam) if you need to check if verbose mode was set within a task's command.
 
 ### Default task
 
