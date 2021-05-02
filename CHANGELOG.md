@@ -19,13 +19,14 @@ Moreover, the parameters are set via CLI using the flag syntax.
 - Help contains parameters' information.
 - The tasks and parameters can be passed via CLI in any order.
 - `Taskflow.Run` panics when a registered parameter is not assigned to any task.
+
 ### Changed
 
 - Use the flag syntax for setting parameters via CLI.
 - Rename `Task.Description` field to `Usage`.
 - Rename `Task.Dependencies` field to `Deps`.
 - Rename `Taskflow.MustRegister` method to `Register` and remove previous `Taskflow.Register` implemention.
-- Remove previous parameters API, add `Taskflow.Register*Param` methods and `Task.Params` field instead.
+- Remove `Taskflow.Params` field and `TF.Params` method, add `Taskflow.Register*Param` methods and `Task.Params` field instead.
 - Remove `TF.Verbose`, add `Taskflow.VerboseParam` instead.
 - Drop official support for Go 1.10.
 
