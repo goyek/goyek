@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Redesign parameters. More in [README.md](README.md).
-- Change the default behaviour for verbosity. More in [README.md](README.md).
+- Change the verbosity's default behaviour. More in [README.md](README.md).
 - Drop official support for Go 1.10.
 
 ## [0.2.0](https://github.com/pellared/taskflow/compare/v0.1.1...v0.2.0) - 2021-03-14
