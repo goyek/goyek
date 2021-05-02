@@ -200,7 +200,7 @@ On the CLI, flags can be set in the following ways:
 
 For example, `go run ./build -v --ci all` would run the `all` task with `verbose` and `ci` bool parameters both set to `true`.
 
-Parameters must first be registered via [`func (f *Taskflow) RegisterValueParam(newValue func() Value, info ParameterInfo) ValueParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterValueParam), or one of the provided methods like `RegisterStringParam`.
+Parameters must first be registered via [`func (f *Taskflow) RegisterValueParam(newValue func() Value, info ParameterInfo) ValueParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterValueParam), or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.RegisterStringParam).
 
 After registration, tasks need to specify which parameters they will read.
 Do this by assigning the [`RegisteredParameter`](https://pkg.go.dev/github.com/pellared/taskflow#RegisteredParameter) instance from the registration result to the [`Task.Parameters`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Parameters) field.
