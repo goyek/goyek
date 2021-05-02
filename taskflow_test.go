@@ -15,17 +15,12 @@ func init() {
 	taskflow.DefaultOutput = ioutil.Discard
 }
 
-func Test_Register(t *testing.T) {
+func Test_Register_errors(t *testing.T) {
 	testCases := []struct {
 		desc  string
 		task  taskflow.Task
 		valid bool
 	}{
-		{
-			desc:  "good task name",
-			task:  taskflow.Task{Name: "my-task"},
-			valid: true,
-		},
 		{
 			desc:  "missing task name",
 			task:  taskflow.Task{},
@@ -33,7 +28,7 @@ func Test_Register(t *testing.T) {
 		},
 		{
 			desc:  "invalid dependency",
-			task:  taskflow.Task{Name: "my-task", Dependencies: taskflow.Deps{taskflow.RegisteredTask{}}},
+			task:  taskflow.Task{Name: "my-task", Deps: taskflow.Deps{taskflow.RegisteredTask{}}},
 			valid: false,
 		},
 	}
@@ -41,13 +36,9 @@ func Test_Register(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			flow := taskflow.New()
 
-			_, err := flow.Register(tc.task)
+			act := func() { flow.Register(tc.task) }
 
-			if tc.valid {
-				assertNoError(t, err, "no error expected")
-			} else {
-				assertError(t, err, "error expected")
-			}
+			assertPanics(t, act, "should panic")
 		})
 	}
 }
@@ -55,47 +46,38 @@ func Test_Register(t *testing.T) {
 func Test_Register_same_name(t *testing.T) {
 	flow := &taskflow.Taskflow{}
 	task := taskflow.Task{Name: "task"}
-	_, err := flow.Register(task)
-	requireNoError(t, err, "should be a valid task")
+	flow.Register(task)
 
-	_, err = flow.Register(task)
+	act := func() { flow.Register(task) }
 
-	assertError(t, err, "should not be possible to register tasks with same name twice")
-}
-
-func Test_MustRegister_panic(t *testing.T) {
-	flow := taskflow.New()
-
-	act := func() { flow.MustRegister(taskflow.Task{}) }
-
-	assertPanics(t, act, "should panic because task name is empty")
+	assertPanics(t, act, "should not be possible to register tasks with same name twice")
 }
 
 func Test_successful(t *testing.T) {
 	ctx := context.Background()
 	flow := &taskflow.Taskflow{}
 	var executed1 int
-	task1 := flow.MustRegister(taskflow.Task{
+	task1 := flow.Register(taskflow.Task{
 		Name: "task-1",
 		Command: func(*taskflow.TF) {
 			executed1++
 		},
 	})
 	var executed2 int
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task-2",
 		Command: func(*taskflow.TF) {
 			executed2++
 		},
-		Dependencies: taskflow.Deps{task1},
+		Deps: taskflow.Deps{task1},
 	})
 	var executed3 int
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task-3",
 		Command: func(*taskflow.TF) {
 			executed3++
 		},
-		Dependencies: taskflow.Deps{task1},
+		Deps: taskflow.Deps{task1},
 	})
 	got := func() []int {
 		return []int{executed1, executed2, executed3}
@@ -117,7 +99,7 @@ func Test_successful(t *testing.T) {
 func Test_dependency_failure(t *testing.T) {
 	flow := &taskflow.Taskflow{}
 	var executed1 int
-	task1 := flow.MustRegister(taskflow.Task{
+	task1 := flow.Register(taskflow.Task{
 		Name: "task-1",
 		Command: func(tf *taskflow.TF) {
 			executed1++
@@ -128,20 +110,20 @@ func Test_dependency_failure(t *testing.T) {
 		},
 	})
 	var executed2 int
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task-2",
 		Command: func(*taskflow.TF) {
 			executed2++
 		},
-		Dependencies: taskflow.Deps{task1},
+		Deps: taskflow.Deps{task1},
 	})
 	var executed3 int
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task-3",
 		Command: func(*taskflow.TF) {
 			executed3++
 		},
-		Dependencies: taskflow.Deps{task1},
+		Deps: taskflow.Deps{task1},
 	})
 	got := func() []int {
 		return []int{executed1, executed2, executed3}
@@ -156,7 +138,7 @@ func Test_dependency_failure(t *testing.T) {
 func Test_fail(t *testing.T) {
 	flow := &taskflow.Taskflow{}
 	failed := false
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
 			defer func() {
@@ -175,7 +157,7 @@ func Test_fail(t *testing.T) {
 func Test_skip(t *testing.T) {
 	flow := &taskflow.Taskflow{}
 	skipped := false
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
 			defer func() {
@@ -193,7 +175,7 @@ func Test_skip(t *testing.T) {
 
 func Test_task_panics(t *testing.T) {
 	flow := &taskflow.Taskflow{}
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
 			panic("panicked!")
@@ -209,7 +191,7 @@ func Test_cancelation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	flow := &taskflow.Taskflow{}
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task",
 	})
 
@@ -222,7 +204,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	flow := &taskflow.Taskflow{}
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
 			cancel()
@@ -236,7 +218,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 
 func Test_empty_command(t *testing.T) {
 	flow := &taskflow.Taskflow{}
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task",
 	})
 
@@ -247,7 +229,7 @@ func Test_empty_command(t *testing.T) {
 
 func Test_invalid_args(t *testing.T) {
 	flow := taskflow.New()
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task",
 	})
 
@@ -282,10 +264,10 @@ func Test_help(t *testing.T) {
 		Name:  "fast",
 		Usage: "simulates fast-lane processing",
 	})
-	a := flow.MustRegister(taskflow.Task{
-		Name:        "a",
-		Params:      taskflow.Params{fastParam},
-		Description: "some task",
+	a := flow.Register(taskflow.Task{
+		Name:   "a",
+		Params: taskflow.Params{fastParam},
+		Usage:  "some task",
 	})
 	flow.DefaultTask = a
 
@@ -299,15 +281,15 @@ func Test_printing(t *testing.T) {
 	flow := &taskflow.Taskflow{
 		Output: sb,
 	}
-	skipped := flow.MustRegister(taskflow.Task{
+	skipped := flow.Register(taskflow.Task{
 		Name: "skipped",
 		Command: func(tf *taskflow.TF) {
 			tf.Skipf("Skipf %d", 0)
 		},
 	})
-	flow.MustRegister(taskflow.Task{
-		Name:         "failing",
-		Dependencies: taskflow.Deps{skipped},
+	flow.Register(taskflow.Task{
+		Name: "failing",
+		Deps: taskflow.Deps{skipped},
 		Command: func(tf *taskflow.TF) {
 			tf.Log("Log", 1)
 			tf.Logf("Logf %d", 2)
@@ -342,7 +324,7 @@ func Test_concurrent_printing(t *testing.T) {
 			flow := taskflow.Taskflow{
 				Output: sb,
 			}
-			flow.MustRegister(taskflow.Task{
+			flow.Register(taskflow.Task{
 				Name: "task",
 				Command: func(tf *taskflow.TF) {
 					ch := make(chan struct{})
@@ -373,7 +355,7 @@ func Test_name(t *testing.T) {
 	flow := &taskflow.Taskflow{}
 	taskName := "my-named-task"
 	var got string
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: taskName,
 		Command: func(tf *taskflow.TF) {
 			got = tf.Name()
@@ -419,7 +401,7 @@ func Test_params(t *testing.T) {
 	var gotInt int
 	var gotString string
 	var gotArray []string
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task",
 		Params: taskflow.Params{
 			boolParam,
@@ -446,7 +428,7 @@ func Test_params(t *testing.T) {
 
 func Test_invalid_params(t *testing.T) {
 	flow := taskflow.New()
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name:    "task",
 		Command: func(tf *taskflow.TF) {},
 	})
@@ -458,7 +440,7 @@ func Test_invalid_params(t *testing.T) {
 
 func Test_unused_params(t *testing.T) {
 	flow := taskflow.New()
-	flow.DefaultTask = flow.MustRegister(taskflow.Task{Name: "task", Command: func(tf *taskflow.TF) {}})
+	flow.DefaultTask = flow.Register(taskflow.Task{Name: "task", Command: func(tf *taskflow.TF) {}})
 	flow.RegisterBoolParam(false, taskflow.ParamInfo{Name: "unused"})
 
 	assertPanics(t, func() { flow.Run(context.Background()) }, "should fail because of unused parameter")
@@ -479,7 +461,7 @@ func Test_param_registration_error_double_name(t *testing.T) {
 func Test_unregistered_params(t *testing.T) {
 	foreignParam := taskflow.New().RegisterBoolParam(false, taskflow.ParamInfo{Name: "foreign"})
 	flow := taskflow.New()
-	flow.MustRegister(taskflow.Task{
+	flow.Register(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
 			foreignParam.Get(tf)
@@ -494,7 +476,7 @@ func Test_unregistered_params(t *testing.T) {
 func Test_defaultTask(t *testing.T) {
 	flow := taskflow.New()
 	taskRan := false
-	task := flow.MustRegister(taskflow.Task{
+	task := flow.Register(taskflow.Task{
 		Name: "task",
 		Command: func(tf *taskflow.TF) {
 			taskRan = true

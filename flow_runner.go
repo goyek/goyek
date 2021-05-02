@@ -120,7 +120,7 @@ func (f *flowRunner) run(ctx context.Context, name string, executed map[string]b
 	if executed[name] {
 		return nil
 	}
-	for _, dep := range task.Dependencies {
+	for _, dep := range task.Deps {
 		if err := f.run(ctx, dep.name, executed); err != nil {
 			return err
 		}
@@ -244,7 +244,7 @@ func printUsage(f *flowRunner) {
 	fmt.Fprintf(f.output, "Tasks:\n")
 	keys = make([]string, 0, len(f.tasks))
 	for k, task := range f.tasks {
-		if task.Description == "" {
+		if task.Usage == "" {
 			continue
 		}
 		keys = append(keys, k)
@@ -261,7 +261,7 @@ func printUsage(f *flowRunner) {
 		if len(params) > 0 {
 			paramsText = "; " + strings.Join(params, " ")
 		}
-		fmt.Fprintf(w, "  %s\t%s%s\n", t.Name, t.Description, paramsText)
+		fmt.Fprintf(w, "  %s\t%s%s\n", t.Name, t.Usage, paramsText)
 	}
 	w.Flush() //nolint // not checking errors when writing to output
 

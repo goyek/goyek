@@ -2,7 +2,6 @@ package taskflow
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -112,32 +111,23 @@ func (f *Taskflow) registerParam(newValue func() ParamValue, info ParamInfo) {
 	}
 }
 
-// Register registers the task.
-func (f *Taskflow) Register(task Task) (RegisteredTask, error) {
+// Register registers the task. It panics in case of any error.
+func (f *Taskflow) Register(task Task) RegisteredTask {
 	// validate
 	if task.Name == "" {
-		return RegisteredTask{}, errors.New("task name cannot be empty")
+		panic("task name cannot be empty")
 	}
 	if f.isRegistered(task.Name) {
-		return RegisteredTask{}, fmt.Errorf("%s task was already registered", task.Name)
+		panic(fmt.Sprintf("%s task was already registered", task.Name))
 	}
-	for _, dep := range task.Dependencies {
+	for _, dep := range task.Deps {
 		if !f.isRegistered(dep.name) {
-			return RegisteredTask{}, fmt.Errorf("invalid dependency %s", dep.name)
+			panic(fmt.Sprintf("invalid dependency %s", dep.name))
 		}
 	}
 
 	f.tasks[task.Name] = task
-	return RegisteredTask{name: task.Name}, nil
-}
-
-// MustRegister registers the task. It panics in case of any error.
-func (f *Taskflow) MustRegister(task Task) RegisteredTask {
-	dep, err := f.Register(task)
-	if err != nil {
-		panic(err)
-	}
-	return dep
+	return RegisteredTask{name: task.Name}
 }
 
 // Run runs provided tasks and all their dependencies.

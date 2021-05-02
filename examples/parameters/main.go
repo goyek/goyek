@@ -22,9 +22,9 @@ func main() {
 		Usage: "An example parameter shared between tasks",
 	})
 
-	first := flow.MustRegister(taskFirst(sharedParam))
-	flow.MustRegister(taskSecond(flow, sharedParam))
-	flow.MustRegister(taskComplexParam(flow))
+	first := flow.Register(taskFirst(sharedParam))
+	flow.Register(taskSecond(flow, sharedParam))
+	flow.Register(taskComplexParam(flow))
 	flow.DefaultTask = first
 
 	flow.Main()
@@ -32,9 +32,9 @@ func main() {
 
 func taskFirst(sharedParam taskflow.StringParam) taskflow.Task {
 	return taskflow.Task{
-		Name:        "first",
-		Description: "Showcases a simple parameter",
-		Params:      taskflow.Params{sharedParam},
+		Name:   "first",
+		Usage:  "Showcases a simple parameter",
+		Params: taskflow.Params{sharedParam},
 		Command: func(tf *taskflow.TF) {
 			tf.Log("Shared parameter named '" + sharedParam.Name() + "', value '" + sharedParam.Get(tf) + "'")
 		},
@@ -48,9 +48,9 @@ func taskSecond(flow *taskflow.Taskflow, sharedParam taskflow.StringParam) taskf
 		Usage: "A task-specific parameter",
 	})
 	return taskflow.Task{
-		Name:        "second",
-		Description: "Showcases shared and task-specific parameters",
-		Params:      taskflow.Params{sharedParam, privateParam},
+		Name:   "second",
+		Usage:  "Showcases shared and task-specific parameters",
+		Params: taskflow.Params{sharedParam, privateParam},
 		Command: func(tf *taskflow.TF) {
 			tf.Log("Shared parameter named '" + sharedParam.Name() + "', value '" + sharedParam.Get(tf) + "'")
 			tf.Log("Private parameter named '" + privateParam.Name() + "', value '" + privateParam.Get(tf) + "'")
@@ -105,9 +105,9 @@ func taskComplexParam(flow *taskflow.Taskflow) taskflow.Task {
 		Usage: "A complex parameter",
 	})
 	return taskflow.Task{
-		Name:        "complex",
-		Description: "Showcases complex parameters",
-		Params:      taskflow.Params{privateParam},
+		Name:   "complex",
+		Usage:  "Showcases complex parameters",
+		Params: taskflow.Params{privateParam},
 		Command: func(tf *taskflow.TF) {
 			tf.Log("Private parameter named '" + privateParam.Name() +
 				"', value '" + fmt.Sprintf("%v", privateParam.Get(tf).(complexParam)) + "'")

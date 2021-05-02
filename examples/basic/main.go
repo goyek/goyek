@@ -5,13 +5,13 @@ import "github.com/pellared/taskflow"
 func main() {
 	flow := taskflow.New()
 
-	fmt := flow.MustRegister(taskFmt())
-	test := flow.MustRegister(taskTest())
+	fmt := flow.Register(taskFmt())
+	test := flow.Register(taskTest())
 
-	flow.MustRegister(taskflow.Task{
-		Name:        "all",
-		Description: "build pipeline",
-		Dependencies: taskflow.Deps{
+	flow.Register(taskflow.Task{
+		Name:  "all",
+		Usage: "build pipeline",
+		Deps: taskflow.Deps{
 			fmt,
 			test,
 		},
@@ -22,16 +22,16 @@ func main() {
 
 func taskFmt() taskflow.Task {
 	return taskflow.Task{
-		Name:        "fmt",
-		Description: "go fmt",
-		Command:     taskflow.Exec("go", "fmt", "./..."),
+		Name:    "fmt",
+		Usage:   "go fmt",
+		Command: taskflow.Exec("go", "fmt", "./..."),
 	}
 }
 
 func taskTest() taskflow.Task {
 	return taskflow.Task{
-		Name:        "test",
-		Description: "go test with race detector and code covarage",
+		Name:  "test",
+		Usage: "go test with race detector and code covarage",
 		Command: func(tf *taskflow.TF) {
 			if err := tf.Cmd("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./...").Run(); err != nil {
 				tf.Errorf("go test: %v", err)

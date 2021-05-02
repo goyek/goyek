@@ -9,11 +9,11 @@ import (
 )
 
 func runTaskflowWith(flow *taskflow.Taskflow, param taskflow.RegisteredParam, cmd func(*taskflow.TF), args []string) int {
-	flow.MustRegister(taskflow.Task{
-		Name:        "task",
-		Params:      taskflow.Params{param},
-		Command:     cmd,
-		Description: "Sample task for parameter tests",
+	flow.Register(taskflow.Task{
+		Name:    "task",
+		Params:  taskflow.Params{param},
+		Command: cmd,
+		Usage:   "Sample task for parameter tests",
 	})
 	completeArgs := []string{"task"}
 	completeArgs = append(completeArgs, args...)
