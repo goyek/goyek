@@ -182,7 +182,7 @@ You can also reuse the registered parameter to check if verbose mode was set wit
 
 ### Default task
 
-Default task can be assigned via [`Taskflow.DefaultTask`]((https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.DefaultTask)) field.
+Default task can be assigned via [`Taskflow.DefaultTask`](https://pkg.go.dev/github.com/pellared/taskflow#Taskflow.DefaultTask) field.
 
 When default task is set, then it is run if no task is provided via CLI.
 
