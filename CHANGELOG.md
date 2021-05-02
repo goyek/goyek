@@ -7,9 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/pellared/taskflow/compare/v0.2.0...HEAD)
 
+This release contains multiple breaking changes for both the CLI and the Go API.
+The biggest change is redesign of parameters API so they have to be explictly registered.
+Moreover the parameters are set in CLI using the flag syntax.
+
+### Added
+
+- Help is printed when `-h`, `--help` or `help` is passsed.
+- Help contains parameters' information.
+- `Taskflow.Run` panics in case a registered parameter is not assigned to any task.
+
 ### Changed
 
-- Redesign parameters. More in [README.md](README.md).
+- Use the flag syntax for setting parameters in CLI.
+- Rename `Task.Description` field to `Usage`.
+- Rename `Task.Dependencies` field to `Deps`.
+- Rename `Taskflow.MustRegister` method to `Register` and remove previous `Taskflow.Register` implemention.
+- Remove previous parameters API, add `Taskflow.Register*Param` methods and `Task.Params` field instead.
+- Remove `TF.Verbose`, add `Taskflow.VerboseParam` instead.
 - Drop official support for Go 1.10.
 
 ## [0.2.0](https://github.com/pellared/taskflow/compare/v0.1.1...v0.2.0) - 2021-03-14
