@@ -206,7 +206,7 @@ After registration, tasks need to specify which parameters they will read.
 Do this by assigning the [`RegisteredParameter`](https://pkg.go.dev/github.com/pellared/taskflow#RegisteredParameter) instance from the registration result to the [`Task.Parameters`](https://pkg.go.dev/github.com/pellared/taskflow#Task.Parameters) field.
 If a task tries to retrieve the value from an unregistered parameter, the task will fail.
 
-When registration is done, the task's command can retrieve the parameter value using `Get(*TF)` method from the respective `RegisteredParameter` type, returned from the registration call during the task's `Command` execution.
+When registration is done, the task's command can retrieve the parameter value using the `Get(*TF)` method from the respective `RegisteredParameter` type, returned from the registration call during the task's `Command` execution.
 
 See [examples/parameters/main.go](examples/parameters/main.go) for a detailed example.
 
