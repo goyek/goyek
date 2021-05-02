@@ -47,9 +47,7 @@ Table of Contents:
 
 ## Example
 
-Create a file in your project `build/build.go`.
-
-Copy and paste the content from below (this code can also be found in [examples/basic/main.go](examples/basic/main.go)).
+Create a file in your project `build/build.go`. Copy and paste the content from below.
 
 ```go
 package main
@@ -59,19 +57,29 @@ import "github.com/pellared/taskflow"
 func main() {
 	flow := taskflow.New()
 
+	hello := flow.Register(taskHello())
 	fmt := flow.Register(taskFmt())
-	test := flow.Register(taskTest())
 
 	flow.Register(taskflow.Task{
 		Name:  "all",
 		Usage: "build pipeline",
 		Deps: taskflow.Deps{
+			hello,
 			fmt,
-			test,
 		},
 	})
 
 	flow.Main()
+}
+
+func taskHello() taskflow.Task {
+	return taskflow.Task{
+		Name:  "hello",
+		Usage: "demonstration",
+		Command: func(tf *taskflow.TF) {
+			tf.Log("Hello world!")
+		},
+	}
 }
 
 func taskFmt() taskflow.Task {
@@ -79,21 +87,6 @@ func taskFmt() taskflow.Task {
 		Name:    "fmt",
 		Usage:   "go fmt",
 		Command: taskflow.Exec("go", "fmt", "./..."),
-	}
-}
-
-func taskTest() taskflow.Task {
-	return taskflow.Task{
-		Name:  "test",
-		Usage: "go test with race detector and code covarage",
-		Command: func(tf *taskflow.TF) {
-			if err := tf.Cmd("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./...").Run(); err != nil {
-				tf.Errorf("go test: %v", err)
-			}
-			if err := tf.Cmd("go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html").Run(); err != nil {
-				tf.Errorf("go tool cover: %v", err)
-			}
-		},
 	}
 }
 ```
@@ -106,27 +99,25 @@ Usage: [flag(s) | task(s)]...
 Flags:
   -v    Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
 Tasks:
-  all     build pipeline
-  fmt     go fmt
-  test    go test with race detector and code covarage
+  all      build pipeline
+  fmt      go fmt
+  hello    demonstration
 ```
 
 ```shell
 $ go run ./build all
-ok     0.453s
+ok     0.167s
 ```
 
 ```shell
-$ go run ./build -v all
+$ go run ./build all -v
+===== TASK  hello
+Hello world!
+----- PASS: hello (0.00s)
 ===== TASK  fmt
-Exec: go fmt ./...
------ PASS: fmt (0.06s)
-===== TASK  test
-Exec: go test -race -covermode=atomic -coverprofile=coverage.out ./...
-?       github.com/pellared/taskflow/example    [no test files]
-Exec: go tool cover -html=coverage.out -o coverage.html
------ PASS: test (0.11s)
-ok      0.176s
+Cmd: go fmt ./...
+----- PASS: fmt (0.18s)
+ok      0.183s
 ```
 
 Tired of writing `go run ./build` each time? Just add an alias to your shell. For example, add the line below to `~/.bash_aliases`:
@@ -135,7 +126,7 @@ Tired of writing `go run ./build` each time? Just add an alias to your shell. Fo
 alias gake='go run ./build'
 ```
 
-Additionally, take a look at [taskflow-example](https://github.com/pellared/taskflow-example) and this repository's own build pipeline script - [build/build.go](build/build.go).
+Additionally, take a look at [examples](examples) and this repository's own build pipeline script - [build/build.go](build/build.go).
 
 ## Features
 
