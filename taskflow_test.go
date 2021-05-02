@@ -17,19 +17,20 @@ func init() {
 
 func Test_Register_errors(t *testing.T) {
 	testCases := []struct {
-		desc  string
-		task  taskflow.Task
-		valid bool
+		desc string
+		task taskflow.Task
 	}{
 		{
-			desc:  "missing task name",
-			task:  taskflow.Task{},
-			valid: false,
+			desc: "missing task name",
+			task: taskflow.Task{},
 		},
 		{
-			desc:  "invalid dependency",
-			task:  taskflow.Task{Name: "my-task", Deps: taskflow.Deps{taskflow.RegisteredTask{}}},
-			valid: false,
+			desc: "invalid dependency",
+			task: taskflow.Task{Name: "my-task", Deps: taskflow.Deps{taskflow.RegisteredTask{}}},
+		},
+		{
+			desc: "invalid task name",
+			task: taskflow.Task{Name: "-flag"},
 		},
 	}
 	for _, tc := range testCases {

@@ -117,6 +117,9 @@ func (f *Taskflow) Register(task Task) RegisteredTask {
 	if task.Name == "" {
 		panic("task name cannot be empty")
 	}
+	if task.Name[0] == '-' {
+		panic("task name cannot start with '-' sign")
+	}
 	if f.isRegistered(task.Name) {
 		panic(fmt.Sprintf("%s task was already registered", task.Name))
 	}
