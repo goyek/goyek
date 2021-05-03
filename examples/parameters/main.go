@@ -11,13 +11,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pellared/taskflow"
+	"github.com/goyek/goyek"
 )
 
 func main() {
-	flow := taskflow.New()
+	flow := goyek.New()
 
-	sharedParam := flow.RegisterStringParam("default-value", taskflow.ParamInfo{
+	sharedParam := flow.RegisterStringParam("default-value", goyek.ParamInfo{
 		Name:  "shared",
 		Usage: "An example parameter shared between tasks",
 	})
@@ -30,28 +30,28 @@ func main() {
 	flow.Main()
 }
 
-func taskFirst(sharedParam taskflow.StringParam) taskflow.Task {
-	return taskflow.Task{
+func taskFirst(sharedParam goyek.StringParam) goyek.Task {
+	return goyek.Task{
 		Name:   "first",
 		Usage:  "Showcases a simple parameter",
-		Params: taskflow.Params{sharedParam},
-		Command: func(tf *taskflow.TF) {
+		Params: goyek.Params{sharedParam},
+		Command: func(tf *goyek.TF) {
 			tf.Log("Shared parameter named '" + sharedParam.Name() + "', value '" + sharedParam.Get(tf) + "'")
 		},
 	}
 }
 
-func taskSecond(flow *taskflow.Taskflow, sharedParam taskflow.StringParam) taskflow.Task {
+func taskSecond(flow *goyek.Taskflow, sharedParam goyek.StringParam) goyek.Task {
 	// The following is a "private" parameter, only available to this task.
-	privateParam := flow.RegisterStringParam("special-default", taskflow.ParamInfo{
+	privateParam := flow.RegisterStringParam("special-default", goyek.ParamInfo{
 		Name:  "private",
 		Usage: "A task-specific parameter",
 	})
-	return taskflow.Task{
+	return goyek.Task{
 		Name:   "second",
 		Usage:  "Showcases shared and task-specific parameters",
-		Params: taskflow.Params{sharedParam, privateParam},
-		Command: func(tf *taskflow.TF) {
+		Params: goyek.Params{sharedParam, privateParam},
+		Command: func(tf *goyek.TF) {
 			tf.Log("Shared parameter named '" + sharedParam.Name() + "', value '" + sharedParam.Get(tf) + "'")
 			tf.Log("Private parameter named '" + privateParam.Name() + "', value '" + privateParam.Get(tf) + "'")
 		},
@@ -65,7 +65,7 @@ type complexParam struct {
 }
 
 // complexParamValue is a wrapper over the complex type, serializing it as JSON.
-// While it is possible to implement the taskflow.Value interface on the
+// While it is possible to implement the goyek.Value interface on the
 // complex parameter itself, it is better to separate these concerns.
 type complexParamValue complexParam
 
@@ -93,22 +93,22 @@ func (value *complexParamValue) IsBool() bool {
 // taskComplexParam showcases complex parameters, JSON encoded.
 //
 // Execute `go run ./main.go -v complex -json "{\"stringValue\":\"abc\"}"` as an example.
-func taskComplexParam(flow *taskflow.Taskflow) taskflow.Task {
-	privateParam := flow.RegisterValueParam(func() taskflow.ParamValue {
+func taskComplexParam(flow *goyek.Taskflow) goyek.Task {
+	privateParam := flow.RegisterValueParam(func() goyek.ParamValue {
 		param := complexParamValue{
 			StringValue: "default",
 			IntValue:    123,
 		}
 		return &param
-	}, taskflow.ParamInfo{
+	}, goyek.ParamInfo{
 		Name:  "json",
 		Usage: "A complex parameter",
 	})
-	return taskflow.Task{
+	return goyek.Task{
 		Name:   "complex",
 		Usage:  "Showcases complex parameters",
-		Params: taskflow.Params{privateParam},
-		Command: func(tf *taskflow.TF) {
+		Params: goyek.Params{privateParam},
+		Command: func(tf *goyek.TF) {
 			tf.Log("Private parameter named '" + privateParam.Name() +
 				"', value '" + fmt.Sprintf("%v", privateParam.Get(tf).(complexParam)) + "'")
 		},

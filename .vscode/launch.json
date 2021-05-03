@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch taskflow",
+            "name": "Launch goyek",
             "type": "go",
             "request": "launch",
             "mode": "debug",

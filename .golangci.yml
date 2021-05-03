@@ -1,8 +1,10 @@
 linters-settings:
   goimports:
-    local-prefixes: github.com/pellared/taskflow
+    local-prefixes: github.com/goyek/goyek
   golint:
     min-confidence: 0.8
+  gocyclo:
+    min-complexity: 15
   govet:
     check-shadowing: true
   misspell:
@@ -18,7 +20,6 @@ linters:
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
-    # default linters:
     - deadcode
     - errcheck
     - gosimple
@@ -29,50 +30,35 @@ linters:
     - typecheck
     - unused
     - varcheck
-    # linters disabled by default:
-    - asciicheck
     - bodyclose
     - depguard
-    - dogsled
     - dupl
     - exportloopref
+    - forcetypeassert
+    - funlen
+    - gci
     - gocognit
     - goconst
     - gocritic
     - gocyclo
     - godot
-    - gofmt
     - gofumpt
-    - goimports
     - golint
     - gomnd
-    - gomodguard
     - goprintffuncname
     - gosec
-    - interfacer
+    - ifshort
     - misspell
-    - nakedret
-    - nestif
     - noctx
     - nolintlint
     - rowserrcheck
     - sqlclosecheck
     - stylecheck
+    - thelper
+    - tparallel
     - unconvert
     - unparam
     - whitespace
-    # don't enable:
-    # - go-header
-    # - testpackage
-    # - wsl
-    # - goerr113
-    # - godox
-    # - funlen
-    # - lll
-    # - scopelint
-    # - prealloc
-    # - gochecknoinits
-    # - gochecknoglobals
 
 issues:
   # enable issues excluded by default 

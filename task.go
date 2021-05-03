@@ -1,4 +1,4 @@
-package taskflow
+package goyek
 
 // Task represents a named task that can be registered.
 // It can consist of a command (function that will be called when task is run),

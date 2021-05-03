@@ -1,17 +1,17 @@
-package taskflow_test
+package goyek_test
 
 import (
 	"context"
 	"strconv"
 	"testing"
 
-	"github.com/pellared/taskflow"
+	"github.com/goyek/goyek"
 )
 
-func runTaskflowWith(flow *taskflow.Taskflow, param taskflow.RegisteredParam, cmd func(*taskflow.TF), args []string) int {
-	flow.Register(taskflow.Task{
+func runTaskflowWith(flow *goyek.Taskflow, param goyek.RegisteredParam, cmd func(*goyek.TF), args []string) int {
+	flow.Register(goyek.Task{
 		Name:    "task",
-		Params:  taskflow.Params{param},
+		Params:  goyek.Params{param},
 		Command: cmd,
 		Usage:   "Sample task for parameter tests",
 	})
@@ -28,23 +28,23 @@ func Test_bool_param(t *testing.T) {
 		exitCode int
 		value    bool
 	}{
-		{defaultValue: false, args: []string{}, exitCode: taskflow.CodePass, value: false},
-		{defaultValue: false, args: []string{"-b"}, exitCode: taskflow.CodePass, value: true},
-		{defaultValue: true, args: []string{"-b=false"}, exitCode: taskflow.CodePass, value: false},
+		{defaultValue: false, args: []string{}, exitCode: goyek.CodePass, value: false},
+		{defaultValue: false, args: []string{"-b"}, exitCode: goyek.CodePass, value: true},
+		{defaultValue: true, args: []string{"-b=false"}, exitCode: goyek.CodePass, value: false},
 
-		{defaultValue: false, args: []string{"-b", "false"}, exitCode: taskflow.CodeInvalidArgs},
-		{defaultValue: false, args: []string{"-b=maybe"}, exitCode: taskflow.CodeInvalidArgs},
+		{defaultValue: false, args: []string{"-b", "false"}, exitCode: goyek.CodeInvalidArgs},
+		{defaultValue: false, args: []string{"-b=maybe"}, exitCode: goyek.CodeInvalidArgs},
 	}
 
 	for index, tc := range tt {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
-			flow := taskflow.New()
-			param := flow.RegisterBoolParam(tc.defaultValue, taskflow.ParamInfo{
+			flow := goyek.New()
+			param := flow.RegisterBoolParam(tc.defaultValue, goyek.ParamInfo{
 				Name: "b",
 			})
 			var got bool
-			exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)
+			exitCode := runTaskflowWith(flow, param, func(tf *goyek.TF) { got = param.Get(tf) }, tc.args)
 
 			assertEqual(t, exitCode, tc.exitCode, "exit code should match")
 			assertEqual(t, got, tc.value, "value should match")
@@ -53,11 +53,11 @@ func Test_bool_param(t *testing.T) {
 }
 
 func Test_bool_param_help(t *testing.T) {
-	flow := taskflow.New()
-	param := flow.RegisterBoolParam(true, taskflow.ParamInfo{
+	flow := goyek.New()
+	param := flow.RegisterBoolParam(true, goyek.ParamInfo{
 		Name: "bool",
 	})
-	exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) {}, []string{"-h"})
+	exitCode := runTaskflowWith(flow, param, func(tf *goyek.TF) {}, []string{"-h"})
 
 	assertEqual(t, exitCode, 0, "exit code should be OK")
 }
@@ -70,24 +70,24 @@ func Test_int_param(t *testing.T) {
 		exitCode int
 		value    int
 	}{
-		{defaultValue: 1, args: []string{}, exitCode: taskflow.CodePass, value: 1},
-		{defaultValue: 1, args: []string{"-i"}, exitCode: taskflow.CodePass, value: 1},
-		{defaultValue: 1, args: []string{"-i=123"}, exitCode: taskflow.CodePass, value: 123},
-		{defaultValue: 1, args: []string{"-i", "456"}, exitCode: taskflow.CodePass, value: 456},
+		{defaultValue: 1, args: []string{}, exitCode: goyek.CodePass, value: 1},
+		{defaultValue: 1, args: []string{"-i"}, exitCode: goyek.CodePass, value: 1},
+		{defaultValue: 1, args: []string{"-i=123"}, exitCode: goyek.CodePass, value: 123},
+		{defaultValue: 1, args: []string{"-i", "456"}, exitCode: goyek.CodePass, value: 456},
 
-		{defaultValue: 1, args: []string{"-i", "9999999999999999999999"}, exitCode: taskflow.CodeInvalidArgs},
-		{defaultValue: 1, args: []string{"-i=abc"}, exitCode: taskflow.CodeInvalidArgs},
+		{defaultValue: 1, args: []string{"-i", "9999999999999999999999"}, exitCode: goyek.CodeInvalidArgs},
+		{defaultValue: 1, args: []string{"-i=abc"}, exitCode: goyek.CodeInvalidArgs},
 	}
 
 	for index, tc := range tt {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
-			flow := taskflow.New()
-			param := flow.RegisterIntParam(tc.defaultValue, taskflow.ParamInfo{
+			flow := goyek.New()
+			param := flow.RegisterIntParam(tc.defaultValue, goyek.ParamInfo{
 				Name: "i",
 			})
 			var got int
-			exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)
+			exitCode := runTaskflowWith(flow, param, func(tf *goyek.TF) { got = param.Get(tf) }, tc.args)
 
 			assertEqual(t, exitCode, tc.exitCode, "exit code should match")
 			assertEqual(t, got, tc.value, "value should match")
@@ -96,11 +96,11 @@ func Test_int_param(t *testing.T) {
 }
 
 func Test_int_param_help(t *testing.T) {
-	flow := taskflow.New()
-	param := flow.RegisterIntParam(123, taskflow.ParamInfo{
+	flow := goyek.New()
+	param := flow.RegisterIntParam(123, goyek.ParamInfo{
 		Name: "int",
 	})
-	exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) {}, []string{"-h"})
+	exitCode := runTaskflowWith(flow, param, func(tf *goyek.TF) {}, []string{"-h"})
 
 	assertEqual(t, exitCode, 0, "exit code should be OK")
 }
@@ -122,25 +122,25 @@ func Test_string_param(t *testing.T) {
 	for index, tc := range tt {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
-			flow := taskflow.New()
-			param := flow.RegisterStringParam(tc.defaultValue, taskflow.ParamInfo{
+			flow := goyek.New()
+			param := flow.RegisterStringParam(tc.defaultValue, goyek.ParamInfo{
 				Name: "s",
 			})
 			var got string
-			exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) { got = param.Get(tf) }, tc.args)
+			exitCode := runTaskflowWith(flow, param, func(tf *goyek.TF) { got = param.Get(tf) }, tc.args)
 
-			assertEqual(t, exitCode, taskflow.CodePass, "exit code should match")
+			assertEqual(t, exitCode, goyek.CodePass, "exit code should match")
 			assertEqual(t, got, tc.value, "value should match")
 		})
 	}
 }
 
 func Test_string_param_help(t *testing.T) {
-	flow := taskflow.New()
-	param := flow.RegisterStringParam("abc", taskflow.ParamInfo{
+	flow := goyek.New()
+	param := flow.RegisterStringParam("abc", goyek.ParamInfo{
 		Name: "string",
 	})
-	exitCode := runTaskflowWith(flow, param, func(tf *taskflow.TF) {}, []string{"-h"})
+	exitCode := runTaskflowWith(flow, param, func(tf *goyek.TF) {}, []string{"-h"})
 
 	assertEqual(t, exitCode, 0, "exit code should be OK")
 }
