@@ -36,7 +36,7 @@ Moreover, the parameters are set via CLI using the flag syntax.
 - Remove `TF.Verbose`, add `Taskflow.VerboseParam` instead.
 - Remove `New` function, create instance using `&Taskflow{}` instead.
 - Unexport `Runner` type, use `Taskflow` in tests instead.
-- Enforce patterns for task names (`goyek.TaskNamePattern`) and parameter names (`goyek.ParamNamePattern`).
+- Enforce patterns for task names (`TaskNamePattern`) and parameter names (`ParamNamePattern`).
 - Drop official support for Go 1.10.
 
 ## [0.2.0](https://github.com/goyek/goyek/compare/v0.1.1...v0.2.0) - 2021-03-14
