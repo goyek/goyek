@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 )
 
 const (
@@ -95,9 +96,14 @@ func (f *Taskflow) RegisterStringParam(defaultValue string, info ParamInfo) Stri
 	return StringParam{param{name: info.Name}}
 }
 
+// ParamNamePattern describes the regular expression a parameter name must match.
+const ParamNamePattern = "^[a-zA-Z0-9][a-zA-Z0-9_-]*$"
+
+var paramNameRegex = regexp.MustCompile(TaskNamePattern)
+
 func (f *Taskflow) registerParam(newValue func() ParamValue, info ParamInfo) {
-	if info.Name == "" {
-		panic("parameter name cannot be empty")
+	if !paramNameRegex.MatchString(info.Name) {
+		panic("parameter name must match ParamNamePattern")
 	}
 	if _, exists := f.params[info.Name]; exists {
 		panic(fmt.Sprintf("%s parameter was already registered", info.Name))
@@ -111,14 +117,16 @@ func (f *Taskflow) registerParam(newValue func() ParamValue, info ParamInfo) {
 	}
 }
 
+// TaskNamePattern describes the regular expression a task name must match.
+const TaskNamePattern = "^[a-zA-Z0-9_][a-zA-Z0-9_-]*$"
+
+var taskNameRegex = regexp.MustCompile(TaskNamePattern)
+
 // Register registers the task. It panics in case of any error.
 func (f *Taskflow) Register(task Task) RegisteredTask {
 	// validate
-	if task.Name == "" {
-		panic("task name cannot be empty")
-	}
-	if task.Name[0] == '-' {
-		panic("task name cannot start with '-' sign")
+	if !taskNameRegex.MatchString(task.Name) {
+		panic("task name must match TaskNamePattern")
 	}
 	if f.isRegistered(task.Name) {
 		panic(fmt.Sprintf("%s task was already registered", task.Name))
