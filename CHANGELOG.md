@@ -33,7 +33,7 @@ Moreover, the parameters are set via CLI using the flag syntax.
 - Rename `Taskflow.MustRegister` method to `Register` and remove previous `Taskflow.Register` implemention.
 - Remove `Taskflow.Params` field and `TF.Params` method, add `Taskflow.Register*Param` methods and `Task.Params` field instead.
 - Remove `TF.Verbose`, add `Taskflow.VerboseParam` instead.
-- Remove `New` function, create instance using `&Taskflow` instead.
+- Remove `New` function, create instance using `&Taskflow{}` instead.
 - Unexport `Runner` type, use `Taskflow` in tests instead.
 - Drop official support for Go 1.10.
 
