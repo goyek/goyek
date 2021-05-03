@@ -1,6 +1,8 @@
 package goyek_test
 
 import (
+	"context"
+	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -8,21 +10,33 @@ import (
 )
 
 func TestExec_success(t *testing.T) {
+	taskName := "exec"
 	sb := &strings.Builder{}
-	r := goyek.Runner{
+	flow := &goyek.Taskflow{
 		Output: sb,
 	}
+	flow.Register(goyek.Task{
+		Name:    taskName,
+		Command: goyek.Exec("go", "version"),
+	})
 
-	got := r.Run(goyek.Exec("go", "version"))
+	exitCode := flow.Run(context.Background(), "-v", taskName)
 
 	assertContains(t, sb.String(), "go version go", "output should contain prefix of version report")
-	assertTrue(t, got.Passed(), "task should pass")
+	assertEqual(t, exitCode, goyek.CodePass, "task should pass")
 }
 
 func TestExec_error(t *testing.T) {
-	r := goyek.Runner{}
+	taskName := "exec"
+	flow := &goyek.Taskflow{
+		Output: ioutil.Discard,
+	}
+	flow.Register(goyek.Task{
+		Name:    taskName,
+		Command: goyek.Exec("go", "wrong"),
+	})
 
-	got := r.Run(goyek.Exec("go", "wrong"))
+	exitCode := flow.Run(nil, taskName) //nolint:staticcheck // present that nil context is handled
 
-	assertTrue(t, got.Failed(), "task should fail")
+	assertEqual(t, exitCode, goyek.CodeFail, "task should pass")
 }

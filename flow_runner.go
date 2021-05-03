@@ -16,7 +16,7 @@ type flowRunner struct {
 	params      map[string]paramValueFactory
 	paramValues map[string]ParamValue
 	tasks       map[string]Task
-	verbose     BoolParam
+	verbose     RegisteredBoolParam
 	defaultTask RegisteredTask
 }
 
@@ -30,7 +30,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int { //nolint // T
 	f.paramValues = make(map[string]ParamValue)
 	for _, param := range f.params {
 		value := param.newValue()
-		f.paramValues[param.info.Name] = value
+		f.paramValues[param.name] = value
 	}
 	usageRequested := false
 
@@ -108,7 +108,7 @@ func (f *flowRunner) runTasks(ctx context.Context, tasks []string) int {
 	for _, name := range tasks {
 		if err := f.run(ctx, name, executedTasks); err != nil {
 			fmt.Fprintf(f.output, "%v\t%.3fs\n", err, time.Since(from).Seconds())
-			return CodeFailure
+			return CodeFail
 		}
 	}
 	fmt.Fprintf(f.output, "ok\t%.3fs\n", time.Since(from).Seconds())
@@ -164,13 +164,13 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		fmt.Fprintf(w, "===== TASK  %s\n", tf.Name())
 
 		// run task
-		runner := Runner{
+		r := runner{
 			Ctx:         tf.Context(),
 			TaskName:    tf.Name(),
 			ParamValues: tf.paramValues,
 			Output:      w,
 		}
-		result := runner.Run(task.Command)
+		result := r.Run(task.Command)
 
 		// report task end
 		status := "PASS"
@@ -188,7 +188,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		}
 	}
 
-	measuredRunner := Runner{
+	measuredRunner := runner{
 		Ctx:         ctx,
 		TaskName:    task.Name,
 		ParamValues: paramValues,
@@ -232,7 +232,7 @@ func printUsage(f *flowRunner) {
 	sort.Strings(keys)
 	for _, key := range keys {
 		param := f.params[key]
-		fmt.Fprintf(w, "  %s\tDefault: %s\t%s\n", flagName(param.info.Name), param.newValue().String(), param.info.Usage)
+		fmt.Fprintf(w, "  %s\tDefault: %s\t%s\n", flagName(param.name), param.newValue().String(), param.usage)
 	}
 	w.Flush() //nolint // not checking errors when writing to output
 

@@ -20,6 +20,7 @@ Moreover, the parameters are set via CLI using the flag syntax.
 - Help is printed when `-h`, `--help` or `help` is passed.
 - Help contains parameters' information.
 - The tasks and parameters can be passed via CLI in any order.
+- `Taskflow.Run` handles `nil` passed as `context.Context` argument.
 - `Taskflow.Run` panics when a registered parameter is not assigned to any task.
 
 ### Changed
@@ -29,10 +30,13 @@ Moreover, the parameters are set via CLI using the flag syntax.
 - Use the flag syntax for setting parameters via CLI.
 - Rename `Task.Description` field to `Usage`.
 - Rename `Task.Dependencies` field to `Deps`.
+- Rename `CodeFailure` constant to `CodeFail`.
 - Rename `Taskflow.MustRegister` method to `Register` and remove previous `Taskflow.Register` implementation.
 - Remove `Taskflow.Params` field and `TF.Params` method, add `Taskflow.Register*Param` methods and `Task.Params` field instead.
 - Remove `TF.Verbose`, add `Taskflow.VerboseParam` instead.
-- Enforce patterns for task names (`goyek.TaskNamePattern`) and parameter names (`goyek.ParamNamePattern`).
+- Remove `New` function, create instance using `&Taskflow{}` instead.
+- Unexport `Runner` type, use `Taskflow` in tests instead.
+- Enforce patterns for task names (`TaskNamePattern`) and parameter names (`ParamNamePattern`).
 - Drop official support for Go 1.10.
 
 ## [0.2.0](https://github.com/goyek/goyek/compare/v0.1.1...v0.2.0) - 2021-03-14

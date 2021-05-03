@@ -8,9 +8,9 @@ import (
 )
 
 func main() {
-	flow := goyek.New()
+	flow := &goyek.Taskflow{}
 
-	ci := flow.RegisterBoolParam(false, goyek.ParamInfo{
+	ci := flow.RegisterBoolParam(goyek.BoolParam{
 		Name:  "ci",
 		Usage: "Whether CI is calling the build script",
 	})
@@ -120,7 +120,7 @@ func taskModTidy() goyek.Task {
 	}
 }
 
-func taskDiff(ci goyek.BoolParam) goyek.Task {
+func taskDiff(ci goyek.RegisteredBoolParam) goyek.Task {
 	return goyek.Task{
 		Name:   "diff",
 		Usage:  "git diff",

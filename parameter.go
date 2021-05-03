@@ -6,14 +6,38 @@ import (
 )
 
 type paramValueFactory struct {
-	info     ParamInfo
+	name     string
+	usage    string
 	newValue func() ParamValue
 }
 
-// ParamInfo represents the general information of a parameter for one or more tasks.
-type ParamInfo struct {
-	Name  string
-	Usage string
+// BoolParam represents a named boolean parameter that can be registered.
+type BoolParam struct {
+	Name    string
+	Usage   string
+	Default bool
+}
+
+// IntParam represents a named integer parameter that can be registered.
+type IntParam struct {
+	Name    string
+	Usage   string
+	Default int
+}
+
+// StringParam represents a named string parameter that can be registered.
+type StringParam struct {
+	Name    string
+	Usage   string
+	Default string
+}
+
+// ValueParam represents a named parameter for a custom type that can be registered.
+// NewValue field must be set with a default value factory.
+type ValueParam struct {
+	Name     string
+	Usage    string
+	NewValue func() ParamValue
 }
 
 // ParamValue represents an instance of a generic parameter.
@@ -57,13 +81,13 @@ func (p param) value(tf *TF) ParamValue {
 	return value
 }
 
-// ValueParam represents a registered parameter based on a generic implementation.
-type ValueParam struct {
+// RegisteredValueParam represents a registered parameter based on a generic implementation.
+type RegisteredValueParam struct {
 	param
 }
 
 // Get returns the concrete instance of the generic value in the given flow.
-func (p ValueParam) Get(tf *TF) interface{} {
+func (p RegisteredValueParam) Get(tf *TF) interface{} {
 	return p.value(tf).Get()
 }
 
@@ -88,13 +112,13 @@ func (value *boolValue) String() string { return strconv.FormatBool(bool(*value)
 
 func (value *boolValue) IsBool() bool { return true }
 
-// BoolParam represents a registered boolean parameter.
-type BoolParam struct {
+// RegisteredBoolParam represents a registered boolean parameter.
+type RegisteredBoolParam struct {
 	param
 }
 
 // Get returns the boolean value of the parameter in the given flow.
-func (p BoolParam) Get(tf *TF) bool {
+func (p RegisteredBoolParam) Get(tf *TF) bool {
 	value := p.value(tf)
 	return value.Get().(bool)
 }
@@ -116,13 +140,13 @@ func (value *intValue) String() string { return strconv.Itoa(int(*value)) }
 
 func (value *intValue) IsBool() bool { return false }
 
-// IntParam represents a registered integer parameter.
-type IntParam struct {
+// RegisteredIntParam represents a registered integer parameter.
+type RegisteredIntParam struct {
 	param
 }
 
 // Get returns the integer value of the parameter in the given flow.
-func (p IntParam) Get(tf *TF) int {
+func (p RegisteredIntParam) Get(tf *TF) int {
 	value := p.value(tf)
 	return value.Get().(int)
 }
@@ -140,13 +164,13 @@ func (value *stringValue) String() string { return string(*value) }
 
 func (value *stringValue) IsBool() bool { return false }
 
-// StringParam represents a registered string parameter.
-type StringParam struct {
+// RegisteredStringParam represents a registered string parameter.
+type RegisteredStringParam struct {
 	param
 }
 
 // Get returns the string value of the parameter in the given flow.
-func (p StringParam) Get(tf *TF) string {
+func (p RegisteredStringParam) Get(tf *TF) string {
 	value := p.value(tf)
 	return value.Get().(string)
 }

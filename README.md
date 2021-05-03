@@ -30,7 +30,6 @@ Table of Contents:
     - [Verbose mode](#verbose-mode)
     - [Default task](#default-task)
     - [Parameters](#parameters)
-    - [Task runner](#task-runner)
     - [Supported Go versions](#supported-go-versions)
   - [Alternatives](#alternatives)
     - [Make](#make)
@@ -70,7 +69,7 @@ package main
 import "github.com/goyek/goyek"
 
 func main() {
-	flow := goyek.New()
+	flow := &goyek.Taskflow{}
 
 	hello := flow.Register(taskHello())
 	fmt := flow.Register(taskFmt())
@@ -237,12 +236,6 @@ When registration is done, the task's command can retrieve the parameter value u
 See [examples/parameters/main.go](examples/parameters/main.go) for a detailed example.
 
 `Taskflow` will fail execution if there are unused parameters.
-
-### Task runner
-
-You can use [`type Runner`](https://pkg.go.dev/github.com/goyek/goyek#Runner) to execute a single command.
-
-It may be handy during development of a new task, when debugging some issue or if you want to have a test suite for reusable commands.
 
 ### Supported Go versions
 
