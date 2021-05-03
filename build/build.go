@@ -120,7 +120,7 @@ func taskModTidy() goyek.Task {
 	}
 }
 
-func taskDiff(ci goyek.BoolParam) goyek.Task {
+func taskDiff(ci goyek.RegisteredBoolParam) goyek.Task {
 	return goyek.Task{
 		Name:   "diff",
 		Usage:  "git diff",

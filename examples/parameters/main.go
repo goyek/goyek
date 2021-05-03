@@ -30,7 +30,7 @@ func main() {
 	flow.Main()
 }
 
-func taskFirst(sharedParam goyek.StringParam) goyek.Task {
+func taskFirst(sharedParam goyek.RegisteredStringParam) goyek.Task {
 	return goyek.Task{
 		Name:   "first",
 		Usage:  "Showcases a simple parameter",
@@ -41,7 +41,7 @@ func taskFirst(sharedParam goyek.StringParam) goyek.Task {
 	}
 }
 
-func taskSecond(flow *goyek.Taskflow, sharedParam goyek.StringParam) goyek.Task {
+func taskSecond(flow *goyek.Taskflow, sharedParam goyek.RegisteredStringParam) goyek.Task {
 	// The following is a "private" parameter, only available to this task.
 	privateParam := flow.RegisterStringParam("special-default", goyek.ParamInfo{
 		Name:  "private",

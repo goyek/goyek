@@ -16,7 +16,7 @@ type flowRunner struct {
 	params      map[string]paramValueFactory
 	paramValues map[string]ParamValue
 	tasks       map[string]Task
-	verbose     BoolParam
+	verbose     RegisteredBoolParam
 	defaultTask RegisteredTask
 }
 

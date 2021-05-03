@@ -27,7 +27,7 @@ type Taskflow struct {
 
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
 
-	verbose *BoolParam // when enabled, then the whole output will be always streamed
+	verbose *RegisteredBoolParam // when enabled, then the whole output will be always streamed
 	params  map[string]paramValueFactory
 	tasks   map[string]Task
 }
@@ -46,7 +46,7 @@ func New() *Taskflow {
 }
 
 // VerboseParam returns the out-of-the-box verbose parameter which controls the output behavior.
-func (f *Taskflow) VerboseParam() BoolParam {
+func (f *Taskflow) VerboseParam() RegisteredBoolParam {
 	if f.verbose == nil {
 		param := f.RegisterBoolParam(false, ParamInfo{
 			Name:  "v",
@@ -63,36 +63,36 @@ func (f *Taskflow) VerboseParam() BoolParam {
 //
 // The value is provided via a factory function since Taskflow could be executed multiple times,
 // requiring a new Value instance each time.
-func (f *Taskflow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam {
+func (f *Taskflow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) RegisteredValueParam {
 	f.registerParam(newValue, info)
-	return ValueParam{param{name: info.Name}}
+	return RegisteredValueParam{param{name: info.Name}}
 }
 
 // RegisterBoolParam registers a boolean parameter.
-func (f *Taskflow) RegisterBoolParam(defaultValue bool, info ParamInfo) BoolParam {
+func (f *Taskflow) RegisterBoolParam(defaultValue bool, info ParamInfo) RegisteredBoolParam {
 	f.registerParam(func() ParamValue {
 		value := boolValue(defaultValue)
 		return &value
 	}, info)
-	return BoolParam{param{name: info.Name}}
+	return RegisteredBoolParam{param{name: info.Name}}
 }
 
 // RegisterIntParam registers an integer parameter.
-func (f *Taskflow) RegisterIntParam(defaultValue int, info ParamInfo) IntParam {
+func (f *Taskflow) RegisterIntParam(defaultValue int, info ParamInfo) RegisteredIntParam {
 	f.registerParam(func() ParamValue {
 		value := intValue(defaultValue)
 		return &value
 	}, info)
-	return IntParam{param{name: info.Name}}
+	return RegisteredIntParam{param{name: info.Name}}
 }
 
 // RegisterStringParam registers a string parameter.
-func (f *Taskflow) RegisterStringParam(defaultValue string, info ParamInfo) StringParam {
+func (f *Taskflow) RegisterStringParam(defaultValue string, info ParamInfo) RegisteredStringParam {
 	f.registerParam(func() ParamValue {
 		value := stringValue(defaultValue)
 		return &value
 	}, info)
-	return StringParam{param{name: info.Name}}
+	return RegisteredStringParam{param{name: info.Name}}
 }
 
 func (f *Taskflow) registerParam(newValue func() ParamValue, info ParamInfo) {
