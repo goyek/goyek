@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// Cmd is like exec.Command, but it assignes tf's context
+// Cmd is like exec.Command, but it assigns tf's context
 // and assigns Stdout and Stderr to tf's output.
 func (tf *TF) Cmd(name string, args ...string) *exec.Cmd {
 	cmdStr := strings.Join(append([]string{name}, args...), " ")

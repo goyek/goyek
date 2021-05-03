@@ -9,9 +9,9 @@ and can have dependencies (already defined tasks).
 
 When the taskflow is executed for given tasks,
 then the tasks' commands are run in the order defined by their dependencies.
-The task's dependencies are run in a recusrive manner, however each is going to be run at most once.
+The task's dependencies are run in a recursive manner, however each is going to be run at most once.
 
-The taskflow is interupted in case a command fails.
+The taskflow is interrupted in case a command fails.
 Within these functions, use the Error, Fail or related methods to signal failure.
 */
 package goyek
