@@ -53,7 +53,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int { //nolint // T
 			return nil
 		}
 		if arg[0] == '-' {
-			// parase parameters
+			// parse parameters
 			split := strings.SplitN(arg[1:], "=", 2)
 			if value, isFlag := f.paramValues[split[0]]; isFlag {
 				switch {
