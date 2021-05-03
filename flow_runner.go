@@ -108,7 +108,7 @@ func (f *flowRunner) runTasks(ctx context.Context, tasks []string) int {
 	for _, name := range tasks {
 		if err := f.run(ctx, name, executedTasks); err != nil {
 			fmt.Fprintf(f.output, "%v\t%.3fs\n", err, time.Since(from).Seconds())
-			return CodeFailure
+			return CodeFail
 		}
 	}
 	fmt.Fprintf(f.output, "ok\t%.3fs\n", time.Since(from).Seconds())

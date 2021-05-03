@@ -345,7 +345,7 @@ func Test_concurrent_printing(t *testing.T) {
 			args = append(args, "task")
 			exitCode := flow.Run(context.Background(), args...)
 
-			assertEqual(t, exitCode, goyek.CodeFailure, "should fail")
+			assertEqual(t, exitCode, goyek.CodeFail, "should fail")
 			assertContains(t, sb.String(), "from child goroutine", "should contain log from child goroutine")
 			assertContains(t, sb.String(), "from main goroutine", "should contain log from main goroutine")
 		})
@@ -480,7 +480,7 @@ func Test_unregistered_params(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "task")
 
-	assertEqual(t, goyek.CodeFailure, exitCode, "should fail because of unregistered parameter")
+	assertEqual(t, goyek.CodeFail, exitCode, "should fail because of unregistered parameter")
 }
 
 func Test_defaultTask(t *testing.T) {

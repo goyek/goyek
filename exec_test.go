@@ -38,5 +38,5 @@ func TestExec_error(t *testing.T) {
 
 	exitCode := flow.Run(nil, taskName) //nolint:staticcheck // present that nil context is handled
 
-	assertEqual(t, exitCode, goyek.CodeFailure, "task should pass")
+	assertEqual(t, exitCode, goyek.CodeFail, "task should pass")
 }

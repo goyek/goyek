@@ -10,8 +10,8 @@ import (
 const (
 	// CodePass indicates that taskflow passed.
 	CodePass = 0
-	// CodeFailure indicates that taskflow failed.
-	CodeFailure = 1
+	// CodeFail indicates that taskflow failed.
+	CodeFail = 1
 	// CodeInvalidArgs indicates that taskflow got invalid input.
 	CodeInvalidArgs = 2
 )
