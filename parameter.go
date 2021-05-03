@@ -33,11 +33,11 @@ type StringParam struct {
 }
 
 // ValueParam represents a named parameter for a custom type that can be registered.
-// Default field must be set with a default value factory.
+// NewValue field must be set with a default value factory.
 type ValueParam struct {
-	Name    string
-	Usage   string
-	Default func() ParamValue
+	Name     string
+	Usage    string
+	NewValue func() ParamValue
 }
 
 // ParamValue represents an instance of a generic parameter.

@@ -99,7 +99,7 @@ func taskComplexParam(flow *goyek.Taskflow) goyek.Task {
 	privateParam := flow.RegisterValueParam(goyek.ValueParam{
 		Name:  "json",
 		Usage: "A complex parameter",
-		Default: func() goyek.ParamValue {
+		NewValue: func() goyek.ParamValue {
 			return &complexParamValue{
 				StringValue: "default",
 				IntValue:    123,

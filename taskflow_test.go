@@ -399,8 +399,8 @@ func Test_params(t *testing.T) {
 		Default: "abc",
 	})
 	arrayParam := flow.RegisterValueParam(goyek.ValueParam{
-		Name:    "array",
-		Default: func() goyek.ParamValue { return &arrayValue{} },
+		Name:     "array",
+		NewValue: func() goyek.ParamValue { return &arrayValue{} },
 	})
 	var gotBool bool
 	var gotInt int

@@ -60,7 +60,7 @@ func (f *Taskflow) RegisterValueParam(p ValueParam) RegisteredValueParam {
 	f.registerParam(paramValueFactory{
 		name:     p.Name,
 		usage:    p.Usage,
-		newValue: p.Default,
+		newValue: p.NewValue,
 	})
 	return RegisteredValueParam{param{name: p.Name}}
 }
