@@ -38,13 +38,6 @@ type RegisteredTask struct {
 	name string
 }
 
-// New return an instance of Taskflow with initialized fields.
-func New() *Taskflow {
-	return &Taskflow{
-		Output: DefaultOutput,
-	}
-}
-
 // VerboseParam returns the out-of-the-box verbose parameter which controls the output behavior.
 func (f *Taskflow) VerboseParam() RegisteredBoolParam {
 	if f.verbose == nil {

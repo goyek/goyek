@@ -33,7 +33,8 @@ Moreover, the parameters are set via CLI using the flag syntax.
 - Rename `Taskflow.MustRegister` method to `Register` and remove previous `Taskflow.Register` implemention.
 - Remove `Taskflow.Params` field and `TF.Params` method, add `Taskflow.Register*Param` methods and `Task.Params` field instead.
 - Remove `TF.Verbose`, add `Taskflow.VerboseParam` instead.
-- Unexport `Runner` type.
+- Remove `New` function, create instance using `&Taskflow` instead.
+- Unexport `Runner` type, use `Taskflow` in tests instead.
 - Drop official support for Go 1.10.
 
 ## [0.2.0](https://github.com/goyek/goyek/compare/v0.1.1...v0.2.0) - 2021-03-14

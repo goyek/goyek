@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	flow := goyek.New()
+	flow := &goyek.Taskflow{}
 
 	ci := flow.RegisterBoolParam(goyek.BoolParam{
 		Name:  "ci",

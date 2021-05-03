@@ -3,7 +3,7 @@ package main
 import "github.com/goyek/goyek"
 
 func main() {
-	flow := goyek.New()
+	flow := &goyek.Taskflow{}
 
 	hello := flow.Register(taskHello())
 	fmt := flow.Register(taskFmt())

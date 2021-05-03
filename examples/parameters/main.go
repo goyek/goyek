@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	flow := goyek.New()
+	flow := &goyek.Taskflow{}
 
 	sharedParam := flow.RegisterStringParam(goyek.StringParam{
 		Name:    "shared",

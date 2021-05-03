@@ -39,7 +39,7 @@ func Test_bool_param(t *testing.T) {
 	for index, tc := range tt {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
-			flow := goyek.New()
+			flow := &goyek.Taskflow{}
 			param := flow.RegisterBoolParam(goyek.BoolParam{
 				Name:    "b",
 				Default: tc.defaultValue,
@@ -54,7 +54,7 @@ func Test_bool_param(t *testing.T) {
 }
 
 func Test_bool_param_help(t *testing.T) {
-	flow := goyek.New()
+	flow := &goyek.Taskflow{}
 	param := flow.RegisterBoolParam(goyek.BoolParam{
 		Name:    "bool",
 		Default: true,
@@ -84,7 +84,7 @@ func Test_int_param(t *testing.T) {
 	for index, tc := range tt {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
-			flow := goyek.New()
+			flow := &goyek.Taskflow{}
 			param := flow.RegisterIntParam(goyek.IntParam{
 				Name:    "i",
 				Default: tc.defaultValue,
@@ -99,7 +99,7 @@ func Test_int_param(t *testing.T) {
 }
 
 func Test_int_param_help(t *testing.T) {
-	flow := goyek.New()
+	flow := &goyek.Taskflow{}
 	param := flow.RegisterIntParam(goyek.IntParam{
 		Name:    "int",
 		Default: 123,
@@ -126,7 +126,7 @@ func Test_string_param(t *testing.T) {
 	for index, tc := range tt {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
-			flow := goyek.New()
+			flow := &goyek.Taskflow{}
 			param := flow.RegisterStringParam(goyek.StringParam{
 				Name:    "s",
 				Default: tc.defaultValue,
@@ -141,7 +141,7 @@ func Test_string_param(t *testing.T) {
 }
 
 func Test_string_param_help(t *testing.T) {
-	flow := goyek.New()
+	flow := &goyek.Taskflow{}
 	param := flow.RegisterStringParam(goyek.StringParam{
 		Name:    "string",
 		Default: "abc",
