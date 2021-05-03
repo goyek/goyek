@@ -40,8 +40,9 @@ func Test_bool_param(t *testing.T) {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
 			flow := goyek.New()
-			param := flow.RegisterBoolParam(tc.defaultValue, goyek.ParamInfo{
-				Name: "b",
+			param := flow.RegisterBoolParam(goyek.BoolParam{
+				Name:    "b",
+				Default: tc.defaultValue,
 			})
 			var got bool
 			exitCode := runTaskflowWith(flow, param, func(tf *goyek.TF) { got = param.Get(tf) }, tc.args)
@@ -54,8 +55,9 @@ func Test_bool_param(t *testing.T) {
 
 func Test_bool_param_help(t *testing.T) {
 	flow := goyek.New()
-	param := flow.RegisterBoolParam(true, goyek.ParamInfo{
-		Name: "bool",
+	param := flow.RegisterBoolParam(goyek.BoolParam{
+		Name:    "bool",
+		Default: true,
 	})
 	exitCode := runTaskflowWith(flow, param, func(tf *goyek.TF) {}, []string{"-h"})
 
@@ -83,8 +85,9 @@ func Test_int_param(t *testing.T) {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
 			flow := goyek.New()
-			param := flow.RegisterIntParam(tc.defaultValue, goyek.ParamInfo{
-				Name: "i",
+			param := flow.RegisterIntParam(goyek.IntParam{
+				Name:    "i",
+				Default: tc.defaultValue,
 			})
 			var got int
 			exitCode := runTaskflowWith(flow, param, func(tf *goyek.TF) { got = param.Get(tf) }, tc.args)
@@ -97,8 +100,9 @@ func Test_int_param(t *testing.T) {
 
 func Test_int_param_help(t *testing.T) {
 	flow := goyek.New()
-	param := flow.RegisterIntParam(123, goyek.ParamInfo{
-		Name: "int",
+	param := flow.RegisterIntParam(goyek.IntParam{
+		Name:    "int",
+		Default: 123,
 	})
 	exitCode := runTaskflowWith(flow, param, func(tf *goyek.TF) {}, []string{"-h"})
 
@@ -123,8 +127,9 @@ func Test_string_param(t *testing.T) {
 		tc := tc
 		t.Run("case "+strconv.Itoa(index), func(t *testing.T) {
 			flow := goyek.New()
-			param := flow.RegisterStringParam(tc.defaultValue, goyek.ParamInfo{
-				Name: "s",
+			param := flow.RegisterStringParam(goyek.StringParam{
+				Name:    "s",
+				Default: tc.defaultValue,
 			})
 			var got string
 			exitCode := runTaskflowWith(flow, param, func(tf *goyek.TF) { got = param.Get(tf) }, tc.args)
@@ -137,8 +142,9 @@ func Test_string_param(t *testing.T) {
 
 func Test_string_param_help(t *testing.T) {
 	flow := goyek.New()
-	param := flow.RegisterStringParam("abc", goyek.ParamInfo{
-		Name: "string",
+	param := flow.RegisterStringParam(goyek.StringParam{
+		Name:    "string",
+		Default: "abc",
 	})
 	exitCode := runTaskflowWith(flow, param, func(tf *goyek.TF) {}, []string{"-h"})
 

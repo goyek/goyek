@@ -6,14 +6,38 @@ import (
 )
 
 type paramValueFactory struct {
-	info     ParamInfo
+	name     string
+	usage    string
 	newValue func() ParamValue
 }
 
-// ParamInfo represents the general information of a parameter for one or more tasks.
-type ParamInfo struct {
-	Name  string
-	Usage string
+// BoolParam represents a named boolean parameter that can be registered.
+type BoolParam struct {
+	Name    string
+	Usage   string
+	Default bool
+}
+
+// IntParam represents a named integer parameter that can be registered.
+type IntParam struct {
+	Name    string
+	Usage   string
+	Default int
+}
+
+// StringParam represents a named string parameter that can be registered.
+type StringParam struct {
+	Name    string
+	Usage   string
+	Default string
+}
+
+// ValueParam represents a named parameter for a custom type that can be registered.
+// Default field must be set with a default value factory.
+type ValueParam struct {
+	Name    string
+	Usage   string
+	Default func() ParamValue
 }
 
 // ParamValue represents an instance of a generic parameter.

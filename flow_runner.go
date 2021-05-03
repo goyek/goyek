@@ -30,7 +30,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int { //nolint // T
 	f.paramValues = make(map[string]ParamValue)
 	for _, param := range f.params {
 		value := param.newValue()
-		f.paramValues[param.info.Name] = value
+		f.paramValues[param.name] = value
 	}
 	usageRequested := false
 
@@ -232,7 +232,7 @@ func printUsage(f *flowRunner) {
 	sort.Strings(keys)
 	for _, key := range keys {
 		param := f.params[key]
-		fmt.Fprintf(w, "  %s\tDefault: %s\t%s\n", flagName(param.info.Name), param.newValue().String(), param.info.Usage)
+		fmt.Fprintf(w, "  %s\tDefault: %s\t%s\n", flagName(param.name), param.newValue().String(), param.usage)
 	}
 	w.Flush() //nolint // not checking errors when writing to output
 

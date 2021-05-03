@@ -261,7 +261,7 @@ func Test_invalid_args(t *testing.T) {
 
 func Test_help(t *testing.T) {
 	flow := goyek.New()
-	fastParam := flow.RegisterBoolParam(false, goyek.ParamInfo{
+	fastParam := flow.RegisterBoolParam(goyek.BoolParam{
 		Name:  "fast",
 		Usage: "simulates fast-lane processing",
 	})
@@ -386,17 +386,21 @@ func (value *arrayValue) IsBool() bool { return false }
 
 func Test_params(t *testing.T) {
 	flow := goyek.New()
-	boolParam := flow.RegisterBoolParam(true, goyek.ParamInfo{
-		Name: "b",
+	boolParam := flow.RegisterBoolParam(goyek.BoolParam{
+		Name:    "b",
+		Default: true,
 	})
-	intParam := flow.RegisterIntParam(1, goyek.ParamInfo{
-		Name: "i",
+	intParam := flow.RegisterIntParam(goyek.IntParam{
+		Name:    "i",
+		Default: 1,
 	})
-	stringParam := flow.RegisterStringParam("abc", goyek.ParamInfo{
-		Name: "s",
+	stringParam := flow.RegisterStringParam(goyek.StringParam{
+		Name:    "s",
+		Default: "abc",
 	})
-	arrayParam := flow.RegisterValueParam(func() goyek.ParamValue { return &arrayValue{} }, goyek.ParamInfo{
-		Name: "array",
+	arrayParam := flow.RegisterValueParam(goyek.ValueParam{
+		Name:    "array",
+		Default: func() goyek.ParamValue { return &arrayValue{} },
 	})
 	var gotBool bool
 	var gotInt int
@@ -442,25 +446,30 @@ func Test_invalid_params(t *testing.T) {
 func Test_unused_params(t *testing.T) {
 	flow := goyek.New()
 	flow.DefaultTask = flow.Register(goyek.Task{Name: "task", Command: func(tf *goyek.TF) {}})
-	flow.RegisterBoolParam(false, goyek.ParamInfo{Name: "unused"})
+	flow.RegisterBoolParam(goyek.BoolParam{Name: "unused"})
 
 	assertPanics(t, func() { flow.Run(context.Background()) }, "should fail because of unused parameter")
 }
 
 func Test_param_registration_error_empty_name(t *testing.T) {
 	flow := goyek.New()
-	assertPanics(t, func() { flow.RegisterBoolParam(false, goyek.ParamInfo{Name: ""}) }, "empty name")
+	assertPanics(t, func() { flow.RegisterBoolParam(goyek.BoolParam{Name: ""}) }, "empty name")
+}
+
+func Test_param_registration_error_no_default(t *testing.T) {
+	flow := goyek.New()
+	assertPanics(t, func() { flow.RegisterValueParam(goyek.ValueParam{Name: "custom"}) }, "custom parameter must have default value factory")
 }
 
 func Test_param_registration_error_double_name(t *testing.T) {
 	flow := goyek.New()
-	info := goyek.ParamInfo{Name: "double"}
-	flow.RegisterBoolParam(false, info)
-	assertPanics(t, func() { flow.RegisterBoolParam(false, info) }, "double name")
+	name := "double"
+	flow.RegisterStringParam(goyek.StringParam{Name: name})
+	assertPanics(t, func() { flow.RegisterBoolParam(goyek.BoolParam{Name: name}) }, "double name")
 }
 
 func Test_unregistered_params(t *testing.T) {
-	foreignParam := goyek.New().RegisterBoolParam(false, goyek.ParamInfo{Name: "foreign"})
+	foreignParam := goyek.New().RegisterBoolParam(goyek.BoolParam{Name: "foreign"})
 	flow := goyek.New()
 	flow.Register(goyek.Task{
 		Name: "task",

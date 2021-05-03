@@ -17,9 +17,10 @@ import (
 func main() {
 	flow := goyek.New()
 
-	sharedParam := flow.RegisterStringParam("default-value", goyek.ParamInfo{
-		Name:  "shared",
-		Usage: "An example parameter shared between tasks",
+	sharedParam := flow.RegisterStringParam(goyek.StringParam{
+		Name:    "shared",
+		Usage:   "An example parameter shared between tasks",
+		Default: "default-value",
 	})
 
 	first := flow.Register(taskFirst(sharedParam))
@@ -43,9 +44,10 @@ func taskFirst(sharedParam goyek.RegisteredStringParam) goyek.Task {
 
 func taskSecond(flow *goyek.Taskflow, sharedParam goyek.RegisteredStringParam) goyek.Task {
 	// The following is a "private" parameter, only available to this task.
-	privateParam := flow.RegisterStringParam("special-default", goyek.ParamInfo{
-		Name:  "private",
-		Usage: "A task-specific parameter",
+	privateParam := flow.RegisterStringParam(goyek.StringParam{
+		Name:    "private",
+		Usage:   "A task-specific parameter",
+		Default: "special-default",
 	})
 	return goyek.Task{
 		Name:   "second",
@@ -94,15 +96,15 @@ func (value *complexParamValue) IsBool() bool {
 //
 // Execute `go run ./main.go -v complex -json "{\"stringValue\":\"abc\"}"` as an example.
 func taskComplexParam(flow *goyek.Taskflow) goyek.Task {
-	privateParam := flow.RegisterValueParam(func() goyek.ParamValue {
-		param := complexParamValue{
-			StringValue: "default",
-			IntValue:    123,
-		}
-		return &param
-	}, goyek.ParamInfo{
+	privateParam := flow.RegisterValueParam(goyek.ValueParam{
 		Name:  "json",
 		Usage: "A complex parameter",
+		Default: func() goyek.ParamValue {
+			return &complexParamValue{
+				StringValue: "default",
+				IntValue:    123,
+			}
+		},
 	})
 	return goyek.Task{
 		Name:   "complex",

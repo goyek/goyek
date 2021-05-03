@@ -10,7 +10,7 @@ import (
 func main() {
 	flow := goyek.New()
 
-	ci := flow.RegisterBoolParam(false, goyek.ParamInfo{
+	ci := flow.RegisterBoolParam(goyek.BoolParam{
 		Name:  "ci",
 		Usage: "Whether CI is calling the build script",
 	})
