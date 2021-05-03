@@ -155,6 +155,10 @@ func (f *Taskflow) Register(task Task) RegisteredTask {
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (f *Taskflow) Run(ctx context.Context, args ...string) int {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	flow := &flowRunner{
 		output:      f.Output,
 		params:      f.params,

@@ -164,13 +164,13 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		fmt.Fprintf(w, "===== TASK  %s\n", tf.Name())
 
 		// run task
-		runner := Runner{
+		r := runner{
 			Ctx:         tf.Context(),
 			TaskName:    tf.Name(),
 			ParamValues: tf.paramValues,
 			Output:      w,
 		}
-		result := runner.Run(task.Command)
+		result := r.Run(task.Command)
 
 		// report task end
 		status := "PASS"
@@ -188,7 +188,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		}
 	}
 
-	measuredRunner := Runner{
+	measuredRunner := runner{
 		Ctx:         ctx,
 		TaskName:    task.Name,
 		ParamValues: paramValues,
