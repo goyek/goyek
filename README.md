@@ -218,6 +218,16 @@ and `pkg` string parameter set to `"./..."`.
 
 Parameters must first be registered via [`func (f *Taskflow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.RegisterValueParam), or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.RegisterStringParam).
 
+The registered parameters are required to have a non-empty name, matching
+the regular expression `^[a-zA-Z0-9][a-zA-Z0-9_-]*$`, available as
+[`ParamNamePattern`](https://pkg.go.dev/github.com/goyek/goyek#ParamNamePattern).
+This means the following are acceptable:
+
+- letters (`a-z` and `A-Z`)
+- digits (`0-9`)
+- underscore (`_`) - except at the beginning
+- hyphens (`-`) - except at the beginning
+
 After registration, tasks need to specify which parameters they will read.
 Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/goyek/goyek#RegisteredParam) instance from the registration result to the [`Task.Params`](https://pkg.go.dev/github.com/goyek/goyek#Task.Params) field.
 If a task tries to retrieve the value from an unregistered parameter, the task will fail.

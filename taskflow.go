@@ -96,9 +96,14 @@ func (f *Taskflow) RegisterStringParam(defaultValue string, info ParamInfo) Stri
 	return StringParam{param{name: info.Name}}
 }
 
+// ParamNamePattern describes the regular expression a parameter name must match.
+const ParamNamePattern = "^[a-zA-Z0-9][a-zA-Z0-9_-]*$"
+
+var paramNameRegex = regexp.MustCompile(TaskNamePattern)
+
 func (f *Taskflow) registerParam(newValue func() ParamValue, info ParamInfo) {
-	if info.Name == "" {
-		panic("parameter name cannot be empty")
+	if !paramNameRegex.MatchString(info.Name) {
+		panic("parameter name must match ParamNamePattern")
 	}
 	if _, exists := f.params[info.Name]; exists {
 		panic(fmt.Sprintf("%s parameter was already registered", info.Name))
@@ -112,7 +117,7 @@ func (f *Taskflow) registerParam(newValue func() ParamValue, info ParamInfo) {
 	}
 }
 
-// TaskNamePattern describes the regular expression a task name must have.
+// TaskNamePattern describes the regular expression a task name must match.
 const TaskNamePattern = "^[a-zA-Z0-9_][a-zA-Z0-9_-]*$"
 
 var taskNameRegex = regexp.MustCompile(TaskNamePattern)
