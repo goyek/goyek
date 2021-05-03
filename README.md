@@ -33,6 +33,7 @@ Table of Contents:
     - [Mage](#mage)
     - [Task](#task)
     - [Bazel](#bazel)
+  - [Presentations](#presentations)
   - [Contributing](#contributing)
 
 ## Description
@@ -142,7 +143,6 @@ alias goyek='go run ./build'
 
 - [examples](examples)
 - [build/build.go](build/build.go) - this repository's own build pipeline
-- [Go Build Pipeline Demo](https://github.com/pellared/go-build-pipeline-demo) - comparison with [Make](https://www.gnu.org/software/make/) and [Mage](https://github.com/magefile/mage)
 
 ## Features
 
@@ -286,6 +286,11 @@ While [Task](https://taskfile.dev/) is simpler and easier to use than [Make](htt
 [Bazel](https://bazel.build/) is a very sophisticated tool which is [created to efficiently handle complex and long-running build pipelines](https://en.wikipedia.org/wiki/Bazel_(software)#Rationale). It requires the build target inputs and outputs to be fully specified.
 
 **goyek** is just a simple library that is mainly supposed to create a build pipeline consisting of commands like `go vet`, `go test`, `go build`. However, take notice that **goyek** is a library. Nothing prevents you from, for example, using [Mage's target package](https://pkg.go.dev/github.com/magefile/mage/target) to make your build pipeline more efficient.
+
+## Presentations
+
+- [taskflow - Create build pipelines in Go](https://github.com/pellared/taskflow-example) - **taskflow** (now **goyek**) `v0.1.1` demo
+- [Build pipeline for a Go project](https://github.com/pellared/go-build-pipeline-demo) - build pipeline for a naive Go project using [Make](https://www.gnu.org/software/make/), [Mage](https://github.com/magefile/mage), and **taskflow** (now **goyek**) `v0.1.0`
 
 ## Contributing
 
