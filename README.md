@@ -151,15 +151,15 @@ alias goyek='go run ./build'
 
 ### Task registration
 
-The registered tasks are required to have a non-empty name.
-For future compatibility, it is strongly suggested to use only the following characters:
+The registered tasks are required to have a non-empty name, matching
+the regular expression `^[a-zA-Z0-9_][a-zA-Z0-9_-]*$`, available as
+[`TaskNamePattern`](https://pkg.go.dev/github.com/goyek/goyek#TaskNamePattern).
+This means the following are acceptable:
 
 - letters (`a-z` and `A-Z`)
 - digits (`0-9`)
 - underscore (`_`)
-- hyphens (`-`)
-
-Do not begin the task name with `-` sign as it is used for assigning parameters.
+- hyphens (`-`) - except at the beginning
 
 A task with a given name can be only registered once.
 
@@ -216,6 +216,16 @@ with `v` bool parameter (verbose mode) set to `true`,
 and `pkg` string parameter set to `"./..."`.
 
 Parameters must first be registered via [`func (f *Taskflow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.RegisterValueParam), or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.RegisterStringParam).
+
+The registered parameters are required to have a non-empty name, matching
+the regular expression `^[a-zA-Z0-9][a-zA-Z0-9_-]*$`, available as
+[`ParamNamePattern`](https://pkg.go.dev/github.com/goyek/goyek#ParamNamePattern).
+This means the following are acceptable:
+
+- letters (`a-z` and `A-Z`)
+- digits (`0-9`)
+- underscore (`_`) - except at the beginning
+- hyphens (`-`) - except at the beginning
 
 After registration, tasks need to specify which parameters they will read.
 Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/goyek/goyek#RegisteredParam) instance from the registration result to the [`Task.Params`](https://pkg.go.dev/github.com/goyek/goyek#Task.Params) field.
