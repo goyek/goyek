@@ -29,10 +29,10 @@ Moreover, the parameters are set via CLI using the flag syntax.
 - Use the flag syntax for setting parameters via CLI.
 - Rename `Task.Description` field to `Usage`.
 - Rename `Task.Dependencies` field to `Deps`.
-- Rename `Taskflow.MustRegister` method to `Register` and remove previous `Taskflow.Register` implemention.
+- Rename `Taskflow.MustRegister` method to `Register` and remove previous `Taskflow.Register` implementation.
 - Remove `Taskflow.Params` field and `TF.Params` method, add `Taskflow.Register*Param` methods and `Task.Params` field instead.
 - Remove `TF.Verbose`, add `Taskflow.VerboseParam` instead.
-- Enforce pattern for task and parameter names.
+- Enforce patterns for task names (`goyek.TaskNamePattern`) and parameter names (`goyek.ParamNamePattern`).
 - Drop official support for Go 1.10.
 
 ## [0.2.0](https://github.com/goyek/goyek/compare/v0.1.1...v0.2.0) - 2021-03-14
