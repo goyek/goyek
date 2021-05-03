@@ -23,13 +23,13 @@ type RunResult struct {
 }
 
 // Failed returns true if a command failed.
-// Failure can be caused by invocation of Error, Fail or related methods or a panic.
+// Commands are failed by calling Error, Fail or related methods, or a panic.
 func (r RunResult) Failed() bool {
 	return r.failed
 }
 
 // Skipped returns true if a command was skipped.
-// Skip is casused by invocation of Skip or related methods.
+// Commands are skipped by calling Skip or related methods.
 func (r RunResult) Skipped() bool {
 	return r.skipped
 }
