@@ -63,7 +63,7 @@ Please `Star` this repository if you find it valuable and worth maintaining.
 
 ## Quick start
 
-Create a file in your project `build/build.go`. Copy and paste the content:
+Copy and paste the following code into `build/build.go`:
 
 ```go
 package main
