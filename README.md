@@ -63,7 +63,7 @@ Please `Star` this repository if you find it valuable and worth maintaining.
 
 ## Quick start
 
-Create a file in your project `build/build.go`. Copy and paste the content from below.
+Create a file in your project `build/build.go`. Copy and paste the content:
 
 ```go
 package main
@@ -105,6 +105,12 @@ func taskFmt() goyek.Task {
 		Command: goyek.Exec("go", "fmt", "./..."),
 	}
 }
+```
+
+Run:
+
+```shell
+go mod tidy
 ```
 
 Sample usage:
