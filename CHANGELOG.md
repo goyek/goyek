@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.0](https://github.com/goyek/goyek/compare/v0.2.0...v0.3.0) - 2021-05-03
 
-The repository has migrated to <https://github.com/goyek/goyek>.
+The repository has been migrated from <https://github.com/pellared/taskflow>
+to <https://github.com/goyek/goyek>.
 
 This release contains multiple breaking changes for both the CLI and the Go API.
 
@@ -27,7 +28,7 @@ Moreover, the parameters are set via CLI using the flag syntax.
 
 ### Changed
 
-- Module path changed to `github.com/goyek/goyek`.
+- Module path changed from `github.com/pellared/taskflow` to `github.com/goyek/goyek`.
 - Rename package `task` to `goyek`.
 - Use the flag syntax for setting parameters via CLI.
 - Rename `Task.Description` field to `Usage`.
@@ -36,9 +37,12 @@ Moreover, the parameters are set via CLI using the flag syntax.
 - Rename `Taskflow.MustRegister` method to `Register` and remove previous `Taskflow.Register` implementation.
 - Remove `Taskflow.Params` field and `TF.Params` method, add `Taskflow.Register*Param` methods and `Task.Params` field instead.
 - Remove `TF.Verbose`, add `Taskflow.VerboseParam` instead.
-- Remove `New` function, create instance using `&Taskflow{}` instead.
 - Unexport `Runner` type, use `Taskflow` in tests instead.
 - Enforce patterns for task names (`TaskNamePattern`) and parameter names (`ParamNamePattern`).
+
+### Removed
+
+- Remove `New` function, create instance using `&Taskflow{}` instead.
 - Drop official support for Go 1.10.
 
 ## [0.2.0](https://github.com/goyek/goyek/compare/v0.1.1...v0.2.0) - 2021-03-14
