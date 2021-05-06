@@ -44,22 +44,26 @@ As opposed to many other tools, it is just a Go library.
 Here are some good parts:
 
 - No binary installation is needed. Simply add it to `go.mod` like any other Go module.
-- Low learning curve, thanks to the minimal API surface, documentation, and examples.
-- Reuse code like in any Go application. It may be helpful to use packages like:
-  - [`github.com/bitfield/script`](https://github.com/bitfield/script)
+  - You can be sure that everyone uses the same version of **goyek**.
+- It has low learning curve, thanks to the minimal API surface, documentation, and examples.
+- One can reuse code like in any Go application. It may be helpful to use packages like:
+  - [`github.com/bitfield/script`](https://pkg.go.dev/github.com/bitfield/script)
+  - [`github.com/rjeczalik/notify`](https://pkg.go.dev/github.com/rjeczalik/notify)
   - [`github.com/magefile/mage/target`](https://pkg.go.dev/github.com/magefile/mage/target)
-- Easy to debug. Like a regular Go application.
+- It is easy to debug, like a regular Go application.
 - The API is based on [testing](https://golang.org/pkg/testing).
-  Task implementations look like unit tests. It is even possible to use [testify](https://github.com/stretchr/testify) for asserting.
-- Tasks and helpers can be tested. See [exec_test.go](exec_test.go).
+  The task's command look like a unit test.
+  It is even possible to use [testify](https://github.com/stretchr/testify) for asserting.
+- Tasks and helpers can be easily tested. See [exec_test.go](exec_test.go).
 
-**goyek** API is mainly inspired by the [testing](https://golang.org/pkg/testing), [http](https://golang.org/pkg/http) and [flag](https://golang.org/pkg/flag) packages.
+**goyek** API is mainly inspired by the [http](https://golang.org/pkg/http),
+[testing](https://golang.org/pkg/testing), and [flag](https://golang.org/pkg/flag) packages.
 
 Please `Star` this repository if you find it valuable and worth maintaining.
 
 ## Quick start
 
-Create a file in your project `build/build.go`. Copy and paste the content from below.
+Copy and paste the following code into `build/build.go`:
 
 ```go
 package main
@@ -101,6 +105,12 @@ func taskFmt() goyek.Task {
 		Command: goyek.Exec("go", "fmt", "./..."),
 	}
 }
+```
+
+Run:
+
+```shell
+go mod tidy
 ```
 
 Sample usage:
@@ -248,50 +258,55 @@ While [Make](https://www.gnu.org/software/make/) is currently the _de facto_ sta
 - It is hard to develop a Makefile which is truly cross-platform.
 - Debugging and testing Make targets is not fun.
 
-However, if you (and your team) know Make and are happy with it, do not change it.
-
-Make is very powerful and a lot of stuff can be made a lot faster, if you know how to use it.
+However, if you know Make and are happy with it, do not change it.
+Make is very powerful and a lot of stuff can be made faster, if you know how to use it.
 
 **goyek** is intended to be simpler and easier to learn, while still being able to handle most use cases.
 
 ### Mage
 
-**goyek** is intended to be an alternative implementation of [Mage](https://github.com/magefile/mage).
+[Mage](https://github.com/magefile/mage) is a framework/tool which magically discovers
+the [targets](https://magefile.org/targets/) from [magefiles](https://magefile.org/magefiles/),
+which results in some drawbacks:
 
-[Mage](https://github.com/magefile/mage) is a framework/tool which magically discovers the [targets](https://magefile.org/targets/) from [magefiles](https://magefile.org/magefiles/).
+- Requires using [build tags](https://magefile.org/magefiles/).
+- Reusing tasks is [hacky](https://magefile.org/importing/).
+- Requires installation or using [zero install option](https://magefile.org/zeroinstall/) which is slow.
+- Debugging would be extermly complex.
+- Magical by design (of course one may like it).
 
-**goyek** takes a different approach as it is a regular Go library.
-
-This results in following benefits:
-
-- It is easier to debug.
-- Reusing tasks is easier and more readable. Just create a function which registers common tasks.
-  Mage does it in a [hacky way](https://magefile.org/importing/).
-- Error reporting API is based on [testing](https://golang.org/pkg/testing) package
-  so it is possible to use e.g. [testify](https://github.com/stretchr/testify) for asserting.
-
-To sum up, **goyek** is not magical. Write regular Go code. No build tags or special names for functions.
+**goyek** is intended to be a non-magical alternative for [Mage](https://github.com/magefile/mage).
+Write regular Go code. No build tags, special names for functions, tricky imports.
 
 ### Task
 
-While [Task](https://taskfile.dev/) is simpler and easier to use than [Make](https://www.gnu.org/software/make/) it still has some problems:
+While [Task](https://taskfile.dev/) is simpler and easier to use
+than [Make](https://www.gnu.org/software/make/) it still has similar problems:
 
-- Requires to learn Task's YAML structure and the [minimalistic, cross-platform interpreter](https://github.com/mvdan/sh#gosh) which it uses.
+- Requires to learn Task's YAML structure and
+  the [minimalistic, cross-platform interpreter](https://github.com/mvdan/sh#gosh) which it uses.
 - Debugging and testing tasks is not fun.
-- Harder to make some reusable tasks.
-- Requires to "install" the tool. **goyek** leverages `go run` and Go Modules so that you can be sure that everyone uses the same version of **goyek**.
+- Hard to make reusable tasks.
+- Requires to "install" the tool.
 
 ### Bazel
 
-[Bazel](https://bazel.build/) is a very sophisticated tool which is [created to efficiently handle complex and long-running build pipelines](https://en.wikipedia.org/wiki/Bazel_(software)#Rationale). It requires the build target inputs and outputs to be fully specified.
+[Bazel](https://bazel.build/) is a very sophisticated tool which is
+[created to efficiently handle complex and long-running build pipelines](https://en.wikipedia.org/wiki/Bazel_(software)#Rationale).
+It requires the build target inputs and outputs to be fully specified.
 
-**goyek** is just a simple library that is mainly supposed to create a build pipeline consisting of commands like `go vet`, `go test`, `go build`. However, take notice that **goyek** is a library. Nothing prevents you from, for example, using [Mage's target package](https://pkg.go.dev/github.com/magefile/mage/target) to make your build pipeline more efficient.
+**goyek** is just a simple library that is mainly supposed to create a build pipeline
+consisting of commands like `go vet`, `go test`, `go build`.
+However, take notice that **goyek** is a library. Nothing prevents you from,
+for example, using [Mage's target package](https://pkg.go.dev/github.com/magefile/mage/target)
+to make your build pipeline more efficient.
 
 ## Presentations
 
 | Date       | Presentation                                                                            | Description                |
 | ---------- | --------------------------------------------------------------------------------------- | -------------------------- |
-| 2021-03-10 | [taskflow - Create build pipelines in Go](https://github.com/pellared/taskflow-example) | **taskflow** v0.1.1 demo |
+| 2021-05-05 | [goyek - Create build pipelines in Go](https://github.com/pellared/goyek-demo)          | **goyek** v0.3.0 demo      |
+| 2021-03-10 | [taskflow - Create build pipelines in Go](https://github.com/pellared/taskflow-example) | **taskflow** v0.1.1 demo   |
 | 2020-12-14 | [Build pipeline for a Go project](https://github.com/pellared/go-build-pipeline-demo)   | build pipeline using [Make](https://www.gnu.org/software/make/), [Mage](https://github.com/magefile/mage), and **taskflow** v0.1.0 |
 
 Note: **goyek** was named **taskflow** before v0.3.0.

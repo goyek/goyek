@@ -14,7 +14,7 @@ type Task struct {
 	Usage string
 
 	// Command executes the task in the given taskflow context.
-	// Tasks can be registered without a command and can act as "collector" tasks
+	// A task can be registered without a command and can act as a "collector" task
 	// for a list of dependencies.
 	Command func(tf *TF)
 
