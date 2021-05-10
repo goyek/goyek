@@ -108,13 +108,13 @@ func taskModTidy() goyek.Task {
 		Usage: "go mod tidy",
 		Command: func(tf *goyek.TF) {
 			if err := tf.Cmd("go", "mod", "tidy").Run(); err != nil {
-				tf.Fatalf("go mod tidy: %v", err)
+				tf.Errorf("go mod tidy: %v", err)
 			}
 
 			toolsModTidy := tf.Cmd("go", "mod", "tidy")
 			toolsModTidy.Dir = toolsDir
 			if err := toolsModTidy.Run(); err != nil {
-				tf.Fatalf("go mod tidy: %v", err)
+				tf.Errorf("go mod tidy: %v", err)
 			}
 		},
 	}
