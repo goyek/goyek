@@ -69,7 +69,7 @@ func taskFmt() goyek.Task {
 			installFmt := tf.Cmd("go", "install", "mvdan.cc/gofumpt/gofumports")
 			installFmt.Dir = toolsDir
 			if err := installFmt.Run(); err != nil {
-				tf.Errorf("go install gofumports: %v", err)
+				tf.Fatalf("go install gofumports: %v", err)
 			}
 			tf.Cmd("gofumports", strings.Split("-l -w -local github.com/goyek/goyek .", " ")...).Run() //nolint // it is OK if it returns error
 		},
@@ -84,11 +84,11 @@ func taskLint() goyek.Task {
 			installLint := tf.Cmd("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
 			installLint.Dir = toolsDir
 			if err := installLint.Run(); err != nil {
-				tf.Errorf("go install golangci-lint: %v", err)
+				tf.Fatalf("go install golangci-lint: %v", err)
 			}
 			lint := tf.Cmd("golangci-lint", "run")
 			if err := lint.Run(); err != nil {
-				tf.Errorf("golangci-lint run: %v", err)
+				tf.Fatalf("golangci-lint run: %v", err)
 			}
 		},
 	}
