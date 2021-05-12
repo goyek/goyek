@@ -1,15 +1,26 @@
 package main
 
 import (
+	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/goyek/goyek"
 )
 
 func main() {
+	if err := os.Chdir(".."); err != nil {
+		fmt.Println(err)
+		os.Exit(goyek.CodeInvalidArgs)
+	}
+	flow().Main()
+}
+
+func flow() *goyek.Taskflow {
 	flow := &goyek.Taskflow{}
 
+	// parameters
 	ci := flow.RegisterBoolParam(goyek.BoolParam{
 		Name:  "ci",
 		Usage: "Whether CI is calling the build script",
@@ -25,22 +36,18 @@ func main() {
 	diff := flow.Register(taskDiff(ci))
 
 	// pipeline
-	all := flow.Register(goyek.Task{
-		Name:  "all",
-		Usage: "build pipeline",
-		Deps: goyek.Deps{
-			clean,
-			build,
-			fmt,
-			lint,
-			test,
-			modTidy,
-			diff,
-		},
-	})
-
+	all := flow.Register(taskAll(goyek.Deps{
+		clean,
+		build,
+		fmt,
+		lint,
+		test,
+		modTidy,
+		diff,
+	}))
 	flow.DefaultTask = all
-	flow.Main()
+
+	return flow
 }
 
 const toolsDir = "tools"
@@ -144,5 +151,13 @@ func taskDiff(ci goyek.RegisteredBoolParam) goyek.Task {
 				tf.Error("git status --porcelain returned output")
 			}
 		},
+	}
+}
+
+func taskAll(deps goyek.Deps) goyek.Task {
+	return goyek.Task{
+		Name:  "all",
+		Usage: "build pipeline",
+		Deps:  deps,
 	}
 }
