@@ -63,7 +63,7 @@ Please `Star` this repository if you find it valuable and worth maintaining.
 
 ## Quick start
 
-Copy and paste the following code into `build/build.go`:
+Copy and paste the following code into [`build/build.go`](examples/basic/main.go):
 
 ```go
 package main
@@ -103,13 +103,32 @@ go mod tidy
 
 Add following wrapper scripts to your repository's root directory:
 
-- [goyek.ps1](goyek.ps1)
-- [goyek.sh](goyek.sh) - make sure to add `+x` permission: `git update-index --chmod=+x goyek.sh`
+- [`goyek.sh`](goyek.sh) - make sure to add `+x` permission: `git update-index --chmod=+x goyek.sh`:
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+cd "$DIR/build"
+go run . $@
+```
+
+- [`goyek.ps1`](goyek.ps1):
+
+```powershell
+$ErrorActionPreference = "Stop"
+
+Push-Location "$PSScriptRoot\build"
+& go run . $args
+Pop-Location
+exit $global:LASTEXITCODE
+```
 
 Sample usage:
 
 ```shell
-$ ./build.sh -h
+$ ./goyek.sh -h
 Usage: [flag(s) | task(s)]...
 Flags:
   -v    Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
@@ -118,12 +137,12 @@ Tasks:
 ```
 
 ```shell
-$ ./build.sh hello
+$ ./goyek.sh hello
 ok     0.000s
 ```
 
 ```shell
-$ ./build.sh all -v
+$ ./goyek.sh all -v
 ===== TASK  hello
 Hello world!
 ----- PASS: hello (0.00s)
@@ -200,7 +219,7 @@ On the CLI, flags can be set in the following ways:
 - `-param="value with blanks"`
 - `-param` - setting boolean parameters implicitly to `true`
 
-For example, `./build.sh test -v -pkg ./...` would run the `test` task
+For example, `./goyek.sh test -v -pkg ./...` would run the `test` task
 with `v` bool parameter (verbose mode) set to `true`,
 and `pkg` string parameter set to `"./..."`.
 

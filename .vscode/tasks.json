@@ -6,7 +6,7 @@
         {
             "label": "all",
             "type": "shell",
-            "command": "./build.sh",
+            "command": "./goyek.sh",
             "problemMatcher": [
                 "$go"
             ],
