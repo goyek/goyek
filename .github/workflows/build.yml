@@ -20,7 +20,7 @@ jobs:
         with:
           go-version: '1.16'
       - name: Build
-        run: go run ./build -v all -ci
+        run: ./build.sh -v -ci
       - name: Upload HTML coverage
         uses: actions/upload-artifact@v2
         with:

@@ -68,42 +68,30 @@ Copy and paste the following code into `build/build.go`:
 ```go
 package main
 
-import "github.com/goyek/goyek"
+import (
+	"fmt"
+	"os"
+
+	"github.com/goyek/goyek"
+)
 
 func main() {
+	if err := os.Chdir(".."); err != nil {
+		fmt.Println(err)
+		os.Exit(goyek.CodeInvalidArgs)
+	}
+
 	flow := &goyek.Taskflow{}
 
-	hello := flow.Register(taskHello())
-	fmt := flow.Register(taskFmt())
-
 	flow.Register(goyek.Task{
-		Name:  "all",
-		Usage: "build pipeline",
-		Deps: goyek.Deps{
-			hello,
-			fmt,
-		},
-	})
-
-	flow.Main()
-}
-
-func taskHello() goyek.Task {
-	return goyek.Task{
 		Name:  "hello",
 		Usage: "demonstration",
 		Command: func(tf *goyek.TF) {
 			tf.Log("Hello world!")
 		},
-	}
-}
+	})
 
-func taskFmt() goyek.Task {
-	return goyek.Task{
-		Name:    "fmt",
-		Usage:   "go fmt",
-		Command: goyek.Exec("go", "fmt", "./..."),
-	}
+	flow.Main()
 }
 ```
 
@@ -113,46 +101,40 @@ Run:
 go mod tidy
 ```
 
+Add following wrapper scripts to your repository's root directory:
+
+- [goyek.ps1](goyek.ps1)
+- [goyek.sh](goyek.sh) - make sure to add `+x` permission: `git update-index --chmod=+x goyek.sh`
+
 Sample usage:
 
 ```shell
-$ go run ./build -h
+$ ./build.sh -h
 Usage: [flag(s) | task(s)]...
 Flags:
   -v    Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
 Tasks:
-  all      build pipeline
-  fmt      go fmt
   hello    demonstration
 ```
 
 ```shell
-$ go run ./build all
-ok     0.167s
+$ ./build.sh hello
+ok     0.000s
 ```
 
 ```shell
-$ go run ./build all -v
+$ ./build.sh all -v
 ===== TASK  hello
 Hello world!
 ----- PASS: hello (0.00s)
-===== TASK  fmt
-Cmd: go fmt ./...
------ PASS: fmt (0.18s)
-ok      0.183s
-```
-
-Tired of writing `go run ./build` each time? Just add an alias to your shell.
-For example, add the line below to `~/.bash_aliases`:
-
-```shell
-alias goyek='go run ./build'
+ok      0.001s
 ```
 
 ## Examples
 
 - [examples](examples)
 - [build/build.go](build/build.go) - this repository's own build pipeline
+- [pellared/fluentassert](https://github.com/pellared/fluentassert) - a library using **goyek** without adding it's root `go.mod` file
 
 ## Features
 
@@ -218,7 +200,7 @@ On the CLI, flags can be set in the following ways:
 - `-param="value with blanks"`
 - `-param` - setting boolean parameters implicitly to `true`
 
-For example, `go run ./build test -v -pkg ./...` would run the `test` task
+For example, `./build.sh test -v -pkg ./...` would run the `test` task
 with `v` bool parameter (verbose mode) set to `true`,
 and `pkg` string parameter set to `"./..."`.
 
