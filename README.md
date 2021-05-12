@@ -132,7 +132,7 @@ ok      0.001s
 
 - [examples](examples)
 - [build/build.go](build/build.go) - this repository's own build pipeline
-- [pellared/fluentassert](https://github.com/pellared/fluentassert) - a library using **goyek** without polluting it's root `go.mod` file
+- [pellared/fluentassert](https://github.com/pellared/fluentassert) - a library using **goyek** without polluting it's root `go.mod`
 
 ## Wrapper scripts
 
