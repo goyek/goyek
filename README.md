@@ -19,6 +19,7 @@ Table of Contents:
   - [Description](#description)
   - [Quick start](#quick-start)
   - [Examples](#examples)
+  - [Wrapper scripts](#wrapper-scripts)
   - [Features](#features)
     - [Task registration](#task-registration)
     - [Task command](#task-command)
@@ -98,12 +99,48 @@ func main() {
 Run:
 
 ```shell
+cd build
 go mod tidy
 ```
 
-Add following wrapper scripts to your repository's root directory:
+Sample usage:
 
-- [`goyek.sh`](goyek.sh) - make sure to add `+x` permission: `git update-index --chmod=+x goyek.sh`:
+```shell
+$ go run . -h
+Usage: [flag(s) | task(s)]...
+Flags:
+  -v    Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
+Tasks:
+  hello    demonstration
+```
+
+```shell
+$ go run . hello
+ok     0.000s
+```
+
+```shell
+$ go run . all -v
+===== TASK  hello
+Hello world!
+----- PASS: hello (0.00s)
+ok      0.001s
+```
+
+## Examples
+
+- [examples](examples)
+- [build/build.go](build/build.go) - this repository's own build pipeline
+- [pellared/fluentassert](https://github.com/pellared/fluentassert) - a library using **goyek** without adding it's root `go.mod` file
+
+## Wrapper scripts
+
+Instead of going into `build` directory and executing `go run .`,
+we highly recommened using wrapper scripts.
+
+Simply add them to your repository's root directory:
+
+- [`goyek.sh`](goyek.sh) - make sure to add `+x` permission (`git update-index --chmod=+x goyek.sh`):
 
 ```bash
 #!/bin/bash
@@ -124,36 +161,6 @@ Push-Location "$PSScriptRoot\build"
 Pop-Location
 exit $global:LASTEXITCODE
 ```
-
-Sample usage:
-
-```shell
-$ ./goyek.sh -h
-Usage: [flag(s) | task(s)]...
-Flags:
-  -v    Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
-Tasks:
-  hello    demonstration
-```
-
-```shell
-$ ./goyek.sh hello
-ok     0.000s
-```
-
-```shell
-$ ./goyek.sh all -v
-===== TASK  hello
-Hello world!
------ PASS: hello (0.00s)
-ok      0.001s
-```
-
-## Examples
-
-- [examples](examples)
-- [build/build.go](build/build.go) - this repository's own build pipeline
-- [pellared/fluentassert](https://github.com/pellared/fluentassert) - a library using **goyek** without adding it's root `go.mod` file
 
 ## Features
 
