@@ -39,7 +39,8 @@ Table of Contents:
 
 ## Description
 
-**goyek** is used to create build pipelines in Go.
+**goyek** (/ˈɡɔɪæk/ [🔊 listen](http://ipa-reader.xyz/?text=%CB%88%C9%A1%C9%94%C9%AA%C3%A6k))
+is used to create build pipelines in Go.
 As opposed to many other tools, it is just a Go library.
 
 Here are some good parts:
