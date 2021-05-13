@@ -110,7 +110,8 @@ Sample usage:
 $ go run . -h
 Usage: [flag(s) | task(s)]...
 Flags:
-  -v    Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
+  -v     Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
+  -wd    Default: .        Working directory: sets the working directory.
 Tasks:
   hello    demonstration
 ```

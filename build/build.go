@@ -1,19 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/goyek/goyek"
 )
 
 func main() {
-	if err := os.Chdir(".."); err != nil {
-		fmt.Println(err)
-		os.Exit(goyek.CodeInvalidArgs)
-	}
 	flow().Main()
 }
 

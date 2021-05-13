@@ -10,17 +10,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/goyek/goyek"
 )
 
 func main() {
-	if err := os.Chdir(".."); err != nil {
-		fmt.Println(err)
-		os.Exit(goyek.CodeInvalidArgs)
-	}
-
 	flow := &goyek.Taskflow{}
 
 	sharedParam := flow.RegisterStringParam(goyek.StringParam{
