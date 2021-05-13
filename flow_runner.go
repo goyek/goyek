@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -17,6 +18,7 @@ type flowRunner struct {
 	paramValues map[string]ParamValue
 	tasks       map[string]Task
 	verbose     RegisteredBoolParam
+	workDir     RegisteredStringParam
 	defaultTask RegisteredTask
 }
 
@@ -97,6 +99,24 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int { //nolint // T
 		fmt.Fprintln(f.output, "no task provided")
 		printUsage(f)
 		return CodeInvalidArgs
+	}
+
+	oldWd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	if wdParamVal, ok := f.paramValues[f.workDir.Name()]; ok {
+		wd := wdParamVal.Get().(string) //nolint // it is always a string
+		if err := os.Chdir(wd); err != nil {
+			fmt.Fprintf(f.output, "cannot set working directory: %v\n", err)
+			return CodeInvalidArgs
+		}
+		defer func() {
+			if err := os.Chdir(oldWd); err != nil {
+				panic(err)
+			}
+		}()
 	}
 
 	return f.runTasks(ctx, tasks)
@@ -205,6 +225,7 @@ func (f *flowRunner) unusedParams() []string {
 		remainingParams[key] = struct{}{}
 	}
 	delete(remainingParams, f.verbose.Name())
+	delete(remainingParams, f.workDir.Name())
 	for _, task := range f.tasks {
 		for _, param := range task.Params {
 			delete(remainingParams, param.Name())

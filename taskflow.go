@@ -28,7 +28,8 @@ type Taskflow struct {
 
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
 
-	verbose *RegisteredBoolParam // when enabled, then the whole output will be always streamed
+	verbose *RegisteredBoolParam   // when enabled, then the whole output will be always streamed
+	workDir *RegisteredStringParam // sets the working directory
 	params  map[string]registeredParam
 	tasks   map[string]Task
 }
@@ -50,6 +51,20 @@ func (f *Taskflow) VerboseParam() RegisteredBoolParam {
 	}
 
 	return *f.verbose
+}
+
+// WorkDirParam returns the out-of-the-box working directory parameter which controls the working directory.
+func (f *Taskflow) WorkDirParam() RegisteredStringParam {
+	if f.workDir == nil {
+		param := f.RegisterStringParam(StringParam{
+			Name:    "wd",
+			Usage:   "Working directory: sets the working directory.",
+			Default: ".",
+		})
+		f.workDir = &param
+	}
+
+	return *f.workDir
 }
 
 // RegisterValueParam registers a generic parameter that is defined by the calling code.
@@ -168,6 +183,7 @@ func (f *Taskflow) Run(ctx context.Context, args ...string) int {
 		params:      f.params,
 		tasks:       f.tasks,
 		verbose:     f.VerboseParam(),
+		workDir:     f.WorkDirParam(),
 		defaultTask: f.DefaultTask,
 	}
 

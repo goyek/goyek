@@ -524,3 +524,24 @@ func Test_wd_param(t *testing.T) {
 	assertEqual(t, got, dir, "should have changed the working directory in taskflow")
 	assertEqual(t, afterDir, beforeDir, "should change back the working directory after taskflow")
 }
+
+func Test_wd_param_invalid(t *testing.T) {
+	flow := &goyek.Taskflow{}
+	beforeDir, err := os.Getwd()
+	requireEqual(t, err, nil, "should get work dir before the taskflow")
+	taskRan := false
+	flow.Register(goyek.Task{
+		Name: "task",
+		Command: func(tf *goyek.TF) {
+			taskRan = true
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "task", "-wd=strange-dir")
+	afterDir, err := os.Getwd()
+	requireEqual(t, err, nil, "should get work dir after the taskflow")
+
+	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should not proceed")
+	assertEqual(t, taskRan, false, "should not run the task")
+	assertEqual(t, afterDir, beforeDir, "should change back the working directory after taskflow")
+}
