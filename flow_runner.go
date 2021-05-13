@@ -13,7 +13,7 @@ import (
 
 type flowRunner struct {
 	output      io.Writer
-	params      map[string]paramValueFactory
+	params      map[string]registeredParam
 	paramValues map[string]ParamValue
 	tasks       map[string]Task
 	verbose     RegisteredBoolParam
