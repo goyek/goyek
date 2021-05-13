@@ -137,7 +137,7 @@ ok      0.001s
 ## Wrapper scripts
 
 Instead of going into `build` directory and executing `go run .`,
-we highly recommened using wrapper scripts.
+we highly recommend using wrapper scripts.
 
 Simply add them to your repository's root directory:
 
@@ -229,6 +229,8 @@ func Exec(cmdLine string) func(tf *goyek.TF) {
 	}
 }
 ```
+
+[Here](https://github.com/goyek/goyek/issues/60) is the explantion why argument splitting is not included out-of-the-box.
 
 ### Verbose mode
 
