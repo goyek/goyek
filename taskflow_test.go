@@ -508,7 +508,8 @@ func Test_wd_param(t *testing.T) {
 	flow := &goyek.Taskflow{}
 	beforeDir, err := os.Getwd()
 	requireEqual(t, err, nil, "should get work dir before the taskflow")
-	dir := tempDir(t)
+	dir, cleanup := tempDir(t)
+	defer cleanup()
 	var got string
 	flow.Register(goyek.Task{
 		Name: "task",
@@ -549,14 +550,14 @@ func Test_wd_param_invalid(t *testing.T) {
 	assertEqual(t, afterDir, beforeDir, "should change back the working directory after taskflow")
 }
 
-func tempDir(t *testing.T) string {
+func tempDir(t *testing.T) (string, func()) {
 	t.Helper()
 	dir := filepath.Join(os.TempDir(), t.Name()+strconv.Itoa(rand.Int())) //nolint:gosec // I can use weak random generator in tests
 	err := os.Mkdir(dir, 0700)
 	requireEqual(t, err, nil, "failed to create a temp directory")
-	t.Cleanup(func() {
+	cleanup := func() {
 		err := os.RemoveAll(dir)
 		assertEqual(t, err, nil, "should remove temp dir after test")
-	})
-	return dir
+	}
+	return dir, cleanup
 }
