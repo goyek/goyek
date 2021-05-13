@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -498,4 +499,28 @@ func Test_defaultTask(t *testing.T) {
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertTrue(t, taskRan, "task should have run")
+}
+
+func Test_wd_param(t *testing.T) {
+	flow := &goyek.Taskflow{}
+	beforeDir, err := os.Getwd()
+	requireEqual(t, err, nil, "should get work dir before the taskflow")
+	dir := t.TempDir()
+	var got string
+	flow.Register(goyek.Task{
+		Name: "task",
+		Command: func(tf *goyek.TF) {
+			var osErr error
+			got, osErr = os.Getwd()
+			requireEqual(t, osErr, nil, "should get work dir from task")
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "task", "-wd", dir)
+	afterDir, err := os.Getwd()
+	requireEqual(t, err, nil, "should get work dir after the taskflow")
+
+	assertEqual(t, exitCode, 0, "should pass")
+	assertEqual(t, got, dir, "should have changed the working directory in taskflow")
+	assertEqual(t, afterDir, beforeDir, "should change back the working directory after taskflow")
 }
