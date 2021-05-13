@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -548,7 +551,8 @@ func Test_wd_param_invalid(t *testing.T) {
 
 func tempDir(t *testing.T) string {
 	t.Helper()
-	dir, err := os.MkdirTemp("", "")
+	dir := filepath.Join(os.TempDir(), t.Name()+strconv.Itoa(rand.Int())) //nolint:gosec // I can use weak random generator in tests
+	err := os.Mkdir(dir, 0700)
 	requireEqual(t, err, nil, "failed to create a temp directory")
 	t.Cleanup(func() {
 		err := os.RemoveAll(dir)
