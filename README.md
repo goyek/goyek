@@ -137,7 +137,7 @@ ok      0.001s
 ## Wrapper scripts
 
 Instead of going into `build` directory and executing `go run .`,
-we highly recommened using wrapper scripts.
+we highly recommend using wrapper scripts.
 
 Simply add them to your repository's root directory:
 
@@ -195,11 +195,42 @@ Take note that each task will be executed at most once.
 
 ### Helpers for running programs
 
-Use [`func Exec(name string, args ...string) func(*TF)`](https://pkg.go.dev/github.com/goyek/goyek#Exec)
-to create a task's command which only runs a single program.
-
 Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.dev/github.com/goyek/goyek#TF.Cmd)
-if within a task's command function when you want to execute more programs or you need more granular control.
+to run a program inside a task's command.
+
+You can use it create your own helpers, for example:
+
+```go
+import (
+	"fmt"
+	"os/exec"
+
+	"github.com/goyek/goyek"
+	"github.com/mattn/go-shellwords"
+)
+
+func Cmd(tf *goyek.TF, cmdLine string) *exec.Cmd {
+	args, err := shellwords.Parse(cmdLine)
+	if err != nil {
+		tf.Fatalf("parse command line: %v", err)
+	}
+	return tf.Cmd(args[0], args[1:]...)
+}
+
+func Exec(cmdLine string) func(tf *goyek.TF) {
+	args, err := shellwords.Parse(cmdLine)
+	if err != nil {
+		panic(fmt.Sprintf("parse command line: %v", err))
+	}
+	return func(tf *goyek.TF) {
+		if err := tf.Cmd(args[0], args[1:]...).Run(); err != nil {
+			tf.Fatal(err)
+		}
+	}
+}
+```
+
+[Here](https://github.com/goyek/goyek/issues/60) is the explantion why argument splitting is not included out-of-the-box.
 
 ### Verbose mode
 
