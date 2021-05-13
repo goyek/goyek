@@ -101,11 +101,11 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int { //nolint // T
 		return CodeInvalidArgs
 	}
 
+	// set working directory using global parameter
 	oldWd, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
-
 	if wdParamVal, ok := f.paramValues[f.workDir.Name()]; ok {
 		wd := wdParamVal.Get().(string) //nolint // it is always a string
 		if err := os.Chdir(wd); err != nil {
