@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/goyek/goyek"
 )
@@ -552,7 +552,8 @@ func Test_wd_param_invalid(t *testing.T) {
 
 func tempDir(t *testing.T) (string, func()) {
 	t.Helper()
-	dir := filepath.Join(os.TempDir(), t.Name()+strconv.Itoa(rand.Int())) //nolint:gosec // I can use weak random generator in tests
+	dirName := t.Name() + "-" + strconv.FormatInt(time.Now().UnixNano(), 36)
+	dir := filepath.Join(os.TempDir(), dirName)
 	err := os.Mkdir(dir, 0700)
 	requireEqual(t, err, nil, "failed to create a temp directory")
 	cleanup := func() {
