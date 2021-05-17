@@ -45,7 +45,7 @@ func (f *Taskflow) VerboseParam() RegisteredBoolParam {
 	if f.verbose == nil {
 		param := f.RegisterBoolParam(BoolParam{
 			Name:  "v",
-			Usage: "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.",
+			Usage: "Verbose: log all tasks as they are run.",
 		})
 		f.verbose = &param
 	}
@@ -58,7 +58,7 @@ func (f *Taskflow) WorkDirParam() RegisteredStringParam {
 	if f.workDir == nil {
 		param := f.RegisterStringParam(StringParam{
 			Name:    "wd",
-			Usage:   "Working directory: sets the working directory.",
+			Usage:   "Working directory: set the working directory.",
 			Default: ".",
 		})
 		f.workDir = &param
