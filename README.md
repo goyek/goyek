@@ -131,8 +131,9 @@ ok      0.001s
 
 ## Wrapper scripts
 
-Instead of going into `build` directory and executing `go run .`,
-we highly recommend using wrapper scripts.
+Instead of executing `go run ./build`,
+we highly recommend using wrapper scripts,
+which can be used from any location.
 
 Simply add them to your repository's root directory:
 
