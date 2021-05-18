@@ -153,7 +153,7 @@ set -euo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 cd "$DIR/build"
-go run . $@
+go run . -wd=".." $@
 ```
 
 - [`goyek.ps1`](goyek.ps1):
@@ -162,7 +162,7 @@ go run . $@
 $ErrorActionPreference = "Stop"
 
 Push-Location "$PSScriptRoot\build"
-& go run . $args
+& go run . -wd=".." $args
 Pop-Location
 exit $global:LASTEXITCODE
 ```
