@@ -81,11 +81,6 @@ import (
 )
 
 func main() {
-	if err := os.Chdir(".."); err != nil {
-		fmt.Println(err)
-		os.Exit(goyek.CodeInvalidArgs)
-	}
-
 	flow := &goyek.Taskflow{}
 
 	flow.Register(goyek.Task{
