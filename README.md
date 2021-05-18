@@ -103,14 +103,13 @@ func main() {
 Run:
 
 ```shell
-cd build
 go mod tidy
 ```
 
 Sample usage:
 
 ```shell
-$ go run . -h
+$ go run ./build -h
 Usage: [flag(s) | task(s)]...
 Flags:
   -v     Default: false    Verbose: log all tasks as they are run.
@@ -125,7 +124,7 @@ ok     0.000s
 ```
 
 ```shell
-$ go run . all -v
+$ go run ./build all -v
 ===== TASK  hello
 Hello world!
 ----- PASS: hello (0.00s)
