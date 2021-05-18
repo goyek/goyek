@@ -5,12 +5,6 @@ import (
 	"strconv"
 )
 
-type paramValueFactory struct {
-	name     string
-	usage    string
-	newValue func() ParamValue
-}
-
 // BoolParam represents a named boolean parameter that can be registered.
 type BoolParam struct {
 	Name    string
@@ -63,17 +57,19 @@ type RegisteredParam interface {
 	value(tf *TF) ParamValue
 }
 
-// param is a helper struct for implementing concrete parameter types.
-type param struct {
-	name string
+// registeredParam is a helper struct encapsulating concrete registered parameter type.
+type registeredParam struct {
+	name     string
+	usage    string
+	newValue func() ParamValue
 }
 
 // Name returns the key of the parameter.
-func (p param) Name() string {
+func (p registeredParam) Name() string {
 	return p.name
 }
 
-func (p param) value(tf *TF) ParamValue {
+func (p registeredParam) value(tf *TF) ParamValue {
 	value, existing := tf.paramValues[p.name]
 	if !existing {
 		tf.Fatal(&ParamError{Key: p.name, Err: errors.New("parameter not registered")})
@@ -83,7 +79,7 @@ func (p param) value(tf *TF) ParamValue {
 
 // RegisteredValueParam represents a registered parameter based on a generic implementation.
 type RegisteredValueParam struct {
-	param
+	registeredParam
 }
 
 // Get returns the concrete instance of the generic value in the given flow.
@@ -114,7 +110,7 @@ func (value *boolValue) IsBool() bool { return true }
 
 // RegisteredBoolParam represents a registered boolean parameter.
 type RegisteredBoolParam struct {
-	param
+	registeredParam
 }
 
 // Get returns the boolean value of the parameter in the given flow.
@@ -142,7 +138,7 @@ func (value *intValue) IsBool() bool { return false }
 
 // RegisteredIntParam represents a registered integer parameter.
 type RegisteredIntParam struct {
-	param
+	registeredParam
 }
 
 // Get returns the integer value of the parameter in the given flow.
@@ -166,7 +162,7 @@ func (value *stringValue) IsBool() bool { return false }
 
 // RegisteredStringParam represents a registered string parameter.
 type RegisteredStringParam struct {
-	param
+	registeredParam
 }
 
 // Get returns the string value of the parameter in the given flow.

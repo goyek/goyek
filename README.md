@@ -13,6 +13,9 @@
 [![codecov](https://codecov.io/gh/goyek/goyek/branch/main/graph/badge.svg)](https://codecov.io/gh/goyek/goyek)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
+> :warning: The `main` branch contains **new features**.
+> Here is the [**README for the latest release**](https://github.com/goyek/goyek/blob/v0.3.0/README.md).
+
 Table of Contents:
 
 - [goyek](#goyek)
@@ -110,7 +113,8 @@ Sample usage:
 $ go run . -h
 Usage: [flag(s) | task(s)]...
 Flags:
-  -v    Default: false    Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.
+  -v     Default: false    Verbose: log all tasks as they are run.
+  -wd    Default: .        Working directory: set the working directory.
 Tasks:
   hello    demonstration
 ```

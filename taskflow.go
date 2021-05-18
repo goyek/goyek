@@ -28,8 +28,9 @@ type Taskflow struct {
 
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
 
-	verbose *RegisteredBoolParam // when enabled, then the whole output will be always streamed
-	params  map[string]paramValueFactory
+	verbose *RegisteredBoolParam   // when enabled, then the whole output will be always streamed
+	workDir *RegisteredStringParam // sets the working directory
+	params  map[string]registeredParam
 	tasks   map[string]Task
 }
 
@@ -44,12 +45,26 @@ func (f *Taskflow) VerboseParam() RegisteredBoolParam {
 	if f.verbose == nil {
 		param := f.RegisterBoolParam(BoolParam{
 			Name:  "v",
-			Usage: "Verbose output: log all tasks as they are run. Also print all text from Log and Logf calls even if the task succeeds.",
+			Usage: "Verbose: log all tasks as they are run.",
 		})
 		f.verbose = &param
 	}
 
 	return *f.verbose
+}
+
+// WorkDirParam returns the out-of-the-box working directory parameter which controls the working directory.
+func (f *Taskflow) WorkDirParam() RegisteredStringParam {
+	if f.workDir == nil {
+		param := f.RegisterStringParam(StringParam{
+			Name:    "wd",
+			Usage:   "Working directory: set the working directory.",
+			Default: ".",
+		})
+		f.workDir = &param
+	}
+
+	return *f.workDir
 }
 
 // RegisterValueParam registers a generic parameter that is defined by the calling code.
@@ -58,12 +73,13 @@ func (f *Taskflow) VerboseParam() RegisteredBoolParam {
 // The value is provided via a factory function since Taskflow could be executed multiple times,
 // requiring a new Value instance each time.
 func (f *Taskflow) RegisterValueParam(p ValueParam) RegisteredValueParam {
-	f.registerParam(paramValueFactory{
+	regParam := registeredParam{
 		name:     p.Name,
 		usage:    p.Usage,
 		newValue: p.NewValue,
-	})
-	return RegisteredValueParam{param{name: p.Name}}
+	}
+	f.registerParam(regParam)
+	return RegisteredValueParam{regParam}
 }
 
 // RegisterBoolParam registers a boolean parameter.
@@ -72,12 +88,12 @@ func (f *Taskflow) RegisterBoolParam(p BoolParam) RegisteredBoolParam {
 		value := boolValue(p.Default)
 		return &value
 	}
-	f.registerParam(paramValueFactory{
+	f.registerParam(registeredParam{
 		name:     p.Name,
 		usage:    p.Usage,
 		newValue: valGetter,
 	})
-	return RegisteredBoolParam{param{name: p.Name}}
+	return RegisteredBoolParam{registeredParam{name: p.Name}}
 }
 
 // RegisterIntParam registers an integer parameter.
@@ -86,12 +102,13 @@ func (f *Taskflow) RegisterIntParam(p IntParam) RegisteredIntParam {
 		value := intValue(p.Default)
 		return &value
 	}
-	f.registerParam(paramValueFactory{
+	regParam := registeredParam{
 		name:     p.Name,
 		usage:    p.Usage,
 		newValue: valGetter,
-	})
-	return RegisteredIntParam{param{name: p.Name}}
+	}
+	f.registerParam(regParam)
+	return RegisteredIntParam{regParam}
 }
 
 // RegisterStringParam registers a string parameter.
@@ -100,12 +117,13 @@ func (f *Taskflow) RegisterStringParam(p StringParam) RegisteredStringParam {
 		value := stringValue(p.Default)
 		return &value
 	}
-	f.registerParam(paramValueFactory{
+	regParam := registeredParam{
 		name:     p.Name,
 		usage:    p.Usage,
 		newValue: valGetter,
-	})
-	return RegisteredStringParam{param{name: p.Name}}
+	}
+	f.registerParam(regParam)
+	return RegisteredStringParam{regParam}
 }
 
 // ParamNamePattern describes the regular expression a parameter name must match.
@@ -113,7 +131,7 @@ const ParamNamePattern = "^[a-zA-Z0-9][a-zA-Z0-9_-]*$"
 
 var paramNameRegex = regexp.MustCompile(TaskNamePattern)
 
-func (f *Taskflow) registerParam(p paramValueFactory) {
+func (f *Taskflow) registerParam(p registeredParam) {
 	if !paramNameRegex.MatchString(p.name) {
 		panic("parameter name must match ParamNamePattern")
 	}
@@ -124,7 +142,7 @@ func (f *Taskflow) registerParam(p paramValueFactory) {
 		panic(fmt.Sprintf("%s parameter was already registered", p.name))
 	}
 	if f.params == nil {
-		f.params = make(map[string]paramValueFactory)
+		f.params = make(map[string]registeredParam)
 	}
 	f.params[p.name] = p
 }
@@ -165,6 +183,7 @@ func (f *Taskflow) Run(ctx context.Context, args ...string) int {
 		params:      f.params,
 		tasks:       f.tasks,
 		verbose:     f.VerboseParam(),
+		workDir:     f.WorkDirParam(),
 		defaultTask: f.DefaultTask,
 	}
 

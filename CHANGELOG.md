@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add Bash and PowerShell wrapper scripts.
+- Add `-wd` global parameter allowing to change the working directory.
+  The new `Taskflow.WorkDirParam` method can be used to get its value in a task's command.
 
 ## [0.3.0](https://github.com/goyek/goyek/compare/v0.2.0...v0.3.0) - 2021-05-03
 

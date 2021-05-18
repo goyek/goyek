@@ -5,8 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/goyek/goyek"
 )
@@ -498,4 +502,63 @@ func Test_defaultTask(t *testing.T) {
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertTrue(t, taskRan, "task should have run")
+}
+
+func Test_wd_param(t *testing.T) {
+	flow := &goyek.Taskflow{}
+	beforeDir, err := os.Getwd()
+	requireEqual(t, err, nil, "should get work dir before the taskflow")
+	dir, cleanup := tempDir(t)
+	defer cleanup()
+	var got string
+	flow.Register(goyek.Task{
+		Name: "task",
+		Command: func(tf *goyek.TF) {
+			var osErr error
+			got, osErr = os.Getwd()
+			requireEqual(t, osErr, nil, "should get work dir from task")
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "task", "-wd", dir)
+	afterDir, err := os.Getwd()
+	requireEqual(t, err, nil, "should get work dir after the taskflow")
+
+	assertEqual(t, exitCode, 0, "should pass")
+	assertEqual(t, got, dir, "should have changed the working directory in taskflow")
+	assertEqual(t, afterDir, beforeDir, "should change back the working directory after taskflow")
+}
+
+func Test_wd_param_invalid(t *testing.T) {
+	flow := &goyek.Taskflow{}
+	beforeDir, err := os.Getwd()
+	requireEqual(t, err, nil, "should get work dir before the taskflow")
+	taskRan := false
+	flow.Register(goyek.Task{
+		Name: "task",
+		Command: func(tf *goyek.TF) {
+			taskRan = true
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "task", "-wd=strange-dir")
+	afterDir, err := os.Getwd()
+	requireEqual(t, err, nil, "should get work dir after the taskflow")
+
+	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should not proceed")
+	assertEqual(t, taskRan, false, "should not run the task")
+	assertEqual(t, afterDir, beforeDir, "should change back the working directory after taskflow")
+}
+
+func tempDir(t *testing.T) (string, func()) {
+	t.Helper()
+	dirName := t.Name() + "-" + strconv.FormatInt(time.Now().UnixNano(), 36)
+	dir := filepath.Join(os.TempDir(), dirName)
+	err := os.Mkdir(dir, 0700)
+	requireEqual(t, err, nil, "failed to create a temp directory")
+	cleanup := func() {
+		err := os.RemoveAll(dir)
+		assertEqual(t, err, nil, "should remove temp dir after test")
+	}
+	return dir, cleanup
 }
