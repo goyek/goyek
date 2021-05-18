@@ -74,9 +74,6 @@ Copy and paste the following code into [`build/build.go`](examples/basic/main.go
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/goyek/goyek"
 )
 
