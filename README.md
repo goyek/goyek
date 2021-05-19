@@ -74,18 +74,10 @@ Copy and paste the following code into [`build/build.go`](examples/basic/main.go
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/goyek/goyek"
 )
 
 func main() {
-	if err := os.Chdir(".."); err != nil {
-		fmt.Println(err)
-		os.Exit(goyek.CodeInvalidArgs)
-	}
-
 	flow := &goyek.Taskflow{}
 
 	flow.Register(goyek.Task{
@@ -103,14 +95,13 @@ func main() {
 Run:
 
 ```shell
-cd build
 go mod tidy
 ```
 
 Sample usage:
 
 ```shell
-$ go run . -h
+$ go run ./build -h
 Usage: [flag(s) | task(s)]...
 Flags:
   -v     Default: false    Verbose: log all tasks as they are run.
@@ -125,7 +116,7 @@ ok     0.000s
 ```
 
 ```shell
-$ go run . all -v
+$ go run ./build all -v
 ===== TASK  hello
 Hello world!
 ----- PASS: hello (0.00s)
@@ -140,8 +131,9 @@ ok      0.001s
 
 ## Wrapper scripts
 
-Instead of going into `build` directory and executing `go run .`,
-we highly recommend using wrapper scripts.
+Instead of executing `go run ./build`,
+you can use use the wrapper scripts,
+which can be invoked from any location.
 
 Simply add them to your repository's root directory:
 
@@ -153,7 +145,7 @@ set -euo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 cd "$DIR/build"
-go run . $@
+go run . -wd=".." $@
 ```
 
 - [`goyek.ps1`](goyek.ps1):
@@ -162,7 +154,7 @@ go run . $@
 $ErrorActionPreference = "Stop"
 
 Push-Location "$PSScriptRoot\build"
-& go run . $args
+& go run . -wd=".." $args
 Pop-Location
 exit $global:LASTEXITCODE
 ```
