@@ -25,16 +25,19 @@ func flow() *goyek.Taskflow {
 	build := flow.Register(taskBuild())
 	fmt := flow.Register(taskFmt())
 	misspell := flow.Register(taskMisspell())
-	lint := flow.Register(taskLint())
+	golangciLint := flow.Register(taskGolangciLint())
 	test := flow.Register(taskTest())
 	modTidy := flow.Register(taskModTidy())
 	diff := flow.Register(taskDiff(ci))
 
-	// pipeline
+	// pipelines
+	lint := flow.Register(taskLint(goyek.Deps{
+		misspell,
+		golangciLint,
+	}))
 	all := flow.Register(taskAll(goyek.Deps{
 		clean,
 		build,
-		misspell,
 		fmt,
 		lint,
 		test,
@@ -97,9 +100,9 @@ func taskMisspell() goyek.Task {
 	}
 }
 
-func taskLint() goyek.Task {
+func taskGolangciLint() goyek.Task {
 	return goyek.Task{
-		Name:  "lint",
+		Name:  "golangci-lint",
 		Usage: "golangci-lint",
 		Command: func(tf *goyek.TF) {
 			installLint := tf.Cmd("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
@@ -165,6 +168,14 @@ func taskDiff(ci goyek.RegisteredBoolParam) goyek.Task {
 				tf.Error("git status --porcelain returned output")
 			}
 		},
+	}
+}
+
+func taskLint(deps goyek.Deps) goyek.Task {
+	return goyek.Task{
+		Name:  "lint",
+		Usage: "all linters",
+		Deps:  deps,
 	}
 }
 
