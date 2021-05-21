@@ -24,6 +24,7 @@ func flow() *goyek.Taskflow {
 	clean := flow.Register(taskClean())
 	build := flow.Register(taskBuild())
 	fmt := flow.Register(taskFmt())
+	misspell := flow.Register(taskMisspell())
 	lint := flow.Register(taskLint())
 	test := flow.Register(taskTest())
 	modTidy := flow.Register(taskModTidy())
@@ -33,6 +34,7 @@ func flow() *goyek.Taskflow {
 	all := flow.Register(taskAll(goyek.Deps{
 		clean,
 		build,
+		misspell,
 		fmt,
 		lint,
 		test,
@@ -73,6 +75,24 @@ func taskFmt() goyek.Task {
 				tf.Fatalf("go install gofumports: %v", err)
 			}
 			tf.Cmd("gofumports", strings.Split("-l -w -local github.com/goyek/goyek .", " ")...).Run() //nolint // it is OK if it returns error
+		},
+	}
+}
+
+func taskMisspell() goyek.Task {
+	return goyek.Task{
+		Name:  "misspell",
+		Usage: "misspell",
+		Command: func(tf *goyek.TF) {
+			installFmt := tf.Cmd("go", "install", "github.com/client9/misspell/cmd/misspell")
+			installFmt.Dir = toolsDir
+			if err := installFmt.Run(); err != nil {
+				tf.Fatalf("go install misspell: %v", err)
+			}
+			lint := tf.Cmd("misspell", "-error", "-locale=US", "-i=importas", ".")
+			if err := lint.Run(); err != nil {
+				tf.Fatalf("misspell: %v", err)
+			}
 		},
 	}
 }

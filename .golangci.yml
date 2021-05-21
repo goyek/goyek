@@ -5,8 +5,6 @@ linters-settings:
     min-complexity: 15
   govet:
     check-shadowing: true
-  misspell:
-    locale: US
   nolintlint:
     allow-leading-space: false # require machine-readable nolint directives (with no leading space)
     allow-unused: false # report any unused nolint directives
@@ -46,7 +44,6 @@ linters:
     - goprintffuncname
     - gosec
     - ifshort
-    - misspell
     - noctx
     - nolintlint
     - rowserrcheck
