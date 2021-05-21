@@ -38,7 +38,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 		return CodePass
 	}
 
-	tasks = f.defaultTasks(tasks)
+	tasks = f.tasksToRun(tasks)
 
 	if len(tasks) == 0 {
 		fmt.Fprintln(f.output, "no task provided")
@@ -120,7 +120,7 @@ func (f *flowRunner) parseArguments(args []string) ([]string, bool, error) {
 	return tasks, usageRequested, nil
 }
 
-func (f *flowRunner) defaultTasks(tasks []string) []string {
+func (f *flowRunner) tasksToRun(tasks []string) []string {
 	if len(tasks) > 0 || (f.defaultTask.name == "") {
 		return tasks
 	}
