@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/goyek/goyek"
 )
@@ -26,6 +27,7 @@ func main() {
 	first := flow.Register(taskFirst(sharedParam))
 	flow.Register(taskSecond(flow, sharedParam))
 	flow.Register(taskComplexParam(flow))
+	flow.Register(taskListParam(flow))
 	flow.DefaultTask = first
 
 	flow.Main()
@@ -113,6 +115,52 @@ func taskComplexParam(flow *goyek.Taskflow) goyek.Task {
 		Command: func(tf *goyek.TF) {
 			tf.Log("Private parameter named '" + privateParam.Name() +
 				"', value '" + fmt.Sprintf("%v", privateParam.Get(tf).(complexParam)) + "'")
+		},
+	}
+}
+
+type listParamValue []int
+
+func (value *listParamValue) Set(s string) error {
+	v, err := strconv.Atoi(s)
+	if err != nil {
+		err = errors.New("parse error")
+	}
+	*value = append(*value, v)
+	return err
+}
+
+func (value *listParamValue) Get() interface{} {
+	return []int(*value)
+}
+
+func (value *listParamValue) String() string {
+	return fmt.Sprintf("%v", *value)
+}
+
+func (value *listParamValue) IsBool() bool {
+	return false
+}
+
+// taskListParam showcases repeatable parameters.
+//
+// Execute `go run ./main.go -v list -port 1 -port 2 -port 3` as an example.
+func taskListParam(flow *goyek.Taskflow) goyek.Task {
+	privateParam := flow.RegisterValueParam(goyek.ValueParam{
+		Name:  "port",
+		Usage: "Integer parameter, can be repeated",
+		NewValue: func() goyek.ParamValue {
+			var value listParamValue
+			return &value
+		},
+	})
+	return goyek.Task{
+		Name:   "list",
+		Usage:  "Showcases list parameters",
+		Params: goyek.Params{privateParam},
+		Command: func(tf *goyek.TF) {
+			tf.Log("Private parameter named '" + privateParam.Name() +
+				"', value " + fmt.Sprintf("%v", privateParam.Get(tf).([]int)))
 		},
 	}
 }
