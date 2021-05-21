@@ -1,8 +1,8 @@
 // Example program for parameters, showcasing the following:
 // Sharing of parameters, "private" parameters, and complex parameters encoded in JSON.
 // This example also registers the "verbose" parameter, in order to provide output in the task.
-// Execute `go run ./main.go -v -shared "hello world"` as a first example.
-// Execute `go run ./main.go -h"` to see all details.
+// Execute `go run . -v -shared "hello world"` as a first example.
+// Execute `go run . -h"` to see all details.
 
 package main
 
@@ -96,7 +96,7 @@ func (value *complexParamValue) IsBool() bool {
 
 // taskComplexParam showcases complex parameters, JSON encoded.
 //
-// Execute `go run ./main.go -v complex -json "{\"stringValue\":\"abc\"}"` as an example.
+// Execute `go run . -v complex -json "{\"stringValue\":\"abc\"}"` as an example.
 func taskComplexParam(flow *goyek.Taskflow) goyek.Task {
 	privateParam := flow.RegisterValueParam(goyek.ValueParam{
 		Name:  "json",
@@ -144,7 +144,7 @@ func (value *listParamValue) IsBool() bool {
 
 // taskListParam showcases repeatable parameters.
 //
-// Execute `go run ./main.go -v list -port 1 -port 2 -port 3` as an example.
+// Execute `go run . -v list -port 1 -port 2 -port 3` as an example.
 func taskListParam(flow *goyek.Taskflow) goyek.Task {
 	privateParam := flow.RegisterValueParam(goyek.ValueParam{
 		Name:  "port",
