@@ -138,7 +138,7 @@ func (f *flowRunner) pushWorkingDir() (func(), error) {
 		panic(err)
 	}
 
-	wd := wdParamVal.Get().(string) // nolint // it is always a string
+	wd := wdParamVal.Get().(string) //nolint // it is always a string
 	if err := os.Chdir(wd); err != nil {
 		return func() {}, err
 	}
