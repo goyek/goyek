@@ -231,7 +231,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		fmt.Fprintf(w, "----- %s: %s (%.2fs)\n", status, tf.Name(), result.Duration().Seconds())
 
 		if sb, ok := w.(*strings.Builder); ok && result.failed {
-			io.Copy(tf.Output(), strings.NewReader(sb.String())) //nolint // not checking errors when writting to output
+			io.Copy(tf.Output(), strings.NewReader(sb.String())) //nolint // not checking errors when writing to output
 		}
 	}
 

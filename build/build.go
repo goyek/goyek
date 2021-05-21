@@ -24,12 +24,17 @@ func flow() *goyek.Taskflow {
 	clean := flow.Register(taskClean())
 	build := flow.Register(taskBuild())
 	fmt := flow.Register(taskFmt())
-	lint := flow.Register(taskLint())
+	misspell := flow.Register(taskMisspell())
+	golangciLint := flow.Register(taskGolangciLint())
 	test := flow.Register(taskTest())
 	modTidy := flow.Register(taskModTidy())
 	diff := flow.Register(taskDiff(ci))
 
-	// pipeline
+	// pipelines
+	lint := flow.Register(taskLint(goyek.Deps{
+		misspell,
+		golangciLint,
+	}))
 	all := flow.Register(taskAll(goyek.Deps{
 		clean,
 		build,
@@ -77,9 +82,27 @@ func taskFmt() goyek.Task {
 	}
 }
 
-func taskLint() goyek.Task {
+func taskMisspell() goyek.Task {
 	return goyek.Task{
-		Name:  "lint",
+		Name:  "misspell",
+		Usage: "misspell",
+		Command: func(tf *goyek.TF) {
+			installFmt := tf.Cmd("go", "install", "github.com/client9/misspell/cmd/misspell")
+			installFmt.Dir = toolsDir
+			if err := installFmt.Run(); err != nil {
+				tf.Fatalf("go install misspell: %v", err)
+			}
+			lint := tf.Cmd("misspell", "-error", "-locale=US", "-i=importas", ".")
+			if err := lint.Run(); err != nil {
+				tf.Fatalf("misspell: %v", err)
+			}
+		},
+	}
+}
+
+func taskGolangciLint() goyek.Task {
+	return goyek.Task{
+		Name:  "golangci-lint",
 		Usage: "golangci-lint",
 		Command: func(tf *goyek.TF) {
 			installLint := tf.Cmd("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
@@ -145,6 +168,14 @@ func taskDiff(ci goyek.RegisteredBoolParam) goyek.Task {
 				tf.Error("git status --porcelain returned output")
 			}
 		},
+	}
+}
+
+func taskLint(deps goyek.Deps) goyek.Task {
+	return goyek.Task{
+		Name:  "lint",
+		Usage: "all linters",
+		Deps:  deps,
 	}
 }
 
