@@ -24,20 +24,55 @@ type flowRunner struct {
 
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (f *flowRunner) Run(ctx context.Context, args []string) int { //nolint // TODO: refactor
+func (f *flowRunner) Run(ctx context.Context, args []string) int {
+	f.verifyAllParametersAreInUse()
+	f.initializeParameters()
+	tasks, usageRequested, err := f.parseArguments(args)
+	if err != nil {
+		fmt.Fprintf(f.output, "cannot parse arguments: %v\n", err)
+		return CodeInvalidArgs
+	}
+
+	if usageRequested {
+		printUsage(f)
+		return CodePass
+	}
+
+	tasks = f.defaultTasks(tasks)
+
+	if len(tasks) == 0 {
+		fmt.Fprintln(f.output, "no task provided")
+		printUsage(f)
+		return CodeInvalidArgs
+	}
+
+	popWorkingDir, err := f.pushWorkingDir()
+	if err != nil {
+		fmt.Fprintf(f.output, "cannot change working directory: %v\n", err)
+		return CodeInvalidArgs
+	}
+	defer popWorkingDir()
+
+	return f.runTasks(ctx, tasks)
+}
+
+func (f *flowRunner) verifyAllParametersAreInUse() {
 	if unusedParams := f.unusedParams(); len(unusedParams) > 0 {
 		panic(fmt.Sprintf("unused parameters: %v\n", unusedParams))
 	}
+}
 
+func (f *flowRunner) initializeParameters() {
 	f.paramValues = make(map[string]ParamValue)
 	for _, param := range f.params {
 		value := param.newValue()
 		f.paramValues[param.name] = value
 	}
+}
+
+func (f *flowRunner) parseArguments(args []string) ([]string, bool, error) {
 	usageRequested := false
-
 	var argHandler func(string) error
-
 	handleNextArgFor := func(value ParamValue) {
 		nextHandler := argHandler
 		argHandler = func(s string) error {
@@ -46,7 +81,6 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int { //nolint // T
 			return err
 		}
 	}
-
 	var tasks []string
 
 	argHandler = func(arg string) error {
@@ -74,52 +108,45 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int { //nolint // T
 			usageRequested = true
 			return nil
 		}
-		fmt.Fprintf(f.output, "unknown argument: %s\n", arg)
 		return fmt.Errorf("unknown argument: %s", arg)
 	}
 
 	for _, arg := range args {
 		err := argHandler(arg)
 		if err != nil {
-			return CodeInvalidArgs
+			return []string{}, false, err
 		}
 	}
+	return tasks, usageRequested, nil
+}
 
-	if usageRequested {
-		printUsage(f)
-		return CodePass
+func (f *flowRunner) defaultTasks(tasks []string) []string {
+	if len(tasks) > 0 || len(f.defaultTask.name) == 0 {
+		return tasks
+	}
+	return []string{f.defaultTask.name}
+}
+
+func (f *flowRunner) pushWorkingDir() (func(), error) {
+	wdParamVal, hasParam := f.paramValues[f.workDir.Name()]
+	if !hasParam {
+		return func() {}, nil
 	}
 
-	// set default task if none is provided
-	if len(tasks) == 0 && f.defaultTask.name != "" {
-		tasks = append(tasks, f.defaultTask.name)
-	}
-
-	if len(tasks) == 0 {
-		fmt.Fprintln(f.output, "no task provided")
-		printUsage(f)
-		return CodeInvalidArgs
-	}
-
-	// set working directory using global parameter
 	oldWd, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
-	if wdParamVal, ok := f.paramValues[f.workDir.Name()]; ok {
-		wd := wdParamVal.Get().(string) //nolint // it is always a string
-		if err := os.Chdir(wd); err != nil {
-			fmt.Fprintf(f.output, "cannot set working directory: %v\n", err)
-			return CodeInvalidArgs
-		}
-		defer func() {
-			if err := os.Chdir(oldWd); err != nil {
-				panic(err)
-			}
-		}()
-	}
 
-	return f.runTasks(ctx, tasks)
+	wd := wdParamVal.Get().(string) // nolint // it is always a string
+	if err := os.Chdir(wd); err != nil {
+		return func() {}, err
+	}
+	return func() {
+		if err := os.Chdir(oldWd); err != nil {
+			panic(err)
+		}
+	}, nil
 }
 
 func (f *flowRunner) runTasks(ctx context.Context, tasks []string) int {
