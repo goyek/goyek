@@ -2,8 +2,7 @@ name: release
 
 on:
   push:
-    tags:
-      - 'v*'
+    tags: [ 'v*' ]
 
 jobs:
   godoc:
@@ -12,6 +11,5 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: 1.16
-
       - name: Update pkg.go.dev
         run: go get -u github.com/$GITHUB_REPOSITORY
