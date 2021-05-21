@@ -1,8 +1,6 @@
 linters-settings:
   goimports:
     local-prefixes: github.com/goyek/goyek
-  golint:
-    min-confidence: 0.8
   gocyclo:
     min-complexity: 15
   govet:
@@ -43,7 +41,7 @@ linters:
     - gocyclo
     - godot
     - gofumpt
-    - golint
+    - revive
     - gomnd
     - goprintffuncname
     - gosec
