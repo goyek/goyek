@@ -121,7 +121,7 @@ func (f *flowRunner) parseArguments(args []string) ([]string, bool, error) {
 }
 
 func (f *flowRunner) defaultTasks(tasks []string) []string {
-	if len(tasks) > 0 || len(f.defaultTask.name) == 0 {
+	if len(tasks) > 0 || (f.defaultTask.name == "") {
 		return tasks
 	}
 	return []string{f.defaultTask.name}
