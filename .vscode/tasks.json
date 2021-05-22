@@ -6,7 +6,10 @@
         {
             "label": "all",
             "type": "shell",
-            "command": "./goyek.sh",
+            "command": "go run . -wd=..",
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            },
             "problemMatcher": [
                 "$go"
             ],
