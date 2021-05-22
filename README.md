@@ -51,18 +51,19 @@ Here are some good parts:
 - No binary installation is needed. Simply add it to `go.mod` like any other Go module.
   - You can be sure that everyone uses the same version of **goyek**.
 - It has low learning curve, thanks to the minimal API surface, documentation, and examples.
+- The task's command look like a unit test.
+  It is even possible to use [`testify`](https://github.com/stretchr/testify)
+  or [`is`](https://github.com/matryer/is) for asserting.
+- It is easy to debug, like a regular Go application.
+- Tasks and helpers can be easily tested. See [exec_test.go](exec_test.go).
 - One can reuse code like in any Go application. It may be helpful to use packages like:
   - [`github.com/bitfield/script`](https://pkg.go.dev/github.com/bitfield/script)
   - [`github.com/rjeczalik/notify`](https://pkg.go.dev/github.com/rjeczalik/notify)
   - [`github.com/magefile/mage/target`](https://pkg.go.dev/github.com/magefile/mage/target)
-- It is easy to debug, like a regular Go application.
-- The API is based on [testing](https://golang.org/pkg/testing).
-  The task's command look like a unit test.
-  It is even possible to use [testify](https://github.com/stretchr/testify) for asserting.
-- Tasks and helpers can be easily tested. See [exec_test.go](exec_test.go).
+  - [`github.com/mattn/go-shellwords`](https://pkg.go.dev/github.com/mattn/go-shellwords)
 
-**goyek** API is mainly inspired by the [http](https://golang.org/pkg/http),
-[testing](https://golang.org/pkg/testing), and [flag](https://golang.org/pkg/flag) packages.
+**goyek** API is mainly inspired by the [`testing`](https://golang.org/pkg/testing),
+[`http`](https://golang.org/pkg/http), and [`flag`](https://golang.org/pkg/flag) packages.
 
 Please `Star` this repository if you find it valuable and worth maintaining.
 
