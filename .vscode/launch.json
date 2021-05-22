@@ -11,7 +11,7 @@
             "mode": "debug",
             "cwd": "${workspaceFolder}/build",
             "program": "${workspaceFolder}/build",
-            "args": ["all"]
+            "args": ["-wd=..", "all"]
         }
     ]
 }
