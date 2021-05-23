@@ -13,7 +13,7 @@ updates:
 
   # Maintain dependencies for build tools
   - package-ecosystem: "gomod"
-    directory: "/tools"
+    directory: "/build"
     schedule:
       interval: "weekly"
 

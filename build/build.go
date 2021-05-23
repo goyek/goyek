@@ -49,7 +49,7 @@ func flow() *goyek.Taskflow {
 	return flow
 }
 
-const toolsDir = "tools"
+const buildDir = "build"
 
 func taskClean() goyek.Task {
 	return goyek.Task{
@@ -73,7 +73,7 @@ func taskFmt() goyek.Task {
 		Usage: "gofumports",
 		Command: func(tf *goyek.TF) {
 			installFmt := tf.Cmd("go", "install", "mvdan.cc/gofumpt/gofumports")
-			installFmt.Dir = toolsDir
+			installFmt.Dir = buildDir
 			if err := installFmt.Run(); err != nil {
 				tf.Fatalf("go install gofumports: %v", err)
 			}
@@ -88,7 +88,7 @@ func taskMisspell() goyek.Task {
 		Usage: "misspell",
 		Command: func(tf *goyek.TF) {
 			installFmt := tf.Cmd("go", "install", "github.com/client9/misspell/cmd/misspell")
-			installFmt.Dir = toolsDir
+			installFmt.Dir = buildDir
 			if err := installFmt.Run(); err != nil {
 				tf.Fatalf("go install misspell: %v", err)
 			}
@@ -106,7 +106,7 @@ func taskGolangciLint() goyek.Task {
 		Usage: "golangci-lint",
 		Command: func(tf *goyek.TF) {
 			installLint := tf.Cmd("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
-			installLint.Dir = toolsDir
+			installLint.Dir = buildDir
 			if err := installLint.Run(); err != nil {
 				tf.Fatalf("go install golangci-lint: %v", err)
 			}
@@ -136,7 +136,7 @@ func taskModTidy() goyek.Task {
 			}
 
 			toolsModTidy := tf.Cmd("go", "mod", "tidy")
-			toolsModTidy.Dir = toolsDir
+			toolsModTidy.Dir = buildDir
 			if err := toolsModTidy.Run(); err != nil {
 				tf.Errorf("go mod tidy: %v", err)
 			}
