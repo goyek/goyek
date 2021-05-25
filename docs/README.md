@@ -5,8 +5,8 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/goyek/goyek.svg)](https://pkg.go.dev/github.com/goyek/goyek)
 [![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
 [![GitHub Release](https://img.shields.io/github/v/release/goyek/goyek)](https://github.com/goyek/goyek/releases)
-[![go.mod](https://img.shields.io/github/go-mod/go-version/goyek/goyek)](go.mod)
-[![LICENSE](https://img.shields.io/github/license/goyek/goyek)](LICENSE)
+[![go.mod](https://img.shields.io/github/go-mod/go-version/goyek/goyek)](../go.mod)
+[![LICENSE](https://img.shields.io/github/license/goyek/goyek)](../LICENSE)
 
 [![Build Status](https://img.shields.io/github/workflow/status/goyek/goyek/build)](https://github.com/goyek/goyek/actions?query=workflow%3Abuild+branch%3Amain)
 [![Go Report Card](https://goreportcard.com/badge/github.com/goyek/goyek)](https://goreportcard.com/report/github.com/goyek/goyek)
@@ -29,13 +29,6 @@ Table of Contents:
     - [Default task](#default-task)
     - [Parameters](#parameters)
     - [Supported Go versions](#supported-go-versions)
-  - [Alternatives](#alternatives)
-    - [Make](#make)
-    - [Mage](#mage)
-    - [Task](#task)
-    - [Bazel](#bazel)
-  - [Presentations](#presentations)
-  - [Contributing](#contributing)
 
 ## Description
 
@@ -52,7 +45,7 @@ Here are some good parts:
   It is even possible to use [`testify`](https://github.com/stretchr/testify)
   or [`is`](https://github.com/matryer/is) for asserting.
 - It is easy to debug, like a regular Go application.
-- Tasks and helpers can be easily tested. See [exec_test.go](exec_test.go).
+- Tasks and helpers can be easily tested. See [exec_test.go](../exec_test.go).
 - One can reuse code like in any Go application. It may be helpful to use packages like:
   - [`github.com/bitfield/script`](https://pkg.go.dev/github.com/bitfield/script)
   - [`github.com/rjeczalik/notify`](https://pkg.go.dev/github.com/rjeczalik/notify)
@@ -64,9 +57,16 @@ Here are some good parts:
 
 Please `Star` this repository if you find it valuable and worth maintaining.
 
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) if you want to help us.
+
+See [`ALTERNATIVES.md`](ALTERNATIVES.md) if you want to compare **goyek**
+with other popular tools used for creating build pipelines.
+
+See [`PRESENTATIONS.md`](PRESENTATIONS.md) if you want to watch some presenentations.
+
 ## Quick start
 
-Copy and paste the following code into [`build/build.go`](examples/basic/main.go):
+Copy and paste the following code into [`build/build.go`](../examples/basic/main.go):
 
 ```go
 package main
@@ -123,8 +123,8 @@ ok      0.001s
 
 ## Examples
 
-- [examples](examples)
-- [build/build.go](build/build.go) - this repository's own build pipeline
+- [examples](../examples)
+- [build/build.go](../build/build.go) - this repository's own build pipeline
 - [pellared/fluentassert](https://github.com/pellared/fluentassert) - a library using **goyek** without polluting it's root `go.mod`
 
 ## Wrapper scripts
@@ -135,7 +135,7 @@ which can be invoked from any location.
 
 Simply add them to your repository's root directory:
 
-- [`goyek.sh`](goyek.sh) - make sure to add `+x` permission (`git update-index --chmod=+x goyek.sh`):
+- [`goyek.sh`](../goyek.sh) - make sure to add `+x` permission (`git update-index --chmod=+x goyek.sh`):
 
 ```bash
 #!/bin/bash
@@ -146,7 +146,7 @@ cd "$DIR/build"
 go run . -wd=".." $@
 ```
 
-- [`goyek.ps1`](goyek.ps1):
+- [`goyek.ps1`](../goyek.ps1):
 
 ```powershell
 $ErrorActionPreference = "Stop"
@@ -274,83 +274,10 @@ If a task tries to retrieve the value from an unregistered parameter, the task w
 
 When registration is done, the task's command can retrieve the parameter value using the `Get(*TF)` method from the registration result instance during the task's `Command` execution.
 
-See [examples/parameters/main.go](examples/parameters/main.go) for a detailed example.
+See [examples/parameters/main.go](../examples/parameters/main.go) for a detailed example.
 
 `Taskflow` will fail execution if there are unused parameters.
 
 ### Supported Go versions
 
 Minimal supported Go version is 1.11.
-
-## Alternatives
-
-### Make
-
-While [Make](https://www.gnu.org/software/make/) is currently the _de facto_ standard, it has some pitfalls:
-
-- Requires to learn Make, which is not so easy.
-- It is hard to develop a Makefile which is truly cross-platform.
-- Debugging and testing Make targets is not fun.
-
-However, if you know Make and are happy with it, do not change it.
-Make is very powerful and a lot of stuff can be made faster, if you know how to use it.
-
-**goyek** is intended to be simpler and easier to learn, while still being able to handle most use cases.
-
-### Mage
-
-[Mage](https://github.com/magefile/mage) is a framework/tool which magically discovers
-the [targets](https://magefile.org/targets/) from [magefiles](https://magefile.org/magefiles/),
-which results in some drawbacks:
-
-- Requires using [build tags](https://magefile.org/magefiles/).
-- Reusing tasks is [hacky](https://magefile.org/importing/).
-- Requires installation or using [zero install option](https://magefile.org/zeroinstall/) which is slow.
-- Debugging would be extermly complex.
-- Magical by design (of course one may like it).
-
-**goyek** is intended to be a non-magical alternative for [Mage](https://github.com/magefile/mage).
-Write regular Go code. No build tags, special names for functions, tricky imports.
-
-### Task
-
-While [Task](https://taskfile.dev/) is simpler and easier to use
-than [Make](https://www.gnu.org/software/make/) it still has similar problems:
-
-- Requires to learn Task's YAML structure and
-  the [minimalistic, cross-platform interpreter](https://github.com/mvdan/sh#gosh) which it uses.
-- Debugging and testing tasks is not fun.
-- Hard to make reusable tasks.
-- Requires to "install" the tool.
-
-### Bazel
-
-[Bazel](https://bazel.build/) is a very sophisticated tool which is
-[created to efficiently handle complex and long-running build pipelines](https://en.wikipedia.org/wiki/Bazel_(software)#Rationale).
-It requires the build target inputs and outputs to be fully specified.
-
-**goyek** is just a simple library that is mainly supposed to create a build pipeline
-consisting of commands like `go vet`, `go test`, `go build`.
-However, take notice that **goyek** is a library. Nothing prevents you from,
-for example, using [Mage's target package](https://pkg.go.dev/github.com/magefile/mage/target)
-to make your build pipeline more efficient.
-
-## Presentations
-
-| Date       | Presentation                                                                            | Description                |
-| ---------- | --------------------------------------------------------------------------------------- | -------------------------- |
-| 2021-05-05 | [goyek - Create build pipelines in Go](https://github.com/pellared/goyek-demo)          | **goyek** v0.3.0 demo      |
-| 2021-03-10 | [taskflow - Create build pipelines in Go](https://github.com/pellared/taskflow-example) | **taskflow** v0.1.1 demo   |
-| 2020-12-14 | [Build pipeline for a Go project](https://github.com/pellared/go-build-pipeline-demo)   | build pipeline using [Make](https://www.gnu.org/software/make/), [Mage](https://github.com/magefile/mage), and **taskflow** v0.1.0 |
-
-Note: **goyek** was named **taskflow** before v0.3.0.
-
-## Contributing
-
-We are open to any feedback and contribution.
-
-You can find us on [Gophers Slack](https://invite.slack.golangbridge.org/) in [`#goyek` channel](https://gophers.slack.com/archives/C020UNUK7LL).
-
-Feel free to create an issue, or a pull request.
-
-You may use [Gitpod](https://gitpod.io/#https://github.com/goyek/goyek) to experiment with the codebase.
