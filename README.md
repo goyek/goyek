@@ -59,12 +59,12 @@ Here are some good parts:
 
 Please `Star` this repository if you find it valuable and worth maintaining.
 
-See [`docs/contributing.md`](docs/contributing.md) if you want to help us.
+See [docs/contributing.md](docs/contributing.md) if you want to help us.
 
-See [`docs/alternatives.md`](docs/alternatives.md) if you want to compare **goyek**
+See [docs/alternatives.md](docs/alternatives.md) if you want to compare **goyek**
 with other popular tools used for creating build pipelines.
 
-See [`docs/presentations.md`](docs/presentations.md) if you want to watch some presenentations.
+See [docs/presentations.md](docs/presentations.md) if you want to watch some presenentations.
 
 ## Quick start
 
