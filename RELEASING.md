@@ -12,6 +12,7 @@ Create a pull request named `Release v<version>` that does the following:
    - Change the `Unreleased` header to represent the new release. 
    - Consider adding a description for the new release.
      Especially if it adds new features or introduces breaking changes.
+   - Add a new `Unreleased` header above the new release, with no details.
 
 ## Release
 
