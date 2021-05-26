@@ -5,8 +5,8 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/goyek/goyek.svg)](https://pkg.go.dev/github.com/goyek/goyek)
 [![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
 [![GitHub Release](https://img.shields.io/github/v/release/goyek/goyek)](https://github.com/goyek/goyek/releases)
-[![go.mod](https://img.shields.io/github/go-mod/go-version/goyek/goyek)](../go.mod)
-[![LICENSE](https://img.shields.io/github/license/goyek/goyek)](../LICENSE)
+[![go.mod](https://img.shields.io/github/go-mod/go-version/goyek/goyek)](go.mod)
+[![LICENSE](https://img.shields.io/github/license/goyek/goyek)](LICENSE)
 
 [![Build Status](https://img.shields.io/github/workflow/status/goyek/goyek/build)](https://github.com/goyek/goyek/actions?query=workflow%3Abuild+branch%3Amain)
 [![Go Report Card](https://goreportcard.com/badge/github.com/goyek/goyek)](https://goreportcard.com/report/github.com/goyek/goyek)
@@ -45,7 +45,7 @@ Here are some good parts:
   It is even possible to use [`testify`](https://github.com/stretchr/testify)
   or [`is`](https://github.com/matryer/is) for asserting.
 - It is easy to debug, like a regular Go application.
-- Tasks and helpers can be easily tested. See [exec_test.go](../exec_test.go).
+- Tasks and helpers can be easily tested. See [exec_test.go](exec_test.go).
 - One can reuse code like in any Go application. It may be helpful to use packages like:
   - [`github.com/bitfield/script`](https://pkg.go.dev/github.com/bitfield/script)
   - [`github.com/rjeczalik/notify`](https://pkg.go.dev/github.com/rjeczalik/notify)
@@ -57,16 +57,16 @@ Here are some good parts:
 
 Please `Star` this repository if you find it valuable and worth maintaining.
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) if you want to help us.
+See [`docs/contributing.md`](docs/contributing.md) if you want to help us.
 
-See [`ALTERNATIVES.md`](ALTERNATIVES.md) if you want to compare **goyek**
+See [`docs/alternatives.md`](docs/alternatives.md) if you want to compare **goyek**
 with other popular tools used for creating build pipelines.
 
-See [`PRESENTATIONS.md`](PRESENTATIONS.md) if you want to watch some presenentations.
+See [`docs/presentations.md`](docs/presentations.md) if you want to watch some presenentations.
 
 ## Quick start
 
-Copy and paste the following code into [`build/build.go`](../examples/basic/main.go):
+Copy and paste the following code into [`build/build.go`](examples/basic/main.go):
 
 ```go
 package main
@@ -123,8 +123,8 @@ ok      0.001s
 
 ## Examples
 
-- [examples](../examples)
-- [build/build.go](../build/build.go) - this repository's own build pipeline
+- [examples](examples)
+- [build/build.go](build/build.go) - this repository's own build pipeline
 - [pellared/fluentassert](https://github.com/pellared/fluentassert) - a library using **goyek** without polluting it's root `go.mod`
 
 ## Wrapper scripts
@@ -135,7 +135,7 @@ which can be invoked from any location.
 
 Simply add them to your repository's root directory:
 
-- [`goyek.sh`](../goyek.sh) - make sure to add `+x` permission (`git update-index --chmod=+x goyek.sh`):
+- [`goyek.sh`](goyek.sh) - make sure to add `+x` permission (`git update-index --chmod=+x goyek.sh`):
 
 ```bash
 #!/bin/bash
@@ -146,7 +146,7 @@ cd "$DIR/build"
 go run . -wd=".." $@
 ```
 
-- [`goyek.ps1`](../goyek.ps1):
+- [`goyek.ps1`](goyek.ps1):
 
 ```powershell
 $ErrorActionPreference = "Stop"
@@ -274,7 +274,7 @@ If a task tries to retrieve the value from an unregistered parameter, the task w
 
 When registration is done, the task's command can retrieve the parameter value using the `Get(*TF)` method from the registration result instance during the task's `Command` execution.
 
-See [examples/parameters/main.go](../examples/parameters/main.go) for a detailed example.
+See [examples/parameters/main.go](examples/parameters/main.go) for a detailed example.
 
 `Taskflow` will fail execution if there are unused parameters.
 
