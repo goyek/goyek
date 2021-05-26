@@ -15,6 +15,8 @@
 
 [![Slack](https://img.shields.io/badge/slack-@gophers/goyek-brightgreen.svg?logo=slack)](https://gophers.slack.com/archives/C020UNUK7LL)
 
+Please `Star` ⭐ this repository if you find it valuable and worth maintaining.
+
 Table of Contents:
 
 - [goyek](#goyek)
@@ -57,14 +59,12 @@ Here are some good parts:
 **goyek** API is mainly inspired by the [`testing`](https://golang.org/pkg/testing),
 [`http`](https://golang.org/pkg/http), and [`flag`](https://golang.org/pkg/flag) packages.
 
-Please `Star` this repository if you find it valuable and worth maintaining.
-
-See [docs/contributing.md](docs/contributing.md) if you want to help us.
-
 See [docs/alternatives.md](docs/alternatives.md) if you want to compare **goyek**
 with other popular tools used for creating build pipelines.
 
 See [docs/presentations.md](docs/presentations.md) if you want to watch some presenentations.
+
+See [docs/contributing.md](docs/contributing.md) if you want to help us.
 
 ## Quick start
 
