@@ -15,7 +15,7 @@
 
 [![Slack](https://img.shields.io/badge/slack-@gophers/goyek-brightgreen.svg?logo=slack)](https://gophers.slack.com/archives/C020UNUK7LL)
 
-Please `Star` ⭐ this repository if you find it valuable and worth maintaining.
+Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
 Table of Contents:
 
