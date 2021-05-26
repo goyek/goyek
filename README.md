@@ -13,6 +13,8 @@
 [![codecov](https://codecov.io/gh/goyek/goyek/branch/main/graph/badge.svg)](https://codecov.io/gh/goyek/goyek)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
+[![Slack](https://img.shields.io/badge/slack-@gophers/goyek-brightgreen.svg?logo=slack)](https://gophers.slack.com/archives/C020UNUK7LL)
+
 Table of Contents:
 
 - [goyek](#goyek)
