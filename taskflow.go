@@ -3,7 +3,6 @@ package goyek
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"regexp"
 )
@@ -17,14 +16,14 @@ const (
 	CodeInvalidArgs = 2
 )
 
-// DefaultOutput is the default output used by Taskflow if it is not set.
-var DefaultOutput io.Writer = os.Stdout
-
 // Taskflow is the root type of the package.
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
 type Taskflow struct {
-	Output io.Writer // output where text is printed; os.Stdout by default
+	// Output specifies the writers where text is to be printed.
+	// If a writer is nil, Goyek uses defaults: os.Stdout for Primary, os.Stderr for Message.
+	// If you want to explicitly skip output, set the corresponding member to ioutil.Discard.
+	Output Output
 
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
 
@@ -187,8 +186,11 @@ func (f *Taskflow) Run(ctx context.Context, args ...string) int {
 		defaultTask: f.DefaultTask,
 	}
 
-	if flow.output == nil {
-		flow.output = DefaultOutput
+	if flow.output.Primary == nil {
+		flow.output.Primary = os.Stdout
+	}
+	if flow.output.Message == nil {
+		flow.output.Message = os.Stderr
 	}
 
 	return flow.Run(ctx, args)

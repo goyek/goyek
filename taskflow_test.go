@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,10 +13,6 @@ import (
 
 	"github.com/goyek/goyek"
 )
-
-func init() {
-	goyek.DefaultOutput = ioutil.Discard
-}
 
 func Test_Register_errors(t *testing.T) {
 	testCases := []struct {
@@ -282,9 +277,13 @@ func Test_help(t *testing.T) {
 }
 
 func Test_printing(t *testing.T) {
-	sb := &strings.Builder{}
+	primary := &strings.Builder{}
+	message := &strings.Builder{}
 	flow := &goyek.Taskflow{
-		Output: sb,
+		Output: goyek.Output{
+			Primary: primary,
+			Message: message,
+		},
 	}
 	skipped := flow.Register(goyek.Task{
 		Name: "skipped",
@@ -307,8 +306,8 @@ func Test_printing(t *testing.T) {
 
 	flow.Run(context.Background(), "-v", "failing")
 
-	assertContains(t, sb.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
-	assertContains(t, sb.String(), `Log 1
+	assertContains(t, message.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
+	assertContains(t, message.String(), `Log 1
 Logf 2
 Error 3
 Errorf 4
@@ -325,9 +324,13 @@ func Test_concurrent_printing(t *testing.T) {
 	for _, tc := range testCases {
 		testName := fmt.Sprintf("Verbose:%v", tc.verbose)
 		t.Run(testName, func(t *testing.T) {
-			sb := &strings.Builder{}
-			flow := goyek.Taskflow{
-				Output: sb,
+			primary := &strings.Builder{}
+			message := &strings.Builder{}
+			flow := &goyek.Taskflow{
+				Output: goyek.Output{
+					Primary: primary,
+					Message: message,
+				},
 			}
 			flow.Register(goyek.Task{
 				Name: "task",
@@ -350,8 +353,8 @@ func Test_concurrent_printing(t *testing.T) {
 			exitCode := flow.Run(context.Background(), args...)
 
 			assertEqual(t, exitCode, goyek.CodeFail, "should fail")
-			assertContains(t, sb.String(), "from child goroutine", "should contain log from child goroutine")
-			assertContains(t, sb.String(), "from main goroutine", "should contain log from main goroutine")
+			assertContains(t, message.String(), "from child goroutine", "should contain log from child goroutine")
+			assertContains(t, message.String(), "from main goroutine", "should contain log from main goroutine")
 		})
 	}
 }

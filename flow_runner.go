@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"sort"
 	"strings"
@@ -13,7 +12,7 @@ import (
 )
 
 type flowRunner struct {
-	output      io.Writer
+	output      Output
 	params      map[string]registeredParam
 	paramValues map[string]ParamValue
 	tasks       map[string]Task
@@ -29,7 +28,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	f.initializeParameters()
 	tasks, usageRequested, err := f.parseArguments(args)
 	if err != nil {
-		fmt.Fprintf(f.output, "cannot parse arguments: %v\n", err)
+		f.output.WriteMessage("cannot parse arguments: %v", err)
 		return CodeInvalidArgs
 	}
 
@@ -41,14 +40,14 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	tasks = f.tasksToRun(tasks)
 
 	if len(tasks) == 0 {
-		fmt.Fprintln(f.output, "no task provided")
+		f.output.WriteMessage("no task provided")
 		printUsage(f)
 		return CodeInvalidArgs
 	}
 
 	popWorkingDir, err := f.pushWorkingDir()
 	if err != nil {
-		fmt.Fprintf(f.output, "cannot change working directory: %v\n", err)
+		f.output.WriteMessage("cannot change working directory: %v", err)
 		return CodeInvalidArgs
 	}
 	defer popWorkingDir()
@@ -154,11 +153,11 @@ func (f *flowRunner) runTasks(ctx context.Context, tasks []string) int {
 	executedTasks := map[string]bool{}
 	for _, name := range tasks {
 		if err := f.run(ctx, name, executedTasks); err != nil {
-			fmt.Fprintf(f.output, "%v\t%.3fs\n", err, time.Since(from).Seconds())
+			f.output.WriteMessage("%v\t%.3fs", err, time.Since(from).Seconds())
 			return CodeFail
 		}
 	}
-	fmt.Fprintf(f.output, "ok\t%.3fs\n", time.Since(from).Seconds())
+	f.output.WriteMessage("ok\t%.3fs", time.Since(from).Seconds())
 	return CodePass
 }
 
@@ -202,20 +201,22 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 
 	failed := false
 	measuredCommand := func(tf *TF) {
-		w := tf.Output()
+		var buffered *bufferedOutput
+		output := tf.Output()
 		if !verbose {
-			w = &strings.Builder{}
+			buffered = &bufferedOutput{}
+			output = buffered.Output()
 		}
 
 		// report task start
-		fmt.Fprintf(w, "===== TASK  %s\n", tf.Name())
+		output.WriteMessage("===== TASK  %s", tf.Name())
 
 		// run task
 		r := runner{
 			Ctx:         tf.Context(),
 			TaskName:    tf.Name(),
 			ParamValues: tf.paramValues,
-			Output:      w,
+			Output:      output,
 		}
 		result := r.Run(task.Command)
 
@@ -228,10 +229,10 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		case result.Skipped():
 			status = "SKIP"
 		}
-		fmt.Fprintf(w, "----- %s: %s (%.2fs)\n", status, tf.Name(), result.Duration().Seconds())
+		output.WriteMessage("----- %s: %s (%.2fs)", status, tf.Name(), result.Duration().Seconds())
 
-		if sb, ok := w.(*strings.Builder); ok && result.failed {
-			io.Copy(tf.Output(), strings.NewReader(sb.String())) //nolint // not checking errors when writing to output
+		if (buffered != nil) && result.failed {
+			buffered.WriteTo(tf.Output())
 		}
 	}
 
@@ -270,9 +271,9 @@ func printUsage(f *flowRunner) {
 		return "-" + paramName
 	}
 
-	fmt.Fprintf(f.output, "Usage: [flag(s) | task(s)]...\n")
-	fmt.Fprintf(f.output, "Flags:\n")
-	w := tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
+	f.output.WriteMessage("Usage: [flag(s) | task(s)]...")
+	f.output.WriteMessage("Flags:")
+	w := tabwriter.NewWriter(f.output.Message, 1, 1, 4, ' ', 0)
 	keys := make([]string, 0, len(f.params))
 	for key := range f.params {
 		keys = append(keys, key)
@@ -280,11 +281,11 @@ func printUsage(f *flowRunner) {
 	sort.Strings(keys)
 	for _, key := range keys {
 		param := f.params[key]
-		fmt.Fprintf(w, "  %s\tDefault: %s\t%s\n", flagName(param.name), param.newValue().String(), param.usage)
+		_, _ = fmt.Fprintf(w, "  %s\tDefault: %s\t%s\n", flagName(param.name), param.newValue().String(), param.usage)
 	}
-	w.Flush() //nolint // not checking errors when writing to output
+	_ = w.Flush()
 
-	fmt.Fprintf(f.output, "Tasks:\n")
+	f.output.WriteMessage("Tasks:")
 	keys = make([]string, 0, len(f.tasks))
 	for k, task := range f.tasks {
 		if task.Usage == "" {
@@ -304,11 +305,11 @@ func printUsage(f *flowRunner) {
 		if len(params) > 0 {
 			paramsText = "; " + strings.Join(params, " ")
 		}
-		fmt.Fprintf(w, "  %s\t%s%s\n", t.Name, t.Usage, paramsText)
+		_, _ = fmt.Fprintf(w, "  %s\t%s%s\n", t.Name, t.Usage, paramsText)
 	}
-	w.Flush() //nolint // not checking errors when writing to output
+	_ = w.Flush()
 
 	if f.defaultTask.name != "" {
-		fmt.Fprintf(f.output, "Default task: %s\n", f.defaultTask.name)
+		f.output.WriteMessage("Default task: %s", f.defaultTask.name)
 	}
 }
