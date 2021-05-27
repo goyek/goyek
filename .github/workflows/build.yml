@@ -8,14 +8,14 @@ on:
 
 jobs:
   ci-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2.3.4
       - uses: actions/cache@v2.1.5
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v2.1.3
         with:
           go-version: '1.16'
       - name: Build
@@ -34,10 +34,10 @@ jobs:
       fail-fast: false
       matrix:
         go-version: ['1.11', '1.12', '1.13', '1.14', '1.15', '1.16']
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2.3.4
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v2.1.3
         with:
           go-version: ${{ matrix.go-version }}
       - run: go test -race ./...
