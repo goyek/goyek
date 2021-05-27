@@ -14,6 +14,8 @@ type Output struct {
 	Message io.Writer
 }
 
+// WriteMessage prints the given format message and its arguments to the Message writer.
+// The result of this action is ignored.
 func (out Output) WriteMessage(format string, a ...interface{}) {
 	_, _ = fmt.Fprintf(out.Message, format+"\n", a...)
 }
