@@ -160,7 +160,7 @@ func taskDiff(ci goyek.RegisteredBoolParam) goyek.Task {
 
 			cmd := tf.Cmd("git", "status", "--porcelain")
 			sb := &strings.Builder{}
-			cmd.Stdout = io.MultiWriter(tf.Output(), sb)
+			cmd.Stdout = io.MultiWriter(tf.Output().Primary, sb)
 			if err := cmd.Run(); err != nil {
 				tf.Errorf("git status --porcelain: %v", err)
 			}
