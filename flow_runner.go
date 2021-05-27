@@ -28,7 +28,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	f.initializeParameters()
 	tasks, usageRequested, err := f.parseArguments(args)
 	if err != nil {
-		f.output.WriteMessage("cannot parse arguments: %v", err)
+		f.output.WriteMessagef("cannot parse arguments: %v", err)
 		return CodeInvalidArgs
 	}
 
@@ -40,14 +40,14 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	tasks = f.tasksToRun(tasks)
 
 	if len(tasks) == 0 {
-		f.output.WriteMessage("no task provided")
+		f.output.WriteMessagef("no task provided")
 		printUsage(f)
 		return CodeInvalidArgs
 	}
 
 	popWorkingDir, err := f.pushWorkingDir()
 	if err != nil {
-		f.output.WriteMessage("cannot change working directory: %v", err)
+		f.output.WriteMessagef("cannot change working directory: %v", err)
 		return CodeInvalidArgs
 	}
 	defer popWorkingDir()
@@ -153,11 +153,11 @@ func (f *flowRunner) runTasks(ctx context.Context, tasks []string) int {
 	executedTasks := map[string]bool{}
 	for _, name := range tasks {
 		if err := f.run(ctx, name, executedTasks); err != nil {
-			f.output.WriteMessage("%v\t%.3fs", err, time.Since(from).Seconds())
+			f.output.WriteMessagef("%v\t%.3fs", err, time.Since(from).Seconds())
 			return CodeFail
 		}
 	}
-	f.output.WriteMessage("ok\t%.3fs", time.Since(from).Seconds())
+	f.output.WriteMessagef("ok\t%.3fs", time.Since(from).Seconds())
 	return CodePass
 }
 
@@ -209,7 +209,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		}
 
 		// report task start
-		output.WriteMessage("===== TASK  %s", tf.Name())
+		output.WriteMessagef("===== TASK  %s", tf.Name())
 
 		// run task
 		r := runner{
@@ -229,7 +229,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		case result.Skipped():
 			status = "SKIP"
 		}
-		output.WriteMessage("----- %s: %s (%.2fs)", status, tf.Name(), result.Duration().Seconds())
+		output.WriteMessagef("----- %s: %s (%.2fs)", status, tf.Name(), result.Duration().Seconds())
 
 		if (buffered != nil) && result.failed {
 			buffered.WriteTo(tf.Output())
@@ -271,8 +271,8 @@ func printUsage(f *flowRunner) {
 		return "-" + paramName
 	}
 
-	f.output.WriteMessage("Usage: [flag(s) | task(s)]...")
-	f.output.WriteMessage("Flags:")
+	f.output.WriteMessagef("Usage: [flag(s) | task(s)]...")
+	f.output.WriteMessagef("Flags:")
 	w := tabwriter.NewWriter(f.output.Message, 1, 1, 4, ' ', 0)
 	keys := make([]string, 0, len(f.params))
 	for key := range f.params {
@@ -285,7 +285,7 @@ func printUsage(f *flowRunner) {
 	}
 	_ = w.Flush()
 
-	f.output.WriteMessage("Tasks:")
+	f.output.WriteMessagef("Tasks:")
 	keys = make([]string, 0, len(f.tasks))
 	for k, task := range f.tasks {
 		if task.Usage == "" {
@@ -310,6 +310,6 @@ func printUsage(f *flowRunner) {
 	_ = w.Flush()
 
 	if f.defaultTask.name != "" {
-		f.output.WriteMessage("Default task: %s", f.defaultTask.name)
+		f.output.WriteMessagef("Default task: %s", f.defaultTask.name)
 	}
 }

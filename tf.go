@@ -45,14 +45,14 @@ func (tf *TF) Log(args ...interface{}) {
 	for i := 0; i < len(args); i++ {
 		vs[i] = "%v"
 	}
-	tf.output.WriteMessage(strings.Join(vs, " "), args...)
+	tf.output.WriteMessagef(strings.Join(vs, " "), args...)
 }
 
 // Logf formats its arguments according to the format, analogous to Printf,
 // and prints the text to Output. A final newline is added.
 // The text will be printed only if the task fails or taskflow is run in Verbose mode.
 func (tf *TF) Logf(format string, args ...interface{}) {
-	tf.output.WriteMessage(format, args...)
+	tf.output.WriteMessagef(format, args...)
 }
 
 // Error is equivalent to Log followed by Fail.
