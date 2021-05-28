@@ -6,18 +6,22 @@ import (
 	"sync"
 )
 
+func writeLinef(w io.Writer, format string, a ...interface{}) {
+	_, _ = fmt.Fprintf(w, format+"\n", a...)
+}
+
 // Output contains the writers to communicate results.
 type Output struct {
-	// Primary output is for information that could be processed by piped commands.
+	// Primary output is for information that is expected from the executed tasks.
 	Primary io.Writer
-	// Message output is for any status information. Goyek only prints to this writer.
+	// Message output is for any status information, such as logging or error messages.
 	Message io.Writer
 }
 
 // WriteMessagef prints the given format message and its arguments to the Message writer.
 // The result of this action is ignored.
 func (out Output) WriteMessagef(format string, a ...interface{}) {
-	_, _ = fmt.Fprintf(out.Message, format+"\n", a...)
+	writeLinef(out.Message, format, a...)
 }
 
 // bufferedOutput stores all written data in memory.

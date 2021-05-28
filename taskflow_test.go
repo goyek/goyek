@@ -259,7 +259,14 @@ func Test_invalid_args(t *testing.T) {
 }
 
 func Test_help(t *testing.T) {
-	flow := &goyek.Taskflow{}
+	primary := &strings.Builder{}
+	message := &strings.Builder{}
+	flow := &goyek.Taskflow{
+		Output: goyek.Output{
+			Primary: primary,
+			Message: message,
+		},
+	}
 	fastParam := flow.RegisterBoolParam(goyek.BoolParam{
 		Name:  "fast",
 		Usage: "simulates fast-lane processing",
@@ -273,7 +280,23 @@ func Test_help(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "-h")
 
+	assertContains(t, primary.String(), "Usage:", "should print usage to primary output")
 	assertEqual(t, exitCode, goyek.CodePass, "should return OK")
+}
+
+func Test_help_no_task(t *testing.T) {
+	primary := &strings.Builder{}
+	message := &strings.Builder{}
+	flow := &goyek.Taskflow{
+		Output: goyek.Output{
+			Primary: primary,
+			Message: message,
+		},
+	}
+	exitCode := flow.Run(context.Background())
+
+	assertContains(t, message.String(), "Usage:", "should print usage to message output")
+	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should return invalid args")
 }
 
 func Test_printing(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -33,7 +34,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	}
 
 	if usageRequested {
-		printUsage(f)
+		printUsage(f.output.Primary, f)
 		return CodePass
 	}
 
@@ -41,7 +42,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 
 	if len(tasks) == 0 {
 		f.output.WriteMessagef("no task provided")
-		printUsage(f)
+		printUsage(f.output.Message, f)
 		return CodeInvalidArgs
 	}
 
@@ -266,14 +267,14 @@ func (f *flowRunner) unusedParams() []string {
 	return unusedParams
 }
 
-func printUsage(f *flowRunner) {
+func printUsage(out io.Writer, f *flowRunner) {
 	flagName := func(paramName string) string {
 		return "-" + paramName
 	}
 
-	f.output.WriteMessagef("Usage: [flag(s) | task(s)]...")
-	f.output.WriteMessagef("Flags:")
-	w := tabwriter.NewWriter(f.output.Message, 1, 1, 4, ' ', 0)
+	writeLinef(out, "Usage: [flag(s) | task(s)]...")
+	writeLinef(out, "Flags:")
+	w := tabwriter.NewWriter(out, 1, 1, 4, ' ', 0)
 	keys := make([]string, 0, len(f.params))
 	for key := range f.params {
 		keys = append(keys, key)
@@ -285,7 +286,7 @@ func printUsage(f *flowRunner) {
 	}
 	_ = w.Flush()
 
-	f.output.WriteMessagef("Tasks:")
+	writeLinef(out, "Tasks:")
 	keys = make([]string, 0, len(f.tasks))
 	for k, task := range f.tasks {
 		if task.Usage == "" {
@@ -310,6 +311,6 @@ func printUsage(f *flowRunner) {
 	_ = w.Flush()
 
 	if f.defaultTask.name != "" {
-		f.output.WriteMessagef("Default task: %s", f.defaultTask.name)
+		writeLinef(out, "Default task: %s", f.defaultTask.name)
 	}
 }
