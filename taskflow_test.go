@@ -303,7 +303,6 @@ func Test_printing(t *testing.T) {
 			tf.Fatalf("Fatalf %d", 5)
 		},
 	})
-	t.Log()
 
 	flow.Run(context.Background(), "-v", "failing")
 
