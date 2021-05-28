@@ -463,6 +463,11 @@ func Test_param_registration_error_empty_name(t *testing.T) {
 	assertPanics(t, func() { flow.RegisterBoolParam(goyek.BoolParam{Name: ""}) }, "empty name")
 }
 
+func Test_param_registration_error_underscore_name_start(t *testing.T) {
+	flow := &goyek.Taskflow{}
+	assertPanics(t, func() { flow.RegisterBoolParam(goyek.BoolParam{Name: "_reserved"}) }, "should not start with underscore")
+}
+
 func Test_param_registration_error_no_default(t *testing.T) {
 	flow := &goyek.Taskflow{}
 	assertPanics(t, func() { flow.RegisterValueParam(goyek.ValueParam{Name: "custom"}) }, "custom parameter must have default value factory")

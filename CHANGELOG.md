@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v0.4.0...HEAD)
 
+### Changed
+
+- Names of parameters now have to follow `goyek.ParamNamePattern`;
+  They were allowed to start with an underscore (`_`), and now no longer are.
+
 ## [0.4.0](https://github.com/goyek/goyek/compare/v0.3.0...v0.4.0) - 2021-05-26
 
 ### Added

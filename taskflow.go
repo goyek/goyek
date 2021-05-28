@@ -128,7 +128,7 @@ func (f *Taskflow) RegisterStringParam(p StringParam) RegisteredStringParam {
 // ParamNamePattern describes the regular expression a parameter name must match.
 const ParamNamePattern = "^[a-zA-Z0-9][a-zA-Z0-9_-]*$"
 
-var paramNameRegex = regexp.MustCompile(TaskNamePattern)
+var paramNameRegex = regexp.MustCompile(ParamNamePattern)
 
 func (f *Taskflow) registerParam(p registeredParam) {
 	if !paramNameRegex.MatchString(p.name) {
