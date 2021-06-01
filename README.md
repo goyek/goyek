@@ -20,19 +20,19 @@ Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 Table of Contents:
 
 - [goyek](#goyek)
-  - [Description](#description)
-  - [Quick start](#quick-start)
-  - [Examples](#examples)
-  - [Wrapper scripts](#wrapper-scripts)
-  - [Features](#features)
-    - [Task registration](#task-registration)
-    - [Task command](#task-command)
-    - [Task dependencies](#task-dependencies)
-    - [Helpers for running programs](#helpers-for-running-programs)
-    - [Verbose mode](#verbose-mode)
-    - [Default task](#default-task)
-    - [Parameters](#parameters)
-    - [Supported Go versions](#supported-go-versions)
+	- [Description](#description)
+	- [Quick start](#quick-start)
+	- [Examples](#examples)
+	- [Wrapper scripts](#wrapper-scripts)
+	- [Features](#features)
+		- [Task registration](#task-registration)
+		- [Task command](#task-command)
+		- [Task dependencies](#task-dependencies)
+		- [Helpers for running programs](#helpers-for-running-programs)
+		- [Verbose mode](#verbose-mode)
+		- [Default task](#default-task)
+		- [Parameters](#parameters)
+		- [Supported Go versions](#supported-go-versions)
 
 ## Description
 
@@ -151,9 +151,7 @@ go run . -wd=".." $@
 - [`goyek.ps1`](goyek.ps1):
 
 ```powershell
-$ErrorActionPreference = "Stop"
-
-Push-Location "$PSScriptRoot\build"
+Push-Location "$PSScriptRoot\build" -ErrorAction Stop
 & go run . -wd=".." $args
 Pop-Location
 exit $global:LASTEXITCODE
