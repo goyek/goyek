@@ -1,0 +1,5 @@
+# Default state for all rules
+default: true
+
+# no-multiple-blanks
+MD012: false
