@@ -1,5 +1,5 @@
 # Default state for all rules
 default: true
 
-# no-multiple-blanks
-MD012: false
+# first-line-heading/first-line-h1
+MD041: false
