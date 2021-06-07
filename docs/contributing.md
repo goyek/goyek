@@ -11,4 +11,4 @@ You can also find us on [Gophers Slack](https://invite.slack.golangbridge.org/) 
 
 You may use [Gitpod](https://gitpod.io/#https://github.com/goyek/goyek) to experiment with the codebase.
 
-The [releasing documentation](releasing.md) describes how to prepare and publis a new release.
+The [releasing documentation](releasing.md) describes how to prepare and publish a new release.
