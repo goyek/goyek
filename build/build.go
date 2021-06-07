@@ -2,6 +2,8 @@ package main
 
 import (
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/goyek/goyek"
@@ -24,6 +26,7 @@ func flow() *goyek.Taskflow {
 	clean := flow.Register(taskClean())
 	build := flow.Register(taskBuild())
 	fmt := flow.Register(taskFmt())
+	markdownlint := flow.Register(taskMarkdownLint())
 	misspell := flow.Register(taskMisspell())
 	golangciLint := flow.Register(taskGolangciLint())
 	test := flow.Register(taskTest())
@@ -33,6 +36,7 @@ func flow() *goyek.Taskflow {
 	// pipelines
 	lint := flow.Register(taskLint(goyek.Deps{
 		misspell,
+		markdownlint,
 		golangciLint,
 	}))
 	all := flow.Register(taskAll(goyek.Deps{
@@ -78,6 +82,29 @@ func taskFmt() goyek.Task {
 				tf.Fatalf("go install gofumports: %v", err)
 			}
 			tf.Cmd("gofumports", strings.Split("-l -w -local github.com/goyek/goyek .", " ")...).Run() //nolint // it is OK if it returns error
+		},
+	}
+}
+
+func taskMarkdownLint() goyek.Task {
+	return goyek.Task{
+		Name:  "markdownlint",
+		Usage: "markdownlint-cli",
+		Command: func(tf *goyek.TF) {
+			curDir, err := os.Getwd()
+			if err != nil {
+				tf.Fatal(err)
+			}
+
+			docsMount := curDir + ":/markdown"
+			if err := tf.Cmd("docker", "run", "-v", docsMount, "06kellyjac/markdownlint-cli:0.27.1", "**/*.md").Run(); err != nil {
+				tf.Error(err)
+			}
+
+			gitHubTemplatesMount := filepath.Join(curDir, ".github") + ":/markdown"
+			if err := tf.Cmd("docker", "run", "-v", gitHubTemplatesMount, "06kellyjac/markdownlint-cli:0.27.1", "**/*.md").Run(); err != nil {
+				tf.Error(err)
+			}
 		},
 	}
 }

@@ -1,5 +1,8 @@
 # Default state for all rules
 default: true
 
+# line-length
+MD013: false
+
 # first-line-heading/first-line-h1
 MD041: false
