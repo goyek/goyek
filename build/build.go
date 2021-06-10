@@ -89,7 +89,7 @@ func taskFmt() goyek.Task {
 func taskMarkdownLint() goyek.Task {
 	return goyek.Task{
 		Name:  "markdownlint",
-		Usage: "markdownlint-cli",
+		Usage: "markdownlint-cli (requires docker)",
 		Command: func(tf *goyek.TF) {
 			curDir, err := os.Getwd()
 			if err != nil {
