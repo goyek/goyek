@@ -90,7 +90,7 @@ func (f *flowRunner) parseArguments(args []string) ([]string, bool, error) {
 		}
 		if arg[0] == '-' {
 			// parse parameters
-			split := strings.SplitN(arg[1:], "=", 2)
+			split := strings.SplitN(arg[1:], "=", 2) //nolint:gomnd // ignore
 			if value, isFlag := f.paramValues[split[0]]; isFlag {
 				switch {
 				case len(split) > 1:
@@ -272,7 +272,7 @@ func printUsage(f *flowRunner) {
 
 	fmt.Fprintf(f.output, "Usage: [flag(s) | task(s)]...\n")
 	fmt.Fprintf(f.output, "Flags:\n")
-	w := tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0)
+	w := tabwriter.NewWriter(f.output, 1, 1, 4, ' ', 0) //nolint:gomnd // ignore
 	keys := make([]string, 0, len(f.params))
 	for key := range f.params {
 		keys = append(keys, key)
