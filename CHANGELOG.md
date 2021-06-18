@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v0.4.0...HEAD)
 
+### Added
+
+- Add the stack trace when a task panics.
+
 ### Changed
 
 - Names of parameters now have to follow `goyek.ParamNamePattern`;
