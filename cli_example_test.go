@@ -6,9 +6,13 @@ func Example() {
 	flow := &goyek.Taskflow{}
 
 	task1 := flow.Register(goyek.Task{
-		Name:   "task-1",
-		Usage:  "Print Go version",
-		Action: goyek.Exec("go", "version"),
+		Name:  "task-1",
+		Usage: "Print Go version",
+		Action: func(tf *goyek.TF) {
+			if err := tf.Cmd("go", "version").Run(); err != nil {
+				tf.Fatal(err)
+			}
+		},
 	})
 
 	task2 := flow.Register(goyek.Task{
