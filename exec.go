@@ -17,8 +17,8 @@ func (tf *TF) Cmd(name string, args ...string) *exec.Cmd {
 	return cmd
 }
 
-// Exec returns a command that will run the named program with the given arguments.
-// The command will pass only if the program if the program runs, has no problems
+// Exec returns a action that will run the named program with the given arguments.
+// The action will pass only if the program if the program runs, has no problems
 // copying stdin, stdout, and stderr, and exits with a zero exit status.
 func Exec(name string, args ...string) func(*TF) {
 	return func(tf *TF) {
