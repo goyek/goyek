@@ -9,15 +9,19 @@ import (
 	"github.com/goyek/goyek"
 )
 
-func TestExec_success(t *testing.T) {
+func TestCmd_success(t *testing.T) {
 	taskName := "exec"
 	sb := &strings.Builder{}
 	flow := &goyek.Flow{
 		Output: sb,
 	}
 	flow.Register(goyek.Task{
-		Name:   taskName,
-		Action: goyek.Exec("go", "version"),
+		Name: taskName,
+		Action: func(a *goyek.A) {
+			if err := a.Cmd("go", "version").Run(); err != nil {
+				a.Fatal(err)
+			}
+		},
 	})
 
 	exitCode := flow.Run(context.Background(), "-v", taskName)
@@ -26,14 +30,18 @@ func TestExec_success(t *testing.T) {
 	assertEqual(t, exitCode, goyek.CodePass, "task should pass")
 }
 
-func TestExec_error(t *testing.T) {
+func TestCmd_error(t *testing.T) {
 	taskName := "exec"
 	flow := &goyek.Flow{
 		Output: ioutil.Discard,
 	}
 	flow.Register(goyek.Task{
-		Name:   taskName,
-		Action: goyek.Exec("go", "wrong"),
+		Name: taskName,
+		Action: func(a *goyek.A) {
+			if err := a.Cmd("go", "wrong").Run(); err != nil {
+				a.Fatal(err)
+			}
+		},
 	})
 
 	exitCode := flow.Run(nil, taskName) //nolint:staticcheck // present that nil context is handled

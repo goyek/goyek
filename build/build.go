@@ -57,17 +57,25 @@ const buildDir = "build"
 
 func taskClean() goyek.Task {
 	return goyek.Task{
-		Name:   "clean",
-		Usage:  "remove git ignored files",
-		Action: goyek.Exec("git", "clean", "-fX"),
+		Name:  "clean",
+		Usage: "remove git ignored files",
+		Action: func(a *goyek.A) {
+			if err := a.Cmd("git", "clean", "-fX").Run(); err != nil {
+				a.Fatal(err)
+			}
+		},
 	}
 }
 
 func taskBuild() goyek.Task {
 	return goyek.Task{
-		Name:   "build",
-		Usage:  "go build",
-		Action: goyek.Exec("go", "build", "./..."),
+		Name:  "build",
+		Usage: "go build",
+		Action: func(a *goyek.A) {
+			if err := a.Cmd("go", "build", "./...").Run(); err != nil {
+				a.Fatal(err)
+			}
+		},
 	}
 }
 
@@ -147,9 +155,13 @@ func taskGolangciLint() goyek.Task {
 
 func taskTest() goyek.Task {
 	return goyek.Task{
-		Name:   "test",
-		Usage:  "go test with race detector and code covarage",
-		Action: goyek.Exec("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."),
+		Name:  "test",
+		Usage: "go test with race detector and code covarage",
+		Action: func(a *goyek.A) {
+			if err := a.Cmd("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./...").Run(); err != nil {
+				a.Fatal(err)
+			}
+		},
 	}
 }
 
