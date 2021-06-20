@@ -75,13 +75,13 @@ func taskFmt() goyek.Task {
 	return goyek.Task{
 		Name:  "fmt",
 		Usage: "gofumports",
-		Action: func(tf *goyek.TF) {
-			installFmt := tf.Cmd("go", "install", "mvdan.cc/gofumpt/gofumports")
+		Action: func(a *goyek.A) {
+			installFmt := a.Cmd("go", "install", "mvdan.cc/gofumpt/gofumports")
 			installFmt.Dir = buildDir
 			if err := installFmt.Run(); err != nil {
-				tf.Fatalf("go install gofumports: %v", err)
+				a.Fatalf("go install gofumports: %v", err)
 			}
-			tf.Cmd("gofumports", strings.Split("-l -w -local github.com/goyek/goyek .", " ")...).Run() //nolint // it is OK if it returns error
+			a.Cmd("gofumports", strings.Split("-l -w -local github.com/goyek/goyek .", " ")...).Run() //nolint // it is OK if it returns error
 		},
 	}
 }
@@ -90,20 +90,20 @@ func taskMarkdownLint() goyek.Task {
 	return goyek.Task{
 		Name:  "markdownlint",
 		Usage: "markdownlint-cli (requires docker)",
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			curDir, err := os.Getwd()
 			if err != nil {
-				tf.Fatal(err)
+				a.Fatal(err)
 			}
 
 			docsMount := curDir + ":/markdown"
-			if err := tf.Cmd("docker", "run", "-v", docsMount, "06kellyjac/markdownlint-cli:0.27.1", "**/*.md").Run(); err != nil {
-				tf.Error(err)
+			if err := a.Cmd("docker", "run", "-v", docsMount, "06kellyjac/markdownlint-cli:0.27.1", "**/*.md").Run(); err != nil {
+				a.Error(err)
 			}
 
 			gitHubTemplatesMount := filepath.Join(curDir, ".github") + ":/markdown"
-			if err := tf.Cmd("docker", "run", "-v", gitHubTemplatesMount, "06kellyjac/markdownlint-cli:0.27.1", "**/*.md").Run(); err != nil {
-				tf.Error(err)
+			if err := a.Cmd("docker", "run", "-v", gitHubTemplatesMount, "06kellyjac/markdownlint-cli:0.27.1", "**/*.md").Run(); err != nil {
+				a.Error(err)
 			}
 		},
 	}
@@ -113,15 +113,15 @@ func taskMisspell() goyek.Task {
 	return goyek.Task{
 		Name:  "misspell",
 		Usage: "misspell",
-		Action: func(tf *goyek.TF) {
-			installFmt := tf.Cmd("go", "install", "github.com/client9/misspell/cmd/misspell")
+		Action: func(a *goyek.A) {
+			installFmt := a.Cmd("go", "install", "github.com/client9/misspell/cmd/misspell")
 			installFmt.Dir = buildDir
 			if err := installFmt.Run(); err != nil {
-				tf.Fatalf("go install misspell: %v", err)
+				a.Fatalf("go install misspell: %v", err)
 			}
-			lint := tf.Cmd("misspell", "-error", "-locale=US", "-i=importas", ".")
+			lint := a.Cmd("misspell", "-error", "-locale=US", "-i=importas", ".")
 			if err := lint.Run(); err != nil {
-				tf.Fatalf("misspell: %v", err)
+				a.Fatalf("misspell: %v", err)
 			}
 		},
 	}
@@ -131,15 +131,15 @@ func taskGolangciLint() goyek.Task {
 	return goyek.Task{
 		Name:  "golangci-lint",
 		Usage: "golangci-lint",
-		Action: func(tf *goyek.TF) {
-			installLint := tf.Cmd("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
+		Action: func(a *goyek.A) {
+			installLint := a.Cmd("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
 			installLint.Dir = buildDir
 			if err := installLint.Run(); err != nil {
-				tf.Fatalf("go install golangci-lint: %v", err)
+				a.Fatalf("go install golangci-lint: %v", err)
 			}
-			lint := tf.Cmd("golangci-lint", "run")
+			lint := a.Cmd("golangci-lint", "run")
 			if err := lint.Run(); err != nil {
-				tf.Fatalf("golangci-lint run: %v", err)
+				a.Fatalf("golangci-lint run: %v", err)
 			}
 		},
 	}
@@ -157,15 +157,15 @@ func taskModTidy() goyek.Task {
 	return goyek.Task{
 		Name:  "mod-tidy",
 		Usage: "go mod tidy",
-		Action: func(tf *goyek.TF) {
-			if err := tf.Cmd("go", "mod", "tidy").Run(); err != nil {
-				tf.Errorf("go mod tidy: %v", err)
+		Action: func(a *goyek.A) {
+			if err := a.Cmd("go", "mod", "tidy").Run(); err != nil {
+				a.Errorf("go mod tidy: %v", err)
 			}
 
-			toolsModTidy := tf.Cmd("go", "mod", "tidy")
+			toolsModTidy := a.Cmd("go", "mod", "tidy")
 			toolsModTidy.Dir = buildDir
 			if err := toolsModTidy.Run(); err != nil {
-				tf.Errorf("go mod tidy: %v", err)
+				a.Errorf("go mod tidy: %v", err)
 			}
 		},
 	}
@@ -176,23 +176,23 @@ func taskDiff(ci goyek.RegisteredBoolParam) goyek.Task {
 		Name:   "diff",
 		Usage:  "git diff",
 		Params: goyek.Params{ci},
-		Action: func(tf *goyek.TF) {
-			if !ci.Get(tf) {
-				tf.Skip("ci param is not set, skipping")
+		Action: func(a *goyek.A) {
+			if !ci.Get(a) {
+				a.Skip("ci param is not set, skipping")
 			}
 
-			if err := tf.Cmd("git", "diff", "--exit-code").Run(); err != nil {
-				tf.Errorf("git diff: %v", err)
+			if err := a.Cmd("git", "diff", "--exit-code").Run(); err != nil {
+				a.Errorf("git diff: %v", err)
 			}
 
-			cmd := tf.Cmd("git", "status", "--porcelain")
+			cmd := a.Cmd("git", "status", "--porcelain")
 			sb := &strings.Builder{}
-			cmd.Stdout = io.MultiWriter(tf.Output(), sb)
+			cmd.Stdout = io.MultiWriter(a.Output(), sb)
 			if err := cmd.Run(); err != nil {
-				tf.Errorf("git status --porcelain: %v", err)
+				a.Errorf("git status --porcelain: %v", err)
 			}
 			if sb.Len() > 0 {
-				tf.Error("git status --porcelain returned output")
+				a.Error("git status --porcelain returned output")
 			}
 		},
 	}

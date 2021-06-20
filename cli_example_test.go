@@ -13,16 +13,16 @@ func Example() {
 
 	task2 := flow.Register(goyek.Task{
 		Name: "task-2",
-		Action: func(tf *goyek.TF) {
-			tf.Skip("skipping")
+		Action: func(a *goyek.A) {
+			a.Skip("skipping")
 		},
 	})
 
 	task3 := flow.Register(goyek.Task{
 		Name: "task-3",
-		Action: func(tf *goyek.TF) {
-			tf.Error("hello from", tf.Name())
-			tf.Log("this will be printed")
+		Action: func(a *goyek.A) {
+			a.Error("hello from", a.Name())
+			a.Log("this will be printed")
 		},
 	})
 

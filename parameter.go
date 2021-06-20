@@ -54,7 +54,7 @@ type ParamValue interface {
 // It can be used as a parameter for a Task.
 type RegisteredParam interface {
 	Name() string
-	value(tf *TF) ParamValue
+	value(a *A) ParamValue
 }
 
 // registeredParam is a helper struct encapsulating concrete registered parameter type.
@@ -69,10 +69,10 @@ func (p registeredParam) Name() string {
 	return p.name
 }
 
-func (p registeredParam) value(tf *TF) ParamValue {
-	value, existing := tf.paramValues[p.name]
+func (p registeredParam) value(a *A) ParamValue {
+	value, existing := a.paramValues[p.name]
 	if !existing {
-		tf.Fatal(&ParamError{Key: p.name, Err: errors.New("parameter not registered")})
+		a.Fatal(&ParamError{Key: p.name, Err: errors.New("parameter not registered")})
 	}
 	return value
 }
@@ -83,8 +83,8 @@ type RegisteredValueParam struct {
 }
 
 // Get returns the concrete instance of the generic value in the given flow.
-func (p RegisteredValueParam) Get(tf *TF) interface{} {
-	return p.value(tf).Get()
+func (p RegisteredValueParam) Get(a *A) interface{} {
+	return p.value(a).Get()
 }
 
 type boolValue bool
@@ -114,8 +114,8 @@ type RegisteredBoolParam struct {
 }
 
 // Get returns the boolean value of the parameter in the given flow.
-func (p RegisteredBoolParam) Get(tf *TF) bool {
-	value := p.value(tf)
+func (p RegisteredBoolParam) Get(a *A) bool {
+	value := p.value(a)
 	return value.Get().(bool)
 }
 
@@ -142,8 +142,8 @@ type RegisteredIntParam struct {
 }
 
 // Get returns the integer value of the parameter in the given flow.
-func (p RegisteredIntParam) Get(tf *TF) int {
-	value := p.value(tf)
+func (p RegisteredIntParam) Get(a *A) int {
+	value := p.value(a)
 	return value.Get().(int)
 }
 
@@ -166,7 +166,7 @@ type RegisteredStringParam struct {
 }
 
 // Get returns the string value of the parameter in the given flow.
-func (p RegisteredStringParam) Get(tf *TF) string {
-	value := p.value(tf)
+func (p RegisteredStringParam) Get(a *A) string {
+	value := p.value(a)
 	return value.Get().(string)
 }

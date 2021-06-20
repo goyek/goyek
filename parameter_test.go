@@ -8,7 +8,7 @@ import (
 	"github.com/goyek/goyek"
 )
 
-func runFlowWith(flow *goyek.Flow, param goyek.RegisteredParam, cmd func(*goyek.TF), args []string) int {
+func runFlowWith(flow *goyek.Flow, param goyek.RegisteredParam, cmd func(*goyek.A), args []string) int {
 	flow.Register(goyek.Task{
 		Name:   "task",
 		Params: goyek.Params{param},
@@ -45,7 +45,7 @@ func Test_bool_param(t *testing.T) {
 				Default: tc.defaultValue,
 			})
 			var got bool
-			exitCode := runFlowWith(flow, param, func(tf *goyek.TF) { got = param.Get(tf) }, tc.args)
+			exitCode := runFlowWith(flow, param, func(a *goyek.A) { got = param.Get(a) }, tc.args)
 
 			assertEqual(t, exitCode, tc.exitCode, "exit code should match")
 			assertEqual(t, got, tc.value, "value should match")
@@ -59,7 +59,7 @@ func Test_bool_param_help(t *testing.T) {
 		Name:    "bool",
 		Default: true,
 	})
-	exitCode := runFlowWith(flow, param, func(tf *goyek.TF) {}, []string{"-h"})
+	exitCode := runFlowWith(flow, param, func(a *goyek.A) {}, []string{"-h"})
 
 	assertEqual(t, exitCode, 0, "exit code should be OK")
 }
@@ -90,7 +90,7 @@ func Test_int_param(t *testing.T) {
 				Default: tc.defaultValue,
 			})
 			var got int
-			exitCode := runFlowWith(flow, param, func(tf *goyek.TF) { got = param.Get(tf) }, tc.args)
+			exitCode := runFlowWith(flow, param, func(a *goyek.A) { got = param.Get(a) }, tc.args)
 
 			assertEqual(t, exitCode, tc.exitCode, "exit code should match")
 			assertEqual(t, got, tc.value, "value should match")
@@ -104,7 +104,7 @@ func Test_int_param_help(t *testing.T) {
 		Name:    "int",
 		Default: 123,
 	})
-	exitCode := runFlowWith(flow, param, func(tf *goyek.TF) {}, []string{"-h"})
+	exitCode := runFlowWith(flow, param, func(a *goyek.A) {}, []string{"-h"})
 
 	assertEqual(t, exitCode, 0, "exit code should be OK")
 }
@@ -132,7 +132,7 @@ func Test_string_param(t *testing.T) {
 				Default: tc.defaultValue,
 			})
 			var got string
-			exitCode := runFlowWith(flow, param, func(tf *goyek.TF) { got = param.Get(tf) }, tc.args)
+			exitCode := runFlowWith(flow, param, func(a *goyek.A) { got = param.Get(a) }, tc.args)
 
 			assertEqual(t, exitCode, goyek.CodePass, "exit code should match")
 			assertEqual(t, got, tc.value, "value should match")
@@ -146,7 +146,7 @@ func Test_string_param_help(t *testing.T) {
 		Name:    "string",
 		Default: "abc",
 	})
-	exitCode := runFlowWith(flow, param, func(tf *goyek.TF) {}, []string{"-h"})
+	exitCode := runFlowWith(flow, param, func(a *goyek.A) {}, []string{"-h"})
 
 	assertEqual(t, exitCode, 0, "exit code should be OK")
 }

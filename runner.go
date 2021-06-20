@@ -40,11 +40,11 @@ func (r runResult) Duration() time.Duration {
 }
 
 // Run runs the action.
-func (r runner) Run(action func(tf *TF)) runResult {
+func (r runner) Run(action func(a *A)) runResult {
 	finished := make(chan runResult)
 	go func() {
 		writer := &syncWriter{Writer: r.Output}
-		tf := &TF{
+		a := &A{
 			ctx:         r.Ctx,
 			name:        r.TaskName,
 			writer:      writer,
@@ -53,17 +53,17 @@ func (r runner) Run(action func(tf *TF)) runResult {
 		from := time.Now()
 		defer func() {
 			if r := recover(); r != nil {
-				tf.Errorf("panic: %v", r)
-				tf.Log(string(debug.Stack()))
+				a.Errorf("panic: %v", r)
+				a.Log(string(debug.Stack()))
 			}
 			result := runResult{
-				failed:   tf.failed,
-				skipped:  tf.skipped,
+				failed:   a.failed,
+				skipped:  a.skipped,
 				duration: time.Since(from),
 			}
 			finished <- result
 		}()
-		action(tf)
+		action(a)
 	}()
 	return <-finished
 }

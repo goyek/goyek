@@ -38,8 +38,8 @@ func taskFirst(sharedParam goyek.RegisteredStringParam) goyek.Task {
 		Name:   "first",
 		Usage:  "Showcases a simple parameter",
 		Params: goyek.Params{sharedParam},
-		Action: func(tf *goyek.TF) {
-			tf.Log("Shared parameter named '" + sharedParam.Name() + "', value '" + sharedParam.Get(tf) + "'")
+		Action: func(a *goyek.A) {
+			a.Log("Shared parameter named '" + sharedParam.Name() + "', value '" + sharedParam.Get(a) + "'")
 		},
 	}
 }
@@ -55,9 +55,9 @@ func taskSecond(flow *goyek.Flow, sharedParam goyek.RegisteredStringParam) goyek
 		Name:   "second",
 		Usage:  "Showcases shared and task-specific parameters",
 		Params: goyek.Params{sharedParam, privateParam},
-		Action: func(tf *goyek.TF) {
-			tf.Log("Shared parameter named '" + sharedParam.Name() + "', value '" + sharedParam.Get(tf) + "'")
-			tf.Log("Private parameter named '" + privateParam.Name() + "', value '" + privateParam.Get(tf) + "'")
+		Action: func(a *goyek.A) {
+			a.Log("Shared parameter named '" + sharedParam.Name() + "', value '" + sharedParam.Get(a) + "'")
+			a.Log("Private parameter named '" + privateParam.Name() + "', value '" + privateParam.Get(a) + "'")
 		},
 	}
 }
@@ -112,9 +112,9 @@ func taskComplexParam(flow *goyek.Flow) goyek.Task {
 		Name:   "complex",
 		Usage:  "Showcases complex parameters",
 		Params: goyek.Params{privateParam},
-		Action: func(tf *goyek.TF) {
-			tf.Log("Private parameter named '" + privateParam.Name() +
-				"', value '" + fmt.Sprintf("%v", privateParam.Get(tf).(complexParam)) + "'")
+		Action: func(a *goyek.A) {
+			a.Log("Private parameter named '" + privateParam.Name() +
+				"', value '" + fmt.Sprintf("%v", privateParam.Get(a).(complexParam)) + "'")
 		},
 	}
 }
@@ -158,9 +158,9 @@ func taskListParam(flow *goyek.Flow) goyek.Task {
 		Name:   "list",
 		Usage:  "Showcases list parameters",
 		Params: goyek.Params{privateParam},
-		Action: func(tf *goyek.TF) {
-			tf.Log("Private parameter named '" + privateParam.Name() +
-				"', value " + fmt.Sprintf("%v", privateParam.Get(tf).([]int)))
+		Action: func(a *goyek.A) {
+			a.Log("Private parameter named '" + privateParam.Name() +
+				"', value " + fmt.Sprintf("%v", privateParam.Get(a).([]int)))
 		},
 	}
 }
