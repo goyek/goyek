@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	flow := &goyek.Taskflow{}
+	flow := &goyek.Flow{}
 
 	sharedParam := flow.RegisterStringParam(goyek.StringParam{
 		Name:    "shared",
@@ -44,7 +44,7 @@ func taskFirst(sharedParam goyek.RegisteredStringParam) goyek.Task {
 	}
 }
 
-func taskSecond(flow *goyek.Taskflow, sharedParam goyek.RegisteredStringParam) goyek.Task {
+func taskSecond(flow *goyek.Flow, sharedParam goyek.RegisteredStringParam) goyek.Task {
 	// The following is a "private" parameter, only available to this task.
 	privateParam := flow.RegisterStringParam(goyek.StringParam{
 		Name:    "private",
@@ -97,7 +97,7 @@ func (value *complexParamValue) IsBool() bool {
 // taskComplexParam showcases complex parameters, JSON encoded.
 //
 // Execute `go run . -v complex -json "{\"stringValue\":\"abc\"}"` as an example.
-func taskComplexParam(flow *goyek.Taskflow) goyek.Task {
+func taskComplexParam(flow *goyek.Flow) goyek.Task {
 	privateParam := flow.RegisterValueParam(goyek.ValueParam{
 		Name:  "json",
 		Usage: "A complex parameter",
@@ -145,7 +145,7 @@ func (value *listParamValue) IsBool() bool {
 // taskListParam showcases repeatable parameters.
 //
 // Execute `go run . -v list -port 1 -port 2 -port 3` as an example.
-func taskListParam(flow *goyek.Taskflow) goyek.Task {
+func taskListParam(flow *goyek.Flow) goyek.Task {
 	privateParam := flow.RegisterValueParam(goyek.ValueParam{
 		Name:  "port",
 		Usage: "Integer parameter, can be repeated",

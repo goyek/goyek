@@ -13,8 +13,8 @@ func main() {
 	flow().Main()
 }
 
-func flow() *goyek.Taskflow {
-	flow := &goyek.Taskflow{}
+func flow() *goyek.Flow {
+	flow := &goyek.Flow{}
 
 	// parameters
 	ci := flow.RegisterBoolParam(goyek.BoolParam{

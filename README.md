@@ -78,7 +78,7 @@ import (
 )
 
 func main() {
-	flow := &goyek.Taskflow{}
+	flow := &goyek.Flow{}
 
 	flow.Register(goyek.Task{
 		Name:  "hello",
@@ -184,7 +184,7 @@ Not having a command is very handy when registering "pipelines".
 ### Task dependencies
 
 During task registration it is possible to add a dependency to an already registered task.
-When taskflow is processed, it makes sure that the dependency is executed before the current task is run.
+When flow is processed, it makes sure that the dependency is executed before the current task is run.
 Take note that each task will be executed at most once.
 
 ### Helpers for running programs
@@ -232,12 +232,12 @@ Enable verbose output using the `-v` CLI flag.
 It works similar to `go test -v`. Verbose mode streams all logs to the output.
 If it is disabled, only logs from failed task are send to the output.
 
-Use [`func (f *Taskflow) VerboseParam() BoolParam`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.VerboseParam)
+Use [`func (f *Flow) VerboseParam() BoolParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.VerboseParam)
 if you need to check if verbose mode was set within a task's command.
 
 ### Default task
 
-Default task can be assigned via the [`Taskflow.DefaultTask`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.DefaultTask) field.
+Default task can be assigned via the [`Flow.DefaultTask`](https://pkg.go.dev/github.com/goyek/goyek#Flow.DefaultTask) field.
 
 When the default task is set, then it is run if no task is provided via CLI.
 
@@ -256,7 +256,7 @@ For example, `./goyek.sh test -v -pkg ./...` would run the `test` task
 with `v` bool parameter (verbose mode) set to `true`,
 and `pkg` string parameter set to `"./..."`.
 
-Parameters must first be registered via [`func (f *Taskflow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.RegisterValueParam), or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.RegisterStringParam).
+Parameters must first be registered via [`func (f *Flow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterValueParam), or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterStringParam).
 
 The registered parameters are required to have a non-empty name, matching
 the regular expression `^[a-zA-Z0-9][a-zA-Z0-9_-]*$`, available as
@@ -276,7 +276,7 @@ When registration is done, the task's command can retrieve the parameter value u
 
 See [examples/parameters/main.go](examples/parameters/main.go) for a detailed example.
 
-`Taskflow` will fail execution if there are unused parameters.
+`Flow` will fail execution if there are unused parameters.
 
 ### Supported Go versions
 

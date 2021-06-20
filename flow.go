@@ -9,21 +9,21 @@ import (
 )
 
 const (
-	// CodePass indicates that taskflow passed.
+	// CodePass indicates that a flow passed.
 	CodePass = 0
-	// CodeFail indicates that taskflow failed.
+	// CodeFail indicates that a flow failed.
 	CodeFail = 1
-	// CodeInvalidArgs indicates that taskflow got invalid input.
+	// CodeInvalidArgs indicates that a flow got invalid input.
 	CodeInvalidArgs = 2
 )
 
-// DefaultOutput is the default output used by Taskflow if it is not set.
+// DefaultOutput is the default output used by a flow if it is not set.
 var DefaultOutput io.Writer = os.Stdout
 
-// Taskflow is the root type of the package.
+// Flow is the root type of the package.
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
-type Taskflow struct {
+type Flow struct {
 	Output io.Writer // output where text is printed; os.Stdout by default
 
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
@@ -34,14 +34,14 @@ type Taskflow struct {
 	tasks   map[string]Task
 }
 
-// RegisteredTask represents a task that has been registered to a Taskflow.
+// RegisteredTask represents a task that has been registered to a Flow.
 // It can be used as a dependency for another Task.
 type RegisteredTask struct {
 	name string
 }
 
 // VerboseParam returns the out-of-the-box verbose parameter which controls the output behavior.
-func (f *Taskflow) VerboseParam() RegisteredBoolParam {
+func (f *Flow) VerboseParam() RegisteredBoolParam {
 	if f.verbose == nil {
 		param := f.RegisterBoolParam(BoolParam{
 			Name:  "v",
@@ -54,7 +54,7 @@ func (f *Taskflow) VerboseParam() RegisteredBoolParam {
 }
 
 // WorkDirParam returns the out-of-the-box working directory parameter which controls the working directory.
-func (f *Taskflow) WorkDirParam() RegisteredStringParam {
+func (f *Flow) WorkDirParam() RegisteredStringParam {
 	if f.workDir == nil {
 		param := f.RegisterStringParam(StringParam{
 			Name:    "wd",
@@ -70,9 +70,9 @@ func (f *Taskflow) WorkDirParam() RegisteredStringParam {
 // RegisterValueParam registers a generic parameter that is defined by the calling code.
 // Use this variant in case the primitive-specific implementations cannot cover the parameter.
 //
-// The value is provided via a factory function since Taskflow could be executed multiple times,
+// The value is provided via a factory function since Flow could be executed multiple times,
 // requiring a new Value instance each time.
-func (f *Taskflow) RegisterValueParam(p ValueParam) RegisteredValueParam {
+func (f *Flow) RegisterValueParam(p ValueParam) RegisteredValueParam {
 	regParam := registeredParam{
 		name:     p.Name,
 		usage:    p.Usage,
@@ -83,7 +83,7 @@ func (f *Taskflow) RegisterValueParam(p ValueParam) RegisteredValueParam {
 }
 
 // RegisterBoolParam registers a boolean parameter.
-func (f *Taskflow) RegisterBoolParam(p BoolParam) RegisteredBoolParam {
+func (f *Flow) RegisterBoolParam(p BoolParam) RegisteredBoolParam {
 	valGetter := func() ParamValue {
 		value := boolValue(p.Default)
 		return &value
@@ -97,7 +97,7 @@ func (f *Taskflow) RegisterBoolParam(p BoolParam) RegisteredBoolParam {
 }
 
 // RegisterIntParam registers an integer parameter.
-func (f *Taskflow) RegisterIntParam(p IntParam) RegisteredIntParam {
+func (f *Flow) RegisterIntParam(p IntParam) RegisteredIntParam {
 	valGetter := func() ParamValue {
 		value := intValue(p.Default)
 		return &value
@@ -112,7 +112,7 @@ func (f *Taskflow) RegisterIntParam(p IntParam) RegisteredIntParam {
 }
 
 // RegisterStringParam registers a string parameter.
-func (f *Taskflow) RegisterStringParam(p StringParam) RegisteredStringParam {
+func (f *Flow) RegisterStringParam(p StringParam) RegisteredStringParam {
 	valGetter := func() ParamValue {
 		value := stringValue(p.Default)
 		return &value
@@ -131,7 +131,7 @@ const ParamNamePattern = "^[a-zA-Z0-9][a-zA-Z0-9_-]*$"
 
 var paramNameRegex = regexp.MustCompile(ParamNamePattern)
 
-func (f *Taskflow) registerParam(p registeredParam) {
+func (f *Flow) registerParam(p registeredParam) {
 	if !paramNameRegex.MatchString(p.name) {
 		panic("parameter name must match ParamNamePattern")
 	}
@@ -153,7 +153,7 @@ const TaskNamePattern = "^[a-zA-Z0-9_][a-zA-Z0-9_-]*$"
 var taskNameRegex = regexp.MustCompile(TaskNamePattern)
 
 // Register registers the task. It panics in case of any error.
-func (f *Taskflow) Register(task Task) RegisteredTask {
+func (f *Flow) Register(task Task) RegisteredTask {
 	// validate
 	if !taskNameRegex.MatchString(task.Name) {
 		panic("task name must match TaskNamePattern")
@@ -173,7 +173,7 @@ func (f *Taskflow) Register(task Task) RegisteredTask {
 
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (f *Taskflow) Run(ctx context.Context, args ...string) int {
+func (f *Flow) Run(ctx context.Context, args ...string) int {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -194,7 +194,7 @@ func (f *Taskflow) Run(ctx context.Context, args ...string) int {
 	return flow.Run(ctx, args)
 }
 
-func (f *Taskflow) isRegistered(name string) bool {
+func (f *Flow) isRegistered(name string) bool {
 	if f.tasks == nil {
 		f.tasks = map[string]Task{}
 	}

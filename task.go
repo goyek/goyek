@@ -13,7 +13,7 @@ type Task struct {
 	// If it is empty, this task will not be listed in the usage output.
 	Usage string
 
-	// Command executes the task in the given taskflow context.
+	// Command executes the task in the given flow context.
 	// A task can be registered without a command and can act as a "collector" task
 	// for a list of dependencies.
 	Command func(tf *TF)

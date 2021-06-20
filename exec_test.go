@@ -12,7 +12,7 @@ import (
 func TestExec_success(t *testing.T) {
 	taskName := "exec"
 	sb := &strings.Builder{}
-	flow := &goyek.Taskflow{
+	flow := &goyek.Flow{
 		Output: sb,
 	}
 	flow.Register(goyek.Task{
@@ -28,7 +28,7 @@ func TestExec_success(t *testing.T) {
 
 func TestExec_error(t *testing.T) {
 	taskName := "exec"
-	flow := &goyek.Taskflow{
+	flow := &goyek.Flow{
 		Output: ioutil.Discard,
 	}
 	flow.Register(goyek.Task{
