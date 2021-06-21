@@ -17,9 +17,6 @@ const (
 	CodeInvalidArgs = 2
 )
 
-// DefaultOutput is the default output used by a flow if it is not set.
-var DefaultOutput io.Writer = os.Stdout
-
 // Flow is the root type of the package.
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
@@ -188,7 +185,7 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 	}
 
 	if flow.output == nil {
-		flow.output = DefaultOutput
+		flow.output = os.Stdout
 	}
 
 	return flow.Run(ctx, args)
