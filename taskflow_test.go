@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,10 +13,6 @@ import (
 
 	"github.com/goyek/goyek"
 )
-
-func init() {
-	goyek.DefaultOutput = ioutil.Discard
-}
 
 func Test_Register_errors(t *testing.T) {
 	testCases := []struct {

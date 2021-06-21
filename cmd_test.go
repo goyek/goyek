@@ -2,7 +2,6 @@ package goyek_test
 
 import (
 	"context"
-	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -32,9 +31,7 @@ func TestCmd_success(t *testing.T) {
 
 func TestCmd_error(t *testing.T) {
 	taskName := "exec"
-	flow := &goyek.Taskflow{
-		Output: ioutil.Discard,
-	}
+	flow := &goyek.Taskflow{}
 	flow.Register(goyek.Task{
 		Name: taskName,
 		Action: func(tf *goyek.TF) {
