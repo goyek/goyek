@@ -17,6 +17,9 @@
 
 Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
+> :warning: The `main` branch contains **breaking changes**.
+> Here is the [**README for the latest release**](https://github.com/pellared/taskflow/blob/v0.5.0/README.md).
+
 Table of Contents:
 
 - [goyek](#goyek)

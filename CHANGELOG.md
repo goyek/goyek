@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v0.5.0...HEAD)
 
+This release contains multiple **breaking changes** in the Go API. It is supposed to make it cleaner.
+
+### Changed
+
+- Rename `Taskflow` type to `Flow`.
+- Rename `Task.Command` field to `Action`.
+- Rename `TF` type to `Progress`.
+
+### Removed
+
+- Remove `DefaultOutput` global variable.
+- Remove `TF.Exec` method.
+
 ## [0.5.0](https://github.com/goyek/goyek/compare/v0.4.0...v0.5.0) - 2021-06-21
 
 ### Added
@@ -32,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 The repository has been migrated from <https://github.com/pellared/taskflow>
 to <https://github.com/goyek/goyek>.
 
-This release contains multiple breaking changes for both the CLI and the Go API.
+This release contains multiple **breaking changes** for both the CLI and the Go API.
 
 The biggest change is a redesign of the parameters API, so they have to be explicitly registered.
 It makes the usage of the parameters more controlled and provides a better help output.
