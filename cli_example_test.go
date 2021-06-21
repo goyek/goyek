@@ -8,25 +8,25 @@ func Example() {
 	task1 := flow.Register(goyek.Task{
 		Name:  "task-1",
 		Usage: "Print Go version",
-		Action: func(a *goyek.A) {
-			if err := a.Cmd("go", "version").Run(); err != nil {
-				a.Fatal(err)
+		Action: func(p *goyek.Progress) {
+			if err := p.Cmd("go", "version").Run(); err != nil {
+				p.Fatal(err)
 			}
 		},
 	})
 
 	task2 := flow.Register(goyek.Task{
 		Name: "task-2",
-		Action: func(a *goyek.A) {
-			a.Skip("skipping")
+		Action: func(p *goyek.Progress) {
+			p.Skip("skipping")
 		},
 	})
 
 	task3 := flow.Register(goyek.Task{
 		Name: "task-3",
-		Action: func(a *goyek.A) {
-			a.Error("hello from", a.Name())
-			a.Log("this will be printed")
+		Action: func(p *goyek.Progress) {
+			p.Error("hello from", p.Name())
+			p.Log("this will be printed")
 		},
 	})
 

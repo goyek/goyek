@@ -16,7 +16,7 @@ type Task struct {
 	// Action executes the task in the given flow context.
 	// A task can be registered without a action and can act as a "collector" task
 	// for a list of dependencies.
-	Action func(a *A)
+	Action func(p *Progress)
 
 	// Deps lists all registered tasks that need to be run before this task is executed.
 	Deps Deps

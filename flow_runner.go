@@ -201,20 +201,20 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	verbose := ok && verboseParamVal.Get().(bool)
 
 	failed := false
-	measuredAction := func(a *A) {
-		w := a.Output()
+	measuredAction := func(p *Progress) {
+		w := p.Output()
 		if !verbose {
 			w = &strings.Builder{}
 		}
 
 		// report task start
-		fmt.Fprintf(w, "===== TASK  %s\n", a.Name())
+		fmt.Fprintf(w, "===== TASK  %s\n", p.Name())
 
 		// run task
 		r := runner{
-			Ctx:         a.Context(),
-			TaskName:    a.Name(),
-			ParamValues: a.paramValues,
+			Ctx:         p.Context(),
+			TaskName:    p.Name(),
+			ParamValues: p.paramValues,
 			Output:      w,
 		}
 		result := r.Run(task.Action)
@@ -228,10 +228,10 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		case result.Skipped():
 			status = "SKIP"
 		}
-		fmt.Fprintf(w, "----- %s: %s (%.2fs)\n", status, a.Name(), result.Duration().Seconds())
+		fmt.Fprintf(w, "----- %s: %s (%.2fs)\n", status, p.Name(), result.Duration().Seconds())
 
 		if sb, ok := w.(*strings.Builder); ok && result.failed {
-			io.Copy(a.Output(), strings.NewReader(sb.String())) //nolint // not checking errors when writing to output
+			io.Copy(p.Output(), strings.NewReader(sb.String())) //nolint // not checking errors when writing to output
 		}
 	}
 

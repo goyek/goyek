@@ -10,8 +10,8 @@ func main() {
 	flow.Register(goyek.Task{
 		Name:  "hello",
 		Usage: "demonstration",
-		Action: func(a *goyek.A) {
-			a.Log("Hello world!")
+		Action: func(p *goyek.Progress) {
+			p.Log("Hello world!")
 		},
 	})
 

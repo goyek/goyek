@@ -83,8 +83,8 @@ func main() {
 	flow.Register(goyek.Task{
 		Name:  "hello",
 		Usage: "demonstration",
-		Action: func(a *goyek.A) {
-			a.Log("Hello world!")
+		Action: func(p *goyek.Progress) {
+			p.Log("Hello world!")
 		},
 	})
 
@@ -189,7 +189,7 @@ Take note that each task will be executed at most once.
 
 ### Helpers for running programs
 
-Use [`func (a *A) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.dev/github.com/goyek/goyek#A.Cmd)
+Use [`func (p *Progress) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.dev/github.com/goyek/goyek#Progress.Cmd)
 to run a program inside a task's action.
 
 You can use it create your own helpers, for example:
@@ -203,22 +203,22 @@ import (
 	"github.com/mattn/go-shellwords"
 )
 
-func Cmd(a *goyek.A, cmdLine string) *exec.Cmd {
+func Cmd(p *goyek.Progress, cmdLine string) *exec.Cmd {
 	args, err := shellwords.Parse(cmdLine)
 	if err != nil {
-		a.Fatalf("parse command line: %v", err)
+		p.Fatalf("parse command line: %v", err)
 	}
-	return a.Cmd(args[0], args[1:]...)
+	return p.Cmd(args[0], args[1:]...)
 }
 
-func Exec(cmdLine string) func(a *goyek.A) {
+func Exec(cmdLine string) func(p *goyek.Progress) {
 	args, err := shellwords.Parse(cmdLine)
 	if err != nil {
 		panic(fmt.Sprintf("parse command line: %v", err))
 	}
-	return func(a *goyek.A) {
-		if err := a.Cmd(args[0], args[1:]...).Run(); err != nil {
-			a.Fatal(err)
+	return func(p *goyek.Progress) {
+		if err := p.Cmd(args[0], args[1:]...).Run(); err != nil {
+			p.Fatal(err)
 		}
 	}
 }
@@ -272,7 +272,7 @@ After registration, tasks need to specify which parameters they will read.
 Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/goyek/goyek#RegisteredParam) instance from the registration result to the [`Task.Params`](https://pkg.go.dev/github.com/goyek/goyek#Task.Params) field.
 If a task tries to retrieve the value from an unregistered parameter, the task will fail.
 
-When registration is done, the task's action can retrieve the parameter value using the `Get(*A)` method from the registration result instance during the task's `Action` execution.
+When registration is done, the task's action can retrieve the parameter value using the `Get(*Progress)` method from the registration result instance during the task's `Action` execution.
 
 See [examples/parameters/main.go](examples/parameters/main.go) for a detailed example.
 

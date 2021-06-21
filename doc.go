@@ -4,7 +4,7 @@ It is intended to be used in concert with the "go run" command,
 to run a program which implements the build pipeline (called flow).
 A flow consists of a set of registered tasks.
 A task has a name, can have a defined action, which is a function with signature
-	func (*goyek.A)
+	func (*goyek.Progress)
 and can have dependencies (already defined tasks).
 
 When the flow is executed for given tasks,

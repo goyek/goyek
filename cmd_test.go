@@ -17,9 +17,9 @@ func TestCmd_success(t *testing.T) {
 	}
 	flow.Register(goyek.Task{
 		Name: taskName,
-		Action: func(a *goyek.A) {
-			if err := a.Cmd("go", "version").Run(); err != nil {
-				a.Fatal(err)
+		Action: func(p *goyek.Progress) {
+			if err := p.Cmd("go", "version").Run(); err != nil {
+				p.Fatal(err)
 			}
 		},
 	})
@@ -37,9 +37,9 @@ func TestCmd_error(t *testing.T) {
 	}
 	flow.Register(goyek.Task{
 		Name: taskName,
-		Action: func(a *goyek.A) {
-			if err := a.Cmd("go", "wrong").Run(); err != nil {
-				a.Fatal(err)
+		Action: func(p *goyek.Progress) {
+			if err := p.Cmd("go", "wrong").Run(); err != nil {
+				p.Fatal(err)
 			}
 		},
 	})

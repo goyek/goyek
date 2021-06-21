@@ -64,14 +64,14 @@ func Test_successful(t *testing.T) {
 	var executed1 int
 	task1 := flow.Register(goyek.Task{
 		Name: "task-1",
-		Action: func(*goyek.A) {
+		Action: func(*goyek.Progress) {
 			executed1++
 		},
 	})
 	var executed2 int
 	flow.Register(goyek.Task{
 		Name: "task-2",
-		Action: func(*goyek.A) {
+		Action: func(*goyek.Progress) {
 			executed2++
 		},
 		Deps: goyek.Deps{task1},
@@ -79,7 +79,7 @@ func Test_successful(t *testing.T) {
 	var executed3 int
 	flow.Register(goyek.Task{
 		Name: "task-3",
-		Action: func(*goyek.A) {
+		Action: func(*goyek.Progress) {
 			executed3++
 		},
 		Deps: goyek.Deps{task1},
@@ -106,18 +106,18 @@ func Test_dependency_failure(t *testing.T) {
 	var executed1 int
 	task1 := flow.Register(goyek.Task{
 		Name: "task-1",
-		Action: func(a *goyek.A) {
+		Action: func(p *goyek.Progress) {
 			executed1++
-			a.Error("it still runs")
+			p.Error("it still runs")
 			executed1 += 10
-			a.FailNow()
+			p.FailNow()
 			executed1 += 100
 		},
 	})
 	var executed2 int
 	flow.Register(goyek.Task{
 		Name: "task-2",
-		Action: func(*goyek.A) {
+		Action: func(*goyek.Progress) {
 			executed2++
 		},
 		Deps: goyek.Deps{task1},
@@ -125,7 +125,7 @@ func Test_dependency_failure(t *testing.T) {
 	var executed3 int
 	flow.Register(goyek.Task{
 		Name: "task-3",
-		Action: func(*goyek.A) {
+		Action: func(*goyek.Progress) {
 			executed3++
 		},
 		Deps: goyek.Deps{task1},
@@ -145,18 +145,18 @@ func Test_fail(t *testing.T) {
 	failed := false
 	flow.Register(goyek.Task{
 		Name: "task",
-		Action: func(a *goyek.A) {
+		Action: func(p *goyek.Progress) {
 			defer func() {
-				failed = a.Failed()
+				failed = p.Failed()
 			}()
-			a.Fatal("failing")
+			p.Fatal("failing")
 		},
 	})
 
 	exitCode := flow.Run(context.Background(), "task")
 
 	assertEqual(t, exitCode, 1, "should return error")
-	assertTrue(t, failed, "a.Failed() should return true")
+	assertTrue(t, failed, "p.Failed() should return true")
 }
 
 func Test_skip(t *testing.T) {
@@ -164,25 +164,25 @@ func Test_skip(t *testing.T) {
 	skipped := false
 	flow.Register(goyek.Task{
 		Name: "task",
-		Action: func(a *goyek.A) {
+		Action: func(p *goyek.Progress) {
 			defer func() {
-				skipped = a.Skipped()
+				skipped = p.Skipped()
 			}()
-			a.Skip("skipping")
+			p.Skip("skipping")
 		},
 	})
 
 	exitCode := flow.Run(context.Background(), "task")
 
 	assertEqual(t, exitCode, 0, "should pass")
-	assertTrue(t, skipped, "a.Skipped() should return true")
+	assertTrue(t, skipped, "p.Skipped() should return true")
 }
 
 func Test_task_panics(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.Register(goyek.Task{
 		Name: "task",
-		Action: func(a *goyek.A) {
+		Action: func(p *goyek.Progress) {
 			panic("panicked!")
 		},
 	})
@@ -211,7 +211,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.Register(goyek.Task{
 		Name: "task",
-		Action: func(a *goyek.A) {
+		Action: func(p *goyek.Progress) {
 			cancel()
 		},
 	})
@@ -288,19 +288,19 @@ func Test_printing(t *testing.T) {
 	}
 	skipped := flow.Register(goyek.Task{
 		Name: "skipped",
-		Action: func(a *goyek.A) {
-			a.Skipf("Skipf %d", 0)
+		Action: func(p *goyek.Progress) {
+			p.Skipf("Skipf %d", 0)
 		},
 	})
 	flow.Register(goyek.Task{
 		Name: "failing",
 		Deps: goyek.Deps{skipped},
-		Action: func(a *goyek.A) {
-			a.Log("Log", 1)
-			a.Logf("Logf %d", 2)
-			a.Error("Error", 3)
-			a.Errorf("Errorf %d", 4)
-			a.Fatalf("Fatalf %d", 5)
+		Action: func(p *goyek.Progress) {
+			p.Log("Log", 1)
+			p.Logf("Logf %d", 2)
+			p.Error("Error", 3)
+			p.Errorf("Errorf %d", 4)
+			p.Fatalf("Fatalf %d", 5)
 		},
 	})
 
@@ -330,13 +330,13 @@ func Test_concurrent_printing(t *testing.T) {
 			}
 			flow.Register(goyek.Task{
 				Name: "task",
-				Action: func(a *goyek.A) {
+				Action: func(p *goyek.Progress) {
 					ch := make(chan struct{})
 					go func() {
 						defer func() { ch <- struct{}{} }()
-						a.Log("from child goroutine")
+						p.Log("from child goroutine")
 					}()
-					a.Error("from main goroutine")
+					p.Error("from main goroutine")
 					<-ch
 				},
 			})
@@ -361,8 +361,8 @@ func Test_name(t *testing.T) {
 	var got string
 	flow.Register(goyek.Task{
 		Name: taskName,
-		Action: func(a *goyek.A) {
-			got = a.Name()
+		Action: func(p *goyek.Progress) {
+			got = p.Name()
 		},
 	})
 
@@ -417,11 +417,11 @@ func Test_params(t *testing.T) {
 			stringParam,
 			arrayParam,
 		},
-		Action: func(a *goyek.A) {
-			gotBool = boolParam.Get(a)
-			gotInt = intParam.Get(a)
-			gotString = stringParam.Get(a)
-			gotArray = arrayParam.Get(a).([]string) //nolint:forcetypeassert // test code, it can panic
+		Action: func(p *goyek.Progress) {
+			gotBool = boolParam.Get(p)
+			gotInt = intParam.Get(p)
+			gotString = stringParam.Get(p)
+			gotArray = arrayParam.Get(p).([]string) //nolint:forcetypeassert // test code, it can panic
 		},
 	})
 
@@ -438,7 +438,7 @@ func Test_invalid_params(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.Register(goyek.Task{
 		Name:   "task",
-		Action: func(a *goyek.A) {},
+		Action: func(p *goyek.Progress) {},
 	})
 
 	exitCode := flow.Run(context.Background(), "-z=3", "task")
@@ -448,7 +448,7 @@ func Test_invalid_params(t *testing.T) {
 
 func Test_unused_params(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.DefaultTask = flow.Register(goyek.Task{Name: "task", Action: func(a *goyek.A) {}})
+	flow.DefaultTask = flow.Register(goyek.Task{Name: "task", Action: func(p *goyek.Progress) {}})
 	flow.RegisterBoolParam(goyek.BoolParam{Name: "unused"})
 
 	assertPanics(t, func() { flow.Run(context.Background()) }, "should fail because of unused parameter")
@@ -481,8 +481,8 @@ func Test_unregistered_params(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.Register(goyek.Task{
 		Name: "task",
-		Action: func(a *goyek.A) {
-			foreignParam.Get(a)
+		Action: func(p *goyek.Progress) {
+			foreignParam.Get(p)
 		},
 	})
 
@@ -496,7 +496,7 @@ func Test_defaultTask(t *testing.T) {
 	taskRan := false
 	task := flow.Register(goyek.Task{
 		Name: "task",
-		Action: func(a *goyek.A) {
+		Action: func(p *goyek.Progress) {
 			taskRan = true
 		},
 	})
@@ -517,7 +517,7 @@ func Test_wd_param(t *testing.T) {
 	var got string
 	flow.Register(goyek.Task{
 		Name: "task",
-		Action: func(a *goyek.A) {
+		Action: func(p *goyek.Progress) {
 			var osErr error
 			got, osErr = os.Getwd()
 			requireEqual(t, osErr, nil, "should get work dir from task")
@@ -540,7 +540,7 @@ func Test_wd_param_invalid(t *testing.T) {
 	taskRan := false
 	flow.Register(goyek.Task{
 		Name: "task",
-		Action: func(a *goyek.A) {
+		Action: func(p *goyek.Progress) {
 			taskRan = true
 		},
 	})

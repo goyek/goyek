@@ -40,11 +40,11 @@ func (r runResult) Duration() time.Duration {
 }
 
 // Run runs the action.
-func (r runner) Run(action func(a *A)) runResult {
+func (r runner) Run(action func(p *Progress)) runResult {
 	finished := make(chan runResult)
 	go func() {
 		writer := &syncWriter{Writer: r.Output}
-		a := &A{
+		a := &Progress{
 			ctx:         r.Ctx,
 			name:        r.TaskName,
 			writer:      writer,
