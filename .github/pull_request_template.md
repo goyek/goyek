@@ -1,17 +1,12 @@
 ## Why
-
 > Why this pull request was created? Explain the problem that this pull request is trying to solve.
 <!-- Add explanation bellow this line -->
 
-
 ## What
-
 > What does this pull request contain? Explain what is this pull request changing.
 <!-- Add explanation bellow this line -->
 
-
 ## Checklist
-
 <!-- All items should be verified and marked as done. If an item doesn't apply to the introduced changes - check it as done too -->
 - [ ] `CHANGELOG.md` is updated.
 - [ ] `README.md` is updated.
