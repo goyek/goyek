@@ -26,7 +26,7 @@ Table of Contents:
   - [Wrapper scripts](#wrapper-scripts)
   - [Features](#features)
     - [Task registration](#task-registration)
-    - [Task command](#task-command)
+    - [Task action](#task-action)
     - [Task dependencies](#task-dependencies)
     - [Helpers for running programs](#helpers-for-running-programs)
     - [Verbose mode](#verbose-mode)
@@ -45,7 +45,7 @@ Here are some good parts:
 - No binary installation is needed. Simply add it to `go.mod` like any other Go module.
   - You can be sure that everyone uses the same version of **goyek**.
 - It has low learning curve, thanks to the minimal API surface, documentation, and examples.
-- The task's command look like a unit test.
+- The task's action look like a unit test.
   It is even possible to use [`testify`](https://github.com/stretchr/testify)
   or [`is`](https://github.com/matryer/is) for asserting.
 - It is easy to debug, like a regular Go application.
@@ -83,7 +83,7 @@ func main() {
 	flow.Register(goyek.Task{
 		Name:  "hello",
 		Usage: "demonstration",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			tf.Log("Hello world!")
 		},
 	})
@@ -175,11 +175,11 @@ A task with a given name can be only registered once.
 
 A task without description is not listed in CLI usage.
 
-### Task command
+### Task action
 
-Task command is a function which is executed when a task is executed.
-It is not required to to set a command.
-Not having a command is very handy when registering "pipelines".
+Task action is a function which is executed when a task is executed.
+It is not required to to set a action.
+Not having a action is very handy when registering "pipelines".
 
 ### Task dependencies
 
@@ -190,7 +190,7 @@ Take note that each task will be executed at most once.
 ### Helpers for running programs
 
 Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.dev/github.com/goyek/goyek#TF.Cmd)
-to run a program inside a task's command.
+to run a program inside a task's action.
 
 You can use it create your own helpers, for example:
 
@@ -233,7 +233,7 @@ It works similar to `go test -v`. Verbose mode streams all logs to the output.
 If it is disabled, only logs from failed task are send to the output.
 
 Use [`func (f *Taskflow) VerboseParam() BoolParam`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.VerboseParam)
-if you need to check if verbose mode was set within a task's command.
+if you need to check if verbose mode was set within a task's action.
 
 ### Default task
 
@@ -272,7 +272,7 @@ After registration, tasks need to specify which parameters they will read.
 Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/goyek/goyek#RegisteredParam) instance from the registration result to the [`Task.Params`](https://pkg.go.dev/github.com/goyek/goyek#Task.Params) field.
 If a task tries to retrieve the value from an unregistered parameter, the task will fail.
 
-When registration is done, the task's command can retrieve the parameter value using the `Get(*TF)` method from the registration result instance during the task's `Command` execution.
+When registration is done, the task's action can retrieve the parameter value using the `Get(*TF)` method from the registration result instance during the task's `Action` execution.
 
 See [examples/parameters/main.go](examples/parameters/main.go) for a detailed example.
 

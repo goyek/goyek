@@ -16,8 +16,8 @@ func TestExec_success(t *testing.T) {
 		Output: sb,
 	}
 	flow.Register(goyek.Task{
-		Name:    taskName,
-		Command: goyek.Exec("go", "version"),
+		Name:   taskName,
+		Action: goyek.Exec("go", "version"),
 	})
 
 	exitCode := flow.Run(context.Background(), "-v", taskName)
@@ -32,8 +32,8 @@ func TestExec_error(t *testing.T) {
 		Output: ioutil.Discard,
 	}
 	flow.Register(goyek.Task{
-		Name:    taskName,
-		Command: goyek.Exec("go", "wrong"),
+		Name:   taskName,
+		Action: goyek.Exec("go", "wrong"),
 	})
 
 	exitCode := flow.Run(nil, taskName) //nolint:staticcheck // present that nil context is handled

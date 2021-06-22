@@ -10,10 +10,10 @@ import (
 
 func runTaskflowWith(flow *goyek.Taskflow, param goyek.RegisteredParam, cmd func(*goyek.TF), args []string) int {
 	flow.Register(goyek.Task{
-		Name:    "task",
-		Params:  goyek.Params{param},
-		Command: cmd,
-		Usage:   "Sample task for parameter tests",
+		Name:   "task",
+		Params: goyek.Params{param},
+		Action: cmd,
+		Usage:  "Sample task for parameter tests",
 	})
 	completeArgs := []string{"task"}
 	completeArgs = append(completeArgs, args...)
