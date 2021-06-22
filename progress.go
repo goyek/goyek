@@ -45,7 +45,7 @@ func (p *Progress) Log(args ...interface{}) {
 	fmt.Fprintln(p.writer, args...)
 }
 
-// Logf formats its arguments according to the format, analogous to Prina,
+// Logf formats its arguments according to the format, analogous to Printf,
 // and prints the text to Output. A final newline is added.
 // The text will be printed only if the task fails or flow is run in Verbose mode.
 func (p *Progress) Logf(format string, args ...interface{}) {
