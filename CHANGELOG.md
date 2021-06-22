@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v0.5.0...HEAD)
 
+This release contains multiple **breaking changes** in the Go API. It is supposed to make it cleaner.
+
+### Changed
+
+- Rename `Task.Command` field to `Action` to avoid confusion with [`exec.Command`](https://golang.org/pkg/os/exec/#Command) and `TF.Cmd`.
+
+### Removed
+
+- Remove `DefaultOutput` global variable.
+- Remove `TF.Exec` method.
+
 ## [0.5.0](https://github.com/goyek/goyek/compare/v0.4.0...v0.5.0) - 2021-06-21
 
 ### Added
