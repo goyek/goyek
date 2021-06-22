@@ -44,7 +44,7 @@ func (r runner) Run(action func(p *Progress)) runResult {
 	finished := make(chan runResult)
 	go func() {
 		writer := &syncWriter{Writer: r.Output}
-		a := &Progress{
+		p := &Progress{
 			ctx:         r.Ctx,
 			name:        r.TaskName,
 			writer:      writer,
@@ -53,17 +53,17 @@ func (r runner) Run(action func(p *Progress)) runResult {
 		from := time.Now()
 		defer func() {
 			if r := recover(); r != nil {
-				a.Errorf("panic: %v", r)
-				a.Log(string(debug.Stack()))
+				p.Errorf("panic: %v", r)
+				p.Log(string(debug.Stack()))
 			}
 			result := runResult{
-				failed:   a.failed,
-				skipped:  a.skipped,
+				failed:   p.failed,
+				skipped:  p.skipped,
 				duration: time.Since(from),
 			}
 			finished <- result
 		}()
-		action(a)
+		action(p)
 	}()
 	return <-finished
 }
