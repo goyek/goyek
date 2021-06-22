@@ -3,6 +3,7 @@ package goyek
 import (
 	"context"
 	"io"
+	"runtime/debug"
 	"time"
 )
 
@@ -53,6 +54,7 @@ func (r runner) Run(command func(tf *TF)) runResult {
 		defer func() {
 			if r := recover(); r != nil {
 				tf.Errorf("panic: %v", r)
+				tf.Log(string(debug.Stack()))
 			}
 			result := runResult{
 				failed:   tf.failed,
