@@ -10,6 +10,7 @@
 
 <!-- All items should be verified and marked as done.
      If an item doesn't apply to the introduced changes - check it as done too -->
+
 - [ ] `CHANGELOG.md` is updated.
 - [ ] `README.md` is updated.
 - [ ] The code changes follow [Effective Go](https://golang.org/doc/effective_go).
