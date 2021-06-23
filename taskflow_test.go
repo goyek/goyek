@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,10 +13,6 @@ import (
 
 	"github.com/goyek/goyek"
 )
-
-func init() {
-	goyek.DefaultOutput = ioutil.Discard
-}
 
 func Test_Register_errors(t *testing.T) {
 	testCases := []struct {
@@ -64,14 +59,14 @@ func Test_successful(t *testing.T) {
 	var executed1 int
 	task1 := flow.Register(goyek.Task{
 		Name: "task-1",
-		Command: func(*goyek.TF) {
+		Action: func(*goyek.TF) {
 			executed1++
 		},
 	})
 	var executed2 int
 	flow.Register(goyek.Task{
 		Name: "task-2",
-		Command: func(*goyek.TF) {
+		Action: func(*goyek.TF) {
 			executed2++
 		},
 		Deps: goyek.Deps{task1},
@@ -79,7 +74,7 @@ func Test_successful(t *testing.T) {
 	var executed3 int
 	flow.Register(goyek.Task{
 		Name: "task-3",
-		Command: func(*goyek.TF) {
+		Action: func(*goyek.TF) {
 			executed3++
 		},
 		Deps: goyek.Deps{task1},
@@ -106,7 +101,7 @@ func Test_dependency_failure(t *testing.T) {
 	var executed1 int
 	task1 := flow.Register(goyek.Task{
 		Name: "task-1",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			executed1++
 			tf.Error("it still runs")
 			executed1 += 10
@@ -117,7 +112,7 @@ func Test_dependency_failure(t *testing.T) {
 	var executed2 int
 	flow.Register(goyek.Task{
 		Name: "task-2",
-		Command: func(*goyek.TF) {
+		Action: func(*goyek.TF) {
 			executed2++
 		},
 		Deps: goyek.Deps{task1},
@@ -125,7 +120,7 @@ func Test_dependency_failure(t *testing.T) {
 	var executed3 int
 	flow.Register(goyek.Task{
 		Name: "task-3",
-		Command: func(*goyek.TF) {
+		Action: func(*goyek.TF) {
 			executed3++
 		},
 		Deps: goyek.Deps{task1},
@@ -145,7 +140,7 @@ func Test_fail(t *testing.T) {
 	failed := false
 	flow.Register(goyek.Task{
 		Name: "task",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			defer func() {
 				failed = tf.Failed()
 			}()
@@ -164,7 +159,7 @@ func Test_skip(t *testing.T) {
 	skipped := false
 	flow.Register(goyek.Task{
 		Name: "task",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			defer func() {
 				skipped = tf.Skipped()
 			}()
@@ -182,7 +177,7 @@ func Test_task_panics(t *testing.T) {
 	flow := &goyek.Taskflow{}
 	flow.Register(goyek.Task{
 		Name: "task",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			panic("panicked!")
 		},
 	})
@@ -211,7 +206,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 	flow := &goyek.Taskflow{}
 	flow.Register(goyek.Task{
 		Name: "task",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			cancel()
 		},
 	})
@@ -221,7 +216,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 	assertEqual(t, exitCode, 1, "should return error canceled")
 }
 
-func Test_empty_command(t *testing.T) {
+func Test_empty_action(t *testing.T) {
 	flow := &goyek.Taskflow{}
 	flow.Register(goyek.Task{
 		Name: "task",
@@ -288,14 +283,14 @@ func Test_printing(t *testing.T) {
 	}
 	skipped := flow.Register(goyek.Task{
 		Name: "skipped",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			tf.Skipf("Skipf %d", 0)
 		},
 	})
 	flow.Register(goyek.Task{
 		Name: "failing",
 		Deps: goyek.Deps{skipped},
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			tf.Log("Log", 1)
 			tf.Logf("Logf %d", 2)
 			tf.Error("Error", 3)
@@ -330,7 +325,7 @@ func Test_concurrent_printing(t *testing.T) {
 			}
 			flow.Register(goyek.Task{
 				Name: "task",
-				Command: func(tf *goyek.TF) {
+				Action: func(tf *goyek.TF) {
 					ch := make(chan struct{})
 					go func() {
 						defer func() { ch <- struct{}{} }()
@@ -361,7 +356,7 @@ func Test_name(t *testing.T) {
 	var got string
 	flow.Register(goyek.Task{
 		Name: taskName,
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			got = tf.Name()
 		},
 	})
@@ -417,7 +412,7 @@ func Test_params(t *testing.T) {
 			stringParam,
 			arrayParam,
 		},
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			gotBool = boolParam.Get(tf)
 			gotInt = intParam.Get(tf)
 			gotString = stringParam.Get(tf)
@@ -437,8 +432,8 @@ func Test_params(t *testing.T) {
 func Test_invalid_params(t *testing.T) {
 	flow := &goyek.Taskflow{}
 	flow.Register(goyek.Task{
-		Name:    "task",
-		Command: func(tf *goyek.TF) {},
+		Name:   "task",
+		Action: func(tf *goyek.TF) {},
 	})
 
 	exitCode := flow.Run(context.Background(), "-z=3", "task")
@@ -448,7 +443,7 @@ func Test_invalid_params(t *testing.T) {
 
 func Test_unused_params(t *testing.T) {
 	flow := &goyek.Taskflow{}
-	flow.DefaultTask = flow.Register(goyek.Task{Name: "task", Command: func(tf *goyek.TF) {}})
+	flow.DefaultTask = flow.Register(goyek.Task{Name: "task", Action: func(tf *goyek.TF) {}})
 	flow.RegisterBoolParam(goyek.BoolParam{Name: "unused"})
 
 	assertPanics(t, func() { flow.Run(context.Background()) }, "should fail because of unused parameter")
@@ -481,7 +476,7 @@ func Test_unregistered_params(t *testing.T) {
 	flow := &goyek.Taskflow{}
 	flow.Register(goyek.Task{
 		Name: "task",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			foreignParam.Get(tf)
 		},
 	})
@@ -496,7 +491,7 @@ func Test_defaultTask(t *testing.T) {
 	taskRan := false
 	task := flow.Register(goyek.Task{
 		Name: "task",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			taskRan = true
 		},
 	})
@@ -517,7 +512,7 @@ func Test_wd_param(t *testing.T) {
 	var got string
 	flow.Register(goyek.Task{
 		Name: "task",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			var osErr error
 			got, osErr = os.Getwd()
 			requireEqual(t, osErr, nil, "should get work dir from task")
@@ -540,7 +535,7 @@ func Test_wd_param_invalid(t *testing.T) {
 	taskRan := false
 	flow.Register(goyek.Task{
 		Name: "task",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			taskRan = true
 		},
 	})

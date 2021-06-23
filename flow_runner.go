@@ -187,7 +187,7 @@ func (f *flowRunner) run(ctx context.Context, name string, executed map[string]b
 }
 
 func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
-	if task.Command == nil {
+	if task.Action == nil {
 		return true
 	}
 
@@ -201,7 +201,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	verbose := ok && verboseParamVal.Get().(bool)
 
 	failed := false
-	measuredCommand := func(tf *TF) {
+	measuredAction := func(tf *TF) {
 		w := tf.Output()
 		if !verbose {
 			w = &strings.Builder{}
@@ -217,7 +217,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 			ParamValues: tf.paramValues,
 			Output:      w,
 		}
-		result := r.Run(task.Command)
+		result := r.Run(task.Action)
 
 		// report task end
 		status := "PASS"
@@ -241,7 +241,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		ParamValues: paramValues,
 		Output:      f.output,
 	}
-	measuredRunner.Run(measuredCommand)
+	measuredRunner.Run(measuredAction)
 
 	return !failed
 }

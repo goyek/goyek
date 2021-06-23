@@ -57,17 +57,25 @@ const buildDir = "build"
 
 func taskClean() goyek.Task {
 	return goyek.Task{
-		Name:    "clean",
-		Usage:   "remove git ignored files",
-		Command: goyek.Exec("git", "clean", "-fX"),
+		Name:  "clean",
+		Usage: "remove git ignored files",
+		Action: func(tf *goyek.TF) {
+			if err := tf.Cmd("git", "clean", "-fX").Run(); err != nil {
+				tf.Fatal(err)
+			}
+		},
 	}
 }
 
 func taskBuild() goyek.Task {
 	return goyek.Task{
-		Name:    "build",
-		Usage:   "go build",
-		Command: goyek.Exec("go", "build", "./..."),
+		Name:  "build",
+		Usage: "go build",
+		Action: func(tf *goyek.TF) {
+			if err := tf.Cmd("go", "build", "./...").Run(); err != nil {
+				tf.Fatal(err)
+			}
+		},
 	}
 }
 
@@ -75,7 +83,7 @@ func taskFmt() goyek.Task {
 	return goyek.Task{
 		Name:  "fmt",
 		Usage: "gofumports",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			installFmt := tf.Cmd("go", "install", "mvdan.cc/gofumpt/gofumports")
 			installFmt.Dir = buildDir
 			if err := installFmt.Run(); err != nil {
@@ -90,7 +98,7 @@ func taskMarkdownLint() goyek.Task {
 	return goyek.Task{
 		Name:  "markdownlint",
 		Usage: "markdownlint-cli (requires docker)",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			curDir, err := os.Getwd()
 			if err != nil {
 				tf.Fatal(err)
@@ -113,7 +121,7 @@ func taskMisspell() goyek.Task {
 	return goyek.Task{
 		Name:  "misspell",
 		Usage: "misspell",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			installFmt := tf.Cmd("go", "install", "github.com/client9/misspell/cmd/misspell")
 			installFmt.Dir = buildDir
 			if err := installFmt.Run(); err != nil {
@@ -131,7 +139,7 @@ func taskGolangciLint() goyek.Task {
 	return goyek.Task{
 		Name:  "golangci-lint",
 		Usage: "golangci-lint",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			installLint := tf.Cmd("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
 			installLint.Dir = buildDir
 			if err := installLint.Run(); err != nil {
@@ -147,9 +155,13 @@ func taskGolangciLint() goyek.Task {
 
 func taskTest() goyek.Task {
 	return goyek.Task{
-		Name:    "test",
-		Usage:   "go test with race detector and code covarage",
-		Command: goyek.Exec("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./..."),
+		Name:  "test",
+		Usage: "go test with race detector and code covarage",
+		Action: func(tf *goyek.TF) {
+			if err := tf.Cmd("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./...").Run(); err != nil {
+				tf.Fatal(err)
+			}
+		},
 	}
 }
 
@@ -157,7 +169,7 @@ func taskModTidy() goyek.Task {
 	return goyek.Task{
 		Name:  "mod-tidy",
 		Usage: "go mod tidy",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			if err := tf.Cmd("go", "mod", "tidy").Run(); err != nil {
 				tf.Errorf("go mod tidy: %v", err)
 			}
@@ -176,7 +188,7 @@ func taskDiff(ci goyek.RegisteredBoolParam) goyek.Task {
 		Name:   "diff",
 		Usage:  "git diff",
 		Params: goyek.Params{ci},
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			if !ci.Get(tf) {
 				tf.Skip("ci param is not set, skipping")
 			}
