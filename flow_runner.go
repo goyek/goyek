@@ -274,7 +274,7 @@ func printUsage(out io.Writer, f *flowRunner) {
 
 	writeLinef(out, "Usage: [flag(s) | task(s)]...")
 	writeLinef(out, "Flags:")
-	w := tabwriter.NewWriter(out, 1, 1, 4, ' ', 0)
+	w := tabwriter.NewWriter(out, 1, 1, 4, ' ', 0) //nolint:gomnd // ignore
 	keys := make([]string, 0, len(f.params))
 	for key := range f.params {
 		keys = append(keys, key)
