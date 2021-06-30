@@ -9,7 +9,7 @@ import (
 	"github.com/goyek/goyek"
 )
 
-func TestExec_success(t *testing.T) {
+func TestCmd_success(t *testing.T) {
 	taskName := "exec"
 	primary := &strings.Builder{}
 	message := &strings.Builder{}
@@ -20,8 +20,12 @@ func TestExec_success(t *testing.T) {
 		},
 	}
 	flow.Register(goyek.Task{
-		Name:    taskName,
-		Command: goyek.Exec("go", "version"),
+		Name: taskName,
+		Action: func(tf *goyek.TF) {
+			if err := tf.Cmd("go", "version").Run(); err != nil {
+				tf.Fatal(err)
+			}
+		},
 	})
 
 	exitCode := flow.Run(context.Background(), "-v", taskName)
@@ -30,7 +34,7 @@ func TestExec_success(t *testing.T) {
 	assertEqual(t, exitCode, goyek.CodePass, "task should pass")
 }
 
-func TestExec_error(t *testing.T) {
+func TestCmd_error(t *testing.T) {
 	taskName := "exec"
 	flow := &goyek.Taskflow{
 		Output: goyek.Output{
@@ -39,8 +43,12 @@ func TestExec_error(t *testing.T) {
 		},
 	}
 	flow.Register(goyek.Task{
-		Name:    taskName,
-		Command: goyek.Exec("go", "wrong"),
+		Name: taskName,
+		Action: func(tf *goyek.TF) {
+			if err := tf.Cmd("go", "wrong").Run(); err != nil {
+				tf.Fatal(err)
+			}
+		},
 	})
 
 	exitCode := flow.Run(nil, taskName) //nolint:staticcheck // present that nil context is handled

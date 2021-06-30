@@ -10,7 +10,7 @@ func main() {
 	flow.Register(goyek.Task{
 		Name:  "hello",
 		Usage: "demonstration",
-		Command: func(tf *goyek.TF) {
+		Action: func(tf *goyek.TF) {
 			tf.Log("Hello world!")
 		},
 	})

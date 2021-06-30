@@ -90,7 +90,7 @@ func (f *flowRunner) parseArguments(args []string) ([]string, bool, error) {
 		}
 		if arg[0] == '-' {
 			// parse parameters
-			split := strings.SplitN(arg[1:], "=", 2)
+			split := strings.SplitN(arg[1:], "=", 2) //nolint:gomnd // ignore
 			if value, isFlag := f.paramValues[split[0]]; isFlag {
 				switch {
 				case len(split) > 1:
@@ -187,7 +187,7 @@ func (f *flowRunner) run(ctx context.Context, name string, executed map[string]b
 }
 
 func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
-	if task.Command == nil {
+	if task.Action == nil {
 		return true
 	}
 
@@ -201,7 +201,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	verbose := ok && verboseParamVal.Get().(bool)
 
 	failed := false
-	measuredCommand := func(tf *TF) {
+	measuredAction := func(tf *TF) {
 		var buffered *bufferedOutput
 		output := tf.Output()
 		if !verbose {
@@ -219,7 +219,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 			ParamValues: tf.paramValues,
 			Output:      output,
 		}
-		result := r.Run(task.Command)
+		result := r.Run(task.Action)
 
 		// report task end
 		status := "PASS"
@@ -243,7 +243,7 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		ParamValues: paramValues,
 		Output:      f.output,
 	}
-	measuredRunner.Run(measuredCommand)
+	measuredRunner.Run(measuredAction)
 
 	return !failed
 }
