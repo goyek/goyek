@@ -12,16 +12,16 @@ func writeLinef(w io.Writer, format string, a ...interface{}) {
 
 // Output contains the writers to communicate results.
 type Output struct {
-	// Primary output is for information that is expected from the executed tasks.
-	Primary io.Writer
-	// Message output is for any status information, such as logging or error messages.
-	Message io.Writer
+	// Standard output is for information that is expected from the executed tasks.
+	Standard io.Writer
+	// Messaging output is for any status information, such as logging or error messages.
+	Messaging io.Writer
 }
 
-// WriteMessagef prints the given format message and its arguments to the Message writer.
+// WriteMessagef prints the given format message and its arguments to the Messaging writer.
 // The result of this action is ignored.
 func (out Output) WriteMessagef(format string, a ...interface{}) {
-	writeLinef(out.Message, format, a...)
+	writeLinef(out.Messaging, format, a...)
 }
 
 // bufferedOutput stores all written data in memory.
@@ -31,15 +31,15 @@ type bufferedOutput struct {
 }
 
 type bufferedEntry struct {
-	primary bool
-	data    []byte
+	standard bool
+	data     []byte
 }
 
 // Output returns an Output instance with writers that store written data in this buffer.
 func (buffer *bufferedOutput) Output() Output {
 	return Output{
-		Primary: &bufferedWriter{buffer: buffer, primary: true},
-		Message: &bufferedWriter{buffer: buffer, primary: false},
+		Standard:  &bufferedWriter{buffer: buffer, standard: true},
+		Messaging: &bufferedWriter{buffer: buffer, standard: false},
 	}
 }
 
@@ -51,9 +51,9 @@ func (buffer *bufferedOutput) WriteTo(other Output) {
 	defer buffer.mutex.Unlock()
 	currentEntries := buffer.entries
 	for _, entry := range currentEntries {
-		w := other.Message
-		if entry.primary {
-			w = other.Primary
+		w := other.Messaging
+		if entry.standard {
+			w = other.Standard
 		}
 		_, _ = w.Write(entry.data)
 	}
@@ -66,16 +66,16 @@ func (buffer *bufferedOutput) add(entry *bufferedEntry) {
 }
 
 type bufferedWriter struct {
-	buffer  *bufferedOutput
-	primary bool
+	buffer   *bufferedOutput
+	standard bool
 }
 
 // Write copies the provided data into the backing buffer.
 func (w bufferedWriter) Write(p []byte) (n int, err error) {
 	n = len(p)
 	entry := &bufferedEntry{
-		primary: w.primary,
-		data:    make([]byte, n),
+		standard: w.standard,
+		data:     make([]byte, n),
 	}
 	copy(entry.data, p)
 	w.buffer.add(entry)

@@ -21,7 +21,7 @@ const (
 // and Run or Main method to execute provided tasks.
 type Taskflow struct {
 	// Output specifies the writers where text is to be printed.
-	// If a writer is nil, Goyek uses defaults: os.Stdout for Primary, os.Stderr for Message.
+	// If a writer is nil, Goyek uses defaults: os.Stdout for Standard, os.Stderr for Messaging.
 	// If you want to explicitly skip output, set the corresponding member to ioutil.Discard.
 	Output Output
 
@@ -186,11 +186,11 @@ func (f *Taskflow) Run(ctx context.Context, args ...string) int {
 		defaultTask: f.DefaultTask,
 	}
 
-	if flow.output.Primary == nil {
-		flow.output.Primary = os.Stdout
+	if flow.output.Standard == nil {
+		flow.output.Standard = os.Stdout
 	}
-	if flow.output.Message == nil {
-		flow.output.Message = os.Stderr
+	if flow.output.Messaging == nil {
+		flow.output.Messaging = os.Stderr
 	}
 
 	return flow.Run(ctx, args)

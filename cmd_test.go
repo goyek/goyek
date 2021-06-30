@@ -11,12 +11,12 @@ import (
 
 func TestCmd_success(t *testing.T) {
 	taskName := "exec"
-	primary := &strings.Builder{}
-	message := &strings.Builder{}
+	standard := &strings.Builder{}
+	messaging := &strings.Builder{}
 	flow := &goyek.Taskflow{
 		Output: goyek.Output{
-			Primary: primary,
-			Message: message,
+			Standard:  standard,
+			Messaging: messaging,
 		},
 	}
 	flow.Register(goyek.Task{
@@ -30,7 +30,7 @@ func TestCmd_success(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), "-v", taskName)
 
-	assertContains(t, primary.String(), "go version go", "output should contain prefix of version report")
+	assertContains(t, standard.String(), "go version go", "output should contain prefix of version report")
 	assertEqual(t, exitCode, goyek.CodePass, "task should pass")
 }
 
@@ -38,8 +38,8 @@ func TestCmd_error(t *testing.T) {
 	taskName := "exec"
 	flow := &goyek.Taskflow{
 		Output: goyek.Output{
-			Primary: ioutil.Discard,
-			Message: ioutil.Discard,
+			Standard:  ioutil.Discard,
+			Messaging: ioutil.Discard,
 		},
 	}
 	flow.Register(goyek.Task{

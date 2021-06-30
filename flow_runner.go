@@ -34,7 +34,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 	}
 
 	if usageRequested {
-		printUsage(f.output.Primary, f)
+		printUsage(f.output.Standard, f)
 		return CodePass
 	}
 
@@ -42,7 +42,7 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 
 	if len(tasks) == 0 {
 		f.output.WriteMessagef("no task provided")
-		printUsage(f.output.Message, f)
+		printUsage(f.output.Messaging, f)
 		return CodeInvalidArgs
 	}
 

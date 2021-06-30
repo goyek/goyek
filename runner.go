@@ -43,8 +43,8 @@ func (r runner) Run(action func(tf *TF)) runResult {
 	finished := make(chan runResult)
 	go func() {
 		syncedOutput := Output{
-			Primary: &syncWriter{Writer: r.Output.Primary},
-			Message: &syncWriter{Writer: r.Output.Message},
+			Standard:  &syncWriter{Writer: r.Output.Standard},
+			Messaging: &syncWriter{Writer: r.Output.Messaging},
 		}
 		tf := &TF{
 			ctx:         r.Ctx,
