@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"sort"
 )
 
 const (
@@ -35,6 +36,22 @@ type Taskflow struct {
 // It can be used as a dependency for another Task.
 type RegisteredTask struct {
 	name string
+}
+
+// Tasks returns all registered tasks.
+func (f *Taskflow) Tasks() []Task {
+	keys := make([]string, 0, len(f.tasks))
+	for key := range f.tasks {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	var tasks []Task
+	for _, key := range keys {
+		task := f.tasks[key]
+		tasks = append(tasks, task)
+	}
+	return tasks
 }
 
 // VerboseParam returns the out-of-the-box verbose parameter which controls the output behavior.
