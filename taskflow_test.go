@@ -555,15 +555,19 @@ func Test_introspection_API(t *testing.T) {
 	t1 := flow.Register(goyek.Task{Name: "one", Params: goyek.Params{p}})
 	flow.Register(goyek.Task{Name: "two", Usage: "action", Deps: goyek.Deps{t1}})
 
-	got := flow.Tasks()
+	tasks := flow.Tasks()
 
-	assertEqual(t, len(got), 2, "should return all tasks")
-	assertEqual(t, got[0].Name(), "one", "should first return one")
-	assertEqual(t, got[0].Params()[0].Name(), "string", "should return param Name")
-	assertEqual(t, got[0].Params()[0].Usage(), "text param", "should return param Usage")
-	assertEqual(t, got[0].Params()[0].Default(), "dft", "should return param Default")
-	assertEqual(t, got[1].Name(), "two", "should next return two")
-	assertEqual(t, got[1].Usage(), "action", "should return usage")
+	assertEqual(t, len(tasks), 2, "should return all tasks")
+	assertEqual(t, tasks[0].Name(), "one", "should first return one")
+	assertEqual(t, tasks[0].Params()[0].Name(), "string", "should return param Name")
+	assertEqual(t, tasks[0].Params()[0].Usage(), "text param", "should return param Usage")
+	assertEqual(t, tasks[0].Params()[0].Default(), "dft", "should return param Default")
+	assertEqual(t, tasks[1].Name(), "two", "should next return two")
+	assertEqual(t, tasks[1].Usage(), "action", "should return usage")
+
+	params := flow.Params()
+
+	assertEqual(t, len(params), 1, "should return all parameters")
 }
 
 func tempDir(t *testing.T) (string, func()) {
