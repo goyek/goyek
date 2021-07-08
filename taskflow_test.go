@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -556,6 +557,7 @@ func Test_introspection_API(t *testing.T) {
 	flow.Register(goyek.Task{Name: "two", Usage: "action", Deps: goyek.Deps{t1}})
 
 	tasks := flow.Tasks()
+	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
 
 	assertEqual(t, len(tasks), 2, "should return all tasks")
 	assertEqual(t, tasks[0].Name(), "one", "should first return one")
