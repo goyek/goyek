@@ -551,7 +551,7 @@ func Test_wd_param_invalid(t *testing.T) {
 
 func Test_introspection_API(t *testing.T) {
 	flow := &goyek.Taskflow{}
-	p := flow.RegisterStringParam(goyek.StringParam{Name: "string", Usage: "text param"})
+	p := flow.RegisterStringParam(goyek.StringParam{Name: "string", Usage: "text param", Default: "dft"})
 	t1 := flow.Register(goyek.Task{Name: "one", Params: goyek.Params{p}})
 	flow.Register(goyek.Task{Name: "two", Usage: "action", Deps: goyek.Deps{t1}})
 
@@ -560,6 +560,8 @@ func Test_introspection_API(t *testing.T) {
 	assertEqual(t, len(got), 2, "should return all tasks")
 	assertEqual(t, got[0].Name(), "one", "should first return one")
 	assertEqual(t, got[0].Params()[0].Name(), "string", "should return param Name")
+	assertEqual(t, got[0].Params()[0].Usage(), "text param", "should return param Usage")
+	assertEqual(t, got[0].Params()[0].Default(), "dft", "should return param Default")
 	assertEqual(t, got[1].Name(), "two", "should next return two")
 	assertEqual(t, got[1].Usage(), "action", "should return usage")
 }
