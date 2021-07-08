@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"sort"
 )
 
 const (
@@ -34,15 +33,8 @@ type Taskflow struct {
 
 // Tasks returns all registered tasks.
 func (f *Taskflow) Tasks() []RegisteredTask {
-	keys := make([]string, 0, len(f.tasks))
-	for key := range f.tasks {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-
 	var tasks []RegisteredTask
-	for _, key := range keys {
-		task := f.tasks[key]
+	for _, task := range f.tasks {
 		tasks = append(tasks, RegisteredTask{
 			task: task,
 		})
