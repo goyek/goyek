@@ -42,6 +42,15 @@ func (f *Taskflow) Tasks() []RegisteredTask {
 	return tasks
 }
 
+// Params returns all registered parameters.
+func (f *Taskflow) Params() []RegisteredParam {
+	var params []RegisteredParam
+	for _, param := range f.params {
+		params = append(params, param)
+	}
+	return params
+}
+
 // VerboseParam returns the out-of-the-box verbose parameter which controls the output behavior.
 func (f *Taskflow) VerboseParam() RegisteredBoolParam {
 	if f.verbose == nil {
