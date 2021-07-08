@@ -566,6 +566,7 @@ func Test_introspection_API(t *testing.T) {
 	assertEqual(t, tasks[0].Params()[0].Default(), "dft", "should return param Default")
 	assertEqual(t, tasks[1].Name(), "two", "should next return two")
 	assertEqual(t, tasks[1].Usage(), "action", "should return usage")
+	assertEqual(t, tasks[1].Deps()[0].Name(), "one", "should return dependency")
 
 	params := flow.Params()
 
