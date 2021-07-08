@@ -32,24 +32,20 @@ type Taskflow struct {
 	tasks   map[string]Task
 }
 
-// RegisteredTask represents a task that has been registered to a Taskflow.
-// It can be used as a dependency for another Task.
-type RegisteredTask struct {
-	name string
-}
-
 // Tasks returns all registered tasks.
-func (f *Taskflow) Tasks() []Task {
+func (f *Taskflow) Tasks() []RegisteredTask {
 	keys := make([]string, 0, len(f.tasks))
 	for key := range f.tasks {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
 
-	var tasks []Task
+	var tasks []RegisteredTask
 	for _, key := range keys {
 		task := f.tasks[key]
-		tasks = append(tasks, task)
+		tasks = append(tasks, RegisteredTask{
+			task: task,
+		})
 	}
 	return tasks
 }
@@ -176,13 +172,13 @@ func (f *Taskflow) Register(task Task) RegisteredTask {
 		panic(fmt.Sprintf("%s task was already registered", task.Name))
 	}
 	for _, dep := range task.Deps {
-		if !f.isRegistered(dep.name) {
-			panic(fmt.Sprintf("invalid dependency %s", dep.name))
+		if !f.isRegistered(dep.task.Name) {
+			panic(fmt.Sprintf("invalid dependency %s", dep.task.Name))
 		}
 	}
 
 	f.tasks[task.Name] = task
-	return RegisteredTask{name: task.Name}
+	return RegisteredTask{task: task}
 }
 
 // Run runs provided tasks and all their dependencies.
