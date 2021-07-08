@@ -44,6 +44,10 @@ func (f *Taskflow) Tasks() []RegisteredTask {
 
 // Params returns all registered parameters.
 func (f *Taskflow) Params() []RegisteredParam {
+	// make sure OOTB parameters are registered
+	f.VerboseParam()
+	f.WorkDirParam()
+
 	var params []RegisteredParam
 	for _, param := range f.params {
 		params = append(params, param)

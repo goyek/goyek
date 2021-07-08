@@ -567,7 +567,7 @@ func Test_introspection_API(t *testing.T) {
 
 	params := flow.Params()
 
-	assertEqual(t, len(params), 1, "should return all parameters")
+	assertEqual(t, len(params), 3, "should return all parameters, including the out-of-the-box ones")
 }
 
 func tempDir(t *testing.T) (string, func()) {
