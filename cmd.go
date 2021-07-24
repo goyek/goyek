@@ -7,7 +7,8 @@ import (
 )
 
 // Cmd is like exec.Command, but it assigns tf's context
-// and assigns Stdout and Stderr to tf's output.
+// and assigns Stdout and Stderr to tf's output,
+// and Stdin to os.Stdin.
 func (tf *TF) Cmd(name string, args ...string) *exec.Cmd {
 	cmdStr := strings.Join(append([]string{name}, args...), " ")
 	tf.Logf("Cmd: %s", cmdStr)
