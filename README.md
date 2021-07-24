@@ -17,7 +17,7 @@
 
 Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
-**Be aware that `goyek` is still in `v0` phase, and the API is still in flux. As per [Go module version numbering](https://golang.org/doc/modules/version-numbers), you can use released versions for your projects, yet there is the potential for breaking changes in later releases.** We anticipate a `v1` release for a stable API. It is not yet clear when this will happen.
+**Be aware that `goyek` is still in `v0` phase, and the API is still in flux.** As per [Go module version numbering](https://golang.org/doc/modules/version-numbers), you can use released versions for your projects, yet there is the potential for breaking changes in later releases. We anticipate a `v1` release for a stable API. It is not yet clear when this will happen.
 
 > :warning: The `main` branch contains **breaking changes** compared to the previous release.
 > Here is the [**README for the latest release**](https://github.com/pellared/taskflow/blob/v0.5.0/README.md).
