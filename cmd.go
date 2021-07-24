@@ -1,6 +1,7 @@
 package goyek
 
 import (
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -12,6 +13,7 @@ func (tf *TF) Cmd(name string, args ...string) *exec.Cmd {
 	tf.Logf("Cmd: %s", cmdStr)
 
 	cmd := exec.CommandContext(tf.Context(), name, args...) //nolint:gosec // yes, this runs a subprocess
+	cmd.Stdin = os.Stdin
 	cmd.Stderr = tf.Output()
 	cmd.Stdout = tf.Output()
 	return cmd
