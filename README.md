@@ -19,25 +19,21 @@ Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
 **Be aware that `goyek` is still in `v0` phase, and the API is still in flux.** As per [Go module version numbering](https://golang.org/doc/modules/version-numbers), you can use released versions for your projects, yet there is the potential for breaking changes in later releases. We anticipate a `v1` release for a stable API. It is not yet clear when this will happen.
 
-> :warning: The `main` branch contains **breaking changes** compared to the previous release.
-> Here is the [**README for the latest release**](https://github.com/goyek/goyek/blob/v0.5.0/README.md).
-
 Table of Contents:
 
-- [goyek](#goyek)
-  - [Description](#description)
-  - [Quick start](#quick-start)
-  - [Examples](#examples)
-  - [Wrapper scripts](#wrapper-scripts)
-  - [Features](#features)
-    - [Task registration](#task-registration)
-    - [Task action](#task-action)
-    - [Task dependencies](#task-dependencies)
-    - [Helpers for running programs](#helpers-for-running-programs)
-    - [Verbose mode](#verbose-mode)
-    - [Default task](#default-task)
-    - [Parameters](#parameters)
-    - [Supported Go versions](#supported-go-versions)
+- [Description](#description)
+- [Quick start](#quick-start)
+- [Examples](#examples)
+- [Wrapper scripts](#wrapper-scripts)
+- [Features](#features)
+  - [Task registration](#task-registration)
+  - [Task action](#task-action)
+  - [Task dependencies](#task-dependencies)
+  - [Helpers for running programs](#helpers-for-running-programs)
+  - [Verbose mode](#verbose-mode)
+  - [Default task](#default-task)
+  - [Parameters](#parameters)
+  - [Supported Go versions](#supported-go-versions)
 
 ## Description
 
@@ -133,6 +129,7 @@ ok      0.001s
 - [examples](examples)
 - [build/build.go](build/build.go) - this repository's own build pipeline
 - [pellared/fluentassert](https://github.com/pellared/fluentassert) - a library using **goyek** without polluting it's root `go.mod`
+- [signalfx/go-pipeline](https://github.com/signalfx/go-pipeline) - a reusable Go build pipeline for multi-module repositories
 
 ## Wrapper scripts
 
