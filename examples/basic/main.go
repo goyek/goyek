@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	flow := &goyek.Taskflow{}
+	flow := &goyek.Flow{}
 
 	flow.Register(goyek.Task{
 		Name:  "hello",

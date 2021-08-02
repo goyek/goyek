@@ -11,7 +11,7 @@ import (
 func TestCmd_success(t *testing.T) {
 	taskName := "exec"
 	sb := &strings.Builder{}
-	flow := &goyek.Taskflow{
+	flow := &goyek.Flow{
 		Output: sb,
 	}
 	flow.Register(goyek.Task{
@@ -31,7 +31,7 @@ func TestCmd_success(t *testing.T) {
 
 func TestCmd_error(t *testing.T) {
 	taskName := "exec"
-	flow := &goyek.Taskflow{}
+	flow := &goyek.Flow{}
 	flow.Register(goyek.Task{
 		Name: taskName,
 		Action: func(tf *goyek.TF) {

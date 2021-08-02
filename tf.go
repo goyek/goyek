@@ -23,7 +23,7 @@ type TF struct {
 	skipped     bool
 }
 
-// Context returns the taskflows' run context.
+// Context returns the flows' run context.
 func (tf *TF) Context() context.Context {
 	return tf.ctx
 }
@@ -40,14 +40,14 @@ func (tf *TF) Output() io.Writer {
 
 // Log formats its arguments using default formatting, analogous to Println,
 // and prints the text to Output. A final newline is added.
-// The text will be printed only if the task fails or taskflow is run in Verbose mode.
+// The text will be printed only if the task fails or flow is run in Verbose mode.
 func (tf *TF) Log(args ...interface{}) {
 	fmt.Fprintln(tf.writer, args...)
 }
 
 // Logf formats its arguments according to the format, analogous to Printf,
 // and prints the text to Output. A final newline is added.
-// The text will be printed only if the task fails or taskflow is run in Verbose mode.
+// The text will be printed only if the task fails or flow is run in Verbose mode.
 func (tf *TF) Logf(format string, args ...interface{}) {
 	fmt.Fprintf(tf.writer, format+"\n", args...)
 }
@@ -89,7 +89,7 @@ func (tf *TF) Fatalf(format string, args ...interface{}) {
 // FailNow marks the function as having failed
 // and stops its execution by calling runtime.Goexit
 // (which then runs all deferred calls in the current goroutine).
-// It finishes the whole taskflow.
+// It finishes the whole flow.
 func (tf *TF) FailNow() {
 	tf.Fail()
 	runtime.Goexit()
@@ -117,7 +117,7 @@ func (tf *TF) Skipf(format string, args ...interface{}) {
 // (which then runs all deferred calls in the current goroutine).
 // If a test fails (see Error, Errorf, Fail) and is then skipped,
 // it is still considered to have failed.
-// Taskflow will continue at the next task.
+// Flow will continue at the next task.
 func (tf *TF) SkipNow() {
 	tf.skipped = true
 	runtime.Goexit()

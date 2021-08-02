@@ -20,7 +20,7 @@ Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 **Be aware that `goyek` is still in `v0` phase, and the API is still in flux.** As per [Go module version numbering](https://golang.org/doc/modules/version-numbers), you can use released versions for your projects, yet there is the potential for breaking changes in later releases. We anticipate a `v1` release for a stable API. It is not yet clear when this will happen.
 
 > :warning: The `main` branch contains **breaking changes** compared to the previous release.
-> Here is the [**README for the latest release**](https://github.com/pellared/taskflow/blob/v0.5.0/README.md).
+> Here is the [**README for the latest release**](https://github.com/goyek/goyek/blob/v0.5.0/README.md).
 
 Table of Contents:
 
@@ -83,7 +83,7 @@ import (
 )
 
 func main() {
-	flow := &goyek.Taskflow{}
+	flow := &goyek.Flow{}
 
 	flow.Register(goyek.Task{
 		Name:  "hello",
@@ -183,13 +183,13 @@ A task without description is not listed in CLI usage.
 ### Task action
 
 Task action is a function which is executed when a task is executed.
-It is not required to to set a action.
-Not having a action is very handy when registering "pipelines".
+
+It is not required to set a action. Not having a action is very handy when registering "pipelines".
 
 ### Task dependencies
 
 During task registration it is possible to add a dependency to an already registered task.
-When taskflow is processed, it makes sure that the dependency is executed before the current task is run.
+When the flow is processed, it makes sure that the dependency is executed before the current task is run.
 Take note that each task will be executed at most once.
 
 ### Helpers for running programs
@@ -237,12 +237,12 @@ Enable verbose output using the `-v` CLI flag.
 It works similar to `go test -v`. Verbose mode streams all logs to the output.
 If it is disabled, only logs from failed task are send to the output.
 
-Use [`func (f *Taskflow) VerboseParam() BoolParam`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.VerboseParam)
+Use [`func (f *Flow) VerboseParam() BoolParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.VerboseParam)
 if you need to check if verbose mode was set within a task's action.
 
 ### Default task
 
-Default task can be assigned via the [`Taskflow.DefaultTask`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.DefaultTask) field.
+Default task can be assigned via the [`Flow.DefaultTask`](https://pkg.go.dev/github.com/goyek/goyek#Flow.DefaultTask) field.
 
 When the default task is set, then it is run if no task is provided via CLI.
 
@@ -261,7 +261,7 @@ For example, `./goyek.sh test -v -pkg ./...` would run the `test` task
 with `v` bool parameter (verbose mode) set to `true`,
 and `pkg` string parameter set to `"./..."`.
 
-Parameters must first be registered via [`func (f *Taskflow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.RegisterValueParam), or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/goyek/goyek#Taskflow.RegisterStringParam).
+Parameters must first be registered via [`func (f *Flow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterValueParam), or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterStringParam).
 
 The registered parameters are required to have a non-empty name, matching
 the regular expression `^[a-zA-Z0-9][a-zA-Z0-9_-]*$`, available as
@@ -281,7 +281,7 @@ When registration is done, the task's action can retrieve the parameter value us
 
 See [examples/parameters/main.go](examples/parameters/main.go) for a detailed example.
 
-`Taskflow` will fail execution if there are unused parameters.
+`Flow` will fail execution if there are unused parameters.
 
 ### Supported Go versions
 

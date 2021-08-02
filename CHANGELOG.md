@@ -12,10 +12,11 @@ This release contains multiple **breaking changes** in the Go API. It is suppose
 ### Added
 
 - `Tf.Cmd` also sets `Stdin` to `os.Stdin`.
-- Add `Taskflow.Tasks` and `Taskflow.Params` to allow introspection of the registered tasks and parameters.
+- Add `Flow.Tasks` and `Flow.Params` to allow introspection of the registered tasks and parameters.
 
 ### Changed
 
+- Rename `Taskflow` type to `Flow` to simplify the naming.
 - Rename `Task.Command` field to `Action` to avoid confusion with [`exec.Command`](https://golang.org/pkg/os/exec/#Command) and `TF.Cmd`.
 
 ### Removed

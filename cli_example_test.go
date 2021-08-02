@@ -3,7 +3,7 @@ package goyek_test
 import "github.com/goyek/goyek"
 
 func Example() {
-	flow := &goyek.Taskflow{}
+	flow := &goyek.Flow{}
 
 	task1 := flow.Register(goyek.Task{
 		Name:  "task-1",
