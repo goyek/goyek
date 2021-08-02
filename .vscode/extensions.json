@@ -1,5 +1,6 @@
 {
     "recommendations": [
-        "golang.Go"
+        "golang.Go",
+        "davidanson.vscode-markdownlint"
     ]
 }
