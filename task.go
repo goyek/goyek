@@ -13,7 +13,7 @@ type Task struct {
 	// If it is empty, this task will not be listed in the usage output.
 	Usage string
 
-	// Action executes the task in the given taskflow context.
+	// Action executes the task in the given flow context.
 	// A task can be registered without a action and can act as a "collector" task
 	// for a list of dependencies.
 	Action func(tf *TF)
@@ -27,7 +27,7 @@ type Task struct {
 	Params Params
 }
 
-// RegisteredTask represents a task that has been registered to a Taskflow.
+// RegisteredTask represents a task that has been registered to a Flow.
 // It can be used as a dependency for another Task.
 type RegisteredTask struct {
 	task Task

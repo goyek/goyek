@@ -8,7 +8,7 @@ import (
 
 // Main parses the command-line arguments and runs the provided tasks.
 // The usage is printed when invalid arguments are passed.
-func (f *Taskflow) Main() {
+func (f *Flow) Main() {
 	// trap Ctrl+C and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
@@ -21,7 +21,7 @@ func (f *Taskflow) Main() {
 		}
 	}()
 
-	// run taskflow
+	// run flow
 	exitCode := f.Run(ctx, os.Args[1:]...)
 	os.Exit(exitCode)
 }

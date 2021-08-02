@@ -50,7 +50,7 @@ type ParamValue interface {
 	Set(string) error
 }
 
-// RegisteredParam represents a parameter that has been registered to a Taskflow.
+// RegisteredParam represents a parameter that has been registered to a Flow.
 // It can be used as a parameter for a Task.
 type RegisteredParam interface {
 	Name() string
