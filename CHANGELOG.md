@@ -11,6 +11,7 @@ This release contains multiple **breaking changes** in the Go API. It is suppose
 
 ### Added
 
+- `Tf.Cmd` also sets `Stdin` to `os.Stdin`.
 - Add `Taskflow.Tasks` and `Taskflow.Params` to allow introspection of the registered tasks and parameters.
 
 ### Changed
