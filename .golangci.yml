@@ -1,4 +1,6 @@
 linters-settings:
+  gofumpt:
+    lang-version: "1.11"
   goimports:
     local-prefixes: github.com/goyek/goyek
   gocyclo:
