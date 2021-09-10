@@ -124,6 +124,11 @@ Hello world!
 ok      0.001s
 ```
 
+## Repository Template
+
+Use [goyek/template](https://github.com/goyek/template) to creata a new repository
+or when adopting **goyek** by copying most of its files.
+
 ## Examples
 
 - [examples](examples)
