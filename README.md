@@ -23,6 +23,7 @@ Table of Contents:
 
 - [Description](#description)
 - [Quick start](#quick-start)
+- [Repository template](#repository-template)
 - [Examples](#examples)
 - [Wrapper scripts](#wrapper-scripts)
 - [Features](#features)
@@ -124,7 +125,7 @@ Hello world!
 ok      0.001s
 ```
 
-## Repository Template
+## Repository template
 
 Use [goyek/template](https://github.com/goyek/template) to create a new repository
 or when adopting **goyek** by copying most of its files.
