@@ -113,7 +113,7 @@ Tasks:
 ```
 
 ```shell
-$ go run . hello
+$ go run ./build hello
 ok     0.000s
 ```
 
