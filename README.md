@@ -113,12 +113,12 @@ Tasks:
 ```
 
 ```shell
-$ go run . hello
+$ go run ./build hello
 ok     0.000s
 ```
 
 ```shell
-$ go run ./build all -v
+$ go run ./build hello -v
 ===== TASK  hello
 Hello world!
 ----- PASS: hello (0.00s)
