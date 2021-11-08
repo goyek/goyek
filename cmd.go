@@ -13,7 +13,7 @@ func (tf *TF) Cmd(name string, args ...string) *exec.Cmd {
 	cmdStr := strings.Join(append([]string{name}, args...), " ")
 	tf.Logf("Cmd: %s", cmdStr)
 
-	cmd := exec.CommandContext(tf.Context(), name, args...) //nolint:gosec // yes, this runs a subprocess
+	cmd := exec.CommandContext(tf.Context(), name, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = tf.Output()
 	cmd.Stdout = tf.Output()
