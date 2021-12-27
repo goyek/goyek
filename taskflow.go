@@ -27,8 +27,9 @@ var verboseParam = BoolParam{
 // Default work dir parameter, is registered in NewFlow or,
 // if NewFlow is not used, whenever the tasks are started
 var workDirParam = StringParam{
-	Name:  "wd",
-	Usage: "Working directory: set the working directory.",
+	Name:    "wd",
+	Usage:   "Working directory: set the working directory.",
+	Default: ".",
 }
 
 // Flow is the root type of the package.
@@ -70,8 +71,6 @@ func NewFlow(options *Options) *Flow {
 	workDir := workDirParam
 	if options != nil && options.WorkDir != "" {
 		workDir.Default = options.WorkDir
-	} else {
-		workDir.Default = "."
 	}
 
 	return flow
@@ -114,9 +113,7 @@ func (f *Flow) VerboseParam() RegisteredBoolParam {
 // WorkDirParam returns the out-of-the-box working directory parameter which controls the working directory.
 func (f *Flow) WorkDirParam() RegisteredStringParam {
 	if f.workDir == nil {
-		workDir := workDirParam
-		workDir.Default = "."
-		param := f.RegisterStringParam(workDir)
+		param := f.RegisterStringParam(workDirParam)
 		f.workDir = &param
 	}
 
