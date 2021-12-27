@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v0.6.0...HEAD)
 
+### Added
+
+- Add `RegisterVerboseParam` and `RegisterWorkDirParam` to overwrite default values for verbose and work dir parameters.
+
 ## [0.6.0](https://github.com/goyek/goyek/compare/v0.5.0...v0.6.0) - 2021-08-02
 
 This release contains multiple **breaking changes** in the Go API. It is supposed to make it cleaner.

@@ -56,6 +56,7 @@ func (f *Flow) Params() []RegisteredParam {
 }
 
 // VerboseParam returns the out-of-the-box verbose parameter which controls the output behavior.
+// This can be overridden with RegisterVerboseParam.
 func (f *Flow) VerboseParam() RegisteredBoolParam {
 	if f.verbose == nil {
 		param := f.RegisterBoolParam(BoolParam{
@@ -65,6 +66,14 @@ func (f *Flow) VerboseParam() RegisteredBoolParam {
 		f.verbose = &param
 	}
 
+	return *f.verbose
+}
+
+// RegisterVerboseParam overwrites the default name, usage and value for the verbose parameter.
+// If this function is used, the default 'v' parameter will be replaced with this parameter.
+func (f *Flow) RegisterVerboseParam(p BoolParam) RegisteredBoolParam {
+	param := f.RegisterBoolParam(p)
+	f.verbose = &param
 	return *f.verbose
 }
 
@@ -79,6 +88,14 @@ func (f *Flow) WorkDirParam() RegisteredStringParam {
 		f.workDir = &param
 	}
 
+	return *f.workDir
+}
+
+// RegisterWorkDirParam overwrites the default name, usage and value for the work dir parameter.
+// If this function is used, the default 'wd' parameter will be replaced with this parameter.
+func (f *Flow) RegisterWorkDirParam(p StringParam) RegisteredStringParam {
+	param := f.RegisterStringParam(p)
+	f.workDir = &param
 	return *f.workDir
 }
 
