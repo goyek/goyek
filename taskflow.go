@@ -17,25 +17,9 @@ const (
 	CodeInvalidArgs = 2
 )
 
-// Default verbose parameter, is registered in NewFlow or,
-// if NewFlow is not used, whenever the tasks are started
-var verboseParam = BoolParam{
-	Name:  "v",
-	Usage: "Verbose: log all tasks as they are run.",
-}
-
-// Default work dir parameter, is registered in NewFlow or,
-// if NewFlow is not used, whenever the tasks are started
-var workDirParam = StringParam{
-	Name:    "wd",
-	Usage:   "Working directory: set the working directory.",
-	Default: ".",
-}
-
 // Flow is the root type of the package.
-// Use NewFlow to create a flow, the Register
-// methods to register all tasks and Run or Main
-// method to execute provided tasks.
+// Use Register methods to register all tasks
+// and Run or Main method to execute provided tasks.
 type Flow struct {
 	Output io.Writer // output where text is printed; os.Stdout by default
 
@@ -45,37 +29,6 @@ type Flow struct {
 	workDir *RegisteredStringParam // sets the working directory
 	params  map[string]registeredParam
 	tasks   map[string]Task
-}
-
-// Options for a new flow
-type Options struct {
-	// Whether flow should be verbose or not, default false
-	Verbose bool
-	// The working directory of the flow. Default "."
-	WorkDir string
-}
-
-// NewFlow creates a new flow and adds the verbose and work dir
-// parameters. Default values for these parameters can be set
-// with the Options-struct which can optionally be passed.
-func NewFlow(options *Options) *Flow {
-	flow := &Flow{}
-
-	// Add verbose param
-	verbose := verboseParam
-	verbose.Default = options != nil && options.Verbose
-	registeredVerbose := flow.RegisterBoolParam(verbose)
-	flow.verbose = &registeredVerbose
-
-	// Add work dir param
-	workDir := workDirParam
-	if options != nil && options.WorkDir != "" {
-		workDir.Default = options.WorkDir
-	}
-	registeredWorkDir := flow.RegisterStringParam(workDir)
-	flow.workDir = &registeredWorkDir
-
-	return flow
 }
 
 // Tasks returns all registered tasks.
@@ -103,22 +56,46 @@ func (f *Flow) Params() []RegisteredParam {
 }
 
 // VerboseParam returns the out-of-the-box verbose parameter which controls the output behavior.
+// This can be overridden with RegisterVerboseParam.
 func (f *Flow) VerboseParam() RegisteredBoolParam {
 	if f.verbose == nil {
-		param := f.RegisterBoolParam(verboseParam)
+		param := f.RegisterBoolParam(BoolParam{
+			Name:  "v",
+			Usage: "Verbose: log all tasks as they are run.",
+		})
 		f.verbose = &param
 	}
 
 	return *f.verbose
 }
 
+// RegisterVerboseParam overwrites the default name, usage and value for the verbose parameter.
+// If this function is used, the default 'v' parameter will be replaced with this parameter.
+func (f *Flow) RegisterVerboseParam(p BoolParam) RegisteredBoolParam {
+	param := f.RegisterBoolParam(p)
+	f.verbose = &param
+	return *f.verbose
+}
+
 // WorkDirParam returns the out-of-the-box working directory parameter which controls the working directory.
 func (f *Flow) WorkDirParam() RegisteredStringParam {
 	if f.workDir == nil {
-		param := f.RegisterStringParam(workDirParam)
+		param := f.RegisterStringParam(StringParam{
+			Name:    "wd",
+			Usage:   "Working directory: set the working directory.",
+			Default: ".",
+		})
 		f.workDir = &param
 	}
 
+	return *f.workDir
+}
+
+// RegisterWorkDirParam overwrites the default name, usage and value for the work dir parameter.
+// If this function is used, the default 'wd' parameter will be replaced with this parameter.
+func (f *Flow) RegisterWorkDirParam(p StringParam) RegisteredStringParam {
+	param := f.RegisterStringParam(p)
+	f.workDir = &param
 	return *f.workDir
 }
 
