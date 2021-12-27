@@ -84,13 +84,21 @@ func taskFmt() goyek.Task {
 		Name:  "fmt",
 		Usage: "gofumports",
 		Action: func(tf *goyek.TF) {
-			installFmt := tf.Cmd("go", "install", "mvdan.cc/gofumpt/gofumports")
+			installFmt := tf.Cmd("go", "install", "mvdan.cc/gofumpt")
 			installFmt.Dir = buildDir
 			if err := installFmt.Run(); err != nil {
 				tf.Fatal(err)
 			}
 
-			tf.Cmd("gofumports", strings.Split("-l -w -local github.com/goyek/goyek .", " ")...).Run() //nolint // it is OK if it returns error
+			tf.Cmd("gofumpt", "-l", "-w", ".").Run() //nolint // it is OK if it returns error
+
+			installGoImports := tf.Cmd("go", "install", "golang.org/x/tools/cmd/goimports")
+			installGoImports.Dir = buildDir
+			if err := installGoImports.Run(); err != nil {
+				tf.Fatal(err)
+			}
+
+			tf.Cmd("goimports", "-l", "-w", "-local=github.com/goyek/goyek", ".").Run() //nolint // it is OK if it returns erro
 		},
 	}
 }
