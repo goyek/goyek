@@ -243,7 +243,7 @@ If it is disabled, only logs from failed task are send to the output.
 Use [`func (f *Flow) VerboseParam() BoolParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.VerboseParam)
 if you need to check if verbose mode was set within a task's action.
 
-The default value for the verbose parameter can be overwritten with 
+The default value for the verbose parameter can be overwritten with
 [`func (f *Flow) RegisterVerboseParam(p BoolParam) RegisteredBoolParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterVerboseParam).
 
 ### Default task
