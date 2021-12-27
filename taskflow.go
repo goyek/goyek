@@ -64,14 +64,16 @@ func NewFlow(options *Options) *Flow {
 	// Add verbose param
 	verbose := verboseParam
 	verbose.Default = options != nil && options.Verbose
-	param := flow.RegisterBoolParam(verbose)
-	flow.verbose = &param
+	registeredVerbose := flow.RegisterBoolParam(verbose)
+	flow.verbose = &registeredVerbose
 
 	// Add work dir param
 	workDir := workDirParam
 	if options != nil && options.WorkDir != "" {
 		workDir.Default = options.WorkDir
 	}
+	registeredWorkDir := flow.RegisterStringParam(workDir)
+	flow.workDir = &registeredWorkDir
 
 	return flow
 }
