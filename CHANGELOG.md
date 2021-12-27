@@ -15,6 +15,7 @@ This release contains multiple **breaking changes** in the Go API. It is suppose
 
 - `Tf.Cmd` also sets `Stdin` to `os.Stdin`.
 - Add `Flow.Tasks` and `Flow.Params` to allow introspection of the registered tasks and parameters.
+- Add `NewFlow` to create a new flow with custom defaults for default parameters.
 
 ### Changed
 

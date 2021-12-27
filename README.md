@@ -243,6 +243,8 @@ If it is disabled, only logs from failed task are send to the output.
 Use [`func (f *Flow) VerboseParam() BoolParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.VerboseParam)
 if you need to check if verbose mode was set within a task's action.
 
+When creating the flow with `NewFlow`, the default value for the verbose param can be set in the `Options`-struct.
+
 ### Default task
 
 Default task can be assigned via the [`Flow.DefaultTask`](https://pkg.go.dev/github.com/goyek/goyek#Flow.DefaultTask) field.
