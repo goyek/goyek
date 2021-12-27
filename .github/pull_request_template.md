@@ -14,3 +14,4 @@
 - [ ] `CHANGELOG.md` is updated.
 - [ ] `README.md` is updated.
 - [ ] The code changes follow [Effective Go](https://golang.org/doc/effective_go).
+- [ ] The code changes are covered by tests.
