@@ -76,7 +76,7 @@ func (p registeredParam) Usage() string {
 	return p.usage
 }
 
-// Default returns the parameter's default value formated as string.
+// Default returns the parameter's default value formatted as string.
 func (p registeredParam) Default() string {
 	return p.newValue().String()
 }

@@ -550,6 +550,105 @@ func Test_wd_param_invalid(t *testing.T) {
 	assertEqual(t, afterDir, beforeDir, "should change back the working directory after flow")
 }
 
+func Test_register_wd_param(t *testing.T) {
+	flow := &goyek.Flow{}
+	beforeDir, err := os.Getwd()
+	requireEqual(t, err, nil, "should get work dir before the flow")
+	dir, cleanup := tempDir(t)
+	defer cleanup()
+	var got string
+	flow.RegisterWorkDirParam(goyek.StringParam{
+		Name:    "wd",
+		Usage:   "Working directory: set the working directory.",
+		Default: dir,
+	})
+	flow.Register(goyek.Task{
+		Name: "task",
+		Action: func(tf *goyek.TF) {
+			var osErr error
+			got, osErr = os.Getwd()
+			requireEqual(t, osErr, nil, "should get work dir from task")
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "task")
+	afterDir, err := os.Getwd()
+	requireEqual(t, err, nil, "should get work dir after the flow")
+
+	assertEqual(t, exitCode, 0, "should pass")
+	assertEqual(t, got, dir, "should have changed the working directory in flow")
+	assertEqual(t, afterDir, beforeDir, "should change back the working directory after flow")
+}
+
+func Test_register_wd_param_invalid(t *testing.T) {
+	flow := &goyek.Flow{}
+	beforeDir, err := os.Getwd()
+	requireEqual(t, err, nil, "should get work dir before the flow")
+	taskRan := false
+	flow.RegisterWorkDirParam(goyek.StringParam{
+		Name:    "wd",
+		Usage:   "Working directory: set the working directory.",
+		Default: "strange-dir",
+	})
+	flow.Register(goyek.Task{
+		Name: "task",
+		Action: func(tf *goyek.TF) {
+			taskRan = true
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "task")
+	afterDir, err := os.Getwd()
+	requireEqual(t, err, nil, "should get work dir after the flow")
+
+	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should not proceed")
+	assertEqual(t, taskRan, false, "should not run the task")
+	assertEqual(t, afterDir, beforeDir, "should change back the working directory after flow")
+}
+
+func Test_register_verbose_param(t *testing.T) {
+	flow := &goyek.Flow{}
+	var isVerbose bool
+	verboseParam := flow.RegisterVerboseParam(goyek.BoolParam{
+		Name:    "v",
+		Usage:   "Verbose: log all tasks as they are run.",
+		Default: true,
+	})
+	flow.Register(goyek.Task{
+		Name:   "task",
+		Params: goyek.Params{verboseParam},
+		Action: func(tf *goyek.TF) {
+			isVerbose = flow.VerboseParam().Get(tf)
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "task")
+
+	assertEqual(t, exitCode, 0, "should pass")
+	assertTrue(t, isVerbose, "should be verbose in flow")
+}
+
+func Test_register_custom_verbose_param(t *testing.T) {
+	flow := &goyek.Flow{}
+	var isVerbose bool
+	verboseParam := flow.RegisterVerboseParam(goyek.BoolParam{
+		Name:  "something-random",
+		Usage: "Verbose: log all tasks as they are run.",
+	})
+	flow.Register(goyek.Task{
+		Name:   "task",
+		Params: goyek.Params{verboseParam},
+		Action: func(tf *goyek.TF) {
+			isVerbose = flow.VerboseParam().Get(tf)
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), "task", "-something-random")
+
+	assertEqual(t, exitCode, 0, "should pass")
+	assertTrue(t, isVerbose, "should be verbose in flow")
+}
+
 func Test_introspection_API(t *testing.T) {
 	flow := &goyek.Flow{}
 	p := flow.RegisterStringParam(goyek.StringParam{Name: "string", Usage: "text param", Default: "dft"})
