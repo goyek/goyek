@@ -35,6 +35,8 @@ Table of Contents:
   - [Default task](#default-task)
   - [Parameters](#parameters)
   - [Supported Go versions](#supported-go-versions)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Description
 
@@ -65,8 +67,6 @@ See [docs/alternatives.md](docs/alternatives.md) if you want to compare **goyek*
 with other popular tools used for creating build pipelines.
 
 See [docs/presentations.md](docs/presentations.md) if you want to watch some presenentations.
-
-See [docs/contributing.md](docs/contributing.md) if you want to help us.
 
 ## Quick start
 
@@ -292,3 +292,14 @@ See [examples/parameters/main.go](examples/parameters/main.go) for a detailed ex
 ### Supported Go versions
 
 Minimal supported Go version is 1.11.
+
+## Contributing
+
+See [docs/contributing.md](docs/contributing.md) if you want to help us.
+
+## License
+
+**goyek** is licensed under the terms of the MIT license.
+
+[`github.com/goyek/goyek` package](go.mod) does not use any third-party dependency
+other than the Go standard library.
