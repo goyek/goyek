@@ -186,11 +186,7 @@ func (f *flowRunner) run(ctx context.Context, name string, executed map[string]b
 	return nil
 }
 
-func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
-	if task.Action == nil {
-		return true
-	}
-
+func (f *flowRunner) getParamValues(task Task) (map[string]ParamValue, bool) {
 	// set all the param values and check if the required params have a value
 	var errStr string
 	paramValues := make(map[string]ParamValue)
@@ -200,8 +196,20 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 			errStr += fmt.Sprintf("param %q is required\n", param.Name())
 		}
 	}
-	if errStr != "" {
-		fmt.Print(errStr)
+	if errStr == "" {
+		return paramValues, true
+	}
+	fmt.Print(errStr)
+	return nil, false
+}
+
+func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
+	if task.Action == nil {
+		return true
+	}
+
+	paramValues, ok := f.getParamValues(task)
+	if !ok {
 		return false
 	}
 
