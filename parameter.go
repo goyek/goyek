@@ -89,7 +89,7 @@ func (p registeredParam) Default() string {
 	return p.newValue().String()
 }
 
-// Required returns whether the parameter is required
+// Required returns whether the parameter is required.
 func (p registeredParam) Required() bool {
 	return p.required
 }
