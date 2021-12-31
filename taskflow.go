@@ -109,6 +109,7 @@ func (f *Flow) RegisterValueParam(p ValueParam) RegisteredValueParam {
 		name:     p.Name,
 		usage:    p.Usage,
 		newValue: p.NewValue,
+		required: p.Required,
 	}
 	f.registerParam(regParam)
 	return RegisteredValueParam{regParam}
@@ -117,13 +118,13 @@ func (f *Flow) RegisterValueParam(p ValueParam) RegisteredValueParam {
 // RegisterBoolParam registers a boolean parameter.
 func (f *Flow) RegisterBoolParam(p BoolParam) RegisteredBoolParam {
 	valGetter := func() ParamValue {
-		value := boolValue(p.Default)
-		return &value
+		return &boolValue{value: p.Default}
 	}
 	f.registerParam(registeredParam{
 		name:     p.Name,
 		usage:    p.Usage,
 		newValue: valGetter,
+		required: p.Required,
 	})
 	return RegisteredBoolParam{registeredParam{name: p.Name}}
 }
@@ -131,13 +132,13 @@ func (f *Flow) RegisterBoolParam(p BoolParam) RegisteredBoolParam {
 // RegisterIntParam registers an integer parameter.
 func (f *Flow) RegisterIntParam(p IntParam) RegisteredIntParam {
 	valGetter := func() ParamValue {
-		value := intValue(p.Default)
-		return &value
+		return &intValue{value: p.Default}
 	}
 	regParam := registeredParam{
 		name:     p.Name,
 		usage:    p.Usage,
 		newValue: valGetter,
+		required: p.Required,
 	}
 	f.registerParam(regParam)
 	return RegisteredIntParam{regParam}
@@ -146,13 +147,13 @@ func (f *Flow) RegisterIntParam(p IntParam) RegisteredIntParam {
 // RegisterStringParam registers a string parameter.
 func (f *Flow) RegisterStringParam(p StringParam) RegisteredStringParam {
 	valGetter := func() ParamValue {
-		value := stringValue(p.Default)
-		return &value
+		return &stringValue{value: p.Default}
 	}
 	regParam := registeredParam{
 		name:     p.Name,
 		usage:    p.Usage,
 		newValue: valGetter,
+		required: p.Required,
 	}
 	f.registerParam(regParam)
 	return RegisteredStringParam{regParam}

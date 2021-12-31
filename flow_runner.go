@@ -191,9 +191,18 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 		return true
 	}
 
+	// set all the param values and check if the required params have a value
+	var errStr string
 	paramValues := make(map[string]ParamValue)
 	for _, param := range task.Params {
 		paramValues[param.Name()] = f.paramValues[param.Name()]
+		if param.Required() && !f.paramValues[param.Name()].IsSet() {
+			errStr += fmt.Sprintf("param %q is required\n", param.Name())
+		}
+	}
+	if errStr != "" {
+		fmt.Print(errStr)
+		return false
 	}
 
 	// if verbose flag is registered then check its value
@@ -280,7 +289,7 @@ func printUsage(f *flowRunner) {
 	sort.Strings(keys)
 	for _, key := range keys {
 		param := f.params[key]
-		fmt.Fprintf(w, "  %s\tDefault: %s\t%s\n", flagName(param.name), param.newValue().String(), param.usage)
+		fmt.Fprintf(w, "  %s\tDefault: %s\tRequired: %v\t%s\n", flagName(param.name), param.newValue().String(), param.required, param.usage)
 	}
 	w.Flush() //nolint // not checking errors when writing to output
 

@@ -383,6 +383,8 @@ func (value *arrayValue) String() string {
 
 func (value *arrayValue) IsBool() bool { return false }
 
+func (value *arrayValue) IsSet() bool { return value != nil }
+
 func Test_params(t *testing.T) {
 	flow := &goyek.Flow{}
 	boolParam := flow.RegisterBoolParam(goyek.BoolParam{
