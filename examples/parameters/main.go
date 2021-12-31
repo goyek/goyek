@@ -94,6 +94,10 @@ func (value *complexParamValue) IsBool() bool {
 	return false
 }
 
+func (value *complexParamValue) IsSet() bool {
+	return value.StringValue != ""
+}
+
 // taskComplexParam showcases complex parameters, JSON encoded.
 //
 // Execute `go run . -v complex -json "{\"stringValue\":\"abc\"}"` as an example.
@@ -140,6 +144,10 @@ func (value *listParamValue) String() string {
 
 func (value *listParamValue) IsBool() bool {
 	return false
+}
+
+func (value *listParamValue) IsSet() bool {
+	return value != nil && *value != nil
 }
 
 // taskListParam showcases repeatable parameters.
