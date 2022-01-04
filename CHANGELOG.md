@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v0.6.1...HEAD)
 
+### Added
+
+- Add example for parameter validation in [examples/validation/main.go](examples/validation/main.go).
+
 ## [0.6.1](https://github.com/goyek/goyek/compare/v0.6.0...v0.6.1) - 2021-12-27
 
 This release adds the possibility to change the defaults of the global parameters.
