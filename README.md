@@ -287,6 +287,8 @@ When registration is done, the task's action can retrieve the parameter value us
 
 See [examples/parameters/main.go](examples/parameters/main.go) for a detailed example.
 
+See [examples/validation/main.go](examples/parameters/main.go) for a detailed example of cross-parameter validation.
+
 `Flow` will fail execution if there are unused parameters.
 
 ### Supported Go versions
