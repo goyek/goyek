@@ -22,44 +22,43 @@ func main() {
 		Usage: "The direction to migrate ('up' / 'down')",
 	})
 
-	flow.Register(taskMigrate(db, direction))
+	validation := flow.Register(taskValidation(db, direction))
+	flow.Register(taskMigrate(validation, db, direction))
 
 	flow.Main()
 }
 
-// validateMigrateParams validates params and prints error messages for each error
+// taskValidation validates params and prints error messages for each error
 // it encounters. If it encounters at least one error, the validation function
 // will abort the TaskFlow and the task will be stopped.
-func validateMigrateParams(tf *goyek.TF, db, direction goyek.RegisteredStringParam) {
-	var err bool
-	dbStr := db.Get(tf)
-	dirStr := direction.Get(tf)
-	if dbStr != "only-up" && dbStr != "only-down" {
-		tf.Errorf("Database %q is invalid", dbStr)
-		err = true
-	}
-	if dirStr != "up" && dirStr != "down" {
-		tf.Errorf("Direction %q is invalid", dirStr)
-		err = true
-	}
-	if (dbStr == "only-up" && dirStr == "down") || (dbStr == "only-down" && dirStr == "up") {
-		tf.Errorf("Direction %q is invalid for database %q", dirStr, dbStr)
-		err = true
-	}
-	if err {
-		tf.FailNow()
+func taskValidation(db, direction goyek.RegisteredStringParam) goyek.Task {
+	return goyek.Task{
+		Name:   "validation",
+		Params: goyek.Params{db, direction},
+		Action: func(tf *goyek.TF) {
+			dbStr := db.Get(tf)
+			dirStr := direction.Get(tf)
+			if dbStr != "only-up" && dbStr != "only-down" {
+				tf.Errorf("Database %q is invalid", dbStr)
+			}
+			if dirStr != "up" && dirStr != "down" {
+				tf.Errorf("Direction %q is invalid", dirStr)
+			}
+			if (dbStr == "only-up" && dirStr == "down") || (dbStr == "only-down" && dirStr == "up") {
+				tf.Errorf("Direction %q is invalid for database %q", dirStr, dbStr)
+			}
+		},
 	}
 }
 
-// taskMigrate validates the params for the task, and if they are valid,
-// it prints a message with the provided params.
-func taskMigrate(db, direction goyek.RegisteredStringParam) goyek.Task {
+// taskMigrate prints a message with the provided params.
+func taskMigrate(validation goyek.RegisteredTask, db, direction goyek.RegisteredStringParam) goyek.Task {
 	return goyek.Task{
 		Name:   "migrate",
 		Usage:  "Migrate a database",
 		Params: goyek.Params{db, direction},
+		Deps:   goyek.Deps{validation},
 		Action: func(tf *goyek.TF) {
-			validateMigrateParams(tf, db, direction)
 			tf.Logf("Database %q and direction %q are valid values", db.Get(tf), direction.Get(tf))
 		},
 	}
