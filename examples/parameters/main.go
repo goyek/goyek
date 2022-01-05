@@ -2,7 +2,7 @@
 // Sharing of parameters, "private" parameters, and complex parameters encoded in JSON.
 // This example also registers the "verbose" parameter, in order to provide output in the task.
 // Execute `go run . -v -shared "hello world"` as a first example.
-// Execute `go run . -h"` to see all details.
+// Execute `go run . -h` to see all details.
 
 package main
 
