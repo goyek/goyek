@@ -1,4 +1,4 @@
-// Example program for validation, showcasing the following:
+// Example program for complex validation, showcasing the following:
 // Validation of parameters as a dependent, reusable task.
 // Execute `go run . -v migrate -db only-up -direction up` as a valid example.
 // Execute `go run . -v migrate -db only-up -direction down` as an invalid example.
@@ -37,10 +37,10 @@ func taskValidation(db, direction goyek.RegisteredStringParam) goyek.Task {
 		Params: goyek.Params{db, direction},
 		Action: func(tf *goyek.TF) {
 			dbStr := db.Get(tf)
-			dirStr := direction.Get(tf)
 			if dbStr != "only-up" && dbStr != "only-down" {
 				tf.Errorf("Database %q is invalid", dbStr)
 			}
+			dirStr := direction.Get(tf)
 			if dirStr != "up" && dirStr != "down" {
 				tf.Errorf("Direction %q is invalid", dirStr)
 			}
