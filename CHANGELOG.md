@@ -109,3 +109,11 @@ Moreover, the parameters are set via CLI using the flag syntax.
 ### Added
 
 - First release version after the experiential phase.
+
+<!-- markdownlint-configure-file
+{
+  "MD024": {
+    "siblings_only": true
+  }
+}
+-->
