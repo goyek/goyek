@@ -13,8 +13,6 @@
 [![codecov](https://codecov.io/gh/goyek/goyek/branch/main/graph/badge.svg)](https://codecov.io/gh/goyek/goyek)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
-[![Slack](https://img.shields.io/badge/slack-@gophers/goyek-brightgreen.svg?logo=slack)](https://gophers.slack.com/archives/C020UNUK7LL)
-
 Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
 **Be aware that `goyek` is still in `v0` phase, and the API is still in flux.** As per [Go module version numbering](https://golang.org/doc/modules/version-numbers), you can use released versions for your projects, yet there is the potential for breaking changes in later releases. We anticipate a `v1` release for a stable API. It is not yet clear when this will happen.
