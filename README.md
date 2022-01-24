@@ -133,7 +133,7 @@ or when adopting **goyek** by copying most of its files.
 - [examples](examples)
 - [build/build.go](build/build.go) - this repository's own build pipeline
 - [pellared/fluentassert](https://github.com/pellared/fluentassert) - a library using **goyek** without polluting it's root `go.mod`
-- [signalfx/splunk-otel-go](https://github.com/signalfx/splunk-otel-go) - a Go build pipeline for a multi-module repository
+- [signalfx/splunk-otel-go](https://github.com/signalfx/splunk-otel-go) - a multi-module repository using **goyek**
 
 ## Wrapper scripts
 
