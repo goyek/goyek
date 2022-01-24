@@ -7,8 +7,6 @@ Feel free to start or join a [discussion](https://github.com/goyek/goyek/discuss
 create an [issue](https://github.com/goyek/goyek/issues),
 or propose a [pull request](https://github.com/goyek/goyek/pulls).
 
-You can also find us on [Gophers Slack](https://invite.slack.golangbridge.org/) in [`#goyek` channel](https://gophers.slack.com/archives/C020UNUK7LL).
-
 ## Developing
 
 Go and Docker is required.
