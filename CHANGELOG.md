@@ -71,7 +71,8 @@ to <https://github.com/goyek/goyek>.
 
 This release contains multiple breaking changes for both the CLI and the Go API.
 
-The biggest change is a redesign of the parameters API, so they have to be explicitly registered.
+The biggest change is a redesign of the parameters API,
+so they have to be explicitly registered.
 It makes the usage of the parameters more controlled and provides a better help output.
 Moreover, the parameters are set via CLI using the flag syntax.
 
