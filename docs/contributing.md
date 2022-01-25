@@ -29,6 +29,8 @@ Run `./goyek.sh` (Bash) or `.\goyek.ps1` (PowerShell)
 The repository contains basic confiugration for
 [Visual Studio Code](https://code.visualstudio.com/).
 
-You may use [Gitpod](https://gitpod.io/#https://github.com/goyek/goyek) to experiment with the codebase.
+You may use [Gitpod](https://gitpod.io/#https://github.com/goyek/goyek)
+to experiment with the codebase.
 
-The [releasing documentation](releasing.md) describes how to prepare and publish a new release.
+The [releasing documentation](releasing.md) describes
+how to prepare and publish a new release.

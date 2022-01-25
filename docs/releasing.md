@@ -18,4 +18,5 @@ Create a pull request named `Release v<version>` that does the following:
 
 Create a GitHib Release named `<version>` with `v<version>` tag.
 
-The release description should include all the release notes from the [`CHANGELOG.md`](./CHANGELOG.md) for this release.
+The release description should include all the release notes
+from the [`CHANGELOG.md`](./CHANGELOG.md) for this release.
