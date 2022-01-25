@@ -24,9 +24,9 @@ assignees: ''
 
 <!-- Please complete the following information: -->
 
- - OS: [e.g. Windows 10]
- - Go version: [e.g. 1.13]
- - goyek version: [e.g. 0.6.0]
+- OS: [e.g. Windows 10]
+- Go version: [e.g. 1.13]
+- goyek version: [e.g. 0.6.0]
 
 ## Additional context
 
