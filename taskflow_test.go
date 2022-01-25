@@ -201,6 +201,22 @@ func Test_cancelation(t *testing.T) {
 	assertEqual(t, exitCode, 1, "should return error canceled")
 }
 
+func Test_cancelation_during_last_task(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	flow := &goyek.Flow{}
+	flow.Register(goyek.Task{
+		Name: "task",
+		Action: func(tf *goyek.TF) {
+			cancel()
+		},
+	})
+
+	exitCode := flow.Run(ctx, "task")
+
+	assertEqual(t, exitCode, 0, "should return pass as the taskflow completed")
+}
+
 func Test_empty_action(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.Register(goyek.Task{
