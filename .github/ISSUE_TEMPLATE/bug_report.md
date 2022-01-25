@@ -16,7 +16,6 @@ assignees: ''
 <!-- Steps to reproduce the behavior.
      It can be a code snippet and sample execution. -->
 
-
 ## Expected behavior
 
 <!-- A clear and concise description of what you expected to happen. -->
