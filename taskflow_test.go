@@ -214,7 +214,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 
 	exitCode := flow.Run(ctx, "task")
 
-	assertEqual(t, exitCode, 1, "should return error canceled")
+	assertEqual(t, exitCode, 0, "should pass as the taskflow completed")
 }
 
 func Test_empty_action(t *testing.T) {
