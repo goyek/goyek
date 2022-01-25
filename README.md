@@ -51,20 +51,23 @@ Here are some good parts:
 
 - No binary installation is needed. Simply add it to `go.mod` like any other Go module.
   - You can be sure that everyone uses the same version of **goyek**.
-- It has low learning curve, thanks to the minimal API surface, documentation, and examples.
+- It has low learning curve, thanks to the minimal API surface,
+  documentation, and examples.
 - The task's action look like a unit test.
   It is even possible to use [`testify`](https://github.com/stretchr/testify)
   or [`is`](https://github.com/matryer/is) for asserting.
 - It is easy to debug, like a regular Go application.
 - Tasks and helpers can be easily tested. See [exec_test.go](exec_test.go).
-- One can reuse code like in any Go application. It may be helpful to use packages like:
+- One can reuse code like in any Go application.
+  It may be helpful to use packages like:
   - [`github.com/bitfield/script`](https://pkg.go.dev/github.com/bitfield/script)
   - [`github.com/rjeczalik/notify`](https://pkg.go.dev/github.com/rjeczalik/notify)
   - [`github.com/magefile/mage/target`](https://pkg.go.dev/github.com/magefile/mage/target)
   - [`github.com/mattn/go-shellwords`](https://pkg.go.dev/github.com/mattn/go-shellwords)
 
 **goyek** API is mainly inspired by the [`testing`](https://golang.org/pkg/testing),
-[`http`](https://golang.org/pkg/http), and [`flag`](https://golang.org/pkg/flag) packages.
+[`http`](https://golang.org/pkg/http), and [`flag`](https://golang.org/pkg/flag)
+packages.
 
 See [docs/alternatives.md](docs/alternatives.md) if you want to compare **goyek**
 with other popular tools used for creating build pipelines.
@@ -136,7 +139,7 @@ or when adopting **goyek** by copying most of its files.
 ## Examples
 
 - [examples](examples)
-- [build/build.go](build/build.go) - 
+- [build/build.go](build/build.go) -
   this repository's own build pipeline
 - [pellared/fluentassert](https://github.com/pellared/fluentassert) -
   a library using **goyek** without polluting it's root `go.mod`
@@ -279,7 +282,8 @@ For example, `./goyek.sh test -v -pkg ./...` would run the `test` task
 with `v` bool parameter (verbose mode) set to `true`,
 and `pkg` string parameter set to `"./..."`.
 
-Parameters must first be registered via [`func (f *Flow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterValueParam),
+Parameters must first be registered via
+[`func (f *Flow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterValueParam),
 or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterStringParam).
 
 The registered parameters are required to have a non-empty name, matching
@@ -296,7 +300,8 @@ After registration, tasks need to specify which parameters they will read.
 Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/goyek/goyek#RegisteredParam)
 instance from the registration result to the [`Task.Params`](https://pkg.go.dev/github.com/goyek/goyek#Task.Params)
 field.
-If a task tries to retrieve the value from an unregistered parameter, the task will fail.
+If a task tries to retrieve the value from an unregistered parameter,
+the task will fail.
 
 When registration is done, the task's action can retrieve the parameter value
 using the `Get(*TF)` method from the registration result instance
