@@ -15,7 +15,12 @@
 
 Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
-**Be aware that `goyek` is still in `v0` phase, and the API is still in flux.** As per [Go module version numbering](https://golang.org/doc/modules/version-numbers), you can use released versions for your projects, yet there is the potential for breaking changes in later releases. We anticipate a `v1` release for a stable API. It is not yet clear when this will happen.
+**Be aware that `goyek` is still in `v0` phase, and the API is still in flux.**
+As per [Go module version numbering](https://golang.org/doc/modules/version-numbers),
+you can use released versions for your projects,
+yet there is the potential for breaking changes in later releases.
+We anticipate a `v1` release for a stable API.
+It is not yet clear when this will happen.
 
 Table of Contents:
 
@@ -131,9 +136,12 @@ or when adopting **goyek** by copying most of its files.
 ## Examples
 
 - [examples](examples)
-- [build/build.go](build/build.go) - this repository's own build pipeline
-- [pellared/fluentassert](https://github.com/pellared/fluentassert) - a library using **goyek** without polluting it's root `go.mod`
-- [signalfx/splunk-otel-go](https://github.com/signalfx/splunk-otel-go) - a multi-module repository using **goyek**
+- [build/build.go](build/build.go) - 
+  this repository's own build pipeline
+- [pellared/fluentassert](https://github.com/pellared/fluentassert) -
+  a library using **goyek** without polluting it's root `go.mod`
+- [signalfx/splunk-otel-go](https://github.com/signalfx/splunk-otel-go) -
+  a multi-module repository using **goyek**
 
 ## Wrapper scripts
 
@@ -143,7 +151,8 @@ which can be invoked from any location.
 
 Simply add them to your repository's root directory:
 
-- [`goyek.sh`](goyek.sh) - make sure to add `+x` permission (`git update-index --chmod=+x goyek.sh`):
+- [`goyek.sh`](goyek.sh) - make sure to add `+x` permission
+  (`git update-index --chmod=+x goyek.sh`):
 
 ```bash
 #!/bin/bash
@@ -185,12 +194,15 @@ A task without description is not listed in CLI usage.
 
 Task action is a function which is executed when a task is executed.
 
-It is not required to set a action. Not having a action is very handy when registering "pipelines".
+It is not required to set a action.
+Not having a action is very handy when registering "pipelines".
 
 ### Task dependencies
 
-During task registration it is possible to add a dependency to an already registered task.
-When the flow is processed, it makes sure that the dependency is executed before the current task is run.
+During task registration it is possible to add a dependency
+to an already registered task.
+When the flow is processed,
+it makes sure that the dependency is executed before the current task is run.
 Take note that each task will be executed at most once.
 
 ### Helpers for running programs
@@ -230,7 +242,8 @@ func Exec(cmdLine string) func(tf *goyek.TF) {
 }
 ```
 
-[Here](https://github.com/goyek/goyek/issues/60) is the explantion why argument splitting is not included out-of-the-box.
+[Here](https://github.com/goyek/goyek/issues/60) is the explanation
+why argument splitting is not included out-of-the-box.
 
 ### Verbose mode
 
@@ -246,7 +259,8 @@ The default value for the verbose parameter can be overwritten with
 
 ### Default task
 
-Default task can be assigned via the [`Flow.DefaultTask`](https://pkg.go.dev/github.com/goyek/goyek#Flow.DefaultTask) field.
+Default task can be assigned via the [`Flow.DefaultTask`](https://pkg.go.dev/github.com/goyek/goyek#Flow.DefaultTask)
+field.
 
 When the default task is set, then it is run if no task is provided via CLI.
 
@@ -265,7 +279,8 @@ For example, `./goyek.sh test -v -pkg ./...` would run the `test` task
 with `v` bool parameter (verbose mode) set to `true`,
 and `pkg` string parameter set to `"./..."`.
 
-Parameters must first be registered via [`func (f *Flow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterValueParam), or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterStringParam).
+Parameters must first be registered via [`func (f *Flow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterValueParam),
+or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterStringParam).
 
 The registered parameters are required to have a non-empty name, matching
 the regular expression `^[a-zA-Z0-9][a-zA-Z0-9_-]*$`, available as
@@ -278,14 +293,20 @@ This means the following are acceptable:
 - hyphens (`-`) - except at the beginning
 
 After registration, tasks need to specify which parameters they will read.
-Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/goyek/goyek#RegisteredParam) instance from the registration result to the [`Task.Params`](https://pkg.go.dev/github.com/goyek/goyek#Task.Params) field.
+Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/goyek/goyek#RegisteredParam)
+instance from the registration result to the [`Task.Params`](https://pkg.go.dev/github.com/goyek/goyek#Task.Params)
+field.
 If a task tries to retrieve the value from an unregistered parameter, the task will fail.
 
-When registration is done, the task's action can retrieve the parameter value using the `Get(*TF)` method from the registration result instance during the task's `Action` execution.
+When registration is done, the task's action can retrieve the parameter value
+using the `Get(*TF)` method from the registration result instance
+during the task's `Action` execution.
 
-See [examples/parameters/main.go](examples/parameters/main.go) for a detailed example.
+See [examples/parameters/main.go](examples/parameters/main.go)
+for a detailed example.
 
-See [examples/validation/main.go](examples/validation/main.go) for a detailed example of cross-parameter validation.
+See [examples/validation/main.go](examples/validation/main.go)
+for a detailed example of cross-parameter validation.
 
 `Flow` will fail execution if there are unused parameters.
 
