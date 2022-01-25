@@ -18,21 +18,25 @@ This release adds the possibility to change the defaults of the global parameter
 
 ### Added
 
-- Add `RegisterVerboseParam` and `RegisterWorkDirParam` to overwrite default values for verbose and work dir parameters.
+- Add `RegisterVerboseParam` and `RegisterWorkDirParam` to overwrite
+  default values for verbose and work dir parameters.
 
 ## [0.6.0](https://github.com/goyek/goyek/compare/v0.5.0...v0.6.0) - 2021-08-02
 
-This release contains multiple **breaking changes** in the Go API. It is supposed to make it cleaner.
+This release contains multiple **breaking changes** in the Go API.
+It is supposed to make it cleaner.
 
 ### Added
 
 - `Tf.Cmd` also sets `Stdin` to `os.Stdin`.
-- Add `Flow.Tasks` and `Flow.Params` to allow introspection of the registered tasks and parameters.
+- Add `Flow.Tasks` and `Flow.Params` to allow introspection
+  of the registered tasks and parameters.
 
 ### Changed
 
 - Rename `Taskflow` type to `Flow` to simplify the naming.
-- Rename `Task.Command` field to `Action` to avoid confusion with [`exec.Command`](https://golang.org/pkg/os/exec/#Command) and `TF.Cmd`.
+- Rename `Task.Command` field to `Action` to avoid confusion with
+  [`exec.Command`](https://golang.org/pkg/os/exec/#Command) and `TF.Cmd`.
 
 ### Removed
 
@@ -57,7 +61,8 @@ This release contains multiple **breaking changes** in the Go API. It is suppose
 
 - Add Bash and PowerShell wrapper scripts.
 - Add `-wd` global parameter allowing to change the working directory.
-  The new `Taskflow.WorkDirParam` method can be used to get its value in a task's command.
+  The new `Taskflow.WorkDirParam` method can be used to get its value in
+  a task's command.
 
 ## [0.3.0](https://github.com/goyek/goyek/compare/v0.2.0...v0.3.0) - 2021-05-03
 
@@ -86,8 +91,10 @@ Moreover, the parameters are set via CLI using the flag syntax.
 - Rename `Task.Description` field to `Usage`.
 - Rename `Task.Dependencies` field to `Deps`.
 - Rename `CodeFailure` constant to `CodeFail`.
-- Rename `Taskflow.MustRegister` method to `Register` and remove previous `Taskflow.Register` implementation.
-- Remove `Taskflow.Params` field and `TF.Params` method, add `Taskflow.Register*Param` methods and `Task.Params` field instead.
+- Rename `Taskflow.MustRegister` method to `Register`
+  and remove previous `Taskflow.Register` implementation.
+- Remove `Taskflow.Params` field and `TF.Params` method,
+  add `Taskflow.Register*Param` methods and `Task.Params` field instead.
 - Remove `TF.Verbose`, add `Taskflow.VerboseParam` instead.
 - Unexport `Runner` type, use `Taskflow` in tests instead.
 - Enforce patterns for task names (`TaskNamePattern`) and parameter names (`ParamNamePattern`).
