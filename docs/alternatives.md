@@ -10,16 +10,19 @@ Table of Contents:
 
 ## Make
 
-While [Make](https://www.gnu.org/software/make/) is currently the _de facto_ standard, it has some pitfalls:
+While [Make](https://www.gnu.org/software/make/) is currently
+the _de facto_ standard, it has some pitfalls:
 
 - Requires to learn Make, which is not so easy.
 - It is hard to develop a Makefile which is truly cross-platform.
 - Debugging and testing Make targets is not fun.
 
 However, if you know Make and are happy with it, do not change it.
-Make is very powerful and a lot of stuff can be made faster, if you know how to use it.
+Make is very powerful and a lot of stuff can be made faster,
+if you know how to use it.
 
-**goyek** is intended to be simpler and easier to learn, while still being able to handle most use cases.
+**goyek** is intended to be simpler and easier to learn,
+while still being able to handle most use cases.
 
 ## Mage
 
@@ -29,7 +32,8 @@ which results in some drawbacks:
 
 - Requires using [build tags](https://magefile.org/magefiles/).
 - Reusing tasks is [hacky](https://magefile.org/importing/).
-- Requires installation or using [zero install option](https://magefile.org/zeroinstall/) which is slow.
+- Requires installation or using [zero install option](https://magefile.org/zeroinstall/)
+  which is slow.
 - Debugging would be extermly complex.
 - Magical by design (of course one may like it).
 
@@ -42,7 +46,8 @@ While [Task](https://taskfile.dev/) is simpler and easier to use
 than [Make](https://www.gnu.org/software/make/) it still has similar problems:
 
 - Requires to learn Task's YAML structure and
-  the [minimalistic, cross-platform interpreter](https://github.com/mvdan/sh#gosh) which it uses.
+  the [minimalistic, cross-platform interpreter](https://github.com/mvdan/sh#gosh)
+  which it uses.
 - Debugging and testing tasks is not fun.
 - Hard to make reusable tasks.
 - Requires to "install" the tool.
