@@ -138,7 +138,7 @@ func (f *flowRunner) pushWorkingDir() (func(), error) {
 		panic(err)
 	}
 
-	wd := wdParamVal.Get().(string) //nolint // it is always a string
+	wd := wdParamVal.Get().(string)
 	if err := os.Chdir(wd); err != nil {
 		return func() {}, err
 	}
@@ -175,11 +175,7 @@ func (f *flowRunner) run(ctx context.Context, name string, executed map[string]b
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	passed := f.runTask(ctx, task)
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	if !passed {
+	if !f.runTask(ctx, task) {
 		return errors.New("task failed")
 	}
 	executed[name] = true
