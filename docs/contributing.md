@@ -12,10 +12,10 @@ It would be very helpful if you:
 
 - tell us what is missing in the documentation and examples,
 - share your experience report,
-- propose features that you find critical or extremly useful,
-- share **goyek** with others by writting a blog post,
-  giving a speach at a meetup or conference,
-  or even telling your collegues that you work with.
+- propose features that you find critical or extremely useful,
+- share **goyek** with others by writing a blog post,
+  giving a speech at a meetup or conference,
+  or even telling your colleagues that you work with.
 
 Make sure to be familiar with our [Code of Conduct](code-of-conduct.md).
 
