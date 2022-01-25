@@ -175,11 +175,7 @@ func (f *flowRunner) run(ctx context.Context, name string, executed map[string]b
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	passed := f.runTask(ctx, task)
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	if !passed {
+	if !f.runTask(ctx, task) {
 		return errors.New("task failed")
 	}
 	executed[name] = true
