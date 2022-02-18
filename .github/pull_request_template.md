@@ -1,10 +1,12 @@
 ## Why
 
-<!-- Why this pull request was created? Explain the problem that this pull request is trying to solve. -->
+<!-- Why this pull request was created?
+     Explain the problem that this pull request is trying to solve. -->
 
 ## What
 
-<!-- What does this pull request contain? Explain what is this pull request changing. -->
+<!-- What does this pull request contain?
+     Explain what is this pull request changing. -->
 
 ## Checklist
 
@@ -15,3 +17,5 @@
 - [ ] `README.md` is updated.
 - [ ] The code changes follow [Effective Go](https://golang.org/doc/effective_go).
 - [ ] The code changes are covered by tests.
+
+<!-- markdownlint-disable-file MD041 -->

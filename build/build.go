@@ -3,7 +3,6 @@ package main
 import (
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/goyek/goyek"
@@ -113,13 +112,7 @@ func taskMarkdownLint() goyek.Task {
 				tf.Fatal(err)
 			}
 
-			docsMount := curDir + ":/markdown"
-			if err := tf.Cmd("docker", "run", "--rm", "-v", docsMount, "06kellyjac/markdownlint-cli:0.27.1", "**/*.md").Run(); err != nil {
-				tf.Error(err)
-			}
-
-			gitHubTemplatesMount := filepath.Join(curDir, ".github") + ":/markdown"
-			if err := tf.Cmd("docker", "run", "--rm", "-v", gitHubTemplatesMount, "06kellyjac/markdownlint-cli:0.27.1", "**/*.md").Run(); err != nil {
+			if err := tf.Cmd("docker", "run", "--rm", "-v", curDir+":/workdir", "ghcr.io/igorshubovych/markdownlint-cli:"+markdownlintCliVersion, "**/*.md", ".github/**/*.md").Run(); err != nil {
 				tf.Error(err)
 			}
 		},
