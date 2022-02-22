@@ -19,10 +19,10 @@ const (
 
 const (
 	// TaskNamePattern describes the regular expression a task name must match.
-	TaskNamePattern = "^[a-zA-Z0-9_]([a-zA-Z0-9_+-]|:)*$"
+	TaskNamePattern = "^[a-zA-Z0-9_][a-zA-Z0-9:_+-]*$"
 
 	// ParamNamePattern describes the regular expression a parameter name must match.
-	ParamNamePattern = "^[a-zA-Z0-9]([a-zA-Z0-9_+-]|:)*$"
+	ParamNamePattern = "^[a-zA-Z0-9][a-zA-Z0-9:_+-]*$"
 )
 
 var (
