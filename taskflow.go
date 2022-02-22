@@ -17,6 +17,19 @@ const (
 	CodeInvalidArgs = 2
 )
 
+const (
+	// TaskNamePattern describes the regular expression a task name must match.
+	TaskNamePattern = "^[a-zA-Z0-9_]([a-zA-Z0-9_+-]|:)*$"
+
+	// ParamNamePattern describes the regular expression a parameter name must match.
+	ParamNamePattern = "^[a-zA-Z0-9]([a-zA-Z0-9_+-]|:)*$"
+)
+
+var (
+	taskNameRegex  = regexp.MustCompile(TaskNamePattern)
+	paramNameRegex = regexp.MustCompile(ParamNamePattern)
+)
+
 // Flow is the root type of the package.
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
@@ -158,11 +171,6 @@ func (f *Flow) RegisterStringParam(p StringParam) RegisteredStringParam {
 	return RegisteredStringParam{regParam}
 }
 
-// ParamNamePattern describes the regular expression a parameter name must match.
-const ParamNamePattern = "^[a-zA-Z0-9][a-zA-Z0-9_-]*$"
-
-var paramNameRegex = regexp.MustCompile(ParamNamePattern)
-
 func (f *Flow) registerParam(p registeredParam) {
 	if !paramNameRegex.MatchString(p.name) {
 		panic("parameter name must match ParamNamePattern")
@@ -178,11 +186,6 @@ func (f *Flow) registerParam(p registeredParam) {
 	}
 	f.params[p.name] = p
 }
-
-// TaskNamePattern describes the regular expression a task name must match.
-const TaskNamePattern = "^[a-zA-Z0-9_][a-zA-Z0-9_-]*$"
-
-var taskNameRegex = regexp.MustCompile(TaskNamePattern)
 
 // Register registers the task. It panics in case of any error.
 func (f *Flow) Register(task Task) RegisteredTask {

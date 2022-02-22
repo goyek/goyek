@@ -180,14 +180,15 @@ exit $global:LASTEXITCODE
 ### Task registration
 
 The registered tasks are required to have a non-empty name, matching
-the regular expression `^[a-zA-Z0-9_][a-zA-Z0-9_-]*$`, available as
-[`TaskNamePattern`](https://pkg.go.dev/github.com/goyek/goyek#TaskNamePattern).
+the regular expression [`TaskNamePattern`](https://pkg.go.dev/github.com/goyek/goyek#TaskNamePattern).
 This means the following are acceptable:
 
 - letters (`a-z` and `A-Z`)
 - digits (`0-9`)
 - underscore (`_`)
-- hyphens (`-`) - except at the beginning
+- hyphen (`-`) - except at the beginning
+- plus (`+`) - except at the beginning
+- colon (`:`) - except at the beginning
 
 A task with a given name can be only registered once.
 
@@ -287,14 +288,15 @@ Parameters must first be registered via
 or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterStringParam).
 
 The registered parameters are required to have a non-empty name, matching
-the regular expression `^[a-zA-Z0-9][a-zA-Z0-9_-]*$`, available as
-[`ParamNamePattern`](https://pkg.go.dev/github.com/goyek/goyek#ParamNamePattern).
+the regular expression [`ParamNamePattern`](https://pkg.go.dev/github.com/goyek/goyek#ParamNamePattern).
 This means the following are acceptable:
 
 - letters (`a-z` and `A-Z`)
 - digits (`0-9`)
 - underscore (`_`) - except at the beginning
-- hyphens (`-`) - except at the beginning
+- hyphen (`-`) - except at the beginning
+- plus (`+`) - except at the beginning
+- colon (`:`) - except at the beginning
 
 After registration, tasks need to specify which parameters they will read.
 Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/goyek/goyek#RegisteredParam)

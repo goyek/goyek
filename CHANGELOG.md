@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v0.6.2...HEAD)
 
+### Added
+
+- `TaskNamePattern` and `ParamNamePattern` has been changes so that
+  the plus (`+`) and colon (`:`) characters can used
+  as in the task and parameter name (but not as the first character).
+  
 ## [0.6.2](https://github.com/goyek/goyek/compare/v0.6.1...v0.6.2) - 2022-01-25
 
 ### Fixed
