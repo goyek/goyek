@@ -7,7 +7,7 @@ require (
 	github.com/golangci/golangci-lint v1.45.2
 	github.com/goyek/goyek v0.6.3
 	golang.org/x/tools v0.1.10
-	mvdan.cc/gofumpt v0.3.0
+	mvdan.cc/gofumpt v0.3.1
 )
 
 replace github.com/goyek/goyek => ../
