@@ -21,7 +21,7 @@ jobs:
       - name: Build
         run: ./goyek.sh -v -ci
       - name: Upload HTML coverage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: coverage
           path: coverage.*t
