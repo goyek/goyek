@@ -7,6 +7,7 @@ require (
 	github.com/golangci/golangci-lint v1.46.2
 	github.com/goyek/goyek v0.6.3
 	golang.org/x/tools v0.1.11-0.20220316014157-77aa08bb151a
+	gopkg.in/yaml.v3 v3.0.0 // indirect
 	mvdan.cc/gofumpt v0.3.1
 )
 
