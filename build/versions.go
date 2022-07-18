@@ -1,5 +1,5 @@
 package main
 
 const (
-	markdownlintCliVersion = "v0.31.1"
+	markdownlintCliVersion = "v0.32.0"
 )
