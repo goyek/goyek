@@ -112,8 +112,13 @@ func taskMarkdownLint() goyek.Task {
 				tf.Fatal(err)
 			}
 
-			if err := tf.Cmd("docker", "run", "--rm", "-v", curDir+":/workdir", "ghcr.io/igorshubovych/markdownlint-cli:"+markdownlintCliVersion, "**/*.md", ".github/**/*.md").Run(); err != nil {
-				tf.Error(err)
+			dockerTag := "markdownlint-cli"
+			if err := tf.Cmd("docker", "build", "-t", dockerTag, "-f", "build/markdownlint-cli.dockerfile", ".").Run(); err != nil {
+				tf.Fatal(err)
+			}
+
+			if err := tf.Cmd("docker", "run", "--rm", "-v", curDir+":/workdir", dockerTag, "**/*.md").Run(); err != nil {
+				tf.Fatal(err)
 			}
 		},
 	}
