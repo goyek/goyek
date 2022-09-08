@@ -15,13 +15,6 @@
 
 Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
-**Be aware that `goyek` is still in `v0` phase, and the API is still in flux.**
-As per [Go module version numbering](https://golang.org/doc/modules/version-numbers),
-you can use released versions for your projects,
-yet there is the potential for breaking changes in later releases.
-We anticipate a `v1` release for a stable API.
-It is not yet clear when this will happen.
-
 Table of Contents:
 
 - [Description](#description)

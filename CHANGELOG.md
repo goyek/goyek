@@ -3,9 +3,15 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
+as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
-## [Unreleased](https://github.com/goyek/goyek/compare/v0.6.3...HEAD)
+## [Unreleased](https://github.com/goyek/goyek/compare/v1.0.0...HEAD)
+
+## [1.0.0](https://github.com/goyek/goyek/compare/v0.6.3...v1.0.0) - 2022-09-08
+
+This is the first stable release.
+Backward-incompatible changes in future releases are unlikely.
 
 ## [0.6.3](https://github.com/goyek/goyek/compare/v0.6.2...v0.6.3) - 2022-02-23
 
