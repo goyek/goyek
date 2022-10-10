@@ -135,7 +135,7 @@ func taskMisspell() goyek.Task {
 				tf.Fatal(err)
 			}
 
-			lint := tf.Cmd("misspell", "-error", "-locale=US", "-i=importas", ".")
+			lint := tf.Cmd("misspell", "-error", "-locale=US", "*.md")
 			if err := lint.Run(); err != nil {
 				tf.Fatal(err)
 			}

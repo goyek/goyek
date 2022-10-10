@@ -128,16 +128,12 @@ func (f *flowRunner) tasksToRun(tasks []string) []string {
 }
 
 func (f *flowRunner) pushWorkingDir() (func(), error) {
-	wdParamVal, hasParam := f.paramValues[f.workDir.Name()]
-	if !hasParam {
-		return func() {}, nil
-	}
-
 	oldWd, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
 
+	wdParamVal := f.paramValues[f.workDir.Name()]
 	wd := wdParamVal.Get().(string)
 	if err := os.Chdir(wd); err != nil {
 		return func() {}, err
@@ -193,53 +189,44 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	}
 
 	// if verbose flag is registered then check its value
-	verboseParamVal, ok := f.paramValues[f.verbose.Name()]
-	verbose := ok && verboseParamVal.Get().(bool)
+	verboseParamVal := f.paramValues[f.verbose.Name()]
+	verbose := verboseParamVal.Get().(bool)
+	writer := f.output
+	var streamWriter *strings.Builder
+	if !verbose {
+		streamWriter = &strings.Builder{}
+		writer = streamWriter
+	}
+	writer = &syncWriter{Writer: writer}
 
-	failed := false
-	measuredAction := func(tf *TF) {
-		w := tf.Output()
-		if !verbose {
-			w = &strings.Builder{}
-		}
+	// report task start
+	fmt.Fprintf(writer, "===== TASK  %s\n", task.Name)
 
-		// report task start
-		fmt.Fprintf(w, "===== TASK  %s\n", tf.Name())
+	tf := &TF{
+		ctx:         ctx,
+		name:        task.Name,
+		writer:      writer,
+		paramValues: paramValues,
+	}
+	result := (&taskRunner{}).Run(tf, task.Action)
 
-		// run task
-		r := runner{
-			Ctx:         tf.Context(),
-			TaskName:    tf.Name(),
-			ParamValues: tf.paramValues,
-			Output:      w,
-		}
-		result := r.Run(task.Action)
+	// report task end
+	status := "PASS"
+	passed := true
+	switch {
+	case result.Failed:
+		status = "FAIL"
+		passed = false
+	case result.Skipped:
+		status = "SKIP"
+	}
+	fmt.Fprintf(writer, "----- %s: %s (%.2fs)\n", status, task.Name, result.Duration.Seconds())
 
-		// report task end
-		status := "PASS"
-		switch {
-		case result.Failed():
-			status = "FAIL"
-			failed = true
-		case result.Skipped():
-			status = "SKIP"
-		}
-		fmt.Fprintf(w, "----- %s: %s (%.2fs)\n", status, tf.Name(), result.Duration().Seconds())
-
-		if sb, ok := w.(*strings.Builder); ok && result.failed {
-			io.Copy(tf.Output(), strings.NewReader(sb.String())) //nolint // not checking errors when writing to output
-		}
+	if streamWriter != nil && result.Failed {
+		io.Copy(f.output, strings.NewReader(streamWriter.String())) //nolint // not checking errors when writing to output
 	}
 
-	measuredRunner := runner{
-		Ctx:         ctx,
-		TaskName:    task.Name,
-		ParamValues: paramValues,
-		Output:      f.output,
-	}
-	measuredRunner.Run(measuredAction)
-
-	return !failed
+	return passed
 }
 
 func (f *flowRunner) unusedParams() []string {
