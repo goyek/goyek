@@ -128,16 +128,12 @@ func (f *flowRunner) tasksToRun(tasks []string) []string {
 }
 
 func (f *flowRunner) pushWorkingDir() (func(), error) {
-	wdParamVal, hasParam := f.paramValues[f.workDir.Name()]
-	if !hasParam {
-		return func() {}, nil
-	}
-
 	oldWd, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
 
+	wdParamVal := f.paramValues[f.workDir.Name()]
 	wd := wdParamVal.Get().(string)
 	if err := os.Chdir(wd); err != nil {
 		return func() {}, err
@@ -193,8 +189,8 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	}
 
 	// if verbose flag is registered then check its value
-	verboseParamVal, ok := f.paramValues[f.verbose.Name()]
-	verbose := ok && verboseParamVal.Get().(bool)
+	verboseParamVal := f.paramValues[f.verbose.Name()]
+	verbose := verboseParamVal.Get().(bool)
 	writer := f.output
 	var streamWriter *strings.Builder
 	if !verbose {
