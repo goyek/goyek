@@ -10,7 +10,7 @@ jobs:
   ci-build:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.1.0
       - uses: actions/cache@v3.0.9
         with:
           path: ~/go/pkg/mod
@@ -45,7 +45,7 @@ jobs:
           - '1.19'
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.1.0
       - uses: actions/setup-go@v3.3.0
         with:
           go-version: ${{ matrix.go-version }}
