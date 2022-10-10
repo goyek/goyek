@@ -17,7 +17,7 @@ type runResult struct {
 
 // Run runs the action.
 func (r taskRunner) Run(tf *TF, action func(tf *TF)) runResult {
-	finished := make(chan runResult)
+	finished := make(chan runResult, 1)
 	go func() {
 		from := time.Now()
 		defer func() {
