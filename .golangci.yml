@@ -1,59 +1,50 @@
 linters-settings:
-  gofumpt:
-    lang-version: "1.11"
-  goimports:
-    local-prefixes: github.com/goyek/goyek
   gocyclo:
     min-complexity: 15
+  goimports:
+    local-prefixes: github.com/goyek/goyek
   govet:
     check-shadowing: true
+  misspell:
+    locale: US
   nolintlint:
     allow-leading-space: false # require machine-readable nolint directives (with no leading space)
     allow-unused: false # report any unused nolint directives
     require-explanation: true # require an explanation for nolint directives
     require-specific: false # don't require nolint directives to be specific about which linter is being skipped
+  revive:
+    confidence: 0
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
-    - deadcode
+    - dogsled
     - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - structcheck
-    - typecheck
-    - unused
-    - varcheck
-    - bodyclose
-    - depguard
-    - dupl
     - exportloopref
     - funlen
-    - gci
-    - gocognit
-    - goconst
+    - gochecknoinits
     - gocritic
+    - goconst
     - gocyclo
-    - godot
     - gofumpt
+    - goimports
     - revive
     - gomnd
     - goprintffuncname
     - gosec
-    - ifshort
-    - noctx
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
     - nolintlint
-    - rowserrcheck
-    - sqlclosecheck
+    - staticcheck
     - stylecheck
-    - thelper
-    - tparallel
+    - typecheck
     - unconvert
     - unparam
+    - unused
     - whitespace
 
 issues:
