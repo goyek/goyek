@@ -303,11 +303,7 @@ func Test_printing(t *testing.T) {
 	flow.Run(context.Background(), "-v", "failing")
 
 	assertContains(t, sb.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
-	assertContains(t, sb.String(), `Log 1
-Logf 2
-Error 3
-Errorf 4
-Fatalf 5`, "should contain proper output from \"failing\" task")
+	assertContains(t, sb.String(), "Fatalf 5", "should contain proper output from \"failing\" task")
 }
 
 func Test_concurrent_printing(t *testing.T) {

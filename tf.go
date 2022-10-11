@@ -7,6 +7,8 @@ import (
 	"runtime"
 )
 
+const skipCount = 2
+
 // TF is a type passed to Task's Action function to manage task state.
 //
 // A Task ends when its Action function returns or calls any of the methods
@@ -42,25 +44,36 @@ func (tf *TF) Output() io.Writer {
 // and prints the text to Output. A final newline is added.
 // The text will be printed only if the task fails or flow is run in Verbose mode.
 func (tf *TF) Log(args ...interface{}) {
-	fmt.Fprintln(tf.writer, args...)
+	tf.log(args...)
+}
+
+func (tf *TF) log(args ...interface{}) {
+	_, filename, line, _ := runtime.Caller(skipCount)
+	prefix := fmt.Sprintf("%s:%d:", filename, line)
+	fmt.Fprintln(tf.writer, append([]interface{}{prefix}, args...)...)
 }
 
 // Logf formats its arguments according to the format, analogous to Printf,
 // and prints the text to Output. A final newline is added.
 // The text will be printed only if the task fails or flow is run in Verbose mode.
 func (tf *TF) Logf(format string, args ...interface{}) {
-	fmt.Fprintf(tf.writer, format+"\n", args...)
+	tf.logf(format, args...)
+}
+
+func (tf *TF) logf(format string, args ...interface{}) {
+	_, filename, line, _ := runtime.Caller(skipCount)
+	fmt.Fprintf(tf.writer, "%s:%d: "+format+"\n", append([]interface{}{filename, line}, args...)...)
 }
 
 // Error is equivalent to Log followed by Fail.
 func (tf *TF) Error(args ...interface{}) {
-	tf.Log(args...)
+	tf.log(args...)
 	tf.Fail()
 }
 
 // Errorf is equivalent to Logf followed by Fail.
 func (tf *TF) Errorf(format string, args ...interface{}) {
-	tf.Logf(format, args...)
+	tf.logf(format, args...)
 	tf.Fail()
 }
 
@@ -76,13 +89,13 @@ func (tf *TF) Fail() {
 
 // Fatal is equivalent to Log followed by FailNow.
 func (tf *TF) Fatal(args ...interface{}) {
-	tf.Log(args...)
+	tf.log(args...)
 	tf.FailNow()
 }
 
 // Fatalf is equivalent to Logf followed by FailNow.
 func (tf *TF) Fatalf(format string, args ...interface{}) {
-	tf.Logf(format, args...)
+	tf.logf(format, args...)
 	tf.FailNow()
 }
 
@@ -102,13 +115,13 @@ func (tf *TF) Skipped() bool {
 
 // Skip is equivalent to Log followed by SkipNow.
 func (tf *TF) Skip(args ...interface{}) {
-	tf.Log(args...)
+	tf.log(args...)
 	tf.SkipNow()
 }
 
 // Skipf is equivalent to Logf followed by SkipNow.
 func (tf *TF) Skipf(format string, args ...interface{}) {
-	tf.Logf(format, args...)
+	tf.logf(format, args...)
 	tf.SkipNow()
 }
 
