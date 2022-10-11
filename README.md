@@ -19,9 +19,9 @@ Table of Contents:
 
 - [Description](#description)
 - [Quick start](#quick-start)
+- [Wrapper scripts](#wrapper-scripts)
 - [Repository template](#repository-template)
 - [Examples](#examples)
-- [Wrapper scripts](#wrapper-scripts)
 - [Features](#features)
   - [Task registration](#task-registration)
   - [Task action](#task-action)
@@ -128,49 +128,40 @@ Hello world!
 ok      0.001s
 ```
 
-## Repository template
-
-Use [goyek/template](https://github.com/goyek/template) to create a new repository
-or when adopting **goyek** by copying most of its files.
-
-## Examples
-
-- [examples](examples)
-- [build/build.go](build/build.go) -
-  this repository's own build pipeline
-- [pellared/fluentassert](https://github.com/pellared/fluentassert) -
-  a library using **goyek** without polluting it's root `go.mod`
-- [signalfx/splunk-otel-go](https://github.com/signalfx/splunk-otel-go) -
-  a multi-module repository using **goyek**
-
 ## Wrapper scripts
 
 Instead of executing `go run ./build`,
 you can use the wrapper scripts,
 which can be invoked from any location.
 
-Simply add them to your repository's root directory:
+- [`goyek.sh`](goyek.sh)
+- [`goyek.ps1`](goyek.ps1)
 
-- [`goyek.sh`](goyek.sh) - make sure to add `+x` permission
-  (`git update-index --chmod=+x goyek.sh`):
+Simply add them to your repository's root directory
+and make sure to add the `+x` permission:
 
-```bash
-#!/bin/bash
-set -euo pipefail
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-cd "$DIR/build"
-go run . -wd=".." $@
+```sh
+curl -sSfL https://raw.githubusercontent.com/goyek/goyek/main/goyek.sh -O
+curl -sSfL https://raw.githubusercontent.com/goyek/goyek/main/goyek.ps1 -O
+git add --chmod=+x goyek.sh goyek.ps1
 ```
 
-- [`goyek.ps1`](goyek.ps1):
+## Repository template
 
-```powershell
-Push-Location "$PSScriptRoot\build" -ErrorAction Stop
-& go run . -wd=".." $args
-Pop-Location
-exit $global:LASTEXITCODE
-```
+You can use [goyek/template](https://github.com/goyek/template)
+to create a new repository
+
+For an existing repository you can copy most of its files.
+
+## Examples
+
+- [examples](examples)
+- [build/build.go](build/build.go) -
+  this repository's own build pipeline ()
+- [fluentassert](https://github.com/fluentassert/verify) -
+  a library using **goyek** without polluting it's root `go.mod`
+- [splunk-otel-go](https://github.com/signalfx/splunk-otel-go) -
+  a multi-module monorepo using **goyek**
 
 ## Features
 
