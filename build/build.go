@@ -136,7 +136,7 @@ func taskMisspell() goyek.Task {
 		Name:  "misspell",
 		Usage: "misspell",
 		Action: func(tf *goyek.TF) {
-			misspell := tf.Cmd("misspell", "-error", "-locale=US", "-i=importas", ,"-w", ".")
+			misspell := tf.Cmd("misspell", "-error", "-locale=US", "-i=importas", "-w", ".")
 			if err := misspell.Run(); err != nil {
 				tf.Fatal(err)
 			}
