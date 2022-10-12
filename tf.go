@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"io"
 	"runtime"
+	"strings"
 )
 
-const skipCount = 2
+const skipCount = 3
 
 // TF is a type passed to Task's Action function to manage task state.
 //
@@ -47,22 +48,11 @@ func (tf *TF) Log(args ...interface{}) {
 	tf.log(args...)
 }
 
-func (tf *TF) log(args ...interface{}) {
-	_, filename, line, _ := runtime.Caller(skipCount)
-	prefix := fmt.Sprintf("%s:%d:", filename, line)
-	fmt.Fprintln(tf.writer, append([]interface{}{prefix}, args...)...)
-}
-
 // Logf formats its arguments according to the format, analogous to Printf,
 // and prints the text to Output. A final newline is added.
 // The text will be printed only if the task fails or flow is run in Verbose mode.
 func (tf *TF) Logf(format string, args ...interface{}) {
 	tf.logf(format, args...)
-}
-
-func (tf *TF) logf(format string, args ...interface{}) {
-	_, filename, line, _ := runtime.Caller(skipCount)
-	fmt.Fprintf(tf.writer, "%s:%d: "+format+"\n", append([]interface{}{filename, line}, args...)...)
 }
 
 // Error is equivalent to Log followed by Fail.
@@ -134,4 +124,53 @@ func (tf *TF) Skipf(format string, args ...interface{}) {
 func (tf *TF) SkipNow() {
 	tf.skipped = true
 	runtime.Goexit()
+}
+
+func (tf *TF) log(args ...interface{}) {
+	txt := fmt.Sprint(args...)
+	txt = tf.decorate(txt, skipCount)
+	io.WriteString(tf.writer, txt) //nolint // not checking errors when writing to output
+}
+
+func (tf *TF) logf(format string, args ...interface{}) {
+	txt := fmt.Sprintf(format, args...)
+	txt = tf.decorate(txt, skipCount)
+	io.WriteString(tf.writer, txt) //nolint // not checking errors when writing to output
+}
+
+// decorate prefixes the string with the file and line of the call site
+// and inserts the final newline if needed and indentation spaces for formatting.
+// This function must be called with c.mu held.
+func (tf *TF) decorate(s string, skip int) string {
+	_, file, line, _ := runtime.Caller(skip)
+	if file != "" {
+		// Truncate file name at last file name separator.
+		if index := strings.LastIndex(file, "/"); index >= 0 {
+			file = file[index+1:]
+		} else if index = strings.LastIndex(file, "\\"); index >= 0 {
+			file = file[index+1:]
+		}
+	} else {
+		file = "???"
+	}
+	if line == 0 {
+		line = 1
+	}
+	buf := &strings.Builder{}
+	// Every line is indented at least 6 spaces.
+	buf.WriteString("      ")
+	fmt.Fprintf(buf, "%s:%d: ", file, line)
+	lines := strings.Split(s, "\n")
+	if l := len(lines); l > 1 && lines[l-1] == "" {
+		lines = lines[:l-1]
+	}
+	for i, line := range lines {
+		if i > 0 {
+			// Second and subsequent lines are indented an additional 4 spaces.
+			buf.WriteString("\n        ")
+		}
+		buf.WriteString(line)
+	}
+	buf.WriteByte('\n')
+	return buf.String()
 }
