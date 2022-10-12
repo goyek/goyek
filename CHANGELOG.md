@@ -20,8 +20,7 @@ There are no API changes.
 
 ### Fixed
 
-- Remove `TF.Cmd` undocumented behavior
-  (printing command name and arguments).
+- Remove `TF.Cmd` undocumented behavior (printing command name and arguments).
 
 ## [1.0.0](https://github.com/goyek/goyek/compare/v0.6.3...v1.0.0) - 2022-09-08
 
