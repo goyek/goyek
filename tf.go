@@ -126,12 +126,14 @@ func (tf *TF) SkipNow() {
 	runtime.Goexit()
 }
 
+// log is used internally in order to provide proper prefix.
 func (tf *TF) log(args ...interface{}) {
 	txt := fmt.Sprint(args...)
 	txt = tf.decorate(txt, skipCount)
 	io.WriteString(tf.writer, txt) //nolint // not checking errors when writing to output
 }
 
+// lof is used internally in order to provide proper prefix.
 func (tf *TF) logf(format string, args ...interface{}) {
 	txt := fmt.Sprintf(format, args...)
 	txt = tf.decorate(txt, skipCount)
@@ -140,7 +142,6 @@ func (tf *TF) logf(format string, args ...interface{}) {
 
 // decorate prefixes the string with the file and line of the call site
 // and inserts the final newline if needed and indentation spaces for formatting.
-// This function must be called with c.mu held.
 func (tf *TF) decorate(s string, skip int) string {
 	_, file, line, _ := runtime.Caller(skip)
 	if file != "" {
