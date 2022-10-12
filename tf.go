@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"io"
 	"runtime"
+	"strings"
 )
+
+const skipCount = 3
 
 // TF is a type passed to Task's Action function to manage task state.
 //
@@ -42,25 +45,25 @@ func (tf *TF) Output() io.Writer {
 // and prints the text to Output. A final newline is added.
 // The text will be printed only if the task fails or flow is run in Verbose mode.
 func (tf *TF) Log(args ...interface{}) {
-	fmt.Fprintln(tf.writer, args...)
+	tf.log(args...)
 }
 
 // Logf formats its arguments according to the format, analogous to Printf,
 // and prints the text to Output. A final newline is added.
 // The text will be printed only if the task fails or flow is run in Verbose mode.
 func (tf *TF) Logf(format string, args ...interface{}) {
-	fmt.Fprintf(tf.writer, format+"\n", args...)
+	tf.logf(format, args...)
 }
 
 // Error is equivalent to Log followed by Fail.
 func (tf *TF) Error(args ...interface{}) {
-	tf.Log(args...)
+	tf.log(args...)
 	tf.Fail()
 }
 
 // Errorf is equivalent to Logf followed by Fail.
 func (tf *TF) Errorf(format string, args ...interface{}) {
-	tf.Logf(format, args...)
+	tf.logf(format, args...)
 	tf.Fail()
 }
 
@@ -76,13 +79,13 @@ func (tf *TF) Fail() {
 
 // Fatal is equivalent to Log followed by FailNow.
 func (tf *TF) Fatal(args ...interface{}) {
-	tf.Log(args...)
+	tf.log(args...)
 	tf.FailNow()
 }
 
 // Fatalf is equivalent to Logf followed by FailNow.
 func (tf *TF) Fatalf(format string, args ...interface{}) {
-	tf.Logf(format, args...)
+	tf.logf(format, args...)
 	tf.FailNow()
 }
 
@@ -102,13 +105,13 @@ func (tf *TF) Skipped() bool {
 
 // Skip is equivalent to Log followed by SkipNow.
 func (tf *TF) Skip(args ...interface{}) {
-	tf.Log(args...)
+	tf.log(args...)
 	tf.SkipNow()
 }
 
 // Skipf is equivalent to Logf followed by SkipNow.
 func (tf *TF) Skipf(format string, args ...interface{}) {
-	tf.Logf(format, args...)
+	tf.logf(format, args...)
 	tf.SkipNow()
 }
 
@@ -121,4 +124,54 @@ func (tf *TF) Skipf(format string, args ...interface{}) {
 func (tf *TF) SkipNow() {
 	tf.skipped = true
 	runtime.Goexit()
+}
+
+// log is used internally in order to provide proper prefix.
+func (tf *TF) log(args ...interface{}) {
+	txt := fmt.Sprint(args...)
+	txt = tf.decorate(txt, skipCount)
+	io.WriteString(tf.writer, txt) //nolint // not checking errors when writing to output
+}
+
+// lof is used internally in order to provide proper prefix.
+func (tf *TF) logf(format string, args ...interface{}) {
+	txt := fmt.Sprintf(format, args...)
+	txt = tf.decorate(txt, skipCount)
+	io.WriteString(tf.writer, txt) //nolint // not checking errors when writing to output
+}
+
+// decorate prefixes the string with the file and line of the call site
+// and inserts the final newline if needed and indentation spaces for formatting.
+func (tf *TF) decorate(s string, skip int) string {
+	_, file, line, _ := runtime.Caller(skip)
+	if file != "" {
+		// Truncate file name at last file name separator.
+		if index := strings.LastIndex(file, "/"); index >= 0 {
+			file = file[index+1:]
+		} else if index = strings.LastIndex(file, "\\"); index >= 0 {
+			file = file[index+1:]
+		}
+	} else {
+		file = "???"
+	}
+	if line == 0 {
+		line = 1
+	}
+	buf := &strings.Builder{}
+	// Every line is indented at least 6 spaces.
+	buf.WriteString("      ")
+	fmt.Fprintf(buf, "%s:%d: ", file, line)
+	lines := strings.Split(s, "\n")
+	if l := len(lines); l > 1 && lines[l-1] == "" {
+		lines = lines[:l-1]
+	}
+	for i, line := range lines {
+		if i > 0 {
+			// Second and subsequent lines are indented an additional 4 spaces.
+			buf.WriteString("\n          ")
+		}
+		buf.WriteString(line)
+	}
+	buf.WriteByte('\n')
+	return buf.String()
 }

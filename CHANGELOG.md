@@ -8,6 +8,11 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v1.0.0...HEAD)
 
+### Added
+
+- The `TF` methods `Log[f]`, `Error[f]`, `Fatal[f]`, `Skip[f]`, `Cmd`
+  prints indented text with a prefix containing file and line information.
+
 ## [1.0.0](https://github.com/goyek/goyek/compare/v0.6.3...v1.0.0) - 2022-09-08
 
 This is the first stable release.

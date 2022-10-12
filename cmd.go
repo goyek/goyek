@@ -11,7 +11,7 @@ import (
 // and Stdin to os.Stdin.
 func (tf *TF) Cmd(name string, args ...string) *exec.Cmd {
 	cmdStr := strings.Join(append([]string{name}, args...), " ")
-	tf.Logf("Cmd: %s", cmdStr)
+	tf.logf("Cmd: %s", cmdStr)
 
 	cmd := exec.CommandContext(tf.Context(), name, args...)
 	cmd.Stdin = os.Stdin
