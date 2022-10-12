@@ -10,7 +10,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [1.1.0](https://github.com/goyek/goyek/compare/v1.0.0...v1.1.0) - 2022-10-13
 
-This release focuses on improving the output printing.
+This release focuses on improving output printing.
 There are no API changes.
 
 ### Added
