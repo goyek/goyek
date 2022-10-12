@@ -213,22 +213,15 @@ import (
 	"github.com/mattn/go-shellwords"
 )
 
-func Cmd(tf *goyek.TF, cmdLine string) *exec.Cmd {
-	args, err := shellwords.Parse(cmdLine)
-	if err != nil {
-		tf.Fatalf("parse command line: %v", err)
-	}
-	return tf.Cmd(args[0], args[1:]...)
-}
-
 func Exec(cmdLine string) func(tf *goyek.TF) {
 	args, err := shellwords.Parse(cmdLine)
 	if err != nil {
 		panic(fmt.Sprintf("parse command line: %v", err))
 	}
 	return func(tf *goyek.TF) {
+    tf.Logf("Run '%s'", cmdLine)
 		if err := tf.Cmd(args[0], args[1:]...).Run(); err != nil {
-			tf.Fatal(err)
+			tf.Error(err)
 		}
 	}
 }

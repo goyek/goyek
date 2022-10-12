@@ -64,8 +64,8 @@ func taskClean() goyek.Task {
 		Name:  "clean",
 		Usage: "remove git ignored files",
 		Action: func(tf *goyek.TF) {
-			if err := tf.Cmd("git", "clean", "-fX").Run(); err != nil {
-				tf.Fatal(err)
+			if err := tf.Cmd("git", "clean", "-fXd").Run(); err != nil {
+				tf.Error(err)
 			}
 		},
 	}
@@ -84,14 +84,8 @@ func taskInstall() goyek.Task {
 				tf.Fatal(err)
 			}
 
-			var installArgs []string
-			for _, v := range strings.Split(tools.String(), " ") {
-				installArgs = append(installArgs, strings.TrimSpace(v))
-			}
-			installCmd := tf.Cmd("go", append([]string{"install"}, installArgs...)...)
-			installCmd.Dir = toolsDir
-			if err := installCmd.Run(); err != nil {
-				tf.Fatal(err)
+			if err := Exec(tf, toolsDir, "go install "+strings.TrimSpace(tools.String())); err != nil {
+				tf.Error(err)
 			}
 		},
 	}
@@ -102,8 +96,8 @@ func taskBuild() goyek.Task {
 		Name:  "build",
 		Usage: "go build",
 		Action: func(tf *goyek.TF) {
-			if err := tf.Cmd("go", "build", "./...").Run(); err != nil {
-				tf.Fatal(err)
+			if err := Exec(tf, rootDir, "go build ./..."); err != nil {
+				tf.Error(err)
 			}
 		},
 	}
@@ -120,10 +114,11 @@ func taskMarkdownLint() goyek.Task {
 			}
 
 			dockerTag := "markdownlint-cli"
+			tf.Log("Cmd: docker build")
 			if err := tf.Cmd("docker", "build", "-t", dockerTag, "-f", toolsDir+"/markdownlint-cli.dockerfile", ".").Run(); err != nil {
 				tf.Fatal(err)
 			}
-
+			tf.Log("Cmd: docker run")
 			if err := tf.Cmd("docker", "run", "--rm", "-v", curDir+":/workdir", dockerTag, "**/*.md").Run(); err != nil {
 				tf.Fatal(err)
 			}
@@ -136,9 +131,8 @@ func taskMisspell() goyek.Task {
 		Name:  "misspell",
 		Usage: "misspell",
 		Action: func(tf *goyek.TF) {
-			misspell := tf.Cmd("misspell", "-error", "-locale=US", "-i=importas", "-w", ".")
-			if err := misspell.Run(); err != nil {
-				tf.Fatal(err)
+			if err := Exec(tf, rootDir, "misspell -error -locale=US -i=importas -w ."); err != nil {
+				tf.Error(err)
 			}
 		},
 	}
@@ -149,8 +143,12 @@ func taskGolangciLint() goyek.Task {
 		Name:  "golangci-lint",
 		Usage: "golangci-lint run --fix",
 		Action: func(tf *goyek.TF) {
-			exec(tf, rootDir, "golangci-lint run --fix")
-			exec(tf, buildDir, "golangci-lint run --fix")
+			if err := Exec(tf, rootDir, "golangci-lint run --fix"); err != nil {
+				tf.Error(err)
+			}
+			if err := Exec(tf, buildDir, "golangci-lint run --fix"); err != nil {
+				tf.Error(err)
+			}
 		},
 	}
 }
@@ -160,8 +158,8 @@ func taskTest() goyek.Task {
 		Name:  "test",
 		Usage: "go test with race detector and code covarage",
 		Action: func(tf *goyek.TF) {
-			if err := tf.Cmd("go", "test", "-race", "-covermode=atomic", "-coverprofile=coverage.out", "./...").Run(); err != nil {
-				tf.Fatal(err)
+			if err := Exec(tf, rootDir, "go test -race -covermode=atomic -coverprofile=coverage.out ./..."); err != nil {
+				tf.Error(err)
 			}
 		},
 	}
@@ -172,9 +170,15 @@ func taskModTidy() goyek.Task {
 		Name:  "mod-tidy",
 		Usage: "go mod tidy",
 		Action: func(tf *goyek.TF) {
-			exec(tf, rootDir, "go mod tidy")
-			exec(tf, buildDir, "go mod tidy")
-			exec(tf, toolsDir, "go mod tidy")
+			if err := Exec(tf, rootDir, "go mod tidy"); err != nil {
+				tf.Error(err)
+			}
+			if err := Exec(tf, buildDir, "go mod tidy"); err != nil {
+				tf.Error(err)
+			}
+			if err := Exec(tf, toolsDir, "go mod tidy"); err != nil {
+				tf.Error(err)
+			}
 		},
 	}
 }
@@ -189,10 +193,11 @@ func taskDiff(ci goyek.RegisteredBoolParam) goyek.Task {
 				tf.Skip("ci param is not set, skipping")
 			}
 
-			if err := tf.Cmd("git", "diff", "--exit-code").Run(); err != nil {
+			if err := Exec(tf, rootDir, "git diff --exit-code"); err != nil {
 				tf.Error(err)
 			}
 
+			tf.Log("Cmd: git status --porcelain")
 			cmd := tf.Cmd("git", "status", "--porcelain")
 			sb := &strings.Builder{}
 			cmd.Stdout = io.MultiWriter(tf.Output(), sb)
@@ -219,17 +224,5 @@ func taskAll(deps goyek.Deps) goyek.Task {
 		Name:  "all",
 		Usage: "build pipeline",
 		Deps:  deps,
-	}
-}
-
-// exec runs the command in given directory.
-// Calls tf.Error in failure.
-func exec(tf *goyek.TF, workDir, cmdLine string) {
-	tf.Logf("For %s:", workDir)
-	args := strings.Split(cmdLine, " ")
-	cmd := tf.Cmd(args[0], args[1:]...)
-	cmd.Dir = workDir
-	if err := cmd.Run(); err != nil {
-		tf.Error(err)
 	}
 }

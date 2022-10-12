@@ -13,6 +13,11 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - The `TF` methods `Log[f]`, `Error[f]`, `Fatal[f]`, `Skip[f]`, `Cmd`
   prints indented text with a prefix containing file and line information.
 
+### Fixed
+
+- `TF.Cmd` undocumented behavior (printing command name and arguments)
+  is removed.
+
 ## [1.0.0](https://github.com/goyek/goyek/compare/v0.6.3...v1.0.0) - 2022-09-08
 
 This is the first stable release.
@@ -49,7 +54,7 @@ It is supposed to make it cleaner.
 
 ### Added
 
-- `Tf.Cmd` also sets `Stdin` to `os.Stdin`.
+- `TF.Cmd` also sets `Stdin` to `os.Stdin`.
 - Add `Flow.Tasks` and `Flow.Params` to allow introspection
   of the registered tasks and parameters.
 

@@ -1,7 +1,8 @@
 package goyek
 
 import (
-	"runtime/debug"
+	"fmt"
+	"io"
 	"time"
 )
 
@@ -22,8 +23,11 @@ func (r taskRunner) Run(tf *TF, action func(tf *TF)) runResult {
 		from := time.Now()
 		defer func() {
 			if r := recover(); r != nil {
-				tf.Errorf("panic: %v", r)
-				tf.Log(string(debug.Stack()))
+				txt := fmt.Sprintf("panic: %v", r)
+				const skipUntilPanic = 3
+				txt = tf.decorate(txt, skipUntilPanic)
+				io.WriteString(tf.writer, txt) //nolint // not checking errors when writing to output
+				tf.failed = true
 			}
 			result := runResult{
 				Failed:   tf.failed,
