@@ -15,7 +15,7 @@ There are no API changes.
 
 ### Added
 
-- The `TF` methods `Log[f]`, `Error[f]`, `Fatal[f]`, `Skip[f]`, `Cmd`
+- The `TF` methods `Log[f]`, `Error[f]`, `Fatal[f]`, `Skip[f]`, `panic`
   prints indented text with a prefix containing file and line information.
 
 ### Fixed
