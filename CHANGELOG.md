@@ -15,8 +15,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Fixed
 
-- `TF.Cmd` undocumented behavior (printing command name and arguments)
-  is removed.
+- `TF.Cmd` undocumented behavior is removed
+  (printing command name and arguments).
 
 ## [1.0.0](https://github.com/goyek/goyek/compare/v0.6.3...v1.0.0) - 2022-09-08
 
