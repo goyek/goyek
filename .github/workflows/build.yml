@@ -8,7 +8,7 @@ on:
 
 jobs:
   ci-build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.1.0
       - uses: actions/setup-go@v3.3.0
@@ -20,11 +20,12 @@ jobs:
         uses: actions/upload-artifact@v3.1.0
         with:
           name: coverage
-          path: coverage.*t
+          path: coverage.*
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         with:
           file: ./coverage.out
+
   compatibility:
     strategy:
       fail-fast: false
@@ -39,7 +40,7 @@ jobs:
           - '1.17'
           - '1.18'
           - '1.19'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.1.0
       - uses: actions/setup-go@v3.3.0
