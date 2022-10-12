@@ -168,7 +168,7 @@ func (tf *TF) decorate(s string, skip int) string {
 	for i, line := range lines {
 		if i > 0 {
 			// Second and subsequent lines are indented an additional 4 spaces.
-			buf.WriteString("\n        ")
+			buf.WriteString("\n          ")
 		}
 		buf.WriteString(line)
 	}
