@@ -1,22 +1,26 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this library are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
+and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
-## [Unreleased](https://github.com/goyek/goyek/compare/v1.0.0...HEAD)
+## [Unreleased](https://github.com/goyek/goyek/compare/v1.1.0...HEAD)
+
+## [1.1.0](https://github.com/goyek/goyek/compare/v1.0.0...v1.1.0) - 2022-10-13
+
+This release focuses on improving output printing.
+There are no API changes.
 
 ### Added
 
-- The `TF` methods `Log[f]`, `Error[f]`, `Fatal[f]`, `Skip[f]`, `Cmd`
+- The `TF` methods `Log[f]`, `Error[f]`, `Fatal[f]`, `Skip[f]`, `panic`
   prints indented text with a prefix containing file and line information.
 
 ### Fixed
 
-- Remove `TF.Cmd` undocumented behavior
-  (printing command name and arguments).
+- Remove `TF.Cmd` undocumented behavior (printing command name and arguments).
 
 ## [1.0.0](https://github.com/goyek/goyek/compare/v0.6.3...v1.0.0) - 2022-09-08
 
