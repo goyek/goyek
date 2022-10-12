@@ -63,7 +63,7 @@ Here are some good parts:
   - [`github.com/rjeczalik/notify`](https://pkg.go.dev/github.com/rjeczalik/notify)
   - [`github.com/magefile/mage/target`](https://pkg.go.dev/github.com/magefile/mage/target)
   - [`github.com/mattn/go-shellwords`](https://pkg.go.dev/github.com/mattn/go-shellwords)
-- Tasks and helpers can be unit tested.
+- Tasks and helpers can be unit tested. For example, see [cmd_test.go](cmd_test.go).
 - [`github.com/goyek/goyek` package](go.mod) does not use any third-party dependency
   other than the Go standard library.
 
