@@ -121,9 +121,9 @@ ok     0.000s
 ```
 
 ```shell
-$ go run ./build hello -v
+$ go run . hello -v
 ===== TASK  hello
-Hello world!
+      main.go:14: Hello world!
 ----- PASS: hello (0.00s)
 ok      0.001s
 ```
