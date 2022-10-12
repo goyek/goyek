@@ -1,3 +1,4 @@
+// Build is the build pipeline for this repository.
 package main
 
 import (
@@ -23,8 +24,8 @@ func flow() *goyek.Flow {
 
 	// tasks
 	clean := flow.Register(taskClean())
+	install := flow.Register(taskInstall())
 	build := flow.Register(taskBuild())
-	fmt := flow.Register(taskFmt())
 	markdownlint := flow.Register(taskMarkdownLint())
 	misspell := flow.Register(taskMisspell())
 	golangciLint := flow.Register(taskGolangciLint())
@@ -40,8 +41,8 @@ func flow() *goyek.Flow {
 	}))
 	all := flow.Register(taskAll(goyek.Deps{
 		clean,
+		install,
 		build,
-		fmt,
 		lint,
 		test,
 		modTidy,
@@ -52,7 +53,11 @@ func flow() *goyek.Flow {
 	return flow
 }
 
-const buildDir = "build"
+const (
+	rootDir  = "."
+	buildDir = "build"
+	toolsDir = "tools"
+)
 
 func taskClean() goyek.Task {
 	return goyek.Task{
@@ -60,6 +65,32 @@ func taskClean() goyek.Task {
 		Usage: "remove git ignored files",
 		Action: func(tf *goyek.TF) {
 			if err := tf.Cmd("git", "clean", "-fX").Run(); err != nil {
+				tf.Fatal(err)
+			}
+		},
+	}
+}
+
+func taskInstall() goyek.Task {
+	return goyek.Task{
+		Name:  "install",
+		Usage: " go install tools",
+		Action: func(tf *goyek.TF) {
+			tools := &strings.Builder{}
+			toolsCmd := tf.Cmd("go", "list", `-f={{ join .Imports " " }}`, "-tags=tools")
+			toolsCmd.Dir = toolsDir
+			toolsCmd.Stdout = tools
+			if err := toolsCmd.Run(); err != nil {
+				tf.Fatal(err)
+			}
+
+			var installArgs []string
+			for _, v := range strings.Split(tools.String(), " ") {
+				installArgs = append(installArgs, strings.TrimSpace(v))
+			}
+			installCmd := tf.Cmd("go", append([]string{"install"}, installArgs...)...)
+			installCmd.Dir = toolsDir
+			if err := installCmd.Run(); err != nil {
 				tf.Fatal(err)
 			}
 		},
@@ -78,30 +109,6 @@ func taskBuild() goyek.Task {
 	}
 }
 
-func taskFmt() goyek.Task {
-	return goyek.Task{
-		Name:  "fmt",
-		Usage: "gofumports",
-		Action: func(tf *goyek.TF) {
-			installFmt := tf.Cmd("go", "install", "mvdan.cc/gofumpt")
-			installFmt.Dir = buildDir
-			if err := installFmt.Run(); err != nil {
-				tf.Fatal(err)
-			}
-
-			tf.Cmd("gofumpt", "-l", "-w", ".").Run() //nolint // it is OK if it returns error
-
-			installGoImports := tf.Cmd("go", "install", "golang.org/x/tools/cmd/goimports")
-			installGoImports.Dir = buildDir
-			if err := installGoImports.Run(); err != nil {
-				tf.Fatal(err)
-			}
-
-			tf.Cmd("goimports", "-l", "-w", "-local=github.com/goyek/goyek", ".").Run() //nolint // it is OK if it returns erro
-		},
-	}
-}
-
 func taskMarkdownLint() goyek.Task {
 	return goyek.Task{
 		Name:  "markdownlint",
@@ -113,7 +120,7 @@ func taskMarkdownLint() goyek.Task {
 			}
 
 			dockerTag := "markdownlint-cli"
-			if err := tf.Cmd("docker", "build", "-t", dockerTag, "-f", "build/markdownlint-cli.dockerfile", ".").Run(); err != nil {
+			if err := tf.Cmd("docker", "build", "-t", dockerTag, "-f", toolsDir+"/markdownlint-cli.dockerfile", ".").Run(); err != nil {
 				tf.Fatal(err)
 			}
 
@@ -129,14 +136,8 @@ func taskMisspell() goyek.Task {
 		Name:  "misspell",
 		Usage: "misspell",
 		Action: func(tf *goyek.TF) {
-			installFmt := tf.Cmd("go", "install", "github.com/client9/misspell/cmd/misspell")
-			installFmt.Dir = buildDir
-			if err := installFmt.Run(); err != nil {
-				tf.Fatal(err)
-			}
-
-			lint := tf.Cmd("misspell", "-error", "-locale=US", "*.md")
-			if err := lint.Run(); err != nil {
+			misspell := tf.Cmd("misspell", "-error", "-locale=US", "-w", "*.md")
+			if err := misspell.Run(); err != nil {
 				tf.Fatal(err)
 			}
 		},
@@ -146,18 +147,10 @@ func taskMisspell() goyek.Task {
 func taskGolangciLint() goyek.Task {
 	return goyek.Task{
 		Name:  "golangci-lint",
-		Usage: "golangci-lint",
+		Usage: "golangci-lint run --fix",
 		Action: func(tf *goyek.TF) {
-			installLint := tf.Cmd("go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
-			installLint.Dir = buildDir
-			if err := installLint.Run(); err != nil {
-				tf.Fatal(err)
-			}
-
-			lint := tf.Cmd("golangci-lint", "run")
-			if err := lint.Run(); err != nil {
-				tf.Fatal(err)
-			}
+			exec(tf, rootDir, "golangci-lint run --fix")
+			exec(tf, buildDir, "golangci-lint run --fix")
 		},
 	}
 }
@@ -179,15 +172,9 @@ func taskModTidy() goyek.Task {
 		Name:  "mod-tidy",
 		Usage: "go mod tidy",
 		Action: func(tf *goyek.TF) {
-			if err := tf.Cmd("go", "mod", "tidy").Run(); err != nil {
-				tf.Error(err)
-			}
-
-			toolsModTidy := tf.Cmd("go", "mod", "tidy")
-			toolsModTidy.Dir = buildDir
-			if err := toolsModTidy.Run(); err != nil {
-				tf.Error(err)
-			}
+			exec(tf, rootDir, "go mod tidy")
+			exec(tf, buildDir, "go mod tidy")
+			exec(tf, toolsDir, "go mod tidy")
 		},
 	}
 }
@@ -232,5 +219,17 @@ func taskAll(deps goyek.Deps) goyek.Task {
 		Name:  "all",
 		Usage: "build pipeline",
 		Deps:  deps,
+	}
+}
+
+// exec runs the command in given directory.
+// Calls tf.Error in failure.
+func exec(tf *goyek.TF, workDir, cmdLine string) {
+	tf.Logf("For %s:", workDir)
+	args := strings.Split(cmdLine, " ")
+	cmd := tf.Cmd(args[0], args[1:]...)
+	cmd.Dir = workDir
+	if err := cmd.Run(); err != nil {
+		tf.Error(err)
 	}
 }
