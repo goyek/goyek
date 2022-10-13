@@ -1,6 +1,10 @@
 package goyek_test
 
-import "github.com/goyek/goyek"
+import (
+	"os"
+
+	"github.com/goyek/goyek"
+)
 
 func Example() {
 	flow := &goyek.Flow{}
@@ -35,5 +39,5 @@ func Example() {
 		Deps: goyek.Deps{task1, task2, task3},
 	})
 
-	flow.Main()
+	flow.Main(os.Args[1:])
 }

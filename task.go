@@ -20,11 +20,6 @@ type Task struct {
 
 	// Deps lists all registered tasks that need to be run before this task is executed.
 	Deps Deps
-
-	// Params is a list of registered parameters that the action may need during executions.
-	// Not all parameters need to be queried during execution, yet accessing a parameter
-	// that was not registered will fail the task.
-	Params Params
 }
 
 // RegisteredTask represents a task that has been registered to a Flow.
@@ -43,13 +38,6 @@ func (r RegisteredTask) Usage() string {
 	return r.task.Usage
 }
 
-// Params returns the task's parameters.
-func (r RegisteredTask) Params() Params {
-	params := make(Params, len(r.task.Params))
-	copy(params, r.task.Params)
-	return params
-}
-
 // Deps returns the task's dependencies.
 func (r RegisteredTask) Deps() Deps {
 	deps := make(Deps, len(r.task.Deps))
@@ -59,6 +47,3 @@ func (r RegisteredTask) Deps() Deps {
 
 // Deps represents a collection of registered Tasks.
 type Deps []RegisteredTask
-
-// Params represents a collection of registered Params.
-type Params []RegisteredParam

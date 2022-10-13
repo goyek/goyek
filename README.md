@@ -155,9 +155,8 @@ For an existing repository you can copy most of its files.
 
 ## Examples
 
-- [examples](examples)
 - [build/build.go](build/build.go) -
-  this repository's own build pipeline ()
+  this repository's own build pipeline (dogfooding)
 - [fluentassert](https://github.com/fluentassert/verify) -
   a library using **goyek** without polluting it's root `go.mod`
 - [splunk-otel-go](https://github.com/signalfx/splunk-otel-go) -
@@ -167,20 +166,9 @@ For an existing repository you can copy most of its files.
 
 ### Task registration
 
-The registered tasks are required to have a non-empty name, matching
-the regular expression [`TaskNamePattern`](https://pkg.go.dev/github.com/goyek/goyek#TaskNamePattern).
-This means the following are acceptable:
-
-- letters (`a-z` and `A-Z`)
-- digits (`0-9`)
-- underscore (`_`)
-- hyphen (`-`) - except at the beginning
-- plus (`+`) - except at the beginning
-- colon (`:`) - except at the beginning
+The registered tasks are required to have a non-empty name.
 
 A task with a given name can be only registered once.
-
-A task without description is not listed in CLI usage.
 
 ### Task action
 
@@ -192,10 +180,13 @@ Not having a action is very handy when registering "pipelines".
 ### Task dependencies
 
 During task registration it is possible to add a dependency
-to an already registered task.
+to another registered task.
+
 When the flow is processed,
-it makes sure that the dependency is executed before the current task is run.
-Take note that each task will be executed at most once.
+it makes sure that the dependency is executed
+before the given task is run.
+
+Each task will be executed at most once.
 
 ### Helpers for running programs
 
@@ -232,15 +223,10 @@ why argument splitting is not included out-of-the-box.
 
 ### Verbose mode
 
-Enable verbose output using the `-v` CLI flag.
+Enable verbose output by setting the `Verbose` field to true.
 It works similar to `go test -v`. Verbose mode streams all logs to the output.
-If it is disabled, only logs from failed task are send to the output.
 
-Use [`func (f *Flow) VerboseParam() BoolParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.VerboseParam)
-if you need to check if verbose mode was set within a task's action.
-
-The default value for the verbose parameter can be overwritten with
-[`func (f *Flow) RegisterVerboseParam(p BoolParam) RegisteredBoolParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterVerboseParam).
+If it is disabled, only output from a failed task are send to the output.
 
 ### Default task
 
@@ -251,52 +237,14 @@ When the default task is set, then it is run if no task is provided via CLI.
 
 ### Parameters
 
-The parameters can be set via CLI using the flag syntax.
+Use your favourity library for making parameters
 
-On the CLI, flags can be set in the following ways:
-
-- `-param simple` - for simple single-word values
-- `-param "value with blanks"`
-- `-param="value with blanks"`
-- `-param` - setting boolean parameters implicitly to `true`
-
-For example, `./goyek.sh test -v -pkg ./...` would run the `test` task
-with `v` bool parameter (verbose mode) set to `true`,
-and `pkg` string parameter set to `"./..."`.
-
-Parameters must first be registered via
-[`func (f *Flow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterValueParam),
-or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterStringParam).
-
-The registered parameters are required to have a non-empty name, matching
-the regular expression [`ParamNamePattern`](https://pkg.go.dev/github.com/goyek/goyek#ParamNamePattern).
-This means the following are acceptable:
-
-- letters (`a-z` and `A-Z`)
-- digits (`0-9`)
-- underscore (`_`) - except at the beginning
-- hyphen (`-`) - except at the beginning
-- plus (`+`) - except at the beginning
-- colon (`:`) - except at the beginning
-
-After registration, tasks need to specify which parameters they will read.
-Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/goyek/goyek#RegisteredParam)
-instance from the registration result to the [`Task.Params`](https://pkg.go.dev/github.com/goyek/goyek#Task.Params)
-field.
-If a task tries to retrieve the value from an unregistered parameter,
-the task will fail.
-
-When registration is done, the task's action can retrieve the parameter value
-using the `Get(*TF)` method from the registration result instance
-during the task's `Action` execution.
-
-See [examples/parameters/main.go](examples/parameters/main.go)
-for a detailed example.
-
-See [examples/validation/main.go](examples/validation/main.go)
-for a detailed example of cross-parameter validation.
-
-`Flow` will fail execution if there are unused parameters.
+`flag`
+`urfave/cli`
+`spf13/pflag`
+`spf13/cobra`
+`spf13/viper`
+`caarlos0/env`
 
 ### Supported Go versions
 

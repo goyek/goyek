@@ -18,12 +18,11 @@ const skipCount = 3
 // All methods must be called only from the goroutine running the
 // Action function.
 type TF struct {
-	ctx         context.Context
-	name        string
-	writer      io.Writer
-	paramValues map[string]ParamValue
-	failed      bool
-	skipped     bool
+	ctx     context.Context
+	name    string
+	writer  io.Writer
+	failed  bool
+	skipped bool
 }
 
 // Context returns the flows' run context.

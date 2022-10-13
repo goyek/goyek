@@ -12,7 +12,8 @@ func TestCmd_success(t *testing.T) {
 	taskName := "exec"
 	sb := &strings.Builder{}
 	flow := &goyek.Flow{
-		Output: sb,
+		Output:  sb,
+		Verbose: true,
 	}
 	flow.Register(goyek.Task{
 		Name: taskName,
@@ -23,7 +24,7 @@ func TestCmd_success(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "-v", taskName)
+	exitCode := flow.Run(context.Background(), taskName)
 
 	assertContains(t, sb.String(), "go version go", "output should contain prefix of version report")
 	assertEqual(t, exitCode, goyek.CodePass, "task should pass")
@@ -31,7 +32,7 @@ func TestCmd_success(t *testing.T) {
 
 func TestCmd_error(t *testing.T) {
 	taskName := "exec"
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	flow.Register(goyek.Task{
 		Name: taskName,
 		Action: func(tf *goyek.TF) {

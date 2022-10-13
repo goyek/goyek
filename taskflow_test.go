@@ -2,50 +2,24 @@ package goyek_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/goyek/goyek"
 )
 
-func Test_Register_errors(t *testing.T) {
-	testCases := []struct {
-		desc string
-		task goyek.Task
-	}{
-		{
-			desc: "missing task name",
-			task: goyek.Task{},
-		},
-		{
-			desc: "invalid dependency",
-			task: goyek.Task{Name: "my-task", Deps: goyek.Deps{goyek.RegisteredTask{}}},
-		},
-		{
-			desc: "invalid task name",
-			task: goyek.Task{Name: "-flag"},
-		},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			flow := &goyek.Flow{}
+func Test_Register_empty_name(t *testing.T) {
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 
-			act := func() { flow.Register(tc.task) }
+	act := func() { flow.Register(goyek.Task{}) }
 
-			assertPanics(t, act, "should panic")
-		})
-	}
+	assertPanics(t, act, "should panic")
 }
 
 func Test_Register_same_name(t *testing.T) {
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	task := goyek.Task{Name: "task"}
 	flow.Register(task)
 
@@ -56,7 +30,7 @@ func Test_Register_same_name(t *testing.T) {
 
 func Test_successful(t *testing.T) {
 	ctx := context.Background()
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	var executed1 int
 	task1 := flow.Register(goyek.Task{
 		Name: "task-1",
@@ -98,7 +72,7 @@ func Test_successful(t *testing.T) {
 }
 
 func Test_dependency_failure(t *testing.T) {
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	var executed1 int
 	task1 := flow.Register(goyek.Task{
 		Name: "task-1",
@@ -137,7 +111,7 @@ func Test_dependency_failure(t *testing.T) {
 }
 
 func Test_fail(t *testing.T) {
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	failed := false
 	flow.Register(goyek.Task{
 		Name: "task",
@@ -156,7 +130,7 @@ func Test_fail(t *testing.T) {
 }
 
 func Test_skip(t *testing.T) {
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	skipped := false
 	flow.Register(goyek.Task{
 		Name: "task",
@@ -175,7 +149,7 @@ func Test_skip(t *testing.T) {
 }
 
 func Test_task_panics(t *testing.T) {
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	flow.Register(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {
@@ -191,7 +165,7 @@ func Test_task_panics(t *testing.T) {
 func Test_cancelation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	flow.Register(goyek.Task{
 		Name: "task",
 	})
@@ -204,7 +178,7 @@ func Test_cancelation(t *testing.T) {
 func Test_cancelation_during_last_task(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	flow.Register(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {
@@ -218,7 +192,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 }
 
 func Test_empty_action(t *testing.T) {
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	flow.Register(goyek.Task{
 		Name: "task",
 	})
@@ -229,11 +203,7 @@ func Test_empty_action(t *testing.T) {
 }
 
 func Test_invalid_args(t *testing.T) {
-	flow := &goyek.Flow{}
-	flow.Register(goyek.Task{
-		Name: "task",
-	})
-
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	testCases := []struct {
 		desc string
 		args []string
@@ -242,12 +212,12 @@ func Test_invalid_args(t *testing.T) {
 			desc: "missing task name",
 		},
 		{
-			desc: "bad flag",
-			args: []string{"-badflag", "task"},
+			desc: "empty task name",
+			args: []string{""},
 		},
 		{
-			desc: "bad task name",
-			args: []string{"badtask"},
+			desc: "not registered task name",
+			args: []string{"unknown"},
 		},
 	}
 	for _, tc := range testCases {
@@ -259,28 +229,11 @@ func Test_invalid_args(t *testing.T) {
 	}
 }
 
-func Test_help(t *testing.T) {
-	flow := &goyek.Flow{}
-	fastParam := flow.RegisterBoolParam(goyek.BoolParam{
-		Name:  "fast",
-		Usage: "simulates fast-lane processing",
-	})
-	a := flow.Register(goyek.Task{
-		Name:   "a",
-		Params: goyek.Params{fastParam},
-		Usage:  "some task",
-	})
-	flow.DefaultTask = a
-
-	exitCode := flow.Run(context.Background(), "-h")
-
-	assertEqual(t, exitCode, goyek.CodePass, "should return OK")
-}
-
 func Test_printing(t *testing.T) {
 	sb := &strings.Builder{}
 	flow := &goyek.Flow{
-		Output: sb,
+		Output:  sb,
+		Verbose: true,
 	}
 	skipped := flow.Register(goyek.Task{
 		Name: "skipped",
@@ -300,7 +253,7 @@ func Test_printing(t *testing.T) {
 		},
 	})
 
-	flow.Run(context.Background(), "-v", "failing")
+	flow.Run(context.Background(), "failing")
 
 	assertContains(t, sb.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
 	assertContains(t, sb.String(), "Fatalf 5", "should contain proper output from \"failing\" task")
@@ -318,7 +271,8 @@ func Test_concurrent_printing(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			sb := &strings.Builder{}
 			flow := goyek.Flow{
-				Output: sb,
+				Output:  sb,
+				Verbose: tc.verbose,
 			}
 			flow.Register(goyek.Task{
 				Name: "task",
@@ -333,12 +287,7 @@ func Test_concurrent_printing(t *testing.T) {
 				},
 			})
 
-			var args []string
-			if tc.verbose {
-				args = append(args, "-v")
-			}
-			args = append(args, "task")
-			exitCode := flow.Run(context.Background(), args...)
+			exitCode := flow.Run(context.Background(), "task")
 
 			assertEqual(t, exitCode, goyek.CodeFail, "should fail")
 			assertContains(t, sb.String(), "from child goroutine", "should contain log from child goroutine")
@@ -348,7 +297,7 @@ func Test_concurrent_printing(t *testing.T) {
 }
 
 func Test_name(t *testing.T) {
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	taskName := "my-named-task"
 	var got string
 	flow.Register(goyek.Task{
@@ -364,127 +313,8 @@ func Test_name(t *testing.T) {
 	assertEqual(t, got, taskName, "should return proper Name value")
 }
 
-type arrayValue []string
-
-func (value *arrayValue) Set(s string) error {
-	return json.Unmarshal([]byte(s), value)
-}
-
-func (value *arrayValue) Get() interface{} { return []string(*value) }
-
-func (value *arrayValue) String() string {
-	b, _ := json.Marshal(value)
-	return string(b)
-}
-
-func (value *arrayValue) IsBool() bool { return false }
-
-func Test_params(t *testing.T) {
-	flow := &goyek.Flow{}
-	boolParam := flow.RegisterBoolParam(goyek.BoolParam{
-		Name:    "b",
-		Default: true,
-	})
-	intParam := flow.RegisterIntParam(goyek.IntParam{
-		Name:    "i",
-		Default: 1,
-	})
-	stringParam := flow.RegisterStringParam(goyek.StringParam{
-		Name:    "s",
-		Default: "abc",
-	})
-	arrayParam := flow.RegisterValueParam(goyek.ValueParam{
-		Name:     "array",
-		NewValue: func() goyek.ParamValue { return &arrayValue{} },
-	})
-	var gotBool bool
-	var gotInt int
-	var gotString string
-	var gotArray []string
-	flow.Register(goyek.Task{
-		Name: "task",
-		Params: goyek.Params{
-			boolParam,
-			intParam,
-			stringParam,
-			arrayParam,
-		},
-		Action: func(tf *goyek.TF) {
-			gotBool = boolParam.Get(tf)
-			gotInt = intParam.Get(tf)
-			gotString = stringParam.Get(tf)
-			gotArray = arrayParam.Get(tf).([]string) //nolint:forcetypeassert // test code, it can panic
-		},
-	})
-
-	exitCode := flow.Run(context.Background(), "-b=false", "-i", "9001", "-s", "xyz", "-array", "[\"a\", \"b\"]", "task")
-
-	assertEqual(t, exitCode, 0, "should pass")
-	assertEqual(t, gotBool, false, "bool param")
-	assertEqual(t, gotInt, 9001, "int param")
-	assertEqual(t, gotString, "xyz", "string param")
-	assertEqual(t, gotArray, []string{"a", "b"}, "array param")
-}
-
-func Test_invalid_params(t *testing.T) {
-	flow := &goyek.Flow{}
-	flow.Register(goyek.Task{
-		Name:   "task",
-		Action: func(tf *goyek.TF) {},
-	})
-
-	exitCode := flow.Run(context.Background(), "-z=3", "task")
-
-	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should fail because of unknown parameter")
-}
-
-func Test_unused_params(t *testing.T) {
-	flow := &goyek.Flow{}
-	flow.DefaultTask = flow.Register(goyek.Task{Name: "task", Action: func(tf *goyek.TF) {}})
-	flow.RegisterBoolParam(goyek.BoolParam{Name: "unused"})
-
-	assertPanics(t, func() { flow.Run(context.Background()) }, "should fail because of unused parameter")
-}
-
-func Test_param_registration_error_empty_name(t *testing.T) {
-	flow := &goyek.Flow{}
-	assertPanics(t, func() { flow.RegisterBoolParam(goyek.BoolParam{Name: ""}) }, "empty name")
-}
-
-func Test_param_registration_error_underscore_name_start(t *testing.T) {
-	flow := &goyek.Flow{}
-	assertPanics(t, func() { flow.RegisterBoolParam(goyek.BoolParam{Name: "_reserved"}) }, "should not start with underscore")
-}
-
-func Test_param_registration_error_no_default(t *testing.T) {
-	flow := &goyek.Flow{}
-	assertPanics(t, func() { flow.RegisterValueParam(goyek.ValueParam{Name: "custom"}) }, "custom parameter must have default value factory")
-}
-
-func Test_param_registration_error_double_name(t *testing.T) {
-	flow := &goyek.Flow{}
-	name := "double"
-	flow.RegisterStringParam(goyek.StringParam{Name: name})
-	assertPanics(t, func() { flow.RegisterBoolParam(goyek.BoolParam{Name: name}) }, "double name")
-}
-
-func Test_unregistered_params(t *testing.T) {
-	foreignParam := (&goyek.Flow{}).RegisterBoolParam(goyek.BoolParam{Name: "foreign"})
-	flow := &goyek.Flow{}
-	flow.Register(goyek.Task{
-		Name: "task",
-		Action: func(tf *goyek.TF) {
-			foreignParam.Get(tf)
-		},
-	})
-
-	exitCode := flow.Run(context.Background(), "task")
-
-	assertEqual(t, goyek.CodeFail, exitCode, "should fail because of unregistered parameter")
-}
-
 func Test_defaultTask(t *testing.T) {
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Output: &strings.Builder{}}
 	taskRan := false
 	task := flow.Register(goyek.Task{
 		Name: "task",
@@ -500,155 +330,9 @@ func Test_defaultTask(t *testing.T) {
 	assertTrue(t, taskRan, "task should have run")
 }
 
-func Test_wd_param(t *testing.T) {
-	flow := &goyek.Flow{}
-	beforeDir, err := os.Getwd()
-	requireEqual(t, err, nil, "should get work dir before the flow")
-	dir, cleanup := tempDir(t)
-	defer cleanup()
-	var got string
-	flow.Register(goyek.Task{
-		Name: "task",
-		Action: func(tf *goyek.TF) {
-			var osErr error
-			got, osErr = os.Getwd()
-			requireEqual(t, osErr, nil, "should get work dir from task")
-		},
-	})
-
-	exitCode := flow.Run(context.Background(), "task", "-wd", dir)
-	afterDir, err := os.Getwd()
-	requireEqual(t, err, nil, "should get work dir after the flow")
-
-	assertEqual(t, exitCode, 0, "should pass")
-	assertEqual(t, got, dir, "should have changed the working directory in flow")
-	assertEqual(t, afterDir, beforeDir, "should change back the working directory after flow")
-}
-
-func Test_wd_param_invalid(t *testing.T) {
-	flow := &goyek.Flow{}
-	beforeDir, err := os.Getwd()
-	requireEqual(t, err, nil, "should get work dir before the flow")
-	taskRan := false
-	flow.Register(goyek.Task{
-		Name: "task",
-		Action: func(tf *goyek.TF) {
-			taskRan = true
-		},
-	})
-
-	exitCode := flow.Run(context.Background(), "task", "-wd=strange-dir")
-	afterDir, err := os.Getwd()
-	requireEqual(t, err, nil, "should get work dir after the flow")
-
-	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should not proceed")
-	assertEqual(t, taskRan, false, "should not run the task")
-	assertEqual(t, afterDir, beforeDir, "should change back the working directory after flow")
-}
-
-func Test_register_wd_param(t *testing.T) {
-	flow := &goyek.Flow{}
-	beforeDir, err := os.Getwd()
-	requireEqual(t, err, nil, "should get work dir before the flow")
-	dir, cleanup := tempDir(t)
-	defer cleanup()
-	var got string
-	flow.RegisterWorkDirParam(goyek.StringParam{
-		Name:    "wd",
-		Usage:   "Working directory: set the working directory.",
-		Default: dir,
-	})
-	flow.Register(goyek.Task{
-		Name: "task",
-		Action: func(tf *goyek.TF) {
-			var osErr error
-			got, osErr = os.Getwd()
-			requireEqual(t, osErr, nil, "should get work dir from task")
-		},
-	})
-
-	exitCode := flow.Run(context.Background(), "task")
-	afterDir, err := os.Getwd()
-	requireEqual(t, err, nil, "should get work dir after the flow")
-
-	assertEqual(t, exitCode, 0, "should pass")
-	assertEqual(t, got, dir, "should have changed the working directory in flow")
-	assertEqual(t, afterDir, beforeDir, "should change back the working directory after flow")
-}
-
-func Test_register_wd_param_invalid(t *testing.T) {
-	flow := &goyek.Flow{}
-	beforeDir, err := os.Getwd()
-	requireEqual(t, err, nil, "should get work dir before the flow")
-	taskRan := false
-	flow.RegisterWorkDirParam(goyek.StringParam{
-		Name:    "wd",
-		Usage:   "Working directory: set the working directory.",
-		Default: "strange-dir",
-	})
-	flow.Register(goyek.Task{
-		Name: "task",
-		Action: func(tf *goyek.TF) {
-			taskRan = true
-		},
-	})
-
-	exitCode := flow.Run(context.Background(), "task")
-	afterDir, err := os.Getwd()
-	requireEqual(t, err, nil, "should get work dir after the flow")
-
-	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should not proceed")
-	assertEqual(t, taskRan, false, "should not run the task")
-	assertEqual(t, afterDir, beforeDir, "should change back the working directory after flow")
-}
-
-func Test_register_verbose_param(t *testing.T) {
-	flow := &goyek.Flow{}
-	var isVerbose bool
-	verboseParam := flow.RegisterVerboseParam(goyek.BoolParam{
-		Name:    "v",
-		Usage:   "Verbose: log all tasks as they are run.",
-		Default: true,
-	})
-	flow.Register(goyek.Task{
-		Name:   "task",
-		Params: goyek.Params{verboseParam},
-		Action: func(tf *goyek.TF) {
-			isVerbose = flow.VerboseParam().Get(tf)
-		},
-	})
-
-	exitCode := flow.Run(context.Background(), "task")
-
-	assertEqual(t, exitCode, 0, "should pass")
-	assertTrue(t, isVerbose, "should be verbose in flow")
-}
-
-func Test_register_custom_verbose_param(t *testing.T) {
-	flow := &goyek.Flow{}
-	var isVerbose bool
-	verboseParam := flow.RegisterVerboseParam(goyek.BoolParam{
-		Name:  "something-random",
-		Usage: "Verbose: log all tasks as they are run.",
-	})
-	flow.Register(goyek.Task{
-		Name:   "task",
-		Params: goyek.Params{verboseParam},
-		Action: func(tf *goyek.TF) {
-			isVerbose = flow.VerboseParam().Get(tf)
-		},
-	})
-
-	exitCode := flow.Run(context.Background(), "task", "-something-random")
-
-	assertEqual(t, exitCode, 0, "should pass")
-	assertTrue(t, isVerbose, "should be verbose in flow")
-}
-
 func Test_introspection_API(t *testing.T) {
-	flow := &goyek.Flow{}
-	p := flow.RegisterStringParam(goyek.StringParam{Name: "string", Usage: "text param", Default: "dft"})
-	t1 := flow.Register(goyek.Task{Name: "one", Params: goyek.Params{p}})
+	flow := &goyek.Flow{Output: &strings.Builder{}}
+	t1 := flow.Register(goyek.Task{Name: "one"})
 	flow.Register(goyek.Task{Name: "two", Usage: "action", Deps: goyek.Deps{t1}})
 
 	tasks := flow.Tasks()
@@ -656,27 +340,7 @@ func Test_introspection_API(t *testing.T) {
 
 	assertEqual(t, len(tasks), 2, "should return all tasks")
 	assertEqual(t, tasks[0].Name(), "one", "should first return one")
-	assertEqual(t, tasks[0].Params()[0].Name(), "string", "should return param Name")
-	assertEqual(t, tasks[0].Params()[0].Usage(), "text param", "should return param Usage")
-	assertEqual(t, tasks[0].Params()[0].Default(), "dft", "should return param Default")
 	assertEqual(t, tasks[1].Name(), "two", "should next return two")
 	assertEqual(t, tasks[1].Usage(), "action", "should return usage")
 	assertEqual(t, tasks[1].Deps()[0].Name(), "one", "should return dependency")
-
-	params := flow.Params()
-
-	assertEqual(t, len(params), 3, "should return all parameters, including the out-of-the-box ones")
-}
-
-func tempDir(t *testing.T) (string, func()) {
-	t.Helper()
-	dirName := t.Name() + "-" + strconv.FormatInt(time.Now().UnixNano(), 36)
-	dir := filepath.Join(os.TempDir(), dirName)
-	err := os.Mkdir(dir, 0700)
-	requireEqual(t, err, nil, "failed to create a temp directory")
-	cleanup := func() {
-		err := os.RemoveAll(dir)
-		assertEqual(t, err, nil, "should remove temp dir after test")
-	}
-	return dir, cleanup
 }
