@@ -22,9 +22,9 @@ func run(out io.Writer, flow *goyek.Flow, flags *flag.FlagSet, args []string) {
 
 		fmt.Fprintln(out)
 		fmt.Fprintf(w, "%s\t%s\t%s\n", "Task", "Usage", "Dependencies")
-		flow.VisitAll(func(task goyek.RegisteredTask) {
+		for _, task := range flow.Tasks() {
 			fmt.Fprintf(w, "%s\t%s\t%s\n", task.Name(), task.Usage(), strings.Join(task.Deps(), ", "))
-		})
+		}
 		w.Flush() //nolint // not checking errors when writing to output
 
 		fmt.Fprintln(out)

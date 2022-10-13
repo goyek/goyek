@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -101,9 +102,9 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	tf := &TF{
 		ctx:    ctx,
 		name:   task.Name,
-		writer: writer,
+		output: writer,
 	}
-	result := (&taskRunner{}).Run(tf, task.Action)
+	result := tf.run(task.Action)
 
 	// report task end
 	status := "PASS"
@@ -122,4 +123,15 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	}
 
 	return passed
+}
+
+type syncWriter struct {
+	io.Writer
+	mtx sync.Mutex
+}
+
+func (w *syncWriter) Write(p []byte) (int, error) {
+	defer func() { w.mtx.Unlock() }()
+	w.mtx.Lock()
+	return w.Writer.Write(p)
 }

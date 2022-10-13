@@ -329,16 +329,13 @@ func Test_defaultTask(t *testing.T) {
 	assertTrue(t, taskRan, "task should have run")
 }
 
-func Test_VisitAll(t *testing.T) {
+func TestFlow_Tasks(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 	t1 := flow.Register(goyek.Task{Name: "one"})
 	flow.Register(goyek.Task{Name: "two", Usage: "action", Deps: goyek.Deps{t1}})
 	flow.Register(goyek.Task{Name: "three"})
 
-	var got []goyek.RegisteredTask
-	flow.VisitAll(func(rt goyek.RegisteredTask) {
-		got = append(got, rt)
-	})
+	got := flow.Tasks()
 
 	assertEqual(t, len(got), 3, "should return all tasks")
 	assertEqual(t, got[0].Name(), "one", "should first return one")

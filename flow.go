@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"sort"
 )
 
@@ -28,23 +29,6 @@ type Flow struct {
 
 	tasks map[string]Task
 }
-
-// VisitAll visits the flags in lexicographical order, calling fn for each.
-func (f *Flow) VisitAll(fn func(RegisteredTask)) {
-	var tasks []RegisteredTask
-	for _, task := range f.tasks {
-		tasks = append(tasks, RegisteredTask{
-			task: task,
-		})
-	}
-
-	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
-	for _, task := range tasks {
-		fn(task)
-	}
-}
-
-// TODO: Print (like PrintDefaults)
 
 // Register registers the task. It panics in case of any error.
 func (f *Flow) Register(task Task) RegisteredTask {
@@ -85,6 +69,43 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 
 	return flow.Run(ctx, args)
 }
+
+// Main parses the args and runs the provided tasks.
+// It exists when after the taskflow finished or SIGINT
+// was send to interrupt the execution.
+func (f *Flow) Main(args []string) {
+	// trap Ctrl+C and call cancel on the context
+	ctx, cancel := context.WithCancel(context.Background())
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		<-c // first signal, cancel context
+		fmt.Fprintln(f.Output, "first interrupt, graceful stop")
+		cancel()
+
+		<-c // second signal, hard exit
+		fmt.Fprintln(f.Output, "second interrupt, exit")
+		os.Exit(CodeFail)
+	}()
+
+	// run flow
+	exitCode := f.Run(ctx, args...)
+	os.Exit(exitCode)
+}
+
+// Tasks returns all tasks sorted in lexicographical order.
+func (f *Flow) Tasks() []RegisteredTask {
+	var tasks []RegisteredTask
+	for _, task := range f.tasks {
+		tasks = append(tasks, RegisteredTask{
+			task: task,
+		})
+	}
+	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
+	return tasks
+}
+
+// TODO: Print (like PrintDefaults)
 
 func (f *Flow) isRegistered(name string) bool {
 	if f.tasks == nil {
