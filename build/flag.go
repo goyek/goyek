@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/goyek/goyek"
+	"github.com/goyek/goyek/v2"
 )
 
 func run(out io.Writer, flow *goyek.Flow, flags *flag.FlagSet, args []string) {

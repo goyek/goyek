@@ -3,7 +3,7 @@ package main
 import (
 	"strings"
 
-	"github.com/goyek/goyek"
+	"github.com/goyek/goyek/v2"
 )
 
 // Exec runs the command in given directory.

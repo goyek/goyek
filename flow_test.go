@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/goyek/goyek"
+	"github.com/goyek/goyek/v2"
 )
 
 func Test_Register_empty_name(t *testing.T) {

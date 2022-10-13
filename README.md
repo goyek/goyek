@@ -26,9 +26,8 @@ Table of Contents:
   - [Task registration](#task-registration)
   - [Task action](#task-action)
   - [Task dependencies](#task-dependencies)
-  - [Helpers for running programs](#helpers-for-running-programs)
   - [Verbose mode](#verbose-mode)
-  - [Default task](#default-task)
+  - [Running programs](#running-programs)
   - [Parameters](#parameters)
   - [Supported Go versions](#supported-go-versions)
 - [Alternatives](#alternatives)
@@ -76,7 +75,7 @@ packages.
 package main
 
 import (
-	"github.com/goyek/goyek"
+	"github.com/goyek/goyek/v2"
 )
 
 func main() {
@@ -151,6 +150,9 @@ The registered tasks are required to have a non-empty name.
 
 A task with a given name can be only registered once.
 
+Default task can be assigned using the `DefaultTask` field.
+When the default task is set, then it is run if no task is provided.
+
 ### Task action
 
 Task action is a function which is executed when a task is executed.
@@ -169,7 +171,15 @@ before the given task is run.
 
 Each task will be executed at most once.
 
-### Helpers for running programs
+### Verbose mode
+
+Enable verbose output by setting the `Verbose` field to `true`.
+It works similar to `go test -v`.
+When enabled it prints all tasks as they are run.
+
+If it is disabled, only output from a failed task is printed.
+
+### Running programs
 
 Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.dev/github.com/goyek/goyek#TF.Cmd)
 to run a program inside a task's action.
@@ -181,7 +191,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/goyek/goyek"
+	"github.com/goyek/goyek/v2"
 	"github.com/mattn/go-shellwords"
 )
 
@@ -202,30 +212,21 @@ func Exec(cmdLine string) func(tf *goyek.TF) {
 [Here](https://github.com/goyek/goyek/issues/60) is the explanation
 why argument splitting is not included out-of-the-box.
 
-### Verbose mode
-
-Enable verbose output by setting the `Verbose` field to true.
-It works similar to `go test -v`. Verbose mode streams all logs to the output.
-
-If it is disabled, only output from a failed task are send to the output.
-
-### Default task
-
-Default task can be assigned via the [`Flow.DefaultTask`](https://pkg.go.dev/github.com/goyek/goyek#Flow.DefaultTask)
-field.
-
-When the default task is set, then it is run if no task is provided via CLI.
-
 ### Parameters
 
-Use your favourity library for making parameters
+As of `v2` the parameters support has been removed
+in order to improve customization.
 
-`flag`
-`urfave/cli`
-`spf13/pflag`
-`spf13/cobra`
-`spf13/viper`
-`caarlos0/env`
+There are libraries that are dedicated to this and do it better such as:
+
+- [`flag`](https://pkg.go.dev/flag)
+- [`urfave/cli`](https://github.com/urfave/cli/v2)
+- [`spf13/pflag`](https://github.com/spf13/pflag)
+- [`spf13/cobra`](https://github.com/spf13/cobra)
+- [`spf13/viper`](https://github.com/spf13/viper)
+- [`caarlos0/env`](https://github.com/caarlos0/env)
+
+With the new API it is easy to integrate **goyek** with any of these libraries.
 
 ### Supported Go versions
 

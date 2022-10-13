@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/goyek/goyek"
+	"github.com/goyek/goyek/v2"
 )
 
 func configure(flow *goyek.Flow, flags *flag.FlagSet) {
