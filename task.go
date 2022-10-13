@@ -18,7 +18,7 @@ type Task struct {
 	// for a list of dependencies.
 	Action func(tf *TF)
 
-	// Deps lists all registered tasks that need to be run before this task is executed.
+	// Deps is a collection of registered tasks that need to be run before this task is executed.
 	Deps Deps
 }
 
@@ -47,5 +47,5 @@ func (r RegisteredTask) Deps() []string {
 	return deps
 }
 
-// Deps represents a collection of registered Tasks.
+// Deps represents a collection of dependencies.
 type Deps []RegisteredTask

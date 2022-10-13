@@ -3,6 +3,7 @@ package goyek_test
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -329,6 +330,45 @@ func Test_defaultTask(t *testing.T) {
 	assertTrue(t, taskRan, "task should have run")
 }
 
+func TestCmd_success(t *testing.T) {
+	taskName := "exec"
+	sb := &strings.Builder{}
+	flow := &goyek.Flow{
+		Output:  sb,
+		Verbose: true,
+	}
+	flow.Register(goyek.Task{
+		Name: taskName,
+		Action: func(tf *goyek.TF) {
+			if err := tf.Cmd("go", "version").Run(); err != nil {
+				tf.Fatal(err)
+			}
+		},
+	})
+
+	exitCode := flow.Run(context.Background(), taskName)
+
+	assertContains(t, sb.String(), "go version go", "output should contain prefix of version report")
+	assertEqual(t, exitCode, goyek.CodePass, "task should pass")
+}
+
+func TestCmd_error(t *testing.T) {
+	taskName := "exec"
+	flow := &goyek.Flow{Output: &strings.Builder{}}
+	flow.Register(goyek.Task{
+		Name: taskName,
+		Action: func(tf *goyek.TF) {
+			if err := tf.Cmd("go", "wrong").Run(); err != nil {
+				tf.Fatal(err)
+			}
+		},
+	})
+
+	exitCode := flow.Run(nil, taskName) //nolint:staticcheck // present that nil context is handled
+
+	assertEqual(t, exitCode, goyek.CodeFail, "task should pass")
+}
+
 func TestFlow_Tasks(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 	t1 := flow.Register(goyek.Task{Name: "one"})
@@ -343,4 +383,57 @@ func TestFlow_Tasks(t *testing.T) {
 	assertEqual(t, got[2].Name(), "two", "should next return two")
 	assertEqual(t, got[2].Usage(), "action", "should return usage")
 	assertEqual(t, got[2].Deps()[0], "one", "should return dependency")
+}
+
+func assertTrue(tb testing.TB, got bool, msg string) {
+	tb.Helper()
+	if got {
+		return
+	}
+	tb.Errorf("%s\ngot: [%v], want: [true]", msg, got)
+}
+
+func assertContains(tb testing.TB, got string, want string, msg string) {
+	tb.Helper()
+	if strings.Contains(got, want) {
+		return
+	}
+	tb.Errorf("%s\ngot: [%s], should contain: [%s]", msg, got, want)
+}
+
+func requireEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
+	tb.Helper()
+	if reflect.DeepEqual(got, want) {
+		return
+	}
+	tb.Fatalf("%s\ngot: [%v], want: [%v]", msg, got, want)
+}
+
+func assertEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
+	tb.Helper()
+	if reflect.DeepEqual(got, want) {
+		return
+	}
+	tb.Errorf("%s\ngot: [%v], want: [%v]", msg, got, want)
+}
+
+func assertPanics(tb testing.TB, fn func(), msg string) {
+	tb.Helper()
+	tryPanic := func() bool {
+		didPanic := false
+		func() {
+			defer func() {
+				if info := recover(); info != nil {
+					didPanic = true
+				}
+			}()
+			fn()
+		}()
+		return didPanic
+	}
+
+	if tryPanic() {
+		return
+	}
+	tb.Errorf("%s\ndid not panic, but expected to do so", msg)
 }
