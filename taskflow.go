@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 )
 
 const (
@@ -28,15 +29,19 @@ type Flow struct {
 	tasks map[string]Task
 }
 
-// Tasks returns all registered tasks.
-func (f *Flow) Tasks() []RegisteredTask {
+// VisitAll visits the flags in lexicographical order, calling fn for each.
+func (f *Flow) VisitAll(fn func(RegisteredTask)) {
 	var tasks []RegisteredTask
 	for _, task := range f.tasks {
 		tasks = append(tasks, RegisteredTask{
 			task: task,
 		})
 	}
-	return tasks
+
+	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
+	for _, task := range tasks {
+		fn(task)
+	}
 }
 
 // Register registers the task. It panics in case of any error.

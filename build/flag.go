@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
 	"strings"
 	"text/tabwriter"
 
@@ -22,12 +21,10 @@ func run(out io.Writer, flow *goyek.Flow, flags *flag.FlagSet, args []string) {
 		w := tabwriter.NewWriter(out, 1, 1, 4, ' ', 0) //nolint:gomnd // ignore
 
 		fmt.Fprintln(out)
-		tasks := flow.Tasks()
-		sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
 		fmt.Fprintf(w, "%s\t%s\t%s\n", "Task", "Usage", "Dependencies")
-		for _, task := range tasks {
+		flow.VisitAll(func(task goyek.RegisteredTask) {
 			fmt.Fprintf(w, "%s\t%s\t%s\n", task.Name(), task.Usage(), strings.Join(task.Deps(), ", "))
-		}
+		})
 		w.Flush() //nolint // not checking errors when writing to output
 
 		fmt.Fprintln(out)

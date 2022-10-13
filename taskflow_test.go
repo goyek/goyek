@@ -3,7 +3,6 @@ package goyek_test
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 	"testing"
 
@@ -330,17 +329,21 @@ func Test_defaultTask(t *testing.T) {
 	assertTrue(t, taskRan, "task should have run")
 }
 
-func Test_introspection_API(t *testing.T) {
+func Test_VisitAll(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 	t1 := flow.Register(goyek.Task{Name: "one"})
 	flow.Register(goyek.Task{Name: "two", Usage: "action", Deps: goyek.Deps{t1}})
+	flow.Register(goyek.Task{Name: "three"})
 
-	tasks := flow.Tasks()
-	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
+	var got []goyek.RegisteredTask
+	flow.VisitAll(func(rt goyek.RegisteredTask) {
+		got = append(got, rt)
+	})
 
-	assertEqual(t, len(tasks), 2, "should return all tasks")
-	assertEqual(t, tasks[0].Name(), "one", "should first return one")
-	assertEqual(t, tasks[1].Name(), "two", "should next return two")
-	assertEqual(t, tasks[1].Usage(), "action", "should return usage")
-	assertEqual(t, tasks[1].Deps()[0], "one", "should return dependency")
+	assertEqual(t, len(got), 3, "should return all tasks")
+	assertEqual(t, got[0].Name(), "one", "should first return one")
+	assertEqual(t, got[1].Name(), "three", "should then return one (sorted)")
+	assertEqual(t, got[2].Name(), "two", "should next return two")
+	assertEqual(t, got[2].Usage(), "action", "should return usage")
+	assertEqual(t, got[2].Deps()[0], "one", "should return dependency")
 }
