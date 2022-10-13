@@ -8,6 +8,24 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v1.1.0...HEAD)
 
+This release contains **breaking changes** in the Go API.
+It focuses on improving customization mainly by removing the parameters API.
+It gives the user the possibility of parsing the input.
+
+### Added
+
+- Add `Flow.Verbose` for controling the verbose mode.
+- Add `Flow.Print` for printing the flow usage.
+- `Flow.Main` now exits on recieving second SIGINT.
+
+### Changed
+
+- `RegisteredTask.Deps` returns `[]string` (dependency names) for easier introspection.
+
+### Removed
+
+- Remove parameters API and out-of-the-box flags (`-v`, `-wd`).
+
 ## [1.1.0](https://github.com/goyek/goyek/compare/v1.0.0...v1.1.0) - 2022-10-13
 
 This release focuses on improving output printing.
