@@ -25,7 +25,6 @@ There are no API changes.
 ## [1.0.0](https://github.com/goyek/goyek/compare/v0.6.3...v1.0.0) - 2022-09-08
 
 This is the first stable release.
-Backward-incompatible changes in future releases are unlikely.
 
 ## [0.6.3](https://github.com/goyek/goyek/compare/v0.6.2...v0.6.3) - 2022-02-23
 
