@@ -15,13 +15,12 @@ func (f *Flow) Main(args []string) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
-		select {
-		case <-c:
-			cancel()
-		case <-ctx.Done():
-		}
+		<-c // first signal, cancel context
+		fmt.Fprintln(f.Output, "first interrupt, graceful stop")
+		cancel()
+
 		<-c // second signal, hard exit
-		fmt.Fprintln(f.Output, "second interrupt signal, hard exit")
+		fmt.Fprintln(f.Output, "second interrupt, exit")
 		os.Exit(CodeFail)
 	}()
 

@@ -2,6 +2,7 @@
 package main
 
 import (
+	"flag"
 	"io"
 	"os"
 	"strings"
@@ -9,18 +10,10 @@ import (
 	"github.com/goyek/goyek"
 )
 
-func main() {
-	flow().Main()
-}
-
-func flow() *goyek.Flow {
-	flow := &goyek.Flow{}
-
-	// parameters
-	ci := flow.RegisterBoolParam(goyek.BoolParam{
-		Name:  "ci",
-		Usage: "Whether CI is calling the build script",
-	})
+func configure(flow *goyek.Flow, flags *flag.FlagSet) {
+	// flags
+	flags.BoolVar(&flow.Verbose, "v", false, "log all tasks as they are run")
+	ci := flags.Bool("ci", false, "whether CI is calling the build script")
 
 	// tasks
 	clean := flow.Register(taskClean())
@@ -48,9 +41,9 @@ func flow() *goyek.Flow {
 		modTidy,
 		diff,
 	}))
-	flow.DefaultTask = all
 
-	return flow
+	// set default task
+	flow.DefaultTask = all
 }
 
 const (
@@ -74,7 +67,7 @@ func taskClean() goyek.Task {
 func taskInstall() goyek.Task {
 	return goyek.Task{
 		Name:  "install",
-		Usage: " go install tools",
+		Usage: "go install tools",
 		Action: func(tf *goyek.TF) {
 			tools := &strings.Builder{}
 			toolsCmd := tf.Cmd("go", "list", `-f={{ join .Imports " " }}`, "-tags=tools")
@@ -183,13 +176,12 @@ func taskModTidy() goyek.Task {
 	}
 }
 
-func taskDiff(ci goyek.RegisteredBoolParam) goyek.Task {
+func taskDiff(ci *bool) goyek.Task {
 	return goyek.Task{
-		Name:   "diff",
-		Usage:  "git diff",
-		Params: goyek.Params{ci},
+		Name:  "diff",
+		Usage: "git diff",
 		Action: func(tf *goyek.TF) {
-			if !ci.Get(tf) {
+			if !*ci {
 				tf.Skip("ci param is not set, skipping")
 			}
 
