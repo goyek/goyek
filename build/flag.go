@@ -16,7 +16,7 @@ func run(out io.Writer, flow *goyek.Flow, flags *flag.FlagSet, args []string) {
 	flags.SetOutput(out)
 
 	flags.Usage = func() {
-		fmt.Fprintln(out, "Usage of build: [flags] [tasks]")
+		fmt.Fprintln(out, "Usage of build: [flags] [--] [tasks]")
 		fmt.Fprintf(out, "Default task: %s\n", flow.DefaultTask.Name())
 		w := tabwriter.NewWriter(out, 1, 1, 4, ' ', 0) //nolint:gomnd // ignore
 
@@ -40,5 +40,5 @@ func run(out io.Writer, flow *goyek.Flow, flags *flag.FlagSet, args []string) {
 		os.Exit(goyek.CodeInvalidArgs)
 	}
 
-	flow.Main(flag.Args())
+	flow.Main(flags.Args())
 }

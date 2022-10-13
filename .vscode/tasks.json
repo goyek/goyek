@@ -6,7 +6,7 @@
         {
             "label": "all",
             "type": "shell",
-            "command": "go run . -wd ..",
+            "command": "go run .",
             "options": {
                 "cwd": "${workspaceFolder}/build"
             },
