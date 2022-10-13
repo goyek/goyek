@@ -141,12 +141,12 @@ func (tf *TF) SkipNow() {
 
 // runResult contains the results of a Action run.
 type runResult struct {
-	Failed   bool
-	Skipped  bool
-	Duration time.Duration
+	failed   bool
+	skipped  bool
+	duration time.Duration
 }
 
-// run executes the action in a seperate goroutine to enable
+// run executes the action in a separate goroutine to enable
 // interuption using runtime.Goexit().
 func (tf *TF) run(action func(tf *TF)) runResult {
 	finished := make(chan runResult, 1)
@@ -161,9 +161,9 @@ func (tf *TF) run(action func(tf *TF)) runResult {
 				tf.failed = true
 			}
 			result := runResult{
-				Failed:   tf.failed,
-				Skipped:  tf.skipped,
-				Duration: time.Since(from),
+				failed:   tf.failed,
+				skipped:  tf.skipped,
+				duration: time.Since(from),
 			}
 			finished <- result
 		}()

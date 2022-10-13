@@ -37,11 +37,11 @@ func (f *Flow) Register(task Task) RegisteredTask {
 		panic("task name cannot be empty")
 	}
 	if f.isRegistered(task.Name) {
-		panic(fmt.Sprintf("%s task was already registered", task.Name))
+		panic(fmt.Sprintf("%q task was already registered", task.Name))
 	}
 	for _, dep := range task.Deps {
 		if !f.isRegistered(dep.task.Name) {
-			panic(fmt.Sprintf("invalid dependency %s", dep.task.Name))
+			panic(fmt.Sprintf("invalid dependency %q", dep.task.Name))
 		}
 	}
 
@@ -56,11 +56,23 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 		ctx = context.Background()
 	}
 
+	tasks := map[string]taskInfo{}
+	for k, v := range f.tasks {
+		var deps []string
+		for _, dep := range v.Deps {
+			deps = append(deps, dep.task.Name)
+		}
+		tasks[k] = taskInfo{
+			name:   v.Name,
+			deps:   deps,
+			action: v.Action,
+		}
+	}
 	flow := &flowRunner{
 		output:      f.Output,
-		tasks:       f.tasks,
+		tasks:       tasks,
 		verbose:     f.Verbose,
-		defaultTask: f.DefaultTask,
+		defaultTask: f.DefaultTask.Name(),
 	}
 
 	if flow.output == nil {

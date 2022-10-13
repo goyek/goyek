@@ -10,12 +10,19 @@ import (
 	"time"
 )
 
-type flowRunner struct {
-	output      io.Writer
-	tasks       map[string]Task
-	verbose     bool
-	defaultTask RegisteredTask
-}
+type (
+	flowRunner struct {
+		output      io.Writer
+		tasks       map[string]taskInfo
+		verbose     bool
+		defaultTask string
+	}
+	taskInfo struct {
+		name   string
+		deps   []string
+		action func(tf *TF)
+	}
+)
 
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
@@ -32,6 +39,11 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 		}
 		tasks = append(tasks, arg)
 	}
+	if f.defaultTask != "" {
+		if _, ok := f.tasks[f.defaultTask]; !ok {
+			panic(fmt.Sprintf("invalid default task %q", f.defaultTask))
+		}
+	}
 
 	tasks = f.tasksToRun(tasks)
 
@@ -44,10 +56,10 @@ func (f *flowRunner) Run(ctx context.Context, args []string) int {
 }
 
 func (f *flowRunner) tasksToRun(tasks []string) []string {
-	if len(tasks) > 0 || (f.defaultTask.task.Name == "") {
+	if len(tasks) > 0 || (f.defaultTask == "") {
 		return tasks
 	}
-	return []string{f.defaultTask.task.Name}
+	return []string{f.defaultTask}
 }
 
 func (f *flowRunner) runTasks(ctx context.Context, tasks []string) int {
@@ -68,8 +80,8 @@ func (f *flowRunner) run(ctx context.Context, name string, executed map[string]b
 	if executed[name] {
 		return nil
 	}
-	for _, dep := range task.Deps {
-		if err := f.run(ctx, dep.task.Name, executed); err != nil {
+	for _, dep := range task.deps {
+		if err := f.run(ctx, dep, executed); err != nil {
 			return err
 		}
 	}
@@ -83,8 +95,8 @@ func (f *flowRunner) run(ctx context.Context, name string, executed map[string]b
 	return nil
 }
 
-func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
-	if task.Action == nil {
+func (f *flowRunner) runTask(ctx context.Context, task taskInfo) bool {
+	if task.action == nil {
 		return true
 	}
 
@@ -97,28 +109,28 @@ func (f *flowRunner) runTask(ctx context.Context, task Task) bool {
 	writer = &syncWriter{Writer: writer}
 
 	// report task start
-	fmt.Fprintf(writer, "===== TASK  %s\n", task.Name)
+	fmt.Fprintf(writer, "===== TASK  %s\n", task.name)
 
 	tf := &TF{
 		ctx:    ctx,
-		name:   task.Name,
+		name:   task.name,
 		output: writer,
 	}
-	result := tf.run(task.Action)
+	result := tf.run(task.action)
 
 	// report task end
 	status := "PASS"
 	passed := true
 	switch {
-	case result.Failed:
+	case result.failed:
 		status = "FAIL"
 		passed = false
-	case result.Skipped:
+	case result.skipped:
 		status = "SKIP"
 	}
-	fmt.Fprintf(writer, "----- %s: %s (%.2fs)\n", status, task.Name, result.Duration.Seconds())
+	fmt.Fprintf(writer, "----- %s: %s (%.2fs)\n", status, task.name, result.duration.Seconds())
 
-	if streamWriter != nil && result.Failed {
+	if streamWriter != nil && result.failed {
 		io.Copy(f.output, strings.NewReader(streamWriter.String())) //nolint // not checking errors when writing to output
 	}
 
