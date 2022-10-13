@@ -44,6 +44,8 @@ func (f *Flow) VisitAll(fn func(RegisteredTask)) {
 	}
 }
 
+// TODO: Print (like PrintDefaults)
+
 // Register registers the task. It panics in case of any error.
 func (f *Flow) Register(task Task) RegisteredTask {
 	// validate
