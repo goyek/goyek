@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/signal"
 	"sort"
+	"strings"
+	"text/tabwriter"
 )
 
 const (
@@ -91,7 +93,7 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 }
 
 // Main parses the args and runs the provided tasks.
-// It exists when after the taskflow finished or SIGINT
+// It exists when after the flow finished or SIGINT
 // was send to interrupt the execution.
 func (f *Flow) Main(args []string) {
 	// trap Ctrl+C and call cancel on the context
@@ -125,9 +127,28 @@ func (f *Flow) Tasks() []RegisteredTask {
 	return tasks
 }
 
-// func (f *Flow) Print() {
-// 	out := f.Output
-// 	if out == nil {
-// 		out = os.Stdout
-// 	}
-// }
+// Print prints, to os.Stdout unless configured otherwise,
+// the information about the registered tasks.
+func (f *Flow) Print() {
+	out := f.Output
+	if out == nil {
+		out = os.Stdout
+	}
+
+	if f.DefaultTask.Name() != "" {
+		fmt.Fprintf(out, "Default task: %s\n", f.DefaultTask.Name())
+	}
+
+	fmt.Fprintln(out, "Tasks:")
+	var (
+		minwidth      = 3
+		tabwidth      = 1
+		padding       = 3
+		padchar  byte = ' '
+	)
+	w := tabwriter.NewWriter(out, minwidth, tabwidth, padding, padchar, 0)
+	for _, task := range f.Tasks() {
+		fmt.Fprintf(w, "\t%s\t%s\t%s\n", task.Name(), task.Usage(), strings.Join(task.Deps(), ", "))
+	}
+	w.Flush() //nolint // not checking errors when writing to output
+}

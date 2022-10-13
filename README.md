@@ -19,9 +19,9 @@ Table of Contents:
 
 - [Description](#description)
 - [Quick start](#quick-start)
+- [Examples](#examples)
 - [Wrapper scripts](#wrapper-scripts)
 - [Repository template](#repository-template)
-- [Examples](#examples)
 - [Features](#features)
   - [Task registration](#task-registration)
   - [Task action](#task-action)
@@ -63,7 +63,6 @@ Here are some good parts:
   - [`github.com/rjeczalik/notify`](https://pkg.go.dev/github.com/rjeczalik/notify)
   - [`github.com/magefile/mage/target`](https://pkg.go.dev/github.com/magefile/mage/target)
   - [`github.com/mattn/go-shellwords`](https://pkg.go.dev/github.com/mattn/go-shellwords)
-- Tasks and helpers can be unit tested. For example, see [cmd_test.go](cmd_test.go).
 - [`github.com/goyek/goyek` package](go.mod) does not use any third-party dependency
   other than the Go standard library.
 
@@ -73,8 +72,6 @@ packages.
 
 ## Quick start
 
-Copy and paste the following code into [`build/build.go`](examples/basic/main.go):
-
 ```go
 package main
 
@@ -83,7 +80,7 @@ import (
 )
 
 func main() {
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Verbose: true}
 
 	flow.Register(goyek.Task{
 		Name:  "hello",
@@ -100,37 +97,30 @@ func main() {
 Run:
 
 ```shell
-go mod tidy
-```
-
-Sample usage:
-
-```shell
-$ go run ./build -h
-Usage: [flag(s) | task(s)]...
-Flags:
-  -v     Default: false    Verbose: log all tasks as they are run.
-  -wd    Default: .        Working directory: set the working directory.
-Tasks:
-  hello    demonstration
-```
-
-```shell
-$ go run ./build hello
-ok     0.000s
-```
-
-```shell
-$ go run ./build hello -v
+$ go mod tidy
+$ go run . hello
 ===== TASK  hello
       main.go:14: Hello world!
 ----- PASS: hello (0.00s)
 ok      0.001s
 ```
 
+## Examples
+
+- [example_test.go](example_test.go) - a more complete example
+- [build/build.go](build/build.go) -
+  this repository's own build pipeline (dogfooding)
+- [fluentassert](https://github.com/fluentassert/verify) -
+  a library using **goyek** without polluting it's root `go.mod`
+- [splunk-otel-go](https://github.com/signalfx/splunk-otel-go) -
+  a multi-module monorepo using **goyek**
+
 ## Wrapper scripts
 
-Instead of executing `go run ./build`,
+The convention is to have the build pipeline
+in the `/build` directory (or even module).
+
+Instead of executing `go run /build`,
 you can use the wrapper scripts,
 which can be invoked from any location.
 
@@ -152,15 +142,6 @@ You can use [goyek/template](https://github.com/goyek/template)
 to create a new repository
 
 For an existing repository you can copy most of its files.
-
-## Examples
-
-- [build/build.go](build/build.go) -
-  this repository's own build pipeline (dogfooding)
-- [fluentassert](https://github.com/fluentassert/verify) -
-  a library using **goyek** without polluting it's root `go.mod`
-- [splunk-otel-go](https://github.com/signalfx/splunk-otel-go) -
-  a multi-module monorepo using **goyek**
 
 ## Features
 

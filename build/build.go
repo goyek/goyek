@@ -12,8 +12,8 @@ import (
 
 func configure(flow *goyek.Flow, flags *flag.FlagSet) {
 	// flags
-	flags.BoolVar(&flow.Verbose, "v", false, "log all tasks as they are run")
-	ci := flags.Bool("ci", false, "whether CI is calling the build script")
+	flags.BoolVar(&flow.Verbose, "v", false, "print all tasks as they are run")
+	ci := flags.Bool("ci", false, "whether CI is calling")
 
 	// tasks
 	clean := flow.Register(taskClean())
@@ -121,7 +121,7 @@ func taskMarkdownLint() goyek.Task {
 
 func taskMisspell() goyek.Task {
 	return goyek.Task{
-		Name:  "misspell",
+		Name:  "spell",
 		Usage: "misspell",
 		Action: func(tf *goyek.TF) {
 			if err := Exec(tf, rootDir, "misspell -error -locale=US -i=importas -w ."); err != nil {
@@ -149,7 +149,7 @@ func taskGolangciLint() goyek.Task {
 func taskTest() goyek.Task {
 	return goyek.Task{
 		Name:  "test",
-		Usage: "go test with race detector and code covarage",
+		Usage: "go test",
 		Action: func(tf *goyek.TF) {
 			if err := Exec(tf, rootDir, "go test -race -covermode=atomic -coverprofile=coverage.out ./..."); err != nil {
 				tf.Error(err)
