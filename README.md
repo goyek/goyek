@@ -15,6 +15,14 @@
 
 Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
+---
+
+⚠️ This README refers to the in-development `v2` version.
+
+See the documentation for the latest release on [pkg.go.dev](https://pkg.go.dev/github.com/goyek/goyek).
+
+---
+
 Table of Contents:
 
 - [Description](#description)
@@ -58,12 +66,12 @@ Here are some good parts:
 - It is easy to debug, like a regular Go application.
 - You can reuse code like in any Go application.
   It may be helpful to use packages like:
-  - [`github.com/bitfield/script`](https://pkg.go.dev/github.com/bitfield/script)
-  - [`github.com/rjeczalik/notify`](https://pkg.go.dev/github.com/rjeczalik/notify)
-  - [`github.com/magefile/mage/target`](https://pkg.go.dev/github.com/magefile/mage/target)
-  - [`github.com/mattn/go-shellwords`](https://pkg.go.dev/github.com/mattn/go-shellwords)
-- [`github.com/goyek/goyek` package](go.mod) does not use any third-party dependency
-  other than the Go standard library.
+  - [`bitfield/script`](https://github.com/bitfield/script)
+  - [`magefile/mage/target`](https://pkg.go.dev/github.com/magefile/mage/target)
+  - [`mattn/go-shellwords`](https://pkg.go.dev/github.com/mattn/go-shellwords)
+  - [`rjeczalik/notify`](https://github.com/rjeczalik/notify)
+  - [`spf13/viper`](https://github.com/spf13/viper)
+- **goyek** does not use any third-party dependency other than the Go standard library.
 
 **goyek** API is mainly inspired by the [`testing`](https://golang.org/pkg/testing),
 [`http`](https://golang.org/pkg/http), and [`flag`](https://golang.org/pkg/flag)
@@ -109,10 +117,8 @@ ok      0.001s
 - [example_test.go](example_test.go) - a more complete example
 - [build/build.go](build/build.go) -
   this repository's own build pipeline (dogfooding)
-- [fluentassert](https://github.com/fluentassert/verify) -
-  a library using **goyek** without polluting it's root `go.mod`
 - [splunk-otel-go](https://github.com/signalfx/splunk-otel-go) -
-  a multi-module monorepo using **goyek**
+  usage in a multi-module monorepo
 
 ## Wrapper scripts
 
@@ -217,10 +223,10 @@ why argument splitting is not included out-of-the-box.
 As of `v2` the parameters support has been removed
 in order to improve customization.
 
-There are libraries that are dedicated to this and do it better such as:
+There are libraries that are dedicated to this such as:
 
 - [`flag`](https://pkg.go.dev/flag)
-- [`urfave/cli`](https://github.com/urfave/cli/v2)
+- [`urfave/cli`](https://github.com/urfave/cli)
 - [`spf13/pflag`](https://github.com/spf13/pflag)
 - [`spf13/cobra`](https://github.com/spf13/cobra)
 - [`spf13/viper`](https://github.com/spf13/viper)
