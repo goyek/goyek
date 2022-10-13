@@ -157,7 +157,7 @@ For an existing repository you can copy most of its files.
 
 - [examples](examples)
 - [build/build.go](build/build.go) -
-  this repository's own build pipeline ()
+  this repository's own build pipeline (dogfooding)
 - [fluentassert](https://github.com/fluentassert/verify) -
   a library using **goyek** without polluting it's root `go.mod`
 - [splunk-otel-go](https://github.com/signalfx/splunk-otel-go) -
