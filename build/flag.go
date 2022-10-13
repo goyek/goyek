@@ -26,11 +26,7 @@ func run(out io.Writer, flow *goyek.Flow, flags *flag.FlagSet, args []string) {
 		sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
 		fmt.Fprintf(w, "%s\t%s\t%s\n", "Task", "Usage", "Dependencies")
 		for _, task := range tasks {
-			var deps []string
-			for _, dep := range task.Deps() {
-				deps = append(deps, dep.Name())
-			}
-			fmt.Fprintf(w, "%s\t%s\t%s\n", task.Name(), task.Usage(), strings.Join(deps, ", "))
+			fmt.Fprintf(w, "%s\t%s\t%s\n", task.Name(), task.Usage(), strings.Join(task.Deps(), ", "))
 		}
 		w.Flush() //nolint // not checking errors when writing to output
 

@@ -342,5 +342,5 @@ func Test_introspection_API(t *testing.T) {
 	assertEqual(t, tasks[0].Name(), "one", "should first return one")
 	assertEqual(t, tasks[1].Name(), "two", "should next return two")
 	assertEqual(t, tasks[1].Usage(), "action", "should return usage")
-	assertEqual(t, tasks[1].Deps()[0].Name(), "one", "should return dependency")
+	assertEqual(t, tasks[1].Deps()[0], "one", "should return dependency")
 }

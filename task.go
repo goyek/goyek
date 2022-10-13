@@ -38,10 +38,12 @@ func (r RegisteredTask) Usage() string {
 	return r.task.Usage
 }
 
-// Deps returns the task's dependencies.
-func (r RegisteredTask) Deps() Deps {
-	deps := make(Deps, len(r.task.Deps))
-	copy(deps, r.task.Deps)
+// Deps returns the names of all task's dependencies.
+func (r RegisteredTask) Deps() []string {
+	var deps []string
+	for _, task := range r.task.Deps {
+		deps = append(deps, task.Name())
+	}
 	return deps
 }
 
