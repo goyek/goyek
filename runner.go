@@ -11,7 +11,7 @@ import (
 )
 
 type (
-	flowRunner struct {
+	runner struct {
 		output      io.Writer
 		tasks       map[string]taskInfo
 		verbose     bool
@@ -26,83 +26,83 @@ type (
 
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (f *flowRunner) Run(ctx context.Context, args []string) int {
+func (r *runner) Run(ctx context.Context, args []string) int {
 	var tasks []string
 	for _, arg := range args {
 		if arg == "" {
-			fmt.Fprintln(f.output, "the task name cannot be empty")
+			fmt.Fprintln(r.output, "the task name cannot be empty")
 			return CodeInvalidArgs
 		}
-		if _, ok := f.tasks[arg]; !ok {
-			fmt.Fprintf(f.output, "the task %q is not registred\n", arg)
+		if _, ok := r.tasks[arg]; !ok {
+			fmt.Fprintf(r.output, "the task %q is not registred\n", arg)
 			return CodeInvalidArgs
 		}
 		tasks = append(tasks, arg)
 	}
-	if f.defaultTask != "" {
-		if _, ok := f.tasks[f.defaultTask]; !ok {
-			panic(fmt.Sprintf("invalid default task %q", f.defaultTask))
+	if r.defaultTask != "" {
+		if _, ok := r.tasks[r.defaultTask]; !ok {
+			panic(fmt.Sprintf("invalid default task %q", r.defaultTask))
 		}
 	}
 
-	tasks = f.tasksToRun(tasks)
+	tasks = r.tasksToRun(tasks)
 
 	if len(tasks) == 0 {
-		fmt.Fprintln(f.output, "no task provided")
+		fmt.Fprintln(r.output, "no task provided")
 		return CodeInvalidArgs
 	}
 
-	return f.runTasks(ctx, tasks)
+	return r.runTasks(ctx, tasks)
 }
 
-func (f *flowRunner) tasksToRun(tasks []string) []string {
-	if len(tasks) > 0 || (f.defaultTask == "") {
+func (r *runner) tasksToRun(tasks []string) []string {
+	if len(tasks) > 0 || (r.defaultTask == "") {
 		return tasks
 	}
-	return []string{f.defaultTask}
+	return []string{r.defaultTask}
 }
 
-func (f *flowRunner) runTasks(ctx context.Context, tasks []string) int {
+func (r *runner) runTasks(ctx context.Context, tasks []string) int {
 	from := time.Now()
 	executedTasks := map[string]bool{}
 	for _, name := range tasks {
-		if err := f.run(ctx, name, executedTasks); err != nil {
-			fmt.Fprintf(f.output, "%v\t%.3fs\n", err, time.Since(from).Seconds())
+		if err := r.run(ctx, name, executedTasks); err != nil {
+			fmt.Fprintf(r.output, "%v\t%.3fs\n", err, time.Since(from).Seconds())
 			return CodeFail
 		}
 	}
-	fmt.Fprintf(f.output, "ok\t%.3fs\n", time.Since(from).Seconds())
+	fmt.Fprintf(r.output, "ok\t%.3fs\n", time.Since(from).Seconds())
 	return CodePass
 }
 
-func (f *flowRunner) run(ctx context.Context, name string, executed map[string]bool) error {
-	task := f.tasks[name]
+func (r *runner) run(ctx context.Context, name string, executed map[string]bool) error {
+	task := r.tasks[name]
 	if executed[name] {
 		return nil
 	}
 	for _, dep := range task.deps {
-		if err := f.run(ctx, dep, executed); err != nil {
+		if err := r.run(ctx, dep, executed); err != nil {
 			return err
 		}
 	}
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if !f.runTask(ctx, task) {
+	if !r.runTask(ctx, task) {
 		return errors.New("task failed")
 	}
 	executed[name] = true
 	return nil
 }
 
-func (f *flowRunner) runTask(ctx context.Context, task taskInfo) bool {
+func (r *runner) runTask(ctx context.Context, task taskInfo) bool {
 	if task.action == nil {
 		return true
 	}
 
-	writer := f.output
+	writer := r.output
 	var streamWriter *strings.Builder
-	if !f.verbose {
+	if !r.verbose {
 		streamWriter = &strings.Builder{}
 		writer = streamWriter
 	}
@@ -131,7 +131,7 @@ func (f *flowRunner) runTask(ctx context.Context, task taskInfo) bool {
 	fmt.Fprintf(writer, "----- %s: %s (%.2fs)\n", status, task.name, result.duration.Seconds())
 
 	if streamWriter != nil && result.failed {
-		io.Copy(f.output, strings.NewReader(streamWriter.String())) //nolint // not checking errors when writing to output
+		io.Copy(r.output, strings.NewReader(streamWriter.String())) //nolint // not checking errors when writing to output
 	}
 
 	return passed

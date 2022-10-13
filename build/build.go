@@ -98,7 +98,7 @@ func taskBuild() goyek.Task {
 
 func taskMarkdownLint() goyek.Task {
 	return goyek.Task{
-		Name:  "markdownlint",
+		Name:  "mdlint",
 		Usage: "markdownlint-cli (requires docker)",
 		Action: func(tf *goyek.TF) {
 			curDir, err := os.Getwd()
@@ -133,7 +133,7 @@ func taskMisspell() goyek.Task {
 
 func taskGolangciLint() goyek.Task {
 	return goyek.Task{
-		Name:  "golangci-lint",
+		Name:  "golint",
 		Usage: "golangci-lint run --fix",
 		Action: func(tf *goyek.TF) {
 			if err := Exec(tf, rootDir, "golangci-lint run --fix"); err != nil {
@@ -160,7 +160,7 @@ func taskTest() goyek.Task {
 
 func taskModTidy() goyek.Task {
 	return goyek.Task{
-		Name:  "mod-tidy",
+		Name:  "mod",
 		Usage: "go mod tidy",
 		Action: func(tf *goyek.TF) {
 			if err := Exec(tf, rootDir, "go mod tidy"); err != nil {

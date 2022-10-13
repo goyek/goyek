@@ -49,6 +49,14 @@ func (f *Flow) Register(task Task) RegisteredTask {
 	return RegisteredTask{task: task}
 }
 
+func (f *Flow) isRegistered(name string) bool {
+	if f.tasks == nil {
+		f.tasks = map[string]Task{}
+	}
+	_, ok := f.tasks[name]
+	return ok
+}
+
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (f *Flow) Run(ctx context.Context, args ...string) int {
@@ -68,18 +76,18 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 			action: v.Action,
 		}
 	}
-	flow := &flowRunner{
+	r := &runner{
 		output:      f.Output,
 		tasks:       tasks,
 		verbose:     f.Verbose,
 		defaultTask: f.DefaultTask.Name(),
 	}
 
-	if flow.output == nil {
-		flow.output = os.Stdout
+	if r.output == nil {
+		r.output = os.Stdout
 	}
 
-	return flow.Run(ctx, args)
+	return r.Run(ctx, args)
 }
 
 // Main parses the args and runs the provided tasks.
@@ -117,12 +125,9 @@ func (f *Flow) Tasks() []RegisteredTask {
 	return tasks
 }
 
-// TODO: Print (like PrintDefaults)
-
-func (f *Flow) isRegistered(name string) bool {
-	if f.tasks == nil {
-		f.tasks = map[string]Task{}
-	}
-	_, ok := f.tasks[name]
-	return ok
-}
+// func (f *Flow) Print() {
+// 	out := f.Output
+// 	if out == nil {
+// 		out = os.Stdout
+// 	}
+// }
