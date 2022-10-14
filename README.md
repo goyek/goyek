@@ -82,6 +82,8 @@ packages.
 package main
 
 import (
+  "os"
+
 	"github.com/goyek/goyek/v2"
 )
 
@@ -96,7 +98,7 @@ func main() {
 		},
 	})
 
-	flow.Main()
+	flow.Main(os.Args[1:])
 }
 ```
 
