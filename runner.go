@@ -11,60 +11,28 @@ import (
 )
 
 type runner struct {
-	output      io.Writer
-	tasks       map[string]taskSnapshot
-	verbose     bool
-	defaultTask string
+	output  io.Writer
+	defined map[string]taskSnapshot
+	verbose bool
 }
 
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (r *runner) Run(ctx context.Context, args []string) int {
-	var tasks []string
-	for _, arg := range args {
-		if arg == "" {
-			fmt.Fprintln(r.output, "task name cannot be empty")
-			return CodeInvalidArgs
-		}
-		if _, ok := r.tasks[arg]; !ok {
-			fmt.Fprintf(r.output, "task provided but not defined: %s\n", arg)
-			return CodeInvalidArgs
-		}
-		tasks = append(tasks, arg)
-	}
-
-	tasks = r.tasksToRun(tasks)
-
-	if len(tasks) == 0 {
-		fmt.Fprintln(r.output, "no task provided")
-		return CodeInvalidArgs
-	}
-
-	return r.runTasks(ctx, tasks)
-}
-
-func (r *runner) tasksToRun(tasks []string) []string {
-	if len(tasks) > 0 || (r.defaultTask == "") {
-		return tasks
-	}
-	return []string{r.defaultTask}
-}
-
-func (r *runner) runTasks(ctx context.Context, tasks []string) int {
+func (r *runner) Run(ctx context.Context, tasks []string) bool {
 	from := time.Now()
 	executedTasks := map[string]bool{}
 	for _, name := range tasks {
 		if err := r.run(ctx, name, executedTasks); err != nil {
 			fmt.Fprintf(r.output, "%v\t%.3fs\n", err, time.Since(from).Seconds())
-			return CodeFail
+			return false
 		}
 	}
 	fmt.Fprintf(r.output, "ok\t%.3fs\n", time.Since(from).Seconds())
-	return CodePass
+	return true
 }
 
 func (r *runner) run(ctx context.Context, name string, executed map[string]bool) error {
-	task := r.tasks[name]
+	task := r.defined[name]
 	if executed[name] {
 		return nil
 	}
