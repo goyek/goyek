@@ -93,30 +93,52 @@ func (f *Flow) SetDefault(task DefinedTask) {
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (f *Flow) Run(ctx context.Context, args ...string) int {
-	if ctx == nil {
-		ctx = context.Background()
+	out := f.Output
+	if out == nil {
+		out = os.Stdout
+	}
+
+	var tasks []string
+	for _, arg := range args {
+		if arg == "" {
+			fmt.Fprintln(out, "task name cannot be empty")
+			return f.invalid()
+		}
+		if _, ok := f.tasks[arg]; !ok {
+			fmt.Fprintf(out, "task provided but not defined: %s\n", arg)
+			return f.invalid()
+		}
+		tasks = append(tasks, arg)
+	}
+	if len(tasks) == 0 && f.defaultTask != "" {
+		tasks = append(tasks, f.defaultTask)
+	}
+	if len(tasks) == 0 {
+		fmt.Fprintln(out, "no task provided")
+		return f.invalid()
 	}
 
 	r := &runner{
-		output:      f.Output,
-		tasks:       f.tasks,
-		verbose:     f.Verbose,
-		defaultTask: f.defaultTask,
+		output:  out,
+		defined: f.tasks,
+		verbose: f.Verbose,
 	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if !r.Run(ctx, tasks) {
+		return CodeFail
+	}
+	return CodePass
+}
 
-	if r.output == nil {
-		r.output = os.Stdout
+func (f *Flow) invalid() int {
+	if f.Usage != nil {
+		f.Usage()
+	} else {
+		f.Print()
 	}
-
-	exitCode := r.Run(ctx, args)
-	if exitCode == CodeInvalidArgs {
-		if f.Usage != nil {
-			f.Usage()
-		} else {
-			f.Print()
-		}
-	}
-	return exitCode
+	return CodeInvalidArgs
 }
 
 // Main runs provided tasks and all their dependencies.
