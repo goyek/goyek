@@ -183,7 +183,7 @@ func (tf *TF) log(args ...interface{}) {
 func (tf *TF) logf(format string, args ...interface{}) {
 	txt := fmt.Sprintf(format, args...)
 	txt = decorate(txt, skipCount)
-	io.WriteString(tf.output, txt) //nolint // not checking errors when writing to output
+	io.WriteString(tf.output, txt) //nolint:errcheck,gosec // not checking errors when writing to output
 }
 
 // decorate prefixes the string with the file and line of the call site

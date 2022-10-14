@@ -207,5 +207,5 @@ func (f *Flow) Print() {
 	for _, task := range f.Tasks() {
 		fmt.Fprintf(w, "\t%s\t%s\t%s\n", task.Name(), task.Usage(), strings.Join(task.Deps(), ", "))
 	}
-	w.Flush() //nolint // not checking errors when writing to output
+	w.Flush() //nolint:errcheck,gosec // not checking errors when writing to output
 }
