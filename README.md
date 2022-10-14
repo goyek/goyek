@@ -207,7 +207,7 @@ func Exec(cmdLine string) func(tf *goyek.TF) {
 		panic(fmt.Sprintf("parse command line: %v", err))
 	}
 	return func(tf *goyek.TF) {
-    tf.Logf("Run '%s'", cmdLine)
+    tf.Logf("Run %q", cmdLine)
 		if err := tf.Cmd(args[0], args[1:]...).Run(); err != nil {
 			tf.Error(err)
 		}
@@ -223,16 +223,17 @@ why argument splitting is not included out-of-the-box.
 As of `v2` the parameters support has been removed
 in order to improve customization.
 
-There are libraries that are dedicated to this such as:
+With the new API it is easy to integrate **goyek** with any of these packages:
 
 - [`flag`](https://pkg.go.dev/flag)
-- [`urfave/cli`](https://github.com/urfave/cli)
-- [`spf13/pflag`](https://github.com/spf13/pflag)
-- [`spf13/cobra`](https://github.com/spf13/cobra)
-- [`spf13/viper`](https://github.com/spf13/viper)
-- [`caarlos0/env`](https://github.com/caarlos0/env)
+- [`pflag`](https://github.com/spf13/pflag)
+- [`viper`](https://github.com/spf13/viper)
+- [`cobra`](https://github.com/spf13/cobra)
 
-With the new API it is easy to integrate **goyek** with any of these libraries.
+You can take the code in [build/flag.go](build/main.go) and [build/flag.go](build/flag.go)
+if you want to integrate with the [`flag` package](https://pkg.go.dev/flag).
+Alternatively, you can use it as a reference
+when writing an integration with another library.
 
 ### Supported Go versions
 
