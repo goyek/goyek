@@ -33,7 +33,15 @@ type Flow struct {
 	// a custom error handler. By default it calls Print.
 	Usage func()
 
-	tasks map[string]Task
+	tasks map[string]taskSnapshot
+}
+
+// taskSnapshot is a copy of the task to make the flow usage safer.
+type taskSnapshot struct {
+	name   string
+	usage  string
+	deps   []string
+	action func(tf *TF)
 }
 
 // Register registers the task. It panics in case of any error.
@@ -46,18 +54,28 @@ func (f *Flow) Register(task Task) RegisteredTask {
 		panic(fmt.Sprintf("task was already defined: %s", task.Name))
 	}
 	for _, dep := range task.Deps {
-		if !f.isRegistered(dep.task.Name) {
-			panic(fmt.Sprintf("invalid dependency: %s", dep.task.Name))
+		if !f.isRegistered(dep.name) {
+			panic(fmt.Sprintf("invalid dependency: %s", dep.name))
 		}
 	}
 
-	f.tasks[task.Name] = task
-	return RegisteredTask{task: task}
+	var deps []string
+	for _, dep := range task.Deps {
+		deps = append(deps, dep.name)
+	}
+	taskCopy := taskSnapshot{
+		name:   task.Name,
+		usage:  task.Usage,
+		deps:   deps,
+		action: task.Action,
+	}
+	f.tasks[task.Name] = taskCopy
+	return RegisteredTask{taskCopy}
 }
 
 func (f *Flow) isRegistered(name string) bool {
 	if f.tasks == nil {
-		f.tasks = map[string]Task{}
+		f.tasks = map[string]taskSnapshot{}
 	}
 	_, ok := f.tasks[name]
 	return ok
@@ -70,21 +88,9 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 		ctx = context.Background()
 	}
 
-	tasks := map[string]taskInfo{}
-	for k, v := range f.tasks {
-		var deps []string
-		for _, dep := range v.Deps {
-			deps = append(deps, dep.task.Name)
-		}
-		tasks[k] = taskInfo{
-			name:   v.Name,
-			deps:   deps,
-			action: v.Action,
-		}
-	}
 	r := &runner{
 		output:      f.Output,
-		tasks:       tasks,
+		tasks:       f.tasks,
 		verbose:     f.Verbose,
 		defaultTask: f.DefaultTask.Name(),
 	}
@@ -131,9 +137,7 @@ func (f *Flow) Main(args []string) {
 func (f *Flow) Tasks() []RegisteredTask {
 	var tasks []RegisteredTask
 	for _, task := range f.tasks {
-		tasks = append(tasks, RegisteredTask{
-			task: task,
-		})
+		tasks = append(tasks, RegisteredTask{task})
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
 	return tasks
