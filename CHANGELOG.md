@@ -14,9 +14,9 @@ It gives the user the possibility of parsing the input.
 
 ### Added
 
-- Add `Flow.Verbose` for controling the verbose mode.
+- Add `Flow.Verbose` for controlling the verbose mode.
 - Add `Flow.Print` for printing the flow usage.
-- `Flow.Main` now exits on recieving second SIGINT.
+- `Flow.Main` now exits on receiving second SIGINT.
 
 ### Changed
 
