@@ -46,7 +46,7 @@ func Example() {
 	})
 
 	// set the default task
-	flow.DefaultTask = all
+	flow.SetDefault(all)
 
 	// set the help message
 	usage := func() {

@@ -160,7 +160,7 @@ The registered tasks are required to have a non-empty name.
 
 A task with a given name can be only registered once.
 
-Default task can be assigned using the `DefaultTask` field.
+Default task can be assigned using the `SetDefault` method.
 When the default task is set, then it is run if no task is provided.
 
 ### Task action

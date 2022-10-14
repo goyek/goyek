@@ -14,7 +14,7 @@ import (
 const (
 	// CodePass indicates that no task has failed.
 	CodePass = 0
-	// CodeFail indicates that some task has failed or the run was interrupted.
+	// CodeFail indicates that a task has failed or the run was interrupted.
 	CodeFail = 1
 	// CodeInvalidArgs indicates that an error occurerd while parsing tasks.
 	CodeInvalidArgs = 2
@@ -24,16 +24,16 @@ const (
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
 type Flow struct {
-	Output      io.Writer   // output where text is printed; os.Stdout by default
-	Verbose     bool        // control the printing
-	DefaultTask DefinedTask // task to run when none is explicitly provided
+	Output  io.Writer // output where text is printed; os.Stdout by default
+	Verbose bool      // control the printing
 
 	// Usage is the function called when an error occurs while parsing tasks.
 	// The field is a function that may be changed to point to
 	// a custom error handler. By default it calls Print.
 	Usage func()
 
-	tasks map[string]taskSnapshot
+	tasks       map[string]taskSnapshot // snapshot of defined tasks
+	defaultTask string                  // task to run when none is explicitly provided
 }
 
 // taskSnapshot is a copy of the task to make the flow usage safer.
@@ -50,12 +50,12 @@ func (f *Flow) Define(task Task) DefinedTask {
 	if task.Name == "" {
 		panic("task name cannot be empty")
 	}
-	if f.isRegistered(task.Name) {
+	if f.isDefined(task.Name) {
 		panic(fmt.Sprintf("task was already defined: %s", task.Name))
 	}
 	for _, dep := range task.Deps {
-		if !f.isRegistered(dep.Name()) {
-			panic(fmt.Sprintf("invalid dependency: %s", dep.Name()))
+		if !f.isDefined(dep.Name()) {
+			panic(fmt.Sprintf("dependency was not defined: %s", dep.Name()))
 		}
 	}
 
@@ -73,12 +73,21 @@ func (f *Flow) Define(task Task) DefinedTask {
 	return registeredTask{taskCopy}
 }
 
-func (f *Flow) isRegistered(name string) bool {
+func (f *Flow) isDefined(name string) bool {
 	if f.tasks == nil {
 		f.tasks = map[string]taskSnapshot{}
 	}
 	_, ok := f.tasks[name]
 	return ok
+}
+
+// SetDefault sets a task to run when none is explicitly provided.
+// It panics in case of any error.
+func (f *Flow) SetDefault(task DefinedTask) {
+	if !f.isDefined(task.Name()) {
+		panic(fmt.Sprintf("task was not defined: %s", task.Name()))
+	}
+	f.defaultTask = task.Name()
 }
 
 // Run runs provided tasks and all their dependencies.
@@ -89,13 +98,10 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 	}
 
 	r := &runner{
-		output:  f.Output,
-		tasks:   f.tasks,
-		verbose: f.Verbose,
-	}
-
-	if f.DefaultTask != nil {
-		r.defaultTask = f.DefaultTask.Name()
+		output:      f.Output,
+		tasks:       f.tasks,
+		verbose:     f.Verbose,
+		defaultTask: f.defaultTask,
 	}
 
 	if r.output == nil {
@@ -113,9 +119,10 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 	return exitCode
 }
 
-// Main parses the args and runs the provided tasks.
-// It exists when after the flow finished or SIGINT
-// was send to interrupt the execution.
+// Main runs provided tasks and all their dependencies.
+// Each task is executed at most once.
+// It exits the current program when after the run is finished
+// or SIGINT was send to interrupt the execution.
 func (f *Flow) Main(args []string) {
 	// trap Ctrl+C and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
@@ -146,6 +153,15 @@ func (f *Flow) Tasks() []DefinedTask {
 	return tasks
 }
 
+// Default returns the default task.
+// Returns nil of there is no default task.
+func (f *Flow) Default() DefinedTask {
+	if f.defaultTask == "" {
+		return nil
+	}
+	return registeredTask{f.tasks[f.defaultTask]}
+}
+
 // Print prints, to os.Stdout unless configured otherwise,
 // the information about the registered tasks.
 func (f *Flow) Print() {
@@ -154,8 +170,8 @@ func (f *Flow) Print() {
 		out = os.Stdout
 	}
 
-	if f.DefaultTask != nil {
-		fmt.Fprintf(out, "Default task: %s\n", f.DefaultTask.Name())
+	if f.defaultTask != "" {
+		fmt.Fprintf(out, "Default task: %s\n", f.defaultTask)
 	}
 
 	fmt.Fprintln(out, "Tasks:")

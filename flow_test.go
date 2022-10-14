@@ -10,7 +10,7 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-func Test_Register_empty_name(t *testing.T) {
+func Test_Define_empty_name(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 
 	act := func() { flow.Define(goyek.Task{}) }
@@ -18,7 +18,7 @@ func Test_Register_empty_name(t *testing.T) {
 	assertPanics(t, act, "should panic")
 }
 
-func Test_Register_same_name(t *testing.T) {
+func Test_Define_same_name(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 	task := goyek.Task{Name: "task"}
 	flow.Define(task)
@@ -26,6 +26,16 @@ func Test_Register_same_name(t *testing.T) {
 	act := func() { flow.Define(task) }
 
 	assertPanics(t, act, "should not be possible to register tasks with same name twice")
+}
+
+func Test_Define_bad_dep(t *testing.T) {
+	flow := &goyek.Flow{}
+	otherFlow := &goyek.Flow{}
+	task := otherFlow.Define(goyek.Task{Name: "different-flow"})
+
+	act := func() { flow.Define(goyek.Task{Name: "dep-from-different-flow", Deps: goyek.Deps{task}}) }
+
+	assertPanics(t, act, "should not be possible use dependencies from different flow")
 }
 
 func Test_successful(t *testing.T) {
@@ -313,7 +323,7 @@ func Test_name(t *testing.T) {
 	assertEqual(t, got, taskName, "should return proper Name value")
 }
 
-func Test_defaultTask(t *testing.T) {
+func Test_SetDefault(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 	taskRan := false
 	task := flow.Define(goyek.Task{
@@ -322,12 +332,24 @@ func Test_defaultTask(t *testing.T) {
 			taskRan = true
 		},
 	})
-	flow.DefaultTask = task
+	flow.SetDefault(task)
 
 	exitCode := flow.Run(context.Background())
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertTrue(t, taskRan, "task should have run")
+}
+
+func TestFlow_SetDefault_panic(t *testing.T) {
+	flow := &goyek.Flow{}
+	otherFlow := &goyek.Flow{}
+	task := otherFlow.Define(goyek.Task{Name: "different-flow"})
+
+	act := func() {
+		flow.SetDefault(task)
+	}
+
+	assertPanics(t, act, "should panic when using a task defined in other flo")
 }
 
 func TestCmd_success(t *testing.T) {
@@ -385,11 +407,28 @@ func TestFlow_Tasks(t *testing.T) {
 	assertEqual(t, got[2].Deps()[0], "one", "should return dependency")
 }
 
+func TestFlow_Default(t *testing.T) {
+	flow := &goyek.Flow{Output: &strings.Builder{}}
+	task := flow.Define(goyek.Task{Name: "name"})
+	flow.SetDefault(task)
+
+	got := flow.Default()
+
+	assertEqual(t, got.Name(), "name", "should return the default task")
+}
+
+func TestFlow_Default_empty(t *testing.T) {
+	flow := &goyek.Flow{Output: &strings.Builder{}}
+	got := flow.Default()
+
+	assertEqual(t, got, nil, "should return nil")
+}
+
 func TestFlow_Usage_default(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{Output: out}
 	task := flow.Define(goyek.Task{Name: "task"})
-	flow.DefaultTask = task
+	flow.SetDefault(task)
 
 	exitCode := flow.Run(context.Background(), "bad")
 

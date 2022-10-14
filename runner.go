@@ -32,11 +32,6 @@ func (r *runner) Run(ctx context.Context, args []string) int {
 		}
 		tasks = append(tasks, arg)
 	}
-	if r.defaultTask != "" {
-		if _, ok := r.tasks[r.defaultTask]; !ok {
-			panic(fmt.Sprintf("default task not defined: %s", r.defaultTask))
-		}
-	}
 
 	tasks = r.tasksToRun(tasks)
 
