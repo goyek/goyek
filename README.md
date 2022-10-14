@@ -27,9 +27,9 @@ Table of Contents:
 - [Description](#description)
 - [Quick start](#quick-start)
 - [Examples](#examples)
-- [Wrapper scripts](#wrapper-scripts)
 - [Repository template](#repository-template)
 - [Features](#features)
+  - [Wrapper scripts](#wrapper-scripts)
   - [Task registration](#task-registration)
   - [Task action](#task-action)
   - [Task dependencies](#task-dependencies)
@@ -114,13 +114,25 @@ ok      0.001s
 ## Examples
 
 - [example_test.go](example_test.go) -
-  a more complete example
+  a demonstrative example
 - [build](build) -
   this repository's own build pipeline (dogfooding)
 - [splunk-otel-go](https://github.com/signalfx/splunk-otel-go/tree/main/build) -
   usage in a multi-module monorepo
 
-## Wrapper scripts
+## Repository template
+
+You can use [goyek/template](https://github.com/goyek/template)
+to create a new repository.
+
+For an existing repository you can copy most of its files.
+
+## Features
+
+[example_test.go](example_test.go demonstrates the key features
+of **goyek**.
+
+### Wrapper scripts
 
 The convention is to have the build pipeline
 in the `/build` directory (or even module).
@@ -144,15 +156,6 @@ curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.2/goyek.sh -O
 curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.2/goyek.ps1 -O
 git add --chmod=+x goyek.sh goyek.ps1
 ```
-
-## Repository template
-
-You can use [goyek/template](https://github.com/goyek/template)
-to create a new repository
-
-For an existing repository you can copy most of its files.
-
-## Features
 
 ### Task registration
 
@@ -233,11 +236,6 @@ With the new API it is easy to integrate **goyek** with any of these packages:
 - [`pflag`](https://github.com/spf13/pflag)
 - [`viper`](https://github.com/spf13/viper)
 - [`cobra`](https://github.com/spf13/cobra)
-
-You can take the code in [build/main.go](build/main.go)
-if you want to integrate with the [`flag` package](https://pkg.go.dev/flag).
-Alternatively, you can use it as a reference
-when writing an integration with another library.
 
 ### Supported Go versions
 

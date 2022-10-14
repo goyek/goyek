@@ -58,8 +58,16 @@ func Example() {
 	flow.Usage = usage
 	flag.Usage = usage
 
-	// parse the args and run the flow
+	// parse the args
 	flag.Parse()
+
+	// change working directory to repo root
+	if err := os.Chdir(".."); err != nil {
+		fmt.Println(err)
+		os.Exit(goyek.CodeInvalidArgs)
+	}
+
+	// run the build pipeline
 	flow.Main(flag.Args())
 
 	/*
