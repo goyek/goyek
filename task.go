@@ -21,24 +21,35 @@ type Task struct {
 	Deps Deps
 }
 
-// RegisteredTask represents a task that has been registered.
+// DefinedTask represents a task that has been registered.
 // It can be used as a dependency for another task.
-type RegisteredTask struct {
+type DefinedTask interface {
+	Name() string
+	Usage() string
+	Deps() []string
+	sealed()
+}
+
+// Deps represents a collection of dependencies.
+type Deps []DefinedTask
+
+// registeredTask implements (and encapsulates) DefinedTask.
+type registeredTask struct {
 	taskSnapshot
 }
 
 // Name returns the name of the task.
-func (r RegisteredTask) Name() string {
+func (r registeredTask) Name() string {
 	return r.name
 }
 
 // Usage returns the description of the task.
-func (r RegisteredTask) Usage() string {
+func (r registeredTask) Usage() string {
 	return r.usage
 }
 
 // Deps returns the names of all task's dependencies.
-func (r RegisteredTask) Deps() []string {
+func (r registeredTask) Deps() []string {
 	count := len(r.deps)
 	if count == 0 {
 		return nil
@@ -48,5 +59,4 @@ func (r RegisteredTask) Deps() []string {
 	return deps
 }
 
-// Deps represents a collection of dependencies.
-type Deps []RegisteredTask
+func (r registeredTask) sealed() {}

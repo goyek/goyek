@@ -16,23 +16,23 @@ func configure() {
 	ci := flag.Bool("ci", false, "whether CI is calling")
 
 	// tasks
-	clean := flow.Register(taskClean())
-	modTidy := flow.Register(taskModTidy())
-	install := flow.Register(taskInstall())
-	build := flow.Register(taskBuild())
-	markdownlint := flow.Register(taskMarkdownLint())
-	misspell := flow.Register(taskMisspell())
-	golangciLint := flow.Register(taskGolangciLint())
-	test := flow.Register(taskTest())
-	diff := flow.Register(taskDiff(ci))
+	clean := flow.Define(taskClean())
+	modTidy := flow.Define(taskModTidy())
+	install := flow.Define(taskInstall())
+	build := flow.Define(taskBuild())
+	markdownlint := flow.Define(taskMarkdownLint())
+	misspell := flow.Define(taskMisspell())
+	golangciLint := flow.Define(taskGolangciLint())
+	test := flow.Define(taskTest())
+	diff := flow.Define(taskDiff(ci))
 
 	// pipelines
-	lint := flow.Register(taskLint(goyek.Deps{
+	lint := flow.Define(taskLint(goyek.Deps{
 		misspell,
 		markdownlint,
 		golangciLint,
 	}))
-	all := flow.Register(taskAll(goyek.Deps{
+	all := flow.Define(taskAll(goyek.Deps{
 		clean,
 		modTidy,
 		install,

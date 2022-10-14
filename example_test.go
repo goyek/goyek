@@ -13,14 +13,14 @@ func Example() {
 	flow := &goyek.Flow{Output: os.Stdout}
 	flag.CommandLine.SetOutput(os.Stdout)
 
-	// register a flag to configure flow verbosity
+	// define a flag to configure flow verbosity
 	flag.BoolVar(&flow.Verbose, "v", true, "print all tasks as they are run")
 
-	// register a flag used by a task
+	// define a flag used by a task
 	msg := flag.String("msg", "hello world", `message to display by "hi" task`)
 
-	// register a task printing the message (configurable via flag)
-	hi := flow.Register(goyek.Task{
+	// define a task printing the message (configurable via flag)
+	hi := flow.Define(goyek.Task{
 		Name:  "hi",
 		Usage: "Greetings",
 		Action: func(tf *goyek.TF) {
@@ -28,8 +28,8 @@ func Example() {
 		},
 	})
 
-	// register a task running a command
-	goVer := flow.Register(goyek.Task{
+	// define a task running a command
+	goVer := flow.Define(goyek.Task{
 		Name:  "go-ver",
 		Usage: `Run "go version"`,
 		Action: func(tf *goyek.TF) {
@@ -39,8 +39,8 @@ func Example() {
 		},
 	})
 
-	// register a pipeline
-	all := flow.Register(goyek.Task{
+	// define a pipeline
+	all := flow.Define(goyek.Task{
 		Name: "all",
 		Deps: goyek.Deps{hi, goVer},
 	})
