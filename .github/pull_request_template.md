@@ -15,8 +15,8 @@
 
 - [ ] `CHANGELOG.md` is updated.
 - [ ] `README.md` is updated.
-- [ ] The code changes follow [Effective Go](https://golang.org/doc/effective_go),
-      [CodeReviewComments](https://github.com/golang/go/wiki/CodeReviewComments).
+- [ ] The code changes follow [Effective Go](https://golang.org/doc/effective_go).
+- [ ] The code changes follow [CodeReviewComments](https://github.com/golang/go/wiki/CodeReviewComments).
 - [ ] The code changes are covered by tests.
 
 <!-- markdownlint-disable-file MD041 -->

@@ -8,7 +8,7 @@
     // gopls
     "go.useLanguageServer": true,
     "gopls": {
-        "formatting.local": "github.com/goyek/goyek",
+        "formatting.local": "github.com/goyek/goyek/v2",
         "formatting.gofumpt": true
     },
     // golangci-lint  

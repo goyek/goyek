@@ -15,20 +15,27 @@
 
 Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
+---
+
+⚠️ This README refers to the in-development `v2` version.
+
+See the documentation for the latest release on [pkg.go.dev](https://pkg.go.dev/github.com/goyek/goyek).
+
+---
+
 Table of Contents:
 
 - [Description](#description)
 - [Quick start](#quick-start)
+- [Examples](#examples)
 - [Wrapper scripts](#wrapper-scripts)
 - [Repository template](#repository-template)
-- [Examples](#examples)
 - [Features](#features)
   - [Task registration](#task-registration)
   - [Task action](#task-action)
   - [Task dependencies](#task-dependencies)
-  - [Helpers for running programs](#helpers-for-running-programs)
   - [Verbose mode](#verbose-mode)
-  - [Default task](#default-task)
+  - [Running programs](#running-programs)
   - [Parameters](#parameters)
   - [Supported Go versions](#supported-go-versions)
 - [Alternatives](#alternatives)
@@ -59,13 +66,12 @@ Here are some good parts:
 - It is easy to debug, like a regular Go application.
 - You can reuse code like in any Go application.
   It may be helpful to use packages like:
-  - [`github.com/bitfield/script`](https://pkg.go.dev/github.com/bitfield/script)
-  - [`github.com/rjeczalik/notify`](https://pkg.go.dev/github.com/rjeczalik/notify)
-  - [`github.com/magefile/mage/target`](https://pkg.go.dev/github.com/magefile/mage/target)
-  - [`github.com/mattn/go-shellwords`](https://pkg.go.dev/github.com/mattn/go-shellwords)
-- Tasks and helpers can be unit tested. For example, see [cmd_test.go](cmd_test.go).
-- [`github.com/goyek/goyek` package](go.mod) does not use any third-party dependency
-  other than the Go standard library.
+  - [`bitfield/script`](https://github.com/bitfield/script)
+  - [`magefile/mage/target`](https://pkg.go.dev/github.com/magefile/mage/target)
+  - [`mattn/go-shellwords`](https://pkg.go.dev/github.com/mattn/go-shellwords)
+  - [`rjeczalik/notify`](https://github.com/rjeczalik/notify)
+  - [`spf13/viper`](https://github.com/spf13/viper)
+- **goyek** does not use any third-party dependency other than the Go standard library.
 
 **goyek** API is mainly inspired by the [`testing`](https://golang.org/pkg/testing),
 [`http`](https://golang.org/pkg/http), and [`flag`](https://golang.org/pkg/flag)
@@ -73,17 +79,15 @@ packages.
 
 ## Quick start
 
-Copy and paste the following code into [`build/build.go`](examples/basic/main.go):
-
 ```go
 package main
 
 import (
-	"github.com/goyek/goyek"
+	"github.com/goyek/goyek/v2"
 )
 
 func main() {
-	flow := &goyek.Flow{}
+	flow := &goyek.Flow{Verbose: true}
 
 	flow.Register(goyek.Task{
 		Name:  "hello",
@@ -100,37 +104,28 @@ func main() {
 Run:
 
 ```shell
-go mod tidy
-```
-
-Sample usage:
-
-```shell
-$ go run ./build -h
-Usage: [flag(s) | task(s)]...
-Flags:
-  -v     Default: false    Verbose: log all tasks as they are run.
-  -wd    Default: .        Working directory: set the working directory.
-Tasks:
-  hello    demonstration
-```
-
-```shell
-$ go run ./build hello
-ok     0.000s
-```
-
-```shell
-$ go run ./build hello -v
+$ go mod tidy
+$ go run . hello
 ===== TASK  hello
       main.go:14: Hello world!
 ----- PASS: hello (0.00s)
 ok      0.001s
 ```
 
+## Examples
+
+- [example_test.go](example_test.go) - a more complete example
+- [build/build.go](build/build.go) -
+  this repository's own build pipeline (dogfooding)
+- [splunk-otel-go](https://github.com/signalfx/splunk-otel-go) -
+  usage in a multi-module monorepo
+
 ## Wrapper scripts
 
-Instead of executing `go run ./build`,
+The convention is to have the build pipeline
+in the `/build` directory (or even module).
+
+Instead of executing `go run /build`,
 you can use the wrapper scripts,
 which can be invoked from any location.
 
@@ -153,34 +148,16 @@ to create a new repository
 
 For an existing repository you can copy most of its files.
 
-## Examples
-
-- [examples](examples)
-- [build/build.go](build/build.go) -
-  this repository's own build pipeline (dogfooding)
-- [fluentassert](https://github.com/fluentassert/verify) -
-  a library using **goyek** without polluting it's root `go.mod`
-- [splunk-otel-go](https://github.com/signalfx/splunk-otel-go) -
-  a multi-module monorepo using **goyek**
-
 ## Features
 
 ### Task registration
 
-The registered tasks are required to have a non-empty name, matching
-the regular expression [`TaskNamePattern`](https://pkg.go.dev/github.com/goyek/goyek#TaskNamePattern).
-This means the following are acceptable:
-
-- letters (`a-z` and `A-Z`)
-- digits (`0-9`)
-- underscore (`_`)
-- hyphen (`-`) - except at the beginning
-- plus (`+`) - except at the beginning
-- colon (`:`) - except at the beginning
+The registered tasks are required to have a non-empty name.
 
 A task with a given name can be only registered once.
 
-A task without description is not listed in CLI usage.
+Default task can be assigned using the `DefaultTask` field.
+When the default task is set, then it is run if no task is provided.
 
 ### Task action
 
@@ -192,12 +169,23 @@ Not having a action is very handy when registering "pipelines".
 ### Task dependencies
 
 During task registration it is possible to add a dependency
-to an already registered task.
-When the flow is processed,
-it makes sure that the dependency is executed before the current task is run.
-Take note that each task will be executed at most once.
+to another registered task.
 
-### Helpers for running programs
+When the flow is processed,
+it makes sure that the dependency is executed
+before the given task is run.
+
+Each task will be executed at most once.
+
+### Verbose mode
+
+Enable verbose output by setting the `Verbose` field to `true`.
+It works similar to `go test -v`.
+When enabled it prints all tasks as they are run.
+
+If it is disabled, only output from a failed task is printed.
+
+### Running programs
 
 Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.dev/github.com/goyek/goyek#TF.Cmd)
 to run a program inside a task's action.
@@ -209,7 +197,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/goyek/goyek"
+	"github.com/goyek/goyek/v2"
 	"github.com/mattn/go-shellwords"
 )
 
@@ -219,7 +207,7 @@ func Exec(cmdLine string) func(tf *goyek.TF) {
 		panic(fmt.Sprintf("parse command line: %v", err))
 	}
 	return func(tf *goyek.TF) {
-    tf.Logf("Run '%s'", cmdLine)
+    tf.Logf("Run %q", cmdLine)
 		if err := tf.Cmd(args[0], args[1:]...).Run(); err != nil {
 			tf.Error(err)
 		}
@@ -230,73 +218,22 @@ func Exec(cmdLine string) func(tf *goyek.TF) {
 [Here](https://github.com/goyek/goyek/issues/60) is the explanation
 why argument splitting is not included out-of-the-box.
 
-### Verbose mode
-
-Enable verbose output using the `-v` CLI flag.
-It works similar to `go test -v`. Verbose mode streams all logs to the output.
-If it is disabled, only logs from failed task are send to the output.
-
-Use [`func (f *Flow) VerboseParam() BoolParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.VerboseParam)
-if you need to check if verbose mode was set within a task's action.
-
-The default value for the verbose parameter can be overwritten with
-[`func (f *Flow) RegisterVerboseParam(p BoolParam) RegisteredBoolParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterVerboseParam).
-
-### Default task
-
-Default task can be assigned via the [`Flow.DefaultTask`](https://pkg.go.dev/github.com/goyek/goyek#Flow.DefaultTask)
-field.
-
-When the default task is set, then it is run if no task is provided via CLI.
-
 ### Parameters
 
-The parameters can be set via CLI using the flag syntax.
+As of `v2` the parameters support has been removed
+in order to improve customization.
 
-On the CLI, flags can be set in the following ways:
+With the new API it is easy to integrate **goyek** with any of these packages:
 
-- `-param simple` - for simple single-word values
-- `-param "value with blanks"`
-- `-param="value with blanks"`
-- `-param` - setting boolean parameters implicitly to `true`
+- [`flag`](https://pkg.go.dev/flag)
+- [`pflag`](https://github.com/spf13/pflag)
+- [`viper`](https://github.com/spf13/viper)
+- [`cobra`](https://github.com/spf13/cobra)
 
-For example, `./goyek.sh test -v -pkg ./...` would run the `test` task
-with `v` bool parameter (verbose mode) set to `true`,
-and `pkg` string parameter set to `"./..."`.
-
-Parameters must first be registered via
-[`func (f *Flow) RegisterValueParam(newValue func() ParamValue, info ParamInfo) ValueParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterValueParam),
-or one of the provided methods like [`RegisterStringParam`](https://pkg.go.dev/github.com/goyek/goyek#Flow.RegisterStringParam).
-
-The registered parameters are required to have a non-empty name, matching
-the regular expression [`ParamNamePattern`](https://pkg.go.dev/github.com/goyek/goyek#ParamNamePattern).
-This means the following are acceptable:
-
-- letters (`a-z` and `A-Z`)
-- digits (`0-9`)
-- underscore (`_`) - except at the beginning
-- hyphen (`-`) - except at the beginning
-- plus (`+`) - except at the beginning
-- colon (`:`) - except at the beginning
-
-After registration, tasks need to specify which parameters they will read.
-Do this by assigning the [`RegisteredParam`](https://pkg.go.dev/github.com/goyek/goyek#RegisteredParam)
-instance from the registration result to the [`Task.Params`](https://pkg.go.dev/github.com/goyek/goyek#Task.Params)
-field.
-If a task tries to retrieve the value from an unregistered parameter,
-the task will fail.
-
-When registration is done, the task's action can retrieve the parameter value
-using the `Get(*TF)` method from the registration result instance
-during the task's `Action` execution.
-
-See [examples/parameters/main.go](examples/parameters/main.go)
-for a detailed example.
-
-See [examples/validation/main.go](examples/validation/main.go)
-for a detailed example of cross-parameter validation.
-
-`Flow` will fail execution if there are unused parameters.
+You can take the code in [build/flag.go](build/main.go) and [build/flag.go](build/flag.go)
+if you want to integrate with the [`flag` package](https://pkg.go.dev/flag).
+Alternatively, you can use it as a reference
+when writing an integration with another library.
 
 ### Supported Go versions
 

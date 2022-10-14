@@ -1,8 +1,11 @@
 linters-settings:
+  funlen:
+    lines: 100
+    statements: 50
   gocyclo:
     min-complexity: 15
   goimports:
-    local-prefixes: github.com/goyek/goyek
+    local-prefixes: github.com/goyek/goyek/v2
   govet:
     check-shadowing: true
   misspell:

@@ -2,6 +2,6 @@ module github.com/goyek/goyek/build
 
 go 1.19
 
-require github.com/goyek/goyek v1.1.0
+require github.com/goyek/goyek/v2 v2.0.0
 
-replace github.com/goyek/goyek => ../
+replace github.com/goyek/goyek/v2 => ../

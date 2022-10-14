@@ -2,25 +2,18 @@
 package main
 
 import (
+	"flag"
 	"io"
 	"os"
 	"strings"
 
-	"github.com/goyek/goyek"
+	"github.com/goyek/goyek/v2"
 )
 
-func main() {
-	flow().Main()
-}
-
-func flow() *goyek.Flow {
-	flow := &goyek.Flow{}
-
-	// parameters
-	ci := flow.RegisterBoolParam(goyek.BoolParam{
-		Name:  "ci",
-		Usage: "Whether CI is calling the build script",
-	})
+func configure(flow *goyek.Flow, flags *flag.FlagSet) {
+	// flags
+	flags.BoolVar(&flow.Verbose, "v", false, "print all tasks as they are run")
+	ci := flags.Bool("ci", false, "whether CI is calling")
 
 	// tasks
 	clean := flow.Register(taskClean())
@@ -48,9 +41,9 @@ func flow() *goyek.Flow {
 		modTidy,
 		diff,
 	}))
-	flow.DefaultTask = all
 
-	return flow
+	// set default task
+	flow.DefaultTask = all
 }
 
 const (
@@ -74,7 +67,7 @@ func taskClean() goyek.Task {
 func taskInstall() goyek.Task {
 	return goyek.Task{
 		Name:  "install",
-		Usage: " go install tools",
+		Usage: "go install tools",
 		Action: func(tf *goyek.TF) {
 			tools := &strings.Builder{}
 			toolsCmd := tf.Cmd("go", "list", `-f={{ join .Imports " " }}`, "-tags=tools")
@@ -105,7 +98,7 @@ func taskBuild() goyek.Task {
 
 func taskMarkdownLint() goyek.Task {
 	return goyek.Task{
-		Name:  "markdownlint",
+		Name:  "mdlint",
 		Usage: "markdownlint-cli (requires docker)",
 		Action: func(tf *goyek.TF) {
 			curDir, err := os.Getwd()
@@ -128,7 +121,7 @@ func taskMarkdownLint() goyek.Task {
 
 func taskMisspell() goyek.Task {
 	return goyek.Task{
-		Name:  "misspell",
+		Name:  "spell",
 		Usage: "misspell",
 		Action: func(tf *goyek.TF) {
 			if err := Exec(tf, rootDir, "misspell -error -locale=US -i=importas -w ."); err != nil {
@@ -140,7 +133,7 @@ func taskMisspell() goyek.Task {
 
 func taskGolangciLint() goyek.Task {
 	return goyek.Task{
-		Name:  "golangci-lint",
+		Name:  "golint",
 		Usage: "golangci-lint run --fix",
 		Action: func(tf *goyek.TF) {
 			if err := Exec(tf, rootDir, "golangci-lint run --fix"); err != nil {
@@ -156,7 +149,7 @@ func taskGolangciLint() goyek.Task {
 func taskTest() goyek.Task {
 	return goyek.Task{
 		Name:  "test",
-		Usage: "go test with race detector and code covarage",
+		Usage: "go test",
 		Action: func(tf *goyek.TF) {
 			if err := Exec(tf, rootDir, "go test -race -covermode=atomic -coverprofile=coverage.out ./..."); err != nil {
 				tf.Error(err)
@@ -167,7 +160,7 @@ func taskTest() goyek.Task {
 
 func taskModTidy() goyek.Task {
 	return goyek.Task{
-		Name:  "mod-tidy",
+		Name:  "mod",
 		Usage: "go mod tidy",
 		Action: func(tf *goyek.TF) {
 			if err := Exec(tf, rootDir, "go mod tidy"); err != nil {
@@ -183,13 +176,12 @@ func taskModTidy() goyek.Task {
 	}
 }
 
-func taskDiff(ci goyek.RegisteredBoolParam) goyek.Task {
+func taskDiff(ci *bool) goyek.Task {
 	return goyek.Task{
-		Name:   "diff",
-		Usage:  "git diff",
-		Params: goyek.Params{ci},
+		Name:  "diff",
+		Usage: "git diff",
 		Action: func(tf *goyek.TF) {
-			if !ci.Get(tf) {
+			if !*ci {
 				tf.Skip("ci param is not set, skipping")
 			}
 
