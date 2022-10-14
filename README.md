@@ -18,7 +18,6 @@ Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 ---
 
 ⚠️ This README refers to the in-development `v2` version.
-
 See the documentation for the latest release on [pkg.go.dev](https://pkg.go.dev/github.com/goyek/goyek).
 
 ---
