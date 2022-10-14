@@ -88,7 +88,7 @@ import (
 func main() {
 	flow := &goyek.Flow{Verbose: true}
 
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name:  "hello",
 		Usage: "demonstration",
 		Action: func(tf *goyek.TF) {

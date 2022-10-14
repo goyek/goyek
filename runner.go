@@ -10,19 +10,12 @@ import (
 	"time"
 )
 
-type (
-	runner struct {
-		output      io.Writer
-		tasks       map[string]taskInfo
-		verbose     bool
-		defaultTask string
-	}
-	taskInfo struct {
-		name   string
-		deps   []string
-		action func(tf *TF)
-	}
-)
+type runner struct {
+	output      io.Writer
+	tasks       map[string]taskSnapshot
+	verbose     bool
+	defaultTask string
+}
 
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
@@ -95,7 +88,7 @@ func (r *runner) run(ctx context.Context, name string, executed map[string]bool)
 	return nil
 }
 
-func (r *runner) runTask(ctx context.Context, task taskInfo) bool {
+func (r *runner) runTask(ctx context.Context, task taskSnapshot) bool {
 	if task.action == nil {
 		return true
 	}

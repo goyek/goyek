@@ -24,20 +24,28 @@ const (
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
 type Flow struct {
-	Output      io.Writer      // output where text is printed; os.Stdout by default
-	Verbose     bool           // control the printing
-	DefaultTask RegisteredTask // task which is run when non is explicitly provided
+	Output      io.Writer   // output where text is printed; os.Stdout by default
+	Verbose     bool        // control the printing
+	DefaultTask DefinedTask // task to run when none is explicitly provided
 
 	// Usage is the function called when an error occurs while parsing tasks.
 	// The field is a function that may be changed to point to
 	// a custom error handler. By default it calls Print.
 	Usage func()
 
-	tasks map[string]Task
+	tasks map[string]taskSnapshot
 }
 
-// Register registers the task. It panics in case of any error.
-func (f *Flow) Register(task Task) RegisteredTask {
+// taskSnapshot is a copy of the task to make the flow usage safer.
+type taskSnapshot struct {
+	name   string
+	usage  string
+	deps   []string
+	action func(tf *TF)
+}
+
+// Define registers the task. It panics in case of any error.
+func (f *Flow) Define(task Task) DefinedTask {
 	// validate
 	if task.Name == "" {
 		panic("task name cannot be empty")
@@ -46,18 +54,28 @@ func (f *Flow) Register(task Task) RegisteredTask {
 		panic(fmt.Sprintf("task was already defined: %s", task.Name))
 	}
 	for _, dep := range task.Deps {
-		if !f.isRegistered(dep.task.Name) {
-			panic(fmt.Sprintf("invalid dependency: %s", dep.task.Name))
+		if !f.isRegistered(dep.Name()) {
+			panic(fmt.Sprintf("invalid dependency: %s", dep.Name()))
 		}
 	}
 
-	f.tasks[task.Name] = task
-	return RegisteredTask{task: task}
+	var deps []string
+	for _, dep := range task.Deps {
+		deps = append(deps, dep.Name())
+	}
+	taskCopy := taskSnapshot{
+		name:   task.Name,
+		usage:  task.Usage,
+		deps:   deps,
+		action: task.Action,
+	}
+	f.tasks[task.Name] = taskCopy
+	return registeredTask{taskCopy}
 }
 
 func (f *Flow) isRegistered(name string) bool {
 	if f.tasks == nil {
-		f.tasks = map[string]Task{}
+		f.tasks = map[string]taskSnapshot{}
 	}
 	_, ok := f.tasks[name]
 	return ok
@@ -70,23 +88,14 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 		ctx = context.Background()
 	}
 
-	tasks := map[string]taskInfo{}
-	for k, v := range f.tasks {
-		var deps []string
-		for _, dep := range v.Deps {
-			deps = append(deps, dep.task.Name)
-		}
-		tasks[k] = taskInfo{
-			name:   v.Name,
-			deps:   deps,
-			action: v.Action,
-		}
-	}
 	r := &runner{
-		output:      f.Output,
-		tasks:       tasks,
-		verbose:     f.Verbose,
-		defaultTask: f.DefaultTask.Name(),
+		output:  f.Output,
+		tasks:   f.tasks,
+		verbose: f.Verbose,
+	}
+
+	if f.DefaultTask != nil {
+		r.defaultTask = f.DefaultTask.Name()
 	}
 
 	if r.output == nil {
@@ -128,12 +137,10 @@ func (f *Flow) Main(args []string) {
 }
 
 // Tasks returns all tasks sorted in lexicographical order.
-func (f *Flow) Tasks() []RegisteredTask {
-	var tasks []RegisteredTask
+func (f *Flow) Tasks() []DefinedTask {
+	var tasks []DefinedTask
 	for _, task := range f.tasks {
-		tasks = append(tasks, RegisteredTask{
-			task: task,
-		})
+		tasks = append(tasks, registeredTask{task})
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
 	return tasks
@@ -147,7 +154,7 @@ func (f *Flow) Print() {
 		out = os.Stdout
 	}
 
-	if f.DefaultTask.Name() != "" {
+	if f.DefaultTask != nil {
 		fmt.Fprintf(out, "Default task: %s\n", f.DefaultTask.Name())
 	}
 

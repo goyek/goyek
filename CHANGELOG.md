@@ -16,6 +16,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - `Flow.Usage` (or `Flow.Print` if it is `nil`)
   is called when `Flow.Run` returns `CodeInvalidArgs`.
+- Rename `Flow.Register` to `Flow.Define`.
+- Change `Flow.RegisteredTask` to sealed interface `Flow.DefinedTask`.
 
 ## [2.0.0-rc.1](https://github.com/goyek/goyek/compare/v1.1.0...v2.0.0-rc.1) - 2022-10-14
 

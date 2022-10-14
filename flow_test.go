@@ -13,7 +13,7 @@ import (
 func Test_Register_empty_name(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 
-	act := func() { flow.Register(goyek.Task{}) }
+	act := func() { flow.Define(goyek.Task{}) }
 
 	assertPanics(t, act, "should panic")
 }
@@ -21,9 +21,9 @@ func Test_Register_empty_name(t *testing.T) {
 func Test_Register_same_name(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 	task := goyek.Task{Name: "task"}
-	flow.Register(task)
+	flow.Define(task)
 
-	act := func() { flow.Register(task) }
+	act := func() { flow.Define(task) }
 
 	assertPanics(t, act, "should not be possible to register tasks with same name twice")
 }
@@ -32,14 +32,14 @@ func Test_successful(t *testing.T) {
 	ctx := context.Background()
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 	var executed1 int
-	task1 := flow.Register(goyek.Task{
+	task1 := flow.Define(goyek.Task{
 		Name: "task-1",
 		Action: func(*goyek.TF) {
 			executed1++
 		},
 	})
 	var executed2 int
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: "task-2",
 		Action: func(*goyek.TF) {
 			executed2++
@@ -47,7 +47,7 @@ func Test_successful(t *testing.T) {
 		Deps: goyek.Deps{task1},
 	})
 	var executed3 int
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: "task-3",
 		Action: func(*goyek.TF) {
 			executed3++
@@ -74,7 +74,7 @@ func Test_successful(t *testing.T) {
 func Test_dependency_failure(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 	var executed1 int
-	task1 := flow.Register(goyek.Task{
+	task1 := flow.Define(goyek.Task{
 		Name: "task-1",
 		Action: func(tf *goyek.TF) {
 			executed1++
@@ -85,7 +85,7 @@ func Test_dependency_failure(t *testing.T) {
 		},
 	})
 	var executed2 int
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: "task-2",
 		Action: func(*goyek.TF) {
 			executed2++
@@ -93,7 +93,7 @@ func Test_dependency_failure(t *testing.T) {
 		Deps: goyek.Deps{task1},
 	})
 	var executed3 int
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: "task-3",
 		Action: func(*goyek.TF) {
 			executed3++
@@ -113,7 +113,7 @@ func Test_dependency_failure(t *testing.T) {
 func Test_fail(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 	failed := false
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {
 			defer func() {
@@ -132,7 +132,7 @@ func Test_fail(t *testing.T) {
 func Test_skip(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 	skipped := false
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {
 			defer func() {
@@ -150,7 +150,7 @@ func Test_skip(t *testing.T) {
 
 func Test_task_panics(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {
 			panic("panicked!")
@@ -166,7 +166,7 @@ func Test_cancelation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	flow := &goyek.Flow{Output: &strings.Builder{}}
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: "task",
 	})
 
@@ -179,7 +179,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	flow := &goyek.Flow{Output: &strings.Builder{}}
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {
 			cancel()
@@ -193,7 +193,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 
 func Test_empty_action(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: "task",
 	})
 
@@ -235,13 +235,13 @@ func Test_printing(t *testing.T) {
 		Output:  out,
 		Verbose: true,
 	}
-	skipped := flow.Register(goyek.Task{
+	skipped := flow.Define(goyek.Task{
 		Name: "skipped",
 		Action: func(tf *goyek.TF) {
 			tf.Skipf("Skipf %d", 0)
 		},
 	})
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: "failing",
 		Deps: goyek.Deps{skipped},
 		Action: func(tf *goyek.TF) {
@@ -274,7 +274,7 @@ func Test_concurrent_printing(t *testing.T) {
 				Output:  out,
 				Verbose: tc.verbose,
 			}
-			flow.Register(goyek.Task{
+			flow.Define(goyek.Task{
 				Name: "task",
 				Action: func(tf *goyek.TF) {
 					ch := make(chan struct{})
@@ -300,7 +300,7 @@ func Test_name(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 	taskName := "my-named-task"
 	var got string
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: taskName,
 		Action: func(tf *goyek.TF) {
 			got = tf.Name()
@@ -316,7 +316,7 @@ func Test_name(t *testing.T) {
 func Test_defaultTask(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
 	taskRan := false
-	task := flow.Register(goyek.Task{
+	task := flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {
 			taskRan = true
@@ -337,7 +337,7 @@ func TestCmd_success(t *testing.T) {
 		Output:  out,
 		Verbose: true,
 	}
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: taskName,
 		Action: func(tf *goyek.TF) {
 			if err := tf.Cmd("go", "version").Run(); err != nil {
@@ -355,7 +355,7 @@ func TestCmd_success(t *testing.T) {
 func TestCmd_error(t *testing.T) {
 	taskName := "exec"
 	flow := &goyek.Flow{Output: &strings.Builder{}}
-	flow.Register(goyek.Task{
+	flow.Define(goyek.Task{
 		Name: taskName,
 		Action: func(tf *goyek.TF) {
 			if err := tf.Cmd("go", "wrong").Run(); err != nil {
@@ -371,9 +371,9 @@ func TestCmd_error(t *testing.T) {
 
 func TestFlow_Tasks(t *testing.T) {
 	flow := &goyek.Flow{Output: &strings.Builder{}}
-	t1 := flow.Register(goyek.Task{Name: "one"})
-	flow.Register(goyek.Task{Name: "two", Usage: "action", Deps: goyek.Deps{t1}})
-	flow.Register(goyek.Task{Name: "three"})
+	t1 := flow.Define(goyek.Task{Name: "one"})
+	flow.Define(goyek.Task{Name: "two", Usage: "action", Deps: goyek.Deps{t1}})
+	flow.Define(goyek.Task{Name: "three"})
 
 	got := flow.Tasks()
 
@@ -388,7 +388,7 @@ func TestFlow_Tasks(t *testing.T) {
 func TestFlow_Usage_default(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{Output: out}
-	task := flow.Register(goyek.Task{Name: "task"})
+	task := flow.Define(goyek.Task{Name: "task"})
 	flow.DefaultTask = task
 
 	exitCode := flow.Run(context.Background(), "bad")
