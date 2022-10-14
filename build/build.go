@@ -43,7 +43,7 @@ func configure() {
 	}))
 
 	// set default task
-	flow.DefaultTask = all
+	flow.SetDefault(all)
 }
 
 const (
