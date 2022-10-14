@@ -140,8 +140,8 @@ Simply add them to your repository's root directory
 and make sure to add the `+x` permission:
 
 ```sh
-curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.1/goyek.sh -O
-curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.1/goyek.ps1 -O
+curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.2/goyek.sh -O
+curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.2/goyek.ps1 -O
 git add --chmod=+x goyek.sh goyek.ps1
 ```
 
