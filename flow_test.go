@@ -230,9 +230,9 @@ func Test_invalid_args(t *testing.T) {
 }
 
 func Test_printing(t *testing.T) {
-	sb := &strings.Builder{}
+	out := &strings.Builder{}
 	flow := &goyek.Flow{
-		Output:  sb,
+		Output:  out,
 		Verbose: true,
 	}
 	skipped := flow.Register(goyek.Task{
@@ -255,8 +255,8 @@ func Test_printing(t *testing.T) {
 
 	flow.Run(context.Background(), "failing")
 
-	assertContains(t, sb.String(), "Skipf 0", "should contain proper output from \"skipped\" task")
-	assertContains(t, sb.String(), "Fatalf 5", "should contain proper output from \"failing\" task")
+	assertContains(t, out, "Skipf 0", "should contain proper output from \"skipped\" task")
+	assertContains(t, out, "Fatalf 5", "should contain proper output from \"failing\" task")
 }
 
 func Test_concurrent_printing(t *testing.T) {
@@ -269,9 +269,9 @@ func Test_concurrent_printing(t *testing.T) {
 	for _, tc := range testCases {
 		testName := fmt.Sprintf("Verbose:%v", tc.verbose)
 		t.Run(testName, func(t *testing.T) {
-			sb := &strings.Builder{}
+			out := &strings.Builder{}
 			flow := goyek.Flow{
-				Output:  sb,
+				Output:  out,
 				Verbose: tc.verbose,
 			}
 			flow.Register(goyek.Task{
@@ -290,8 +290,8 @@ func Test_concurrent_printing(t *testing.T) {
 			exitCode := flow.Run(context.Background(), "task")
 
 			assertEqual(t, exitCode, goyek.CodeFail, "should fail")
-			assertContains(t, sb.String(), "from child goroutine", "should contain log from child goroutine")
-			assertContains(t, sb.String(), "from main goroutine", "should contain log from main goroutine")
+			assertContains(t, out, "from child goroutine", "should contain log from child goroutine")
+			assertContains(t, out, "from main goroutine", "should contain log from main goroutine")
 		})
 	}
 }
@@ -332,9 +332,9 @@ func Test_defaultTask(t *testing.T) {
 
 func TestCmd_success(t *testing.T) {
 	taskName := "exec"
-	sb := &strings.Builder{}
+	out := &strings.Builder{}
 	flow := &goyek.Flow{
-		Output:  sb,
+		Output:  out,
 		Verbose: true,
 	}
 	flow.Register(goyek.Task{
@@ -348,7 +348,7 @@ func TestCmd_success(t *testing.T) {
 
 	exitCode := flow.Run(context.Background(), taskName)
 
-	assertContains(t, sb.String(), "go version go", "output should contain prefix of version report")
+	assertContains(t, out, "go version go", "output should contain prefix of version report")
 	assertEqual(t, exitCode, goyek.CodePass, "task should pass")
 }
 
@@ -385,20 +385,44 @@ func TestFlow_Tasks(t *testing.T) {
 	assertEqual(t, got[2].Deps()[0], "one", "should return dependency")
 }
 
+func TestFlow_Usage_default(t *testing.T) {
+	out := &strings.Builder{}
+	flow := &goyek.Flow{Output: out}
+	task := flow.Register(goyek.Task{Name: "task"})
+	flow.DefaultTask = task
+
+	exitCode := flow.Run(context.Background(), "bad")
+
+	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should work when invalid code returned")
+	assertContains(t, out, "Tasks:", "should print the default usage if not overridden")
+}
+
+func TestFlow_Usage_custom(t *testing.T) {
+	flow := &goyek.Flow{Output: &strings.Builder{}}
+	called := false
+	flow.Usage = func() { called = true }
+
+	exitCode := flow.Run(context.Background(), "bad")
+
+	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should work when invalid code returned")
+	assertTrue(t, called, "should invoke the custom message instead")
+}
+
 func assertTrue(tb testing.TB, got bool, msg string) {
 	tb.Helper()
 	if got {
 		return
 	}
-	tb.Errorf("%s\ngot: [%v], want: [true]", msg, got)
+	tb.Errorf("%s\nGOT: %v, WANT: true", msg, got)
 }
 
-func assertContains(tb testing.TB, got string, want string, msg string) {
+func assertContains(tb testing.TB, got fmt.Stringer, want string, msg string) {
 	tb.Helper()
-	if strings.Contains(got, want) {
+	gotTxt := got.String()
+	if strings.Contains(gotTxt, want) {
 		return
 	}
-	tb.Errorf("%s\ngot: [%s], should contain: [%s]", msg, got, want)
+	tb.Errorf("%s\nGOT:\n%s\nSHOULD CONTAIN:\n%s", msg, gotTxt, want)
 }
 
 func requireEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
@@ -406,7 +430,7 @@ func requireEqual(tb testing.TB, got interface{}, want interface{}, msg string) 
 	if reflect.DeepEqual(got, want) {
 		return
 	}
-	tb.Fatalf("%s\ngot: [%v], want: [%v]", msg, got, want)
+	tb.Fatalf("%s\nGOT: %v\nWANT: %v", msg, got, want)
 }
 
 func assertEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
@@ -414,7 +438,7 @@ func assertEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
 	if reflect.DeepEqual(got, want) {
 		return
 	}
-	tb.Errorf("%s\ngot: [%v], want: [%v]", msg, got, want)
+	tb.Errorf("%s\nGOT: %v\nWANT: %v", msg, got, want)
 }
 
 func assertPanics(tb testing.TB, fn func(), msg string) {

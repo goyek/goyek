@@ -8,6 +8,15 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.1...HEAD)
 
+### Added
+
+- Add `Flow.Usage` for setting a custom parsing tasks error handler.
+
+### Changed
+
+- `Flow.Usage` (or `Flow.Print` if it is `nil`)
+  is called when `Flow.Run` returns `CodeInvalidArgs`.
+
 ## [2.0.0-rc.1](https://github.com/goyek/goyek/compare/v1.1.0...v2.0.0-rc.1) - 2022-10-14
 
 This release contains **breaking changes** in the Go API.

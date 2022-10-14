@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	// CodePass indicates that flow passed.
+	// CodePass indicates that no task has failed.
 	CodePass = 0
-	// CodeFail indicates that flow failed.
+	// CodeFail indicates that some task has failed or the run was interrupted.
 	CodeFail = 1
-	// CodeInvalidArgs indicates that flow got invalid input.
+	// CodeInvalidArgs indicates that an error occurerd while parsing tasks.
 	CodeInvalidArgs = 2
 )
 
@@ -24,10 +24,14 @@ const (
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
 type Flow struct {
-	Output  io.Writer // output where text is printed; os.Stdout by default
-	Verbose bool      // control the printing
-
+	Output      io.Writer      // output where text is printed; os.Stdout by default
+	Verbose     bool           // control the printing
 	DefaultTask RegisteredTask // task which is run when non is explicitly provided
+
+	// Usage is the function called when an error occurs while parsing tasks.
+	// The field is a function that may be changed to point to
+	// a custom error handler. By default it calls Print.
+	Usage func()
 
 	tasks map[string]Task
 }
@@ -39,11 +43,11 @@ func (f *Flow) Register(task Task) RegisteredTask {
 		panic("task name cannot be empty")
 	}
 	if f.isRegistered(task.Name) {
-		panic(fmt.Sprintf("%q task was already registered", task.Name))
+		panic(fmt.Sprintf("task was already defined: %s", task.Name))
 	}
 	for _, dep := range task.Deps {
 		if !f.isRegistered(dep.task.Name) {
-			panic(fmt.Sprintf("invalid dependency %q", dep.task.Name))
+			panic(fmt.Sprintf("invalid dependency: %s", dep.task.Name))
 		}
 	}
 
@@ -89,7 +93,15 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 		r.output = os.Stdout
 	}
 
-	return r.Run(ctx, args)
+	exitCode := r.Run(ctx, args)
+	if exitCode == CodeInvalidArgs {
+		if f.Usage != nil {
+			f.Usage()
+		} else {
+			f.Print()
+		}
+	}
+	return exitCode
 }
 
 // Main parses the args and runs the provided tasks.

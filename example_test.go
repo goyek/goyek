@@ -9,10 +9,8 @@ import (
 )
 
 func Example() {
-	// create the flow
-	flow := &goyek.Flow{}
-
 	// use the same output for flow and flag
+	flow := &goyek.Flow{Output: os.Stdout}
 	flag.CommandLine.SetOutput(os.Stdout)
 
 	// register a flag to configure flow verbosity
@@ -50,13 +48,17 @@ func Example() {
 	// set the default task
 	flow.DefaultTask = all
 
-	// parse the args and run the flow
-	flag.Usage = func() {
+	// set the help message
+	usage := func() {
 		fmt.Println("Usage of build: [flags] [--] [tasks]")
 		flow.Print()
 		fmt.Println("Flags:")
 		flag.PrintDefaults()
 	}
+	flow.Usage = usage
+	flag.Usage = usage
+
+	// parse the args and run the flow
 	flag.Parse()
 	flow.Main(flag.Args())
 

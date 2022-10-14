@@ -30,18 +30,18 @@ func (r *runner) Run(ctx context.Context, args []string) int {
 	var tasks []string
 	for _, arg := range args {
 		if arg == "" {
-			fmt.Fprintln(r.output, "the task name cannot be empty")
+			fmt.Fprintln(r.output, "task name cannot be empty")
 			return CodeInvalidArgs
 		}
 		if _, ok := r.tasks[arg]; !ok {
-			fmt.Fprintf(r.output, "the task %q is not registred\n", arg)
+			fmt.Fprintf(r.output, "task provided but not defined: %s\n", arg)
 			return CodeInvalidArgs
 		}
 		tasks = append(tasks, arg)
 	}
 	if r.defaultTask != "" {
 		if _, ok := r.tasks[r.defaultTask]; !ok {
-			panic(fmt.Sprintf("invalid default task %q", r.defaultTask))
+			panic(fmt.Sprintf("default task not defined: %s", r.defaultTask))
 		}
 	}
 

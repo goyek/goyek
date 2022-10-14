@@ -10,20 +10,20 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-func configure(flow *goyek.Flow, flags *flag.FlagSet) {
+func configure() {
 	// flags
-	flags.BoolVar(&flow.Verbose, "v", false, "print all tasks as they are run")
-	ci := flags.Bool("ci", false, "whether CI is calling")
+	flag.BoolVar(&flow.Verbose, "v", false, "print all tasks as they are run")
+	ci := flag.Bool("ci", false, "whether CI is calling")
 
 	// tasks
 	clean := flow.Register(taskClean())
+	modTidy := flow.Register(taskModTidy())
 	install := flow.Register(taskInstall())
 	build := flow.Register(taskBuild())
 	markdownlint := flow.Register(taskMarkdownLint())
 	misspell := flow.Register(taskMisspell())
 	golangciLint := flow.Register(taskGolangciLint())
 	test := flow.Register(taskTest())
-	modTidy := flow.Register(taskModTidy())
 	diff := flow.Register(taskDiff(ci))
 
 	// pipelines
@@ -34,11 +34,11 @@ func configure(flow *goyek.Flow, flags *flag.FlagSet) {
 	}))
 	all := flow.Register(taskAll(goyek.Deps{
 		clean,
+		modTidy,
 		install,
 		build,
 		lint,
 		test,
-		modTidy,
 		diff,
 	}))
 
