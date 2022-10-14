@@ -10,6 +10,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [2.0.0-rc.2](https://github.com/goyek/goyek/compare/v2.0.0-rc.1...v2.0.0-rc.2)
 
+This release focuses on improving usability and encapsulation.
+
 ### Added
 
 - Add `Flow.Usage` for setting a custom parsing tasks error handler.
