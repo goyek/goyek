@@ -290,7 +290,7 @@ func Test_concurrent_printing(t *testing.T) {
 					ch := make(chan struct{})
 					go func() {
 						defer func() { ch <- struct{}{} }()
-						tf.Log("from child goroutine")
+						tf.Log("from child goroutine\nwith new line")
 					}()
 					tf.Error("from main goroutine")
 					<-ch
@@ -321,6 +321,22 @@ func Test_name(t *testing.T) {
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertEqual(t, got, taskName, "should return proper Name value")
+}
+
+func Test_output(t *testing.T) {
+	out := &strings.Builder{}
+	flow := &goyek.Flow{Output: out, Verbose: true}
+	msg := "hello there"
+	flow.Define(goyek.Task{
+		Name: "task",
+		Action: func(tf *goyek.TF) {
+			tf.Output().Write([]byte(msg)) //nolint:errcheck,gosec // not checking errors when writing to output
+		},
+	})
+
+	flow.Run(context.Background(), "task")
+
+	assertContains(t, out, msg, "should contain message send via output")
 }
 
 func Test_SetDefault(t *testing.T) {
