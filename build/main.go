@@ -8,17 +8,28 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
+var flow = &goyek.Flow{}
+
 func main() {
-	out := os.Stdout
-	flow := &goyek.Flow{}
-	flags := flag.NewFlagSet("", flag.ExitOnError)
-
-	configure(flow, flags)
-
-	if err := os.Chdir(".."); err != nil { // change working directory to repo root
-		fmt.Fprintln(out, err)
+	// change working directory to repo root
+	if err := os.Chdir(".."); err != nil {
+		fmt.Println(err)
 		os.Exit(goyek.CodeInvalidArgs)
 	}
 
-	run(out, flow, flags, os.Args[1:])
+	configure()
+
+	flow.Output = os.Stdout
+	flag.CommandLine.SetOutput(os.Stdout)
+	usage := func() {
+		fmt.Println("Usage of build: [flags] [--] [tasks]")
+		flow.Print()
+		fmt.Println("Flags:")
+		flag.PrintDefaults()
+	}
+	flow.Usage = usage
+	flag.Usage = usage
+
+	flag.Parse()
+	flow.Main(flag.Args())
 }

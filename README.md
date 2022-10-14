@@ -125,6 +125,10 @@ ok      0.001s
 The convention is to have the build pipeline
 in the `/build` directory (or even module).
 
+You may want to call `os.Chdir("..")` in the beginning
+of your `main` so that the flow has
+the repository root as the working directory.
+
 Instead of executing `go run /build`,
 you can use the wrapper scripts,
 which can be invoked from any location.
@@ -230,7 +234,7 @@ With the new API it is easy to integrate **goyek** with any of these packages:
 - [`viper`](https://github.com/spf13/viper)
 - [`cobra`](https://github.com/spf13/cobra)
 
-You can take the code in [build/flag.go](build/main.go) and [build/flag.go](build/flag.go)
+You can take the code in [build/main.go](build/main.go)
 if you want to integrate with the [`flag` package](https://pkg.go.dev/flag).
 Alternatively, you can use it as a reference
 when writing an integration with another library.
