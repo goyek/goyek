@@ -39,13 +39,13 @@ func Example() {
 		},
 	})
 
-	// define a pipeline
+	// define the pipeline
 	all := flow.Define(goyek.Task{
 		Name: "all",
 		Deps: goyek.Deps{hi, goVer},
 	})
 
-	// set the default task
+	// set the pipeline as the default task
 	flow.SetDefault(all)
 
 	// set the help message
