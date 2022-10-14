@@ -113,10 +113,11 @@ ok      0.001s
 
 ## Examples
 
-- [example_test.go](example_test.go) - a more complete example
-- [build/build.go](build/build.go) -
+- [example_test.go](example_test.go) -
+  a more complete example
+- [build](build) -
   this repository's own build pipeline (dogfooding)
-- [splunk-otel-go](https://github.com/signalfx/splunk-otel-go) -
+- [splunk-otel-go](https://github.com/signalfx/splunk-otel-go/tree/main/build) -
   usage in a multi-module monorepo
 
 ## Wrapper scripts
