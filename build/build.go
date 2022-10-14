@@ -107,11 +107,11 @@ func taskMarkdownLint() goyek.Task {
 			}
 
 			dockerTag := "markdownlint-cli"
-			tf.Log("Cmd: docker build")
+			tf.Log(`Cmd "docker build"`)
 			if err := tf.Cmd("docker", "build", "-t", dockerTag, "-f", toolsDir+"/markdownlint-cli.dockerfile", ".").Run(); err != nil {
 				tf.Fatal(err)
 			}
-			tf.Log("Cmd: docker run")
+			tf.Log(`"Cmd "docker run"`)
 			if err := tf.Cmd("docker", "run", "--rm", "-v", curDir+":/workdir", dockerTag, "**/*.md").Run(); err != nil {
 				tf.Fatal(err)
 			}
