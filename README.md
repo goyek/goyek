@@ -18,7 +18,6 @@ Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 ---
 
 ⚠️ This README refers to the in-development `v2` version.
-
 See the documentation for the latest release on [pkg.go.dev](https://pkg.go.dev/github.com/goyek/goyek).
 
 ---
@@ -114,10 +113,11 @@ ok      0.001s
 
 ## Examples
 
-- [example_test.go](example_test.go) - a more complete example
-- [build/build.go](build/build.go) -
+- [example_test.go](example_test.go) -
+  a more complete example
+- [build](build) -
   this repository's own build pipeline (dogfooding)
-- [splunk-otel-go](https://github.com/signalfx/splunk-otel-go) -
+- [splunk-otel-go](https://github.com/signalfx/splunk-otel-go/tree/main/build) -
   usage in a multi-module monorepo
 
 ## Wrapper scripts
@@ -136,8 +136,8 @@ Simply add them to your repository's root directory
 and make sure to add the `+x` permission:
 
 ```sh
-curl -sSfL https://raw.githubusercontent.com/goyek/goyek/main/goyek.sh -O
-curl -sSfL https://raw.githubusercontent.com/goyek/goyek/main/goyek.ps1 -O
+curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.1/goyek.sh -O
+curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.1/goyek.ps1 -O
 git add --chmod=+x goyek.sh goyek.ps1
 ```
 
