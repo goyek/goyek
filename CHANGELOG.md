@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
-## [Unreleased](https://github.com/goyek/goyek/compare/v1.1.0...HEAD)
+## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.1...HEAD)
+
+## [2.0.0-rc.1](https://github.com/goyek/goyek/compare/v1.1.0...v2.0.0-rc.1) - 2022-10-14
 
 This release contains **breaking changes** in the Go API.
 It focuses on improving customization mainly by removing the parameters API.
@@ -26,7 +28,7 @@ It gives the user the possibility of parsing the input.
 
 - Remove parameters API and out-of-the-box flags (`-v`, `-wd`).
 
-## [1.1.0](https://github.com/goyek/goyek/compare/v1.0.0...v1.1.0) - 2022-10-13
+## [1.1.0](https://github.com/goyek/goyek/compare/v1.0.0...v1.1.0) - 2022-10-12
 
 This release focuses on improving output printing.
 There are no API changes.
