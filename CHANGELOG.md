@@ -12,7 +12,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Usually, the task does not call `panic` directly.
   `panic` failure message no longer contains a prefix with file and line information.
-  The stack trace is printed instead.
+  The stack trace is printed instead. The behavior is based on `testing` package.
 
 ### Fixed
 

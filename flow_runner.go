@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type runner struct {
+type flowRunner struct {
 	output  io.Writer
 	defined map[string]taskSnapshot
 	verbose bool
@@ -18,7 +18,7 @@ type runner struct {
 
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (r *runner) Run(ctx context.Context, tasks []string) bool {
+func (r *flowRunner) Run(ctx context.Context, tasks []string) bool {
 	from := time.Now()
 	executedTasks := map[string]bool{}
 	for _, name := range tasks {
@@ -31,7 +31,7 @@ func (r *runner) Run(ctx context.Context, tasks []string) bool {
 	return true
 }
 
-func (r *runner) run(ctx context.Context, name string, executed map[string]bool) error {
+func (r *flowRunner) run(ctx context.Context, name string, executed map[string]bool) error {
 	task := r.defined[name]
 	if executed[name] {
 		return nil
@@ -51,7 +51,7 @@ func (r *runner) run(ctx context.Context, name string, executed map[string]bool)
 	return nil
 }
 
-func (r *runner) runTask(ctx context.Context, task taskSnapshot) bool {
+func (r *flowRunner) runTask(ctx context.Context, task taskSnapshot) bool {
 	if task.action == nil {
 		return true
 	}
@@ -66,7 +66,9 @@ func (r *runner) runTask(ctx context.Context, task taskSnapshot) bool {
 
 	// report task start
 	fmt.Fprintf(writer, "===== TASK  %s\n", task.name)
+	start := time.Now()
 
+	// run task
 	tf := &TF{
 		ctx:    ctx,
 		name:   task.name,
@@ -77,16 +79,27 @@ func (r *runner) runTask(ctx context.Context, task taskSnapshot) bool {
 	// report task end
 	status := "PASS"
 	passed := true
-	switch {
-	case result.failed:
+	switch result.status {
+	case statusFailed, statusPanicked:
 		status = "FAIL"
 		passed = false
-	case result.skipped:
+	case statusNotRun, statusSkipped:
 		status = "SKIP"
 	}
-	fmt.Fprintf(writer, "----- %s: %s (%.2fs)\n", status, task.name, result.duration.Seconds())
+	fmt.Fprintf(writer, "----- %s: %s (%.2fs)\n", status, task.name, time.Since(start).Seconds())
 
-	if streamWriter != nil && result.failed {
+	// report panic if happened
+	if result.status == statusPanicked {
+		if result.panicValue != nil {
+			io.WriteString(tf.output, fmt.Sprintf("panic: %v", result.panicValue)) //nolint:errcheck,gosec // not checking errors when writing to output
+		} else {
+			io.WriteString(tf.output, "panic(nil) or runtime.Goexit() called") //nolint:errcheck,gosec // not checking errors when writing to output
+		}
+		io.WriteString(tf.output, "\n\n")  //nolint:errcheck,gosec // not checking errors when writing to output
+		tf.output.Write(result.panicStack) //nolint:errcheck,gosec // not checking errors when writing to output
+	}
+
+	if streamWriter != nil && !passed {
 		io.Copy(r.output, strings.NewReader(streamWriter.String())) //nolint:errcheck,gosec // not checking errors when writing to output
 	}
 

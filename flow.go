@@ -118,7 +118,7 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 		return f.invalid()
 	}
 
-	r := &runner{
+	r := &flowRunner{
 		output:  out,
 		defined: f.tasks,
 		verbose: f.Verbose,

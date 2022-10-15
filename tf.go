@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strings"
-	"time"
 )
 
 const skipCount = 3
@@ -22,11 +21,10 @@ const skipCount = 3
 // All methods must be called only from the goroutine running the
 // Action function.
 type TF struct {
-	ctx     context.Context
-	name    string
-	output  io.Writer
-	failed  bool
-	skipped bool
+	ctx    context.Context
+	name   string
+	output io.Writer
+	status status
 }
 
 // Context returns the flows' run context.
@@ -83,12 +81,12 @@ func (tf *TF) Errorf(format string, args ...interface{}) {
 
 // Failed reports whether the function has failed.
 func (tf *TF) Failed() bool {
-	return tf.failed
+	return tf.status == statusFailed
 }
 
 // Fail marks the function as having failed but continues execution.
 func (tf *TF) Fail() {
-	tf.failed = true
+	tf.status = statusFailed
 }
 
 // Fatal is equivalent to Log followed by FailNow.
@@ -114,7 +112,7 @@ func (tf *TF) FailNow() {
 
 // Skipped reports whether the task was skipped.
 func (tf *TF) Skipped() bool {
-	return tf.skipped
+	return tf.status == statusSkipped
 }
 
 // Skip is equivalent to Log followed by SkipNow.
@@ -136,45 +134,56 @@ func (tf *TF) Skipf(format string, args ...interface{}) {
 // it is still considered to have failed.
 // Flow will continue at the next task.
 func (tf *TF) SkipNow() {
-	tf.skipped = true
+	tf.status = statusSkipped
 	runtime.Goexit()
 }
 
-// runResult contains the results of a Action run.
-type runResult struct {
-	failed   bool
-	skipped  bool
-	duration time.Duration
+type result struct {
+	status     status
+	panicValue interface{}
+	panicStack []byte
 }
+
+// status represents the status of an action run.
+type status uint8
+
+const (
+	statusNotRun status = iota
+	statusPassed
+	statusPanicked
+	statusFailed
+	statusSkipped
+)
 
 // run executes the action in a separate goroutine to enable
 // interuption using runtime.Goexit().
-func (tf *TF) run(action func(tf *TF)) runResult {
-	result := make(chan runResult, 1)
+func (tf *TF) run(action func(tf *TF)) result {
+	ch := make(chan result, 1)
 	go func() {
-		finished := false
-		from := time.Now()
+		var (
+			finished   bool
+			panicVal   interface{}
+			panicStack []byte
+		)
 		defer func() {
-			if !finished && !tf.skipped && !tf.failed {
-				if r := recover(); r != nil {
-					io.WriteString(tf.output, fmt.Sprintf("panic: %v", r)) //nolint:errcheck,gosec // not checking errors when writing to output
-				} else {
-					io.WriteString(tf.output, "panic(nil) or runtime.Goexit() called") //nolint:errcheck,gosec // not checking errors when writing to output
-				}
-				io.WriteString(tf.output, "\n\n") //nolint:errcheck,gosec // not checking errors when writing to output
-				tf.output.Write(debug.Stack())    //nolint:errcheck,gosec // not checking errors when writing to output
-				tf.failed = true
+			ch <- result{tf.status, panicVal, panicStack}
+		}()
+		defer func() {
+			if tf.status != statusNotRun {
+				return
 			}
-			result <- runResult{
-				failed:   tf.failed,
-				skipped:  tf.skipped,
-				duration: time.Since(from),
+			if finished {
+				tf.status = statusPassed
+				return
 			}
+			tf.status = statusPanicked
+			panicVal = recover()
+			panicStack = debug.Stack()
 		}()
 		action(tf)
 		finished = true
 	}()
-	return <-result
+	return <-ch
 }
 
 // log is used internally in order to provide proper prefix.
