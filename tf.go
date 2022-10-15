@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strings"
-	"time"
 )
 
 const skipCount = 3
@@ -140,41 +139,49 @@ func (tf *TF) SkipNow() {
 	runtime.Goexit()
 }
 
-// runResult contains the results of a Action run.
-type runResult struct {
-	failed   bool
-	skipped  bool
-	duration time.Duration
+type result struct {
+	status     status
+	panicValue interface{}
+	panicStack []byte
 }
+
+// status represents the status of an action run.
+type status uint8
+
+const (
+	statusNotRun status = iota
+	statusPassed
+	statusPanicked
+	statusFailed
+	statusSkipped
+)
 
 // run executes the action in a separate goroutine to enable
 // interuption using runtime.Goexit().
-func (tf *TF) run(action func(tf *TF)) runResult {
-	result := make(chan runResult, 1)
+func (tf *TF) run(action func(tf *TF)) result {
+	ch := make(chan result, 1)
 	go func() {
 		finished := false
-		from := time.Now()
 		defer func() {
-			if !finished && !tf.skipped && !tf.failed {
-				if r := recover(); r != nil {
-					io.WriteString(tf.output, fmt.Sprintf("panic: %v", r)) //nolint:errcheck,gosec // not checking errors when writing to output
-				} else {
-					io.WriteString(tf.output, "panic(nil) or runtime.Goexit() called") //nolint:errcheck,gosec // not checking errors when writing to output
-				}
-				io.WriteString(tf.output, "\n\n") //nolint:errcheck,gosec // not checking errors when writing to output
-				tf.output.Write(debug.Stack())    //nolint:errcheck,gosec // not checking errors when writing to output
-				tf.failed = true
+			res := result{}
+			switch {
+			case tf.failed:
+				res.status = statusFailed
+			case tf.skipped:
+				res.status = statusSkipped
+			case finished:
+				res.status = statusPassed
+			default:
+				res.status = statusPanicked
+				res.panicValue = recover()
+				res.panicStack = debug.Stack()
 			}
-			result <- runResult{
-				failed:   tf.failed,
-				skipped:  tf.skipped,
-				duration: time.Since(from),
-			}
+			ch <- res
 		}()
 		action(tf)
 		finished = true
 	}()
-	return <-result
+	return <-ch
 }
 
 // log is used internally in order to provide proper prefix.
