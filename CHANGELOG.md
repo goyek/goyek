@@ -8,6 +8,12 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.2...HEAD)
 
+### Added
+
+- Add `Flow.LogDecorator` for setting a custom log decorator
+  that is used by `TF` logging methods.
+- Add `DecorateLog` function which is the default `Flow.LogDecorator`.
+
 ## Changed
 
 - Usually, the task does not call `panic` directly.

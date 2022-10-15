@@ -32,6 +32,10 @@ type Flow struct {
 	// a custom error handler. By default it calls Print.
 	Usage func()
 
+	// LogDecorator used by TF's logging functions to decorate the text.
+	// DecorateLog by default.
+	LogDecorator func(string) string
+
 	tasks       map[string]taskSnapshot // snapshot of defined tasks
 	defaultTask string                  // task to run when none is explicitly provided
 }
@@ -101,11 +105,11 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 	var tasks []string
 	for _, arg := range args {
 		if arg == "" {
-			fmt.Fprintln(out, "task name cannot be empty")
+			fmt.Fprintln(out, "task name cannot be empty") // TODO: move to Main
 			return f.invalid()
 		}
 		if _, ok := f.tasks[arg]; !ok {
-			fmt.Fprintf(out, "task provided but not defined: %s\n", arg)
+			fmt.Fprintf(out, "task provided but not defined: %s\n", arg) // TODO: move to Main
 			return f.invalid()
 		}
 		tasks = append(tasks, arg)
@@ -114,14 +118,15 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 		tasks = append(tasks, f.defaultTask)
 	}
 	if len(tasks) == 0 {
-		fmt.Fprintln(out, "no task provided")
+		fmt.Fprintln(out, "no task provided") // TODO: move to Main
 		return f.invalid()
 	}
 
 	r := &flowRunner{
-		output:  out,
-		defined: f.tasks,
-		verbose: f.Verbose,
+		output:       out,
+		defined:      f.tasks,
+		verbose:      f.Verbose,
+		logDecorator: f.LogDecorator,
 	}
 	if ctx == nil {
 		ctx = context.Background()

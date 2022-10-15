@@ -11,8 +11,6 @@ import (
 	"strings"
 )
 
-const skipCount = 3
-
 // TF is a type passed to Task's Action function to manage task state.
 //
 // A Task ends when its Action function returns or calls any of the methods
@@ -21,11 +19,12 @@ const skipCount = 3
 // All methods must be called only from the goroutine running the
 // Action function.
 type TF struct {
-	ctx     context.Context
-	name    string
-	output  io.Writer
-	failed  bool
-	skipped bool
+	ctx       context.Context
+	name      string
+	output    io.Writer
+	decorator func(string) string
+	failed    bool
+	skipped   bool
 }
 
 // Context returns the flows' run context.
@@ -187,20 +186,29 @@ func (tf *TF) run(action func(tf *TF)) result {
 // log is used internally in order to provide proper prefix.
 func (tf *TF) log(args ...interface{}) {
 	txt := fmt.Sprint(args...)
-	txt = decorate(txt, skipCount)
+	if tf.decorator != nil {
+		txt = tf.decorator(txt)
+	} else {
+		txt = DecorateLog(txt)
+	}
 	io.WriteString(tf.output, txt) //nolint:errcheck,gosec // not checking errors when writing to output
 }
 
 // lof is used internally in order to provide proper prefix.
 func (tf *TF) logf(format string, args ...interface{}) {
 	txt := fmt.Sprintf(format, args...)
-	txt = decorate(txt, skipCount)
+	if tf.decorator != nil {
+		txt = tf.decorator(txt)
+	} else {
+		txt = DecorateLog(txt)
+	}
 	io.WriteString(tf.output, txt) //nolint:errcheck,gosec // not checking errors when writing to output
 }
 
-// decorate prefixes the string with the file and line of the call site
-// and inserts the final newline if needed and indentation spaces for formatting.
-func decorate(s string, skip int) string {
+// DecorateLog prefixes the string with the file and line of the call site
+// and inserts the final newline and indentation spaces for formatting.
+func DecorateLog(s string) string {
+	const skip = 3
 	_, file, line, _ := runtime.Caller(skip)
 	if file != "" {
 		// Truncate file name at last file name separator.
