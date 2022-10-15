@@ -87,7 +87,7 @@ func (r *runner) runTask(ctx context.Context, task taskSnapshot) bool {
 	fmt.Fprintf(writer, "----- %s: %s (%.2fs)\n", status, task.name, result.duration.Seconds())
 
 	if streamWriter != nil && result.failed {
-		io.Copy(r.output, strings.NewReader(streamWriter.String())) //nolint // not checking errors when writing to output
+		io.Copy(r.output, strings.NewReader(streamWriter.String())) //nolint:errcheck,gosec // not checking errors when writing to output
 	}
 
 	return passed

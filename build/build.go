@@ -5,6 +5,7 @@ import (
 	"flag"
 	"io"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/goyek/goyek/v2"
@@ -93,8 +94,12 @@ func taskBuild() goyek.Task {
 func taskMarkdownLint() goyek.Task {
 	return goyek.Task{
 		Name:  "mdlint",
-		Usage: "markdownlint-cli (requires docker)",
+		Usage: "markdownlint-cli (uses docker)",
 		Action: func(tf *goyek.TF) {
+			if _, err := exec.LookPath("docker"); err != nil {
+				tf.Skip(err)
+			}
+
 			curDir, err := os.Getwd()
 			if err != nil {
 				tf.Fatal(err)

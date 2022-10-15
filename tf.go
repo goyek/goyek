@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 )
@@ -149,34 +150,38 @@ type runResult struct {
 // run executes the action in a separate goroutine to enable
 // interuption using runtime.Goexit().
 func (tf *TF) run(action func(tf *TF)) runResult {
-	finished := make(chan runResult, 1)
+	result := make(chan runResult, 1)
 	go func() {
+		finished := false
 		from := time.Now()
 		defer func() {
-			if r := recover(); r != nil {
-				txt := fmt.Sprintf("panic: %v", r)
-				const skipUntilPanic = 3
-				txt = decorate(txt, skipUntilPanic)
-				io.WriteString(tf.output, txt) //nolint // not checking errors when writing to output
+			if !finished && !tf.skipped && !tf.failed {
+				if r := recover(); r != nil {
+					io.WriteString(tf.output, fmt.Sprintf("panic: %v", r)) //nolint:errcheck,gosec // not checking errors when writing to output
+				} else {
+					io.WriteString(tf.output, "panic(nil) or runtime.Goexit() called") //nolint:errcheck,gosec // not checking errors when writing to output
+				}
+				io.WriteString(tf.output, "\n\n") //nolint:errcheck,gosec // not checking errors when writing to output
+				tf.output.Write(debug.Stack())    //nolint:errcheck,gosec // not checking errors when writing to output
 				tf.failed = true
 			}
-			result := runResult{
+			result <- runResult{
 				failed:   tf.failed,
 				skipped:  tf.skipped,
 				duration: time.Since(from),
 			}
-			finished <- result
 		}()
 		action(tf)
+		finished = true
 	}()
-	return <-finished
+	return <-result
 }
 
 // log is used internally in order to provide proper prefix.
 func (tf *TF) log(args ...interface{}) {
 	txt := fmt.Sprint(args...)
 	txt = decorate(txt, skipCount)
-	io.WriteString(tf.output, txt) //nolint // not checking errors when writing to output
+	io.WriteString(tf.output, txt) //nolint:errcheck,gosec // not checking errors when writing to output
 }
 
 // lof is used internally in order to provide proper prefix.

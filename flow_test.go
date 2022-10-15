@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -159,17 +160,36 @@ func Test_skip(t *testing.T) {
 }
 
 func Test_task_panics(t *testing.T) {
-	flow := &goyek.Flow{Output: &strings.Builder{}}
-	flow.Define(goyek.Task{
-		Name: "task",
-		Action: func(tf *goyek.TF) {
-			panic("panicked!")
+	testCases := []struct {
+		desc   string
+		action func(tf *goyek.TF)
+	}{
+		{
+			desc:   "regular panic",
+			action: func(tf *goyek.TF) { panic("panicked!") },
 		},
-	})
+		{
+			desc:   "nil panic",
+			action: func(tf *goyek.TF) { panic(nil) },
+		},
+		{
+			desc:   "runtime.Goexit()",
+			action: func(tf *goyek.TF) { runtime.Goexit() },
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			flow := &goyek.Flow{Output: &strings.Builder{}}
+			flow.Define(goyek.Task{
+				Name:   "task",
+				Action: tc.action,
+			})
 
-	exitCode := flow.Run(context.Background(), "task")
+			exitCode := flow.Run(context.Background(), "task")
 
-	assertEqual(t, exitCode, 1, "should return error from first task")
+			assertEqual(t, exitCode, 1, "should return error from first task")
+		})
+	}
 }
 
 func Test_cancelation(t *testing.T) {
