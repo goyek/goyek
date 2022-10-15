@@ -489,13 +489,15 @@ func TestFlow_LogDecorator(t *testing.T) {
 	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {
-			tf.Log("msg")
+			tf.Log("first")
+			tf.Logf("second")
 		},
 	})
 
 	flow.Run(context.Background(), "task")
 
-	assertContains(t, out, "MSG", "should decorate the text")
+	assertContains(t, out, "FIRST", "should decorate Log")
+	assertContains(t, out, "SECOND", "should decorate Logf")
 }
 
 func assertTrue(tb testing.TB, got bool, msg string) {
