@@ -8,6 +8,12 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.2...HEAD)
 
+## Changed
+
+- Usually, the task does not call `panic` directly.
+  `panic` failure message no longer contains a prefix with file and line information.
+  The stack trace is printed instead.
+
 ### Fixed
 
 - Fix panic handling so that `panic(nil)` and `runtime.Goexit()` now cause task failure.
