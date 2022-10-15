@@ -11,9 +11,10 @@ import (
 )
 
 type flowRunner struct {
-	output  io.Writer
-	defined map[string]taskSnapshot
-	verbose bool
+	output       io.Writer
+	defined      map[string]taskSnapshot
+	verbose      bool
+	logDecorator func(string) string
 }
 
 // Run runs provided tasks and all their dependencies.
@@ -23,11 +24,11 @@ func (r *flowRunner) Run(ctx context.Context, tasks []string) bool {
 	executedTasks := map[string]bool{}
 	for _, name := range tasks {
 		if err := r.run(ctx, name, executedTasks); err != nil {
-			fmt.Fprintf(r.output, "%v\t%.3fs\n", err, time.Since(from).Seconds())
+			fmt.Fprintf(r.output, "%v\t%.3fs\n", err, time.Since(from).Seconds()) // TODO: move to Main
 			return false
 		}
 	}
-	fmt.Fprintf(r.output, "ok\t%.3fs\n", time.Since(from).Seconds())
+	fmt.Fprintf(r.output, "ok\t%.3fs\n", time.Since(from).Seconds()) // TODO: move to Main
 	return true
 }
 
@@ -70,9 +71,10 @@ func (r *flowRunner) runTask(ctx context.Context, task taskSnapshot) bool {
 
 	// run task
 	tf := &TF{
-		ctx:    ctx,
-		name:   task.name,
-		output: writer,
+		ctx:       ctx,
+		name:      task.name,
+		output:    writer,
+		decorator: r.logDecorator,
 	}
 	result := tf.run(task.action)
 
