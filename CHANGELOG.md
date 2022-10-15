@@ -8,6 +8,10 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.2...HEAD)
 
+### Fixed
+
+- Fix panic handling so that `panic(nil)` and `runtime.Goexit()` now cause task failure.
+
 ## [2.0.0-rc.2](https://github.com/goyek/goyek/compare/v2.0.0-rc.1...v2.0.0-rc.2)
 
 This release focuses on improving usability and encapsulation.

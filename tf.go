@@ -149,27 +149,32 @@ type runResult struct {
 // run executes the action in a separate goroutine to enable
 // interuption using runtime.Goexit().
 func (tf *TF) run(action func(tf *TF)) runResult {
-	finished := make(chan runResult, 1)
+	result := make(chan runResult, 1)
 	go func() {
+		finished := false
 		from := time.Now()
 		defer func() {
 			if r := recover(); r != nil {
 				txt := fmt.Sprintf("panic: %v", r)
-				const skipUntilPanic = 3
-				txt = decorate(txt, skipUntilPanic)
+				txt = decorate(txt, skipCount)
+				io.WriteString(tf.output, txt) //nolint // not checking errors when writing to output
+				tf.failed = true
+			} else if !finished && !tf.skipped && !tf.failed {
+				txt := "panic(nil) or runtime.Goexit() called"
+				txt = decorate(txt, skipCount)
 				io.WriteString(tf.output, txt) //nolint // not checking errors when writing to output
 				tf.failed = true
 			}
-			result := runResult{
+			result <- runResult{
 				failed:   tf.failed,
 				skipped:  tf.skipped,
 				duration: time.Since(from),
 			}
-			finished <- result
 		}()
 		action(tf)
+		finished = true
 	}()
-	return <-finished
+	return <-result
 }
 
 // log is used internally in order to provide proper prefix.
