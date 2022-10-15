@@ -154,13 +154,13 @@ func (tf *TF) run(action func(tf *TF)) runResult {
 		finished := false
 		from := time.Now()
 		defer func() {
-			if r := recover(); r != nil {
-				txt := fmt.Sprintf("panic: %v", r)
-				txt = decorate(txt, skipCount)
-				io.WriteString(tf.output, txt) //nolint // not checking errors when writing to output
-				tf.failed = true
-			} else if !finished && !tf.skipped && !tf.failed {
-				txt := "panic(nil) or runtime.Goexit() called"
+			if !finished && !tf.skipped && !tf.failed {
+				var txt string
+				if r := recover(); r != nil {
+					txt = fmt.Sprintf("panic: %v", r)
+				} else {
+					txt = "panic(nil) or runtime.Goexit() called"
+				}
 				txt = decorate(txt, skipCount)
 				io.WriteString(tf.output, txt) //nolint // not checking errors when writing to output
 				tf.failed = true
