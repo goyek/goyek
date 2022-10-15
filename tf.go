@@ -21,10 +21,11 @@ const skipCount = 3
 // All methods must be called only from the goroutine running the
 // Action function.
 type TF struct {
-	ctx    context.Context
-	name   string
-	output io.Writer
-	status status
+	ctx     context.Context
+	name    string
+	output  io.Writer
+	failed  bool
+	skipped bool
 }
 
 // Context returns the flows' run context.
@@ -81,12 +82,12 @@ func (tf *TF) Errorf(format string, args ...interface{}) {
 
 // Failed reports whether the function has failed.
 func (tf *TF) Failed() bool {
-	return tf.status == statusFailed
+	return tf.failed
 }
 
 // Fail marks the function as having failed but continues execution.
 func (tf *TF) Fail() {
-	tf.status = statusFailed
+	tf.failed = true
 }
 
 // Fatal is equivalent to Log followed by FailNow.
@@ -112,7 +113,7 @@ func (tf *TF) FailNow() {
 
 // Skipped reports whether the task was skipped.
 func (tf *TF) Skipped() bool {
-	return tf.status == statusSkipped
+	return tf.skipped
 }
 
 // Skip is equivalent to Log followed by SkipNow.
@@ -134,7 +135,7 @@ func (tf *TF) Skipf(format string, args ...interface{}) {
 // it is still considered to have failed.
 // Flow will continue at the next task.
 func (tf *TF) SkipNow() {
-	tf.status = statusSkipped
+	tf.skipped = true
 	runtime.Goexit()
 }
 
@@ -160,25 +161,22 @@ const (
 func (tf *TF) run(action func(tf *TF)) result {
 	ch := make(chan result, 1)
 	go func() {
-		var (
-			finished   bool
-			panicVal   interface{}
-			panicStack []byte
-		)
+		finished := false
 		defer func() {
-			ch <- result{tf.status, panicVal, panicStack}
-		}()
-		defer func() {
-			if tf.status != statusNotRun {
-				return
+			res := result{}
+			switch {
+			case tf.failed:
+				res.status = statusFailed
+			case tf.skipped:
+				res.status = statusSkipped
+			case finished:
+				res.status = statusPassed
+			default:
+				res.status = statusPanicked
+				res.panicValue = recover()
+				res.panicStack = debug.Stack()
 			}
-			if finished {
-				tf.status = statusPassed
-				return
-			}
-			tf.status = statusPanicked
-			panicVal = recover()
-			panicStack = debug.Stack()
+			ch <- res
 		}()
 		action(tf)
 		finished = true
