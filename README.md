@@ -131,7 +131,7 @@ For an existing repository you can copy most of its files.
 
 ## Features
 
-[example_test.go](example_test.go demonstrates the key features
+[example_test.go](example_test.go) demonstrates the key features
 of **goyek**.
 
 ### Wrapper scripts
