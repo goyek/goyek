@@ -236,9 +236,9 @@ func (f *Flow) Print() {
 
 	fmt.Fprintln(out, "Tasks:")
 	var (
-		minwidth      = 3
-		tabwidth      = 1
-		padding       = 3
+		minwidth      = 5
+		tabwidth      = 0
+		padding       = 2
 		padchar  byte = ' '
 	)
 	w := tabwriter.NewWriter(out, minwidth, tabwidth, padding, padchar, 0)
@@ -246,7 +246,11 @@ func (f *Flow) Print() {
 		if task.Usage() == "" {
 			continue
 		}
-		fmt.Fprintf(w, "\t%s\t%s\t%s\n", task.Name(), task.Usage(), strings.Join(task.Deps(), ", "))
+		deps := ""
+		if len(task.Deps()) > 0 {
+			deps = " (depends on: " + strings.Join(task.Deps(), ", ") + ")"
+		}
+		fmt.Fprintf(w, "  %s\t%s\n", task.Name(), task.Usage()+deps)
 	}
 	w.Flush() //nolint:errcheck,gosec // not checking errors when writing to output
 }
