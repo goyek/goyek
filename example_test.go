@@ -62,7 +62,7 @@ func Example() {
 	// parse the args
 	flag.Parse()
 
-	// configure interceptors
+	// configure middlewares
 	flow.Use(intercept.Reporter)
 	if !*verbose {
 		flow.Use(intercept.SilentNonFailed)

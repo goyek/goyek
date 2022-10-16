@@ -35,9 +35,9 @@ type Flow struct {
 	// DecorateLog by default.
 	LogDecorator func(string) string
 
-	tasks        map[string]taskSnapshot // snapshot of defined tasks
-	defaultTask  string                  // task to run when none is explicitly provided
-	interceptors []Interceptor
+	tasks       map[string]taskSnapshot // snapshot of defined tasks
+	defaultTask string                  // task to run when none is explicitly provided
+	middlewares []func(Runner) Runner
 }
 
 // taskSnapshot is a copy of the task to make the flow usage safer.
@@ -95,11 +95,13 @@ func (f *Flow) SetDefault(task DefinedTask) {
 }
 
 // Use banana.
-func (f *Flow) Use(interceptor Interceptor) {
-	if interceptor == nil {
-		panic("interceptor cannot be nil")
+func (f *Flow) Use(middlewares ...func(Runner) Runner) {
+	for _, m := range middlewares {
+		if m == nil {
+			panic("middleware cannot be nil")
+		}
+		f.middlewares = append(f.middlewares, m)
 	}
-	f.interceptors = append(f.interceptors, interceptor)
 }
 
 // Run runs provided tasks and all their dependencies.
@@ -130,14 +132,14 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 		return f.invalid()
 	}
 
-	var interceptors []Interceptor
-	interceptors = append(interceptors, f.interceptors...)
+	var middlewares []func(Runner) Runner
+	middlewares = append(middlewares, f.middlewares...)
 
 	r := &flowRunner{
 		output:       out,
 		defined:      f.tasks,
 		logDecorator: f.LogDecorator,
-		interceptors: interceptors,
+		middlewares:  middlewares,
 	}
 	if ctx == nil {
 		ctx = context.Background()

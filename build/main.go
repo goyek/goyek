@@ -65,7 +65,7 @@ func main() {
 
 	flag.Parse()
 
-	// configure interceptors
+	// configure middlewares
 	flow.Use(intercept.Reporter)
 	if !*verbose {
 		flow.Use(intercept.SilentNonFailed)

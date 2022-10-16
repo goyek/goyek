@@ -50,9 +50,6 @@ func (r taskRunner) run(in Input) Result {
 	return tf.run(r.action)
 }
 
-// Interceptor banana.
-type Interceptor func(Runner) Runner
-
 type syncWriter struct {
 	io.Writer
 	mtx sync.Mutex

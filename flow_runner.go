@@ -12,7 +12,7 @@ type flowRunner struct {
 	output       io.Writer
 	defined      map[string]taskSnapshot
 	logDecorator func(string) string
-	interceptors []Interceptor
+	middlewares  []func(Runner) Runner
 }
 
 // Run runs provided tasks and all their dependencies.
@@ -55,16 +55,16 @@ func (r *flowRunner) runTask(ctx context.Context, task taskSnapshot) bool {
 		return true
 	}
 
-	// prepare default interceptors
-	if len(r.interceptors) == 0 {
-		r.interceptors = append(r.interceptors, reporter)
+	// prepare default middlewares
+	if len(r.middlewares) == 0 {
+		r.middlewares = append(r.middlewares, reporter)
 	}
 
-	// prepare runner with interceptors
+	// prepare runner with middlewares
 	taskRunner := taskRunner{task.action}
 	runner := taskRunner.run
-	for _, interceptor := range r.interceptors {
-		runner = interceptor(runner)
+	for _, middleware := range r.middlewares {
+		runner = middleware(runner)
 	}
 
 	// run action
@@ -80,8 +80,8 @@ func (r *flowRunner) runTask(ctx context.Context, task taskSnapshot) bool {
 }
 
 func reporter(next Runner) Runner {
-	// this interceptor is copy-pasted from intercept/reporter.go
-	// in order to avoid cyclic reference, yet expose all the interceptors under one package
+	// this middleware is copy-pasted from intercept/reporter.go
+	// in order to avoid cyclic reference, yet expose all the middlewares under one package
 	return func(in Input) Result {
 		// report start task
 		fmt.Fprintf(in.Output, "===== TASK  %s\n", in.TaskName)
