@@ -6,8 +6,8 @@ var mod = flow.Define(goyek.Task{
 	Name:  "mod",
 	Usage: "go mod tidy",
 	Action: func(tf *goyek.TF) {
-		Exec(tf, rootDir, "go mod tidy")
-		Exec(tf, buildDir, "go mod tidy")
-		Exec(tf, toolsDir, "go mod tidy")
+		Exec(tf, dirRoot, "go mod tidy")
+		Exec(tf, dirBuild, "go mod tidy")
+		Exec(tf, dirTools, "go mod tidy")
 	},
 })

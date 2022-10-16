@@ -21,10 +21,10 @@ var mdlint = flow.Define(goyek.Task{
 		}
 
 		dockerTag := "markdownlint-cli"
-		Exec(tf, rootDir, "docker build -t "+dockerTag+" -f "+toolsDir+"/markdownlint-cli.dockerfile .")
+		Exec(tf, dirRoot, "docker build -t "+dockerTag+" -f "+dirTools+"/markdownlint-cli.dockerfile .")
 		if tf.Failed() {
 			return
 		}
-		Exec(tf, rootDir, "docker run --rm -v '"+curDir+":/workdir' "+dockerTag+" *.md")
+		Exec(tf, dirRoot, "docker run --rm -v '"+curDir+":/workdir' "+dockerTag+" *.md")
 	},
 })

@@ -12,12 +12,12 @@ var install = flow.Define(goyek.Task{
 	Action: func(tf *goyek.TF) {
 		tools := &strings.Builder{}
 		toolsCmd := tf.Cmd("go", "list", `-f={{ join .Imports " " }}`, "-tags=tools")
-		toolsCmd.Dir = toolsDir
+		toolsCmd.Dir = dirTools
 		toolsCmd.Stdout = tools
 		if err := toolsCmd.Run(); err != nil {
 			tf.Fatal(err)
 		}
 
-		Exec(tf, toolsDir, "go install "+strings.TrimSpace(tools.String()))
+		Exec(tf, dirTools, "go install "+strings.TrimSpace(tools.String()))
 	},
 })

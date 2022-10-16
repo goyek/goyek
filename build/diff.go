@@ -11,7 +11,7 @@ var diff = flow.Define(goyek.Task{
 	Name:  "diff",
 	Usage: "git diff",
 	Action: func(tf *goyek.TF) {
-		Exec(tf, rootDir, "git diff --exit-code")
+		Exec(tf, dirRoot, "git diff --exit-code")
 
 		tf.Log("Cmd: git status --porcelain")
 		cmd := tf.Cmd("git", "status", "--porcelain")

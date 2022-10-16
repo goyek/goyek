@@ -6,6 +6,10 @@ var test = flow.Define(goyek.Task{
 	Name:  "test",
 	Usage: "go test",
 	Action: func(tf *goyek.TF) {
-		Exec(tf, rootDir, "go test -race -covermode=atomic -coverprofile=coverage.out ./...")
+		verbose := ""
+		if *v {
+			verbose = "-v"
+		}
+		Exec(tf, dirRoot, "go test "+verbose+" -race -covermode=atomic -coverprofile=coverage.out ./...")
 	},
 })

@@ -19,7 +19,7 @@ const (
 
 // flags
 var (
-	verbose = flag.Bool("v", false, "print all tasks and tests as they are run")
+	v = flag.Bool("v", false, "print all tasks and tests as they are run")
 )
 
 var flow = &goyek.Flow{}
@@ -40,7 +40,7 @@ func main() {
 	flag.Parse()
 
 	flow.Use(middleware.Reporter)
-	if !*verbose {
+	if !*v {
 		flow.Use(middleware.SilentNonFailed)
 	}
 
