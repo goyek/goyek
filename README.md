@@ -31,12 +31,12 @@ Table of Contents:
 - [Features](#features)
   - [Wrapper scripts](#wrapper-scripts)
   - [Task registration](#task-registration)
-  - [Task action](#task-action)
-  - [Task dependencies](#task-dependencies)
-  - [Verbose mode](#verbose-mode)
   - [Running programs](#running-programs)
-  - [Parameters](#parameters)
-  - [Supported Go versions](#supported-go-versions)
+  - [Customization](#customization)
+    - [Parameters](#parameters)
+    - [Middlewares](#middlewares)
+    - [Custom printing](#custom-printing)
+- [Supported Go versions](#supported-go-versions)
 - [Alternatives](#alternatives)
   - [Make](#make)
   - [Mage](#mage)
@@ -165,18 +165,6 @@ The registered tasks are required to have a non-empty name.
 
 A task with a given name can be only registered once.
 
-Default task can be assigned using the `SetDefault` method.
-When the default task is set, then it is run if no task is provided.
-
-### Task action
-
-Task action is a function which is executed when a task is executed.
-
-It is not required to set a action.
-Not having a action is very handy when registering "pipelines".
-
-### Task dependencies
-
 During task registration it is possible to add a dependency
 to another registered task.
 
@@ -186,48 +174,27 @@ before the given task is run.
 
 Each task will be executed at most once.
 
-### Verbose mode
+Task action is a function which is executed when a task is executed.
 
-Enable verbose output by setting the `Verbose` field to `true`.
-It works similar to `go test -v`.
-When enabled it prints all tasks as they are run.
+It is not required to set a action.
+Not having a action is very handy when registering "pipelines".
 
-If it is disabled, only output from a failed task is printed.
+Default task can be assigned using the `SetDefault` method.
+When the default task is set, then it is run if no task is provided.
 
 ### Running programs
 
 Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.dev/github.com/goyek/goyek#TF.Cmd)
 to run a program inside a task's action.
 
-You can use it create your own helpers, for example:
-
-```go
-import (
-	"fmt"
-	"os/exec"
-
-	"github.com/goyek/goyek/v2"
-	"github.com/mattn/go-shellwords"
-)
-
-func Exec(cmdLine string) func(tf *goyek.TF) {
-	args, err := shellwords.Parse(cmdLine)
-	if err != nil {
-		panic(fmt.Sprintf("parse command line: %v", err))
-	}
-	return func(tf *goyek.TF) {
-    tf.Logf("Run %q", cmdLine)
-		if err := tf.Cmd(args[0], args[1:]...).Run(); err != nil {
-			tf.Error(err)
-		}
-	}
-}
-```
+You can also use it create your own helpers like `Exec` in [build/exec.go](build/exec.go).
 
 [Here](https://github.com/goyek/goyek/issues/60) is the explanation
 why argument splitting is not included out-of-the-box.
 
-### Parameters
+### Customization
+
+#### Parameters
 
 As of `v2` the parameters support has been removed
 in order to improve customization.
@@ -239,7 +206,21 @@ With the new API it is easy to integrate **goyek** with any of these packages:
 - [`viper`](https://github.com/spf13/viper)
 - [`cobra`](https://github.com/spf13/cobra)
 
-### Supported Go versions
+#### Middlewares
+
+> Describe
+
+Enable verbose output by setting the `Verbose` field to `true`.
+It works similar to `go test -v`.
+When enabled it prints all tasks as they are run.
+
+If it is disabled, only output from a failed task is printed.
+
+#### Custom printing
+
+> Describe all extensibility points to change the pritning.
+
+## Supported Go versions
 
 Minimal supported Go version is 1.11.
 

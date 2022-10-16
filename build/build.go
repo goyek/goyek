@@ -86,14 +86,11 @@ func main() { //nolint:funlen // build can be long as it is easier to read and m
 			}
 
 			dockerTag := "markdownlint-cli"
-			tf.Log(`Cmd "docker build"`)
-			if err := tf.Cmd("docker", "build", "-t", dockerTag, "-f", toolsDir+"/markdownlint-cli.dockerfile", ".").Run(); err != nil {
-				tf.Fatal(err)
+			Exec(tf, rootDir, "docker build -t "+dockerTag+" -f "+toolsDir+"/markdownlint-cli.dockerfile .")
+			if tf.Failed() {
+				return
 			}
-			tf.Log(`"Cmd "docker run"`)
-			if err := tf.Cmd("docker", "run", "--rm", "-v", curDir+":/workdir", dockerTag, "**/*.md").Run(); err != nil {
-				tf.Fatal(err)
-			}
+			Exec(tf, rootDir, "docker run --rm -v '"+curDir+":/workdir' "+dockerTag+" *.md")
 		},
 	})
 
@@ -167,17 +164,4 @@ func main() { //nolint:funlen // build can be long as it is easier to read and m
 
 	// run the build pipeline
 	flow.Main(os.Args[1:])
-}
-
-// Exec runs the command in given directory.
-// Returns true if it finished with 0 exit code.
-// Otherwise, reports error and returns false .
-func Exec(tf *goyek.TF, workDir, cmdLine string) {
-	tf.Logf("Run %q in %s", cmdLine, workDir)
-	args := strings.Split(cmdLine, " ")
-	cmd := tf.Cmd(args[0], args[1:]...)
-	cmd.Dir = workDir
-	if err := cmd.Run(); err != nil {
-		tf.Error(err)
-	}
 }
