@@ -31,8 +31,7 @@ type Flow struct {
 	// a custom error handler. By default it calls Print.
 	Usage func()
 
-	// Logger used by TF's logging functions to decorate the text.
-	// CodeLineLogDecorator by default.
+	// Logger used by TF's logging functions. CodeLineLogger by default.
 	//
 	// TODO: If Helper() is implemented then it is called when TF.Helper() is called.
 	Logger Logger
