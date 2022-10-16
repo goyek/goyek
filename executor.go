@@ -51,17 +51,17 @@ func (r *executor) run(ctx context.Context, name string, executed map[string]boo
 }
 
 func (r *executor) runTask(ctx context.Context, task taskSnapshot) bool {
-	if task.action == nil {
-		return true
+	// prepare runner
+	action := task.action
+	if action == nil {
+		action = func(tf *TF) {}
 	}
+	runner := NewRunner(action)
 
-	// prepare default middlewares
+	// apply defined middlewares or the default one
 	if len(r.middlewares) == 0 {
 		r.middlewares = append(r.middlewares, reporter)
 	}
-
-	// prepare runner with middlewares
-	runner := NewRunner(task.action)
 	for _, middleware := range r.middlewares {
 		runner = middleware(runner)
 	}
@@ -94,8 +94,10 @@ func reporter(next Runner) Runner {
 		switch res.Status {
 		case StatusFailed:
 			status = "FAIL"
-		case StatusNotRun, StatusSkipped:
+		case StatusSkipped:
 			status = "SKIP"
+		case StatusNotRun:
+			status = "NOOP"
 		}
 		fmt.Fprintf(in.Output, "----- %s: %s (%.2fs)\n", status, in.TaskName, time.Since(start).Seconds())
 

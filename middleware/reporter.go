@@ -23,8 +23,10 @@ func Reporter(next goyek.Runner) goyek.Runner {
 		switch res.Status {
 		case goyek.StatusFailed:
 			status = "FAIL"
-		case goyek.StatusNotRun, goyek.StatusSkipped:
+		case goyek.StatusSkipped:
 			status = "SKIP"
+		case goyek.StatusNotRun:
+			status = "NOOP"
 		}
 		fmt.Fprintf(in.Output, "----- %s: %s (%.2fs)\n", status, in.TaskName, time.Since(start).Seconds())
 

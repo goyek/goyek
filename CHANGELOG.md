@@ -13,6 +13,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Add `Flow.LogDecorator` for setting a custom log decorator.
   that is used by `TF` logging methods.
 - Add `CodeLineLogDecorator` which is the default for `Flow.LogDecorator`.
+- Add `NOOP` status report for tasks that were intentionally not run
+  to differentiate from being skipped during execution.
 
 ## Changed
 
@@ -21,6 +23,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   The stack trace is printed instead. The behavior is based on `testing` package.
 - `Flow.Main` changes the working directory to parent.
 - Rename `Flow.Run` to `Flow.Execute` to reduce possible confusion with `Runner`.
+- Report `PASS` for a task without an action.
 
 ### Fixed
 
