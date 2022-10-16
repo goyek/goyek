@@ -164,19 +164,31 @@ func (f *Flow) invalid() int {
 // It exits the current program when after the run is finished
 // or SIGINT was send to interrupt the execution.
 func (f *Flow) Main(args []string) {
+	out := f.Output
+	if out == nil {
+		out = os.Stdout
+	}
+
 	// trap Ctrl+C and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		<-c // first signal, cancel context
-		fmt.Fprintln(f.Output, "first interrupt, graceful stop")
+		fmt.Fprintln(out, "first interrupt, graceful stop")
 		cancel()
 
 		<-c // second signal, hard exit
-		fmt.Fprintln(f.Output, "second interrupt, exit")
+		fmt.Fprintln(out, "second interrupt, exit")
 		os.Exit(CodeFail)
 	}()
+
+	// change working directory to repo root (per convention)
+	if err := os.Chdir(".."); err != nil {
+		fmt.Println(err)
+		fmt.Fprintln(out, err)
+		os.Exit(CodeInvalidArgs)
+	}
 
 	// run flow
 	exitCode := f.Run(ctx, args...)

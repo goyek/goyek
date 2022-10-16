@@ -42,12 +42,6 @@ func Example() {
 	// set the pipeline as the default task
 	flow.SetDefault(all)
 
-	// change working directory to repo root
-	if err := os.Chdir(".."); err != nil {
-		fmt.Println(err)
-		os.Exit(goyek.CodeInvalidArgs)
-	}
-
 	// run the build pipeline
 	flow.Main(os.Args[1:])
 
@@ -100,12 +94,6 @@ func Example_flag() {
 	flow.Use(middleware.Reporter)
 	if !*verbose {
 		flow.Use(middleware.SilentNonFailed)
-	}
-
-	// change working directory to repo root
-	if err := os.Chdir(".."); err != nil {
-		fmt.Println(err)
-		os.Exit(goyek.CodeInvalidArgs)
 	}
 
 	// run the build pipeline
