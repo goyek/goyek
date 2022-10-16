@@ -116,7 +116,7 @@ ok      0.001s
 ## Examples
 
 - [example_test.go](example_test.go) -
-  a demonstrative example
+  demonstrative examples
 - [build](build) -
   this repository's own build pipeline (dogfooding)
 - [splunk-otel-go](https://github.com/signalfx/splunk-otel-go/tree/main/build) -

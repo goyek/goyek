@@ -204,6 +204,7 @@ func (f *Flow) Default() DefinedTask {
 
 // Print prints, to os.Stdout unless configured otherwise,
 // the information about the registered tasks.
+// Tasks with empty Usage are not printed.
 func (f *Flow) Print() {
 	out := f.Output
 	if out == nil {
@@ -223,6 +224,9 @@ func (f *Flow) Print() {
 	)
 	w := tabwriter.NewWriter(out, minwidth, tabwidth, padding, padchar, 0)
 	for _, task := range f.Tasks() {
+		if task.Usage() == "" {
+			continue
+		}
 		fmt.Fprintf(w, "\t%s\t%s\t%s\n", task.Name(), task.Usage(), strings.Join(task.Deps(), ", "))
 	}
 	w.Flush() //nolint:errcheck,gosec // not checking errors when writing to output

@@ -15,7 +15,7 @@ jobs:
         with:
           go-version: '1.19'
       - name: Build
-        run: ./goyek.sh -v -ci
+        run: ./goyek.sh ci
       - name: Upload HTML coverage
         uses: actions/upload-artifact@v3.1.0
         with:

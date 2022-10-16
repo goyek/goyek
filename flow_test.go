@@ -446,6 +446,20 @@ func TestFlow_Default_empty(t *testing.T) {
 	assertEqual(t, got, nil, "should return nil")
 }
 
+func TestFlow_Print(t *testing.T) {
+	out := &strings.Builder{}
+	flow := &goyek.Flow{Output: out}
+	task := flow.Define(goyek.Task{Name: "task", Usage: "use it"})
+	flow.Define(goyek.Task{Name: "hidden"})
+	flow.SetDefault(task)
+
+	flow.Print()
+
+	assertContains(t, out, "use it", "should print the usage of the task")
+	assertContains(t, out, "Default task: task", "should print the default task")
+	assertNotContains(t, out, "hidden", "should not print task with no usage")
+}
+
 func TestFlow_Usage_default(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{Output: out}
@@ -501,6 +515,15 @@ func assertContains(tb testing.TB, got fmt.Stringer, want string, msg string) {
 		return
 	}
 	tb.Errorf("%s\nGOT:\n%s\nSHOULD CONTAIN:\n%s", msg, gotTxt, want)
+}
+
+func assertNotContains(tb testing.TB, got fmt.Stringer, want string, msg string) {
+	tb.Helper()
+	gotTxt := got.String()
+	if !strings.Contains(gotTxt, want) {
+		return
+	}
+	tb.Errorf("%s\nGOT:\n%s\nSHOULD NOT CONTAIN:\n%s", msg, gotTxt, want)
 }
 
 func requireEqual(tb testing.TB, got interface{}, want interface{}, msg string) {

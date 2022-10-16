@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -16,18 +17,29 @@ const (
 	toolsDir = "tools"
 )
 
-func taskClean() goyek.Task {
-	return goyek.Task{
+func main() { //nolint:funlen // build can be long as it is easier to read and maintain
+	// tasks
+	flow := &goyek.Flow{}
+
+	clean := flow.Define(goyek.Task{
 		Name:  "clean",
 		Usage: "remove git ignored files",
 		Action: func(tf *goyek.TF) {
 			Exec(tf, rootDir, "git clean -fXd")
 		},
-	}
-}
+	})
 
-func taskInstall() goyek.Task {
-	return goyek.Task{
+	mod := flow.Define(goyek.Task{
+		Name:  "mod",
+		Usage: "go mod tidy",
+		Action: func(tf *goyek.TF) {
+			Exec(tf, rootDir, "go mod tidy")
+			Exec(tf, buildDir, "go mod tidy")
+			Exec(tf, toolsDir, "go mod tidy")
+		},
+	})
+
+	install := flow.Define(goyek.Task{
 		Name:  "install",
 		Usage: "go install tools",
 		Action: func(tf *goyek.TF) {
@@ -41,21 +53,26 @@ func taskInstall() goyek.Task {
 
 			Exec(tf, toolsDir, "go install "+strings.TrimSpace(tools.String()))
 		},
-	}
-}
+	})
 
-func taskBuild() goyek.Task {
-	return goyek.Task{
-		Name:  "build",
-		Usage: "go build",
+	golint := flow.Define(goyek.Task{
+		Name:  "golint",
+		Usage: "golangci-lint run --fix",
 		Action: func(tf *goyek.TF) {
-			Exec(tf, rootDir, "go build ./...")
+			Exec(tf, rootDir, "golangci-lint run --fix")
+			Exec(tf, buildDir, "golangci-lint run --fix")
 		},
-	}
-}
+	})
 
-func taskMarkdownLint() goyek.Task {
-	return goyek.Task{
+	spell := flow.Define(goyek.Task{
+		Name:  "spell",
+		Usage: "misspell",
+		Action: func(tf *goyek.TF) {
+			Exec(tf, rootDir, "misspell -error -locale=US -i=importas -w .")
+		},
+	})
+
+	mdlint := flow.Define(goyek.Task{
 		Name:  "mdlint",
 		Usage: "markdownlint-cli (uses docker)",
 		Action: func(tf *goyek.TF) {
@@ -78,61 +95,20 @@ func taskMarkdownLint() goyek.Task {
 				tf.Fatal(err)
 			}
 		},
-	}
-}
+	})
 
-func taskMisspell() goyek.Task {
-	return goyek.Task{
-		Name:  "spell",
-		Usage: "misspell",
-		Action: func(tf *goyek.TF) {
-			Exec(tf, rootDir, "misspell -error -locale=US -i=importas -w .")
-		},
-	}
-}
-
-func taskGolangciLint() goyek.Task {
-	return goyek.Task{
-		Name:  "golint",
-		Usage: "golangci-lint run --fix",
-		Action: func(tf *goyek.TF) {
-			Exec(tf, rootDir, "golangci-lint run --fix")
-			Exec(tf, buildDir, "golangci-lint run --fix")
-		},
-	}
-}
-
-func taskTest() goyek.Task {
-	return goyek.Task{
+	test := flow.Define(goyek.Task{
 		Name:  "test",
 		Usage: "go test",
 		Action: func(tf *goyek.TF) {
 			Exec(tf, rootDir, "go test -race -covermode=atomic -coverprofile=coverage.out ./...")
 		},
-	}
-}
+	})
 
-func taskModTidy() goyek.Task {
-	return goyek.Task{
-		Name:  "mod",
-		Usage: "go mod tidy",
-		Action: func(tf *goyek.TF) {
-			Exec(tf, rootDir, "go mod tidy")
-			Exec(tf, buildDir, "go mod tidy")
-			Exec(tf, toolsDir, "go mod tidy")
-		},
-	}
-}
-
-func taskDiff(ci *bool) goyek.Task {
-	return goyek.Task{
+	diff := flow.Define(goyek.Task{
 		Name:  "diff",
 		Usage: "git diff",
 		Action: func(tf *goyek.TF) {
-			if !*ci {
-				tf.Skip("ci param is not set, skipping")
-			}
-
 			Exec(tf, rootDir, "git diff --exit-code")
 
 			tf.Log("Cmd: git status --porcelain")
@@ -146,21 +122,62 @@ func taskDiff(ci *bool) goyek.Task {
 				tf.Error("git status --porcelain returned output")
 			}
 		},
-	}
-}
+	})
 
-func taskLint(deps goyek.Deps) goyek.Task {
-	return goyek.Task{
+	// pipelines
+	lint := flow.Define(goyek.Task{
 		Name:  "lint",
 		Usage: "all linters",
-		Deps:  deps,
-	}
-}
+		Deps: goyek.Deps{
+			golint,
+			spell,
+			mdlint,
+		},
+	})
 
-func taskAll(deps goyek.Deps) goyek.Task {
-	return goyek.Task{
+	all := flow.Define(goyek.Task{
 		Name:  "all",
 		Usage: "build pipeline",
-		Deps:  deps,
+		Deps: goyek.Deps{
+			clean,
+			mod,
+			install,
+			lint,
+			test,
+		},
+	})
+
+	flow.Define(goyek.Task{
+		Name:  "ci",
+		Usage: "CI build pipeline",
+		Deps: goyek.Deps{
+			all,
+			diff,
+		},
+	})
+
+	// set the build pipeline as the default task
+	flow.SetDefault(all)
+
+	// change working directory to repo root
+	if err := os.Chdir(".."); err != nil {
+		fmt.Println(err)
+		os.Exit(goyek.CodeInvalidArgs)
+	}
+
+	// run the build pipeline
+	flow.Main(os.Args[1:])
+}
+
+// Exec runs the command in given directory.
+// Returns true if it finished with 0 exit code.
+// Otherwise, reports error and returns false .
+func Exec(tf *goyek.TF, workDir, cmdLine string) {
+	tf.Logf("Run %q in %s", cmdLine, workDir)
+	args := strings.Split(cmdLine, " ")
+	cmd := tf.Cmd(args[0], args[1:]...)
+	cmd.Dir = workDir
+	if err := cmd.Run(); err != nil {
+		tf.Error(err)
 	}
 }
