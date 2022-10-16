@@ -8,16 +8,16 @@ import (
 	"time"
 )
 
-type flowRunner struct {
+type executor struct {
 	output       io.Writer
 	defined      map[string]taskSnapshot
 	logDecorator LogDecorator
 	middlewares  []func(Runner) Runner
 }
 
-// Run runs provided tasks and all their dependencies.
+// Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (r *flowRunner) Run(ctx context.Context, tasks []string) bool {
+func (r *executor) Execute(ctx context.Context, tasks []string) bool {
 	from := time.Now()
 	executedTasks := map[string]bool{}
 	for _, name := range tasks {
@@ -30,7 +30,7 @@ func (r *flowRunner) Run(ctx context.Context, tasks []string) bool {
 	return true
 }
 
-func (r *flowRunner) run(ctx context.Context, name string, executed map[string]bool) error {
+func (r *executor) run(ctx context.Context, name string, executed map[string]bool) error {
 	task := r.defined[name]
 	if executed[name] {
 		return nil
@@ -50,7 +50,7 @@ func (r *flowRunner) run(ctx context.Context, name string, executed map[string]b
 	return nil
 }
 
-func (r *flowRunner) runTask(ctx context.Context, task taskSnapshot) bool {
+func (r *executor) runTask(ctx context.Context, task taskSnapshot) bool {
 	if task.action == nil {
 		return true
 	}
@@ -77,9 +77,10 @@ func (r *flowRunner) runTask(ctx context.Context, task taskSnapshot) bool {
 	return result.Status != StatusFailed
 }
 
+// reporter is a middleware is copy-pasted from middleware/reporter.go
+// It is done so to avoid cyclic reference, yet to expose all the middlewares
+// under one package for a more user-friendly API.
 func reporter(next Runner) Runner {
-	// this middleware is copy-pasted from middleware/reporter.go
-	// in order to avoid cyclic reference, yet expose all the middlewares under one package
 	return func(in Input) Result {
 		// report start task
 		fmt.Fprintf(in.Output, "===== TASK  %s\n", in.TaskName)

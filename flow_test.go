@@ -69,15 +69,15 @@ func Test_successful(t *testing.T) {
 		return []int{executed1, executed2, executed3}
 	}
 
-	exitCode := flow.Run(ctx, "task-1")
+	exitCode := flow.Execute(ctx, "task-1")
 	requireEqual(t, exitCode, 0, "first execution should pass")
 	requireEqual(t, got(), []int{1, 0, 0}, "should execute task 1")
 
-	exitCode = flow.Run(ctx, "task-2")
+	exitCode = flow.Execute(ctx, "task-2")
 	requireEqual(t, exitCode, 0, "second execution should pass")
 	requireEqual(t, got(), []int{2, 1, 0}, "should execute task 1 and 2")
 
-	exitCode = flow.Run(ctx, "task-1", "task-2", "task-3")
+	exitCode = flow.Execute(ctx, "task-1", "task-2", "task-3")
 	requireEqual(t, exitCode, 0, "third execution should pass")
 	requireEqual(t, got(), []int{3, 2, 1}, "should execute task 1 and 2 and 3")
 }
@@ -115,7 +115,7 @@ func Test_dependency_failure(t *testing.T) {
 		return []int{executed1, executed2, executed3}
 	}
 
-	exitCode := flow.Run(context.Background(), "task-2", "task-3")
+	exitCode := flow.Execute(context.Background(), "task-2", "task-3")
 
 	assertEqual(t, exitCode, 1, "should return error from first task")
 	assertEqual(t, got(), []int{11, 0, 0}, "should execute task 1")
@@ -134,7 +134,7 @@ func Test_fail(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "task")
+	exitCode := flow.Execute(context.Background(), "task")
 
 	assertEqual(t, exitCode, 1, "should return error")
 	assertTrue(t, failed, "tf.Failed() should return true")
@@ -153,7 +153,7 @@ func Test_skip(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "task")
+	exitCode := flow.Execute(context.Background(), "task")
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertTrue(t, skipped, "tf.Skipped() should return true")
@@ -185,7 +185,7 @@ func Test_task_panics(t *testing.T) {
 				Action: tc.action,
 			})
 
-			exitCode := flow.Run(context.Background(), "task")
+			exitCode := flow.Execute(context.Background(), "task")
 
 			assertEqual(t, exitCode, 1, "should return error from first task")
 		})
@@ -200,7 +200,7 @@ func Test_cancelation(t *testing.T) {
 		Name: "task",
 	})
 
-	exitCode := flow.Run(ctx, "task")
+	exitCode := flow.Execute(ctx, "task")
 
 	assertEqual(t, exitCode, 1, "should return error canceled")
 }
@@ -216,7 +216,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(ctx, "task")
+	exitCode := flow.Execute(ctx, "task")
 
 	assertEqual(t, exitCode, 0, "should pass as the flow completed")
 }
@@ -227,7 +227,7 @@ func Test_empty_action(t *testing.T) {
 		Name: "task",
 	})
 
-	exitCode := flow.Run(context.Background(), "task")
+	exitCode := flow.Execute(context.Background(), "task")
 
 	assertEqual(t, exitCode, 0, "should pass")
 }
@@ -252,7 +252,7 @@ func Test_invalid_args(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			exitCode := flow.Run(context.Background(), tc.args...)
+			exitCode := flow.Execute(context.Background(), tc.args...)
 
 			assertEqual(t, exitCode, 2, "should return error bad args")
 		})
@@ -282,7 +282,7 @@ func Test_printing(t *testing.T) {
 		},
 	})
 
-	flow.Run(context.Background(), "failing")
+	flow.Execute(context.Background(), "failing")
 
 	assertContains(t, out, "Skipf 0", "should contain proper output from \"skipped\" task")
 	assertContains(t, out, "Fatalf 5", "should contain proper output from \"failing\" task")
@@ -306,7 +306,7 @@ func Test_concurrent_printing(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "task")
+	exitCode := flow.Execute(context.Background(), "task")
 
 	assertEqual(t, exitCode, goyek.CodeFail, "should fail")
 	assertContains(t, out, "from child goroutine", "should contain log from child goroutine")
@@ -324,7 +324,7 @@ func Test_name(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), taskName)
+	exitCode := flow.Execute(context.Background(), taskName)
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertEqual(t, got, taskName, "should return proper Name value")
@@ -341,7 +341,7 @@ func Test_output(t *testing.T) {
 		},
 	})
 
-	flow.Run(context.Background(), "task")
+	flow.Execute(context.Background(), "task")
 
 	assertContains(t, out, msg, "should contain message send via output")
 }
@@ -357,7 +357,7 @@ func Test_SetDefault(t *testing.T) {
 	})
 	flow.SetDefault(task)
 
-	exitCode := flow.Run(context.Background())
+	exitCode := flow.Execute(context.Background())
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertTrue(t, taskRan, "task should have run")
@@ -390,7 +390,7 @@ func TestCmd_success(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), taskName)
+	exitCode := flow.Execute(context.Background(), taskName)
 
 	assertContains(t, out, "go version go", "output should contain prefix of version report")
 	assertEqual(t, exitCode, goyek.CodePass, "task should pass")
@@ -408,7 +408,7 @@ func TestCmd_error(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(nil, taskName) //nolint:staticcheck // present that nil context is handled
+	exitCode := flow.Execute(nil, taskName) //nolint:staticcheck // present that nil context is handled
 
 	assertEqual(t, exitCode, goyek.CodeFail, "task should pass")
 }
@@ -466,7 +466,7 @@ func TestFlow_Usage_default(t *testing.T) {
 	task := flow.Define(goyek.Task{Name: "task"})
 	flow.SetDefault(task)
 
-	exitCode := flow.Run(context.Background(), "bad")
+	exitCode := flow.Execute(context.Background(), "bad")
 
 	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should work when invalid code returned")
 	assertContains(t, out, "Tasks:", "should print the default usage if not overridden")
@@ -477,7 +477,7 @@ func TestFlow_Usage_custom(t *testing.T) {
 	called := false
 	flow.Usage = func() { called = true }
 
-	exitCode := flow.Run(context.Background(), "bad")
+	exitCode := flow.Execute(context.Background(), "bad")
 
 	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should work when invalid code returned")
 	assertTrue(t, called, "should invoke the custom message instead")
@@ -494,7 +494,7 @@ func TestFlow_LogDecorator(t *testing.T) {
 		},
 	})
 
-	flow.Run(context.Background(), "task")
+	flow.Execute(context.Background(), "task")
 
 	assertContains(t, out, "FIRST", "should decorate Log")
 	assertContains(t, out, "SECOND", "should decorate Logf")

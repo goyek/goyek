@@ -30,7 +30,7 @@ Table of Contents:
 - [Repository template](#repository-template)
 - [Features](#features)
   - [Wrapper scripts](#wrapper-scripts)
-  - [Task registration](#task-registration)
+  - [Defining tasks](#defining-tasks)
   - [Running programs](#running-programs)
   - [Customization](#customization)
     - [Parameters](#parameters)
@@ -159,23 +159,18 @@ curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.2/goyek.ps1 -
 git add --chmod=+x goyek.sh goyek.ps1
 ```
 
-### Task registration
+### Defining tasks
 
-The registered tasks are required to have a non-empty name.
-
-A task with a given name can be only registered once.
+You can define a task with a given (non-empty) name only once.
 
 During task registration it is possible to add a dependency
 to another registered task.
-
-When the flow is processed,
-it makes sure that the dependency is executed
-before the given task is run.
-
+The dependencies are executed in sequential order.
+Therefore, if possible, you should order them from the fastest
+to the slowest.
 Each task will be executed at most once.
 
-Task action is a function which is executed when a task is executed.
-
+The task action is a function which is executed when a task is executed.
 It is not required to set a action.
 Not having a action is very handy when registering "pipelines".
 

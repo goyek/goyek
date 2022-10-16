@@ -106,9 +106,9 @@ func (f *Flow) Use(middlewares ...func(Runner) Runner) {
 	}
 }
 
-// Run runs provided tasks and all their dependencies.
+// Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (f *Flow) Run(ctx context.Context, args ...string) int {
+func (f *Flow) Execute(ctx context.Context, args ...string) int {
 	out := f.Output
 	if out == nil {
 		out = os.Stdout
@@ -142,7 +142,7 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 	var middlewares []func(Runner) Runner
 	middlewares = append(middlewares, f.middlewares...)
 
-	r := &flowRunner{
+	r := &executor{
 		output:       out,
 		defined:      f.tasks,
 		logDecorator: decorator,
@@ -151,7 +151,7 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	if !r.Run(ctx, tasks) {
+	if !r.Execute(ctx, tasks) {
 		return CodeFail
 	}
 	return CodePass
@@ -198,7 +198,7 @@ func (f *Flow) Main(args []string) {
 	}
 
 	// run flow
-	exitCode := f.Run(ctx, args...)
+	exitCode := f.Execute(ctx, args...)
 	os.Exit(exitCode)
 }
 

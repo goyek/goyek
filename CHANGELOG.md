@@ -20,6 +20,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   `panic` failure message no longer contains a prefix with file and line information.
   The stack trace is printed instead. The behavior is based on `testing` package.
 - `Flow.Main` changes the working directory to parent.
+- Rename `Flow.Run` to `Flow.Execute` to reduce possible confusion with `Runner`.
 
 ### Fixed
 

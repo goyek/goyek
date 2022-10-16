@@ -12,7 +12,7 @@ import (
 
 // TF is a type passed to Task's Action function to manage task state.
 //
-// A Task ends when its Action function returns or calls any of the methods
+// A task ends when its Action function returns or calls any of the methods
 // FailNow, Fatal, Fatalf, SkipNow, Skip, or Skipf.
 //
 // All methods must be called only from the goroutine running the
