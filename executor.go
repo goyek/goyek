@@ -2,7 +2,6 @@ package goyek
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -44,7 +43,7 @@ func (r *executor) run(ctx context.Context, name string, executed map[string]boo
 		return err
 	}
 	if !r.runTask(ctx, task) {
-		return errors.New("task failed")
+		return fmt.Errorf("task failed: %s", task.name)
 	}
 	executed[name] = true
 	return nil
