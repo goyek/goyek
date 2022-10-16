@@ -3,6 +3,7 @@ package goyek
 import (
 	"context"
 	"io"
+	"io/ioutil"
 	"sync"
 )
 
@@ -53,7 +54,7 @@ func (r taskRunner) run(in Input) Result {
 
 	out := in.Output
 	if out == nil {
-		out = io.Discard
+		out = ioutil.Discard
 	}
 
 	decorator := in.LogDecorator
