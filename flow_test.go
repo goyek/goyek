@@ -483,9 +483,9 @@ func TestFlow_Usage_custom(t *testing.T) {
 	assertTrue(t, called, "should invoke the custom message instead")
 }
 
-func TestFlow_LogDecorator(t *testing.T) {
+func TestFlow_Logger(t *testing.T) {
 	out := &strings.Builder{}
-	flow := &goyek.Flow{Output: out, LogDecorator: goyek.LogDecoratorFunc(strings.ToUpper)}
+	flow := &goyek.Flow{Output: out, Logger: goyek.FmtLogger{}}
 	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {
@@ -496,8 +496,8 @@ func TestFlow_LogDecorator(t *testing.T) {
 
 	flow.Execute(context.Background(), "task")
 
-	assertContains(t, out, "FIRST", "should decorate Log")
-	assertContains(t, out, "SECOND", "should decorate Logf")
+	assertContains(t, out, "first", "should call Log")
+	assertContains(t, out, "second", "should call Logf")
 }
 
 func assertTrue(tb testing.TB, got bool, msg string) {

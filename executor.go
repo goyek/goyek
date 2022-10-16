@@ -9,10 +9,10 @@ import (
 )
 
 type executor struct {
-	output       io.Writer
-	defined      map[string]taskSnapshot
-	logDecorator LogDecorator
-	middlewares  []func(Runner) Runner
+	output      io.Writer
+	defined     map[string]taskSnapshot
+	logger      Logger
+	middlewares []func(Runner) Runner
 }
 
 // Execute runs provided tasks and all their dependencies.
@@ -68,10 +68,10 @@ func (r *executor) runTask(ctx context.Context, task taskSnapshot) bool {
 
 	// run action
 	in := Input{
-		Context:      ctx,
-		TaskName:     task.name,
-		Output:       r.output,
-		LogDecorator: r.logDecorator,
+		Context:  ctx,
+		TaskName: task.name,
+		Output:   r.output,
+		Logger:   r.logger,
 	}
 	result := runner(in)
 	return result.Status != StatusFailed

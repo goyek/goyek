@@ -31,11 +31,11 @@ type Flow struct {
 	// a custom error handler. By default it calls Print.
 	Usage func()
 
-	// LogDecorator used by TF's logging functions to decorate the text.
+	// Logger used by TF's logging functions to decorate the text.
 	// CodeLineLogDecorator by default.
 	//
 	// TODO: If Helper() is implemented then it is called when TF.Helper() is called.
-	LogDecorator LogDecorator
+	Logger Logger
 
 	tasks       map[string]taskSnapshot // snapshot of defined tasks
 	defaultTask string                  // task to run when none is explicitly provided
@@ -114,9 +114,9 @@ func (f *Flow) Execute(ctx context.Context, args ...string) int {
 		out = os.Stdout
 	}
 
-	decorator := f.LogDecorator
-	if decorator == nil {
-		decorator = &CodeLineLogDecorator{}
+	logger := f.Logger
+	if logger == nil {
+		logger = &CodeLineLogger{}
 	}
 
 	var tasks []string
@@ -143,10 +143,10 @@ func (f *Flow) Execute(ctx context.Context, args ...string) int {
 	middlewares = append(middlewares, f.middlewares...)
 
 	r := &executor{
-		output:       out,
-		defined:      f.tasks,
-		logDecorator: decorator,
-		middlewares:  middlewares,
+		output:      out,
+		defined:     f.tasks,
+		logger:      logger,
+		middlewares: middlewares,
 	}
 	if ctx == nil {
 		ctx = context.Background()

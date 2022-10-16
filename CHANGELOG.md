@@ -10,9 +10,10 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
-- Add `Flow.LogDecorator` for setting a custom log decorator.
+- Add `Flow.Logger` for setting a custom log decorator.
   that is used by `TF` logging methods.
-- Add `CodeLineLogDecorator` which is the default for `Flow.LogDecorator`.
+- Add `CodeLineLogger` which is the default for `Flow.LogDecorator`.
+- Add `FmtLogger` which is the default when using `NewRunner`.
 - Add `NOOP` status report for tasks that were intentionally not run
   to differentiate from being skipped during execution.
 

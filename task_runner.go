@@ -9,10 +9,10 @@ import (
 
 // Input banana.
 type Input struct {
-	Context      context.Context
-	TaskName     string
-	Output       io.Writer
-	LogDecorator LogDecorator
+	Context  context.Context
+	TaskName string
+	Output   io.Writer
+	Logger   Logger
 }
 
 // Result banana.
@@ -57,16 +57,16 @@ func (r taskRunner) run(in Input) Result {
 		out = ioutil.Discard
 	}
 
-	decorator := in.LogDecorator
-	if decorator == nil {
-		decorator = LogDecoratorFunc(func(s string) string { return s })
+	logger := in.Logger
+	if logger == nil {
+		logger = FmtLogger{}
 	}
 
 	tf := &TF{
-		ctx:       ctx,
-		name:      in.TaskName,
-		output:    &syncWriter{Writer: out},
-		decorator: decorator,
+		ctx:    ctx,
+		name:   in.TaskName,
+		output: &syncWriter{Writer: out},
+		logger: logger,
 	}
 
 	return tf.run(r.action)
