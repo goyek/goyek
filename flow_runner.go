@@ -92,6 +92,8 @@ func (w *syncWriter) Write(p []byte) (int, error) {
 }
 
 func reporter(next Runner) Runner {
+	// this interceptor is copy-pasted from intercept/reporter.go
+	// in order to avoid cyclic reference, yet expose all the interceptors under one package
 	return func(in Input) Result {
 		// report start task
 		fmt.Fprintf(in.Output, "===== TASK  %s\n", in.TaskName)
