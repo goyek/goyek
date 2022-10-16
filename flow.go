@@ -24,8 +24,7 @@ const (
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
 type Flow struct {
-	Output  io.Writer // output where text is printed; os.Stdout by default
-	Verbose bool      // control the printing
+	Output io.Writer // output where text is printed; os.Stdout by default
 
 	// Usage is the function called when an error occurs while parsing tasks.
 	// The field is a function that may be changed to point to
@@ -36,8 +35,9 @@ type Flow struct {
 	// DecorateLog by default.
 	LogDecorator func(string) string
 
-	tasks       map[string]taskSnapshot // snapshot of defined tasks
-	defaultTask string                  // task to run when none is explicitly provided
+	tasks        map[string]taskSnapshot // snapshot of defined tasks
+	defaultTask  string                  // task to run when none is explicitly provided
+	interceptors []Interceptor
 }
 
 // taskSnapshot is a copy of the task to make the flow usage safer.
@@ -94,6 +94,14 @@ func (f *Flow) SetDefault(task DefinedTask) {
 	f.defaultTask = task.Name()
 }
 
+// Use banana.
+func (f *Flow) Use(interceptor Interceptor) {
+	if interceptor == nil {
+		panic("interceptor cannot be nil")
+	}
+	f.interceptors = append(f.interceptors, interceptor)
+}
+
 // Run runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (f *Flow) Run(ctx context.Context, args ...string) int {
@@ -122,11 +130,14 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 		return f.invalid()
 	}
 
+	var interceptors []Interceptor
+	interceptors = append(interceptors, f.interceptors...)
+
 	r := &flowRunner{
 		output:       out,
 		defined:      f.tasks,
-		verbose:      f.Verbose,
 		logDecorator: f.LogDecorator,
+		interceptors: interceptors,
 	}
 	if ctx == nil {
 		ctx = context.Background()

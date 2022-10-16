@@ -1,19 +1,22 @@
-package goyek
+package intercept
 
 import (
 	"io"
 	"strings"
+
+	"github.com/goyek/goyek/v2"
 )
 
-func silentNonFailed(next runner) runner {
-	return func(in input) result {
+// SilentNonFailed banana.
+func SilentNonFailed(next goyek.Runner) goyek.Runner {
+	return func(in goyek.Input) goyek.Result {
 		orginalOut := in.Output
 		streamWriter := &strings.Builder{}
 		in.Output = streamWriter
 
 		result := next(in)
 
-		if result.status == statusFailed || result.status == statusPanicked {
+		if result.Status == goyek.StatusFailed || result.Status == goyek.StatusPanicked {
 			io.Copy(orginalOut, strings.NewReader(streamWriter.String())) //nolint:errcheck,gosec // not checking errors when writing to output
 		}
 

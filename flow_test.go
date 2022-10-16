@@ -262,8 +262,7 @@ func Test_invalid_args(t *testing.T) {
 func Test_printing(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{
-		Output:  out,
-		Verbose: true,
+		Output: out,
 	}
 	skipped := flow.Define(goyek.Task{
 		Name: "skipped",
@@ -290,40 +289,28 @@ func Test_printing(t *testing.T) {
 }
 
 func Test_concurrent_printing(t *testing.T) {
-	testCases := []struct {
-		verbose bool
-	}{
-		{verbose: false},
-		{verbose: true},
+	out := &strings.Builder{}
+	flow := goyek.Flow{
+		Output: out,
 	}
-	for _, tc := range testCases {
-		testName := fmt.Sprintf("Verbose:%v", tc.verbose)
-		t.Run(testName, func(t *testing.T) {
-			out := &strings.Builder{}
-			flow := goyek.Flow{
-				Output:  out,
-				Verbose: tc.verbose,
-			}
-			flow.Define(goyek.Task{
-				Name: "task",
-				Action: func(tf *goyek.TF) {
-					ch := make(chan struct{})
-					go func() {
-						defer func() { ch <- struct{}{} }()
-						tf.Log("from child goroutine\nwith new line")
-					}()
-					tf.Error("from main goroutine")
-					<-ch
-				},
-			})
+	flow.Define(goyek.Task{
+		Name: "task",
+		Action: func(tf *goyek.TF) {
+			ch := make(chan struct{})
+			go func() {
+				defer func() { ch <- struct{}{} }()
+				tf.Log("from child goroutine\nwith new line")
+			}()
+			tf.Error("from main goroutine")
+			<-ch
+		},
+	})
 
-			exitCode := flow.Run(context.Background(), "task")
+	exitCode := flow.Run(context.Background(), "task")
 
-			assertEqual(t, exitCode, goyek.CodeFail, "should fail")
-			assertContains(t, out, "from child goroutine", "should contain log from child goroutine")
-			assertContains(t, out, "from main goroutine", "should contain log from main goroutine")
-		})
-	}
+	assertEqual(t, exitCode, goyek.CodeFail, "should fail")
+	assertContains(t, out, "from child goroutine", "should contain log from child goroutine")
+	assertContains(t, out, "from main goroutine", "should contain log from main goroutine")
 }
 
 func Test_name(t *testing.T) {
@@ -345,7 +332,7 @@ func Test_name(t *testing.T) {
 
 func Test_output(t *testing.T) {
 	out := &strings.Builder{}
-	flow := &goyek.Flow{Output: out, Verbose: true}
+	flow := &goyek.Flow{Output: out}
 	msg := "hello there"
 	flow.Define(goyek.Task{
 		Name: "task",
@@ -392,8 +379,7 @@ func TestCmd_success(t *testing.T) {
 	taskName := "exec"
 	out := &strings.Builder{}
 	flow := &goyek.Flow{
-		Output:  out,
-		Verbose: true,
+		Output: out,
 	}
 	flow.Define(goyek.Task{
 		Name: taskName,
@@ -485,7 +471,7 @@ func TestFlow_Usage_custom(t *testing.T) {
 
 func TestFlow_LogDecorator(t *testing.T) {
 	out := &strings.Builder{}
-	flow := &goyek.Flow{Output: out, Verbose: true, LogDecorator: strings.ToUpper}
+	flow := &goyek.Flow{Output: out, LogDecorator: strings.ToUpper}
 	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {

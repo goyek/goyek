@@ -138,42 +138,25 @@ func (tf *TF) SkipNow() {
 	runtime.Goexit()
 }
 
-type result struct {
-	status     status
-	panicValue interface{}
-	panicStack []byte
-}
-
-// status represents the status of an action run.
-type status uint8
-
-const (
-	statusNotRun status = iota
-	statusPassed
-	statusPanicked
-	statusFailed
-	statusSkipped
-)
-
 // run executes the action in a separate goroutine to enable
 // interuption using runtime.Goexit().
-func (tf *TF) run(action func(tf *TF)) result {
-	ch := make(chan result, 1)
+func (tf *TF) run(action func(tf *TF)) Result {
+	ch := make(chan Result, 1)
 	go func() {
 		finished := false
 		defer func() {
-			res := result{}
+			res := Result{}
 			switch {
 			case tf.failed:
-				res.status = statusFailed
+				res.Status = StatusFailed
 			case tf.skipped:
-				res.status = statusSkipped
+				res.Status = StatusSkipped
 			case finished:
-				res.status = statusPassed
+				res.Status = StatusPassed
 			default:
-				res.status = statusPanicked
-				res.panicValue = recover()
-				res.panicStack = debug.Stack()
+				res.Status = StatusPanicked
+				res.PanicValue = recover()
+				res.PanicStack = debug.Stack()
 			}
 			ch <- res
 		}()

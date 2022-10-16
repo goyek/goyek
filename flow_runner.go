@@ -12,8 +12,8 @@ import (
 type flowRunner struct {
 	output       io.Writer
 	defined      map[string]taskSnapshot
-	verbose      bool
 	logDecorator func(string) string
+	interceptors []Interceptor
 }
 
 // Run runs provided tasks and all their dependencies.
@@ -57,28 +57,26 @@ func (r *flowRunner) runTask(ctx context.Context, task taskSnapshot) bool {
 	}
 
 	// prepare default interceptors
-	var interceptors []interceptor
-	interceptors = append(interceptors, reporter)
-	if !r.verbose {
-		interceptors = append(interceptors, silentNonFailed)
+	if len(r.interceptors) == 0 {
+		r.interceptors = append(r.interceptors, reporter)
 	}
 
 	// prepare runner with interceptors
 	taskRunner := taskRunner{task.action}
 	runner := taskRunner.run
-	for _, interceptor := range interceptors {
+	for _, interceptor := range r.interceptors {
 		runner = interceptor(runner)
 	}
 
 	// run action
-	in := input{
+	in := Input{
 		Context:      ctx,
 		TaskName:     task.name,
 		Output:       r.output,
 		LogDecorator: r.logDecorator,
 	}
 	result := runner(in)
-	passed := result.status != statusFailed && result.status != statusPanicked
+	passed := result.Status != StatusFailed && result.Status != StatusPanicked
 	return passed
 }
 
@@ -91,4 +89,38 @@ func (w *syncWriter) Write(p []byte) (int, error) {
 	defer func() { w.mtx.Unlock() }()
 	w.mtx.Lock()
 	return w.Writer.Write(p)
+}
+
+func reporter(next Runner) Runner {
+	return func(in Input) Result {
+		// report start task
+		fmt.Fprintf(in.Output, "===== TASK  %s\n", in.TaskName)
+		start := time.Now()
+
+		// run
+		res := next(in)
+
+		// report task end
+		status := "PASS"
+		switch res.Status {
+		case StatusFailed, StatusPanicked:
+			status = "FAIL"
+		case StatusNotRun, StatusSkipped:
+			status = "SKIP"
+		}
+		fmt.Fprintf(in.Output, "----- %s: %s (%.2fs)\n", status, in.TaskName, time.Since(start).Seconds())
+
+		// report panic if happened
+		if res.Status == StatusPanicked {
+			if res.PanicValue != nil {
+				io.WriteString(in.Output, fmt.Sprintf("panic: %v", res.PanicValue)) //nolint:errcheck,gosec // not checking errors when writing to output
+			} else {
+				io.WriteString(in.Output, "panic(nil) or runtime.Goexit() called") //nolint:errcheck,gosec // not checking errors when writing to output
+			}
+			io.WriteString(in.Output, "\n\n") //nolint:errcheck,gosec // not checking errors when writing to output
+			in.Output.Write(res.PanicStack)   //nolint:errcheck,gosec // not checking errors when writing to output
+		}
+
+		return res
+	}
 }

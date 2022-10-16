@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v2/intercept"
 )
 
 func Example() {
@@ -14,7 +15,7 @@ func Example() {
 	flag.CommandLine.SetOutput(os.Stdout)
 
 	// define a flag to configure flow verbosity
-	flag.BoolVar(&flow.Verbose, "v", true, "print all tasks as they are run")
+	verbose := flag.Bool("v", true, "print all tasks as they are run")
 
 	// define a flag used by a task
 	msg := flag.String("msg", "hello world", `message to display by "hi" task`)
@@ -60,6 +61,12 @@ func Example() {
 
 	// parse the args
 	flag.Parse()
+
+	// configure interceptors
+	flow.Use(intercept.Reporter)
+	if !*verbose {
+		flow.Use(intercept.SilentNonFailed)
+	}
 
 	// change working directory to repo root
 	if err := os.Chdir(".."); err != nil {

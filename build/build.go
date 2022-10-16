@@ -2,7 +2,6 @@
 package main
 
 import (
-	"flag"
 	"io"
 	"os"
 	"os/exec"
@@ -10,42 +9,6 @@ import (
 
 	"github.com/goyek/goyek/v2"
 )
-
-func configure() {
-	// flags
-	flag.BoolVar(&flow.Verbose, "v", false, "print all tasks as they are run")
-	ci := flag.Bool("ci", false, "whether CI is calling")
-
-	// tasks
-	clean := flow.Define(taskClean())
-	modTidy := flow.Define(taskModTidy())
-	install := flow.Define(taskInstall())
-	build := flow.Define(taskBuild())
-	markdownlint := flow.Define(taskMarkdownLint())
-	misspell := flow.Define(taskMisspell())
-	golangciLint := flow.Define(taskGolangciLint())
-	test := flow.Define(taskTest())
-	diff := flow.Define(taskDiff(ci))
-
-	// pipelines
-	lint := flow.Define(taskLint(goyek.Deps{
-		misspell,
-		markdownlint,
-		golangciLint,
-	}))
-	all := flow.Define(taskAll(goyek.Deps{
-		clean,
-		modTidy,
-		install,
-		build,
-		lint,
-		test,
-		diff,
-	}))
-
-	// set default task
-	flow.SetDefault(all)
-}
 
 const (
 	rootDir  = "."

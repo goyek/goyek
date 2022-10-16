@@ -5,20 +5,41 @@ import (
 	"io"
 )
 
-type input struct {
+// Input banana.
+type Input struct {
 	Context      context.Context
 	TaskName     string
 	Output       io.Writer
 	LogDecorator func(string) string
 }
 
-type runner func(input) result
+// Result banana.
+type Result struct {
+	Status     Status
+	PanicValue interface{}
+	PanicStack []byte
+}
+
+// Status represents the Status of an action run.
+type Status uint8
+
+// Statuses banana.
+const (
+	StatusNotRun Status = iota
+	StatusPassed
+	StatusPanicked
+	StatusFailed
+	StatusSkipped
+)
+
+// Runner banana.
+type Runner func(Input) Result
 
 type taskRunner struct {
 	action func(tf *TF)
 }
 
-func (r taskRunner) run(in input) result {
+func (r taskRunner) run(in Input) Result {
 	tf := &TF{
 		ctx:       in.Context,
 		name:      in.TaskName,
@@ -28,4 +49,5 @@ func (r taskRunner) run(in input) result {
 	return tf.run(r.action)
 }
 
-type interceptor func(runner) runner
+// Interceptor banana.
+type Interceptor func(Runner) Runner
