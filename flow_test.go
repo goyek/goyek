@@ -485,7 +485,7 @@ func TestFlow_Usage_custom(t *testing.T) {
 
 func TestFlow_LogDecorator(t *testing.T) {
 	out := &strings.Builder{}
-	flow := &goyek.Flow{Output: out, LogDecorator: strings.ToUpper}
+	flow := &goyek.Flow{Output: out, LogDecorator: goyek.LogDecoratorFunc(strings.ToUpper)}
 	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {

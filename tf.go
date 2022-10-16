@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"runtime"
 	"runtime/debug"
-	"strings"
 )
 
 // TF is a type passed to Task's Action function to manage task state.
@@ -22,7 +21,7 @@ type TF struct {
 	ctx       context.Context
 	name      string
 	output    io.Writer
-	decorator func(string) string
+	decorator LogDecorator
 	failed    bool
 	skipped   bool
 }
@@ -169,58 +168,13 @@ func (tf *TF) run(action func(tf *TF)) Result {
 // log is used internally in order to provide proper prefix.
 func (tf *TF) log(args ...interface{}) {
 	txt := fmt.Sprint(args...)
-	if tf.decorator != nil {
-		txt = tf.decorator(txt)
-	} else {
-		txt = DecorateLog(txt)
-	}
+	txt = tf.decorator.Decorate(txt)
 	io.WriteString(tf.output, txt) //nolint:errcheck,gosec // not checking errors when writing to output
 }
 
 // lof is used internally in order to provide proper prefix.
 func (tf *TF) logf(format string, args ...interface{}) {
 	txt := fmt.Sprintf(format, args...)
-	if tf.decorator != nil {
-		txt = tf.decorator(txt)
-	} else {
-		txt = DecorateLog(txt)
-	}
+	txt = tf.decorator.Decorate(txt)
 	io.WriteString(tf.output, txt) //nolint:errcheck,gosec // not checking errors when writing to output
-}
-
-// DecorateLog prefixes the string with the file and line of the call site
-// and inserts the final newline and indentation spaces for formatting.
-func DecorateLog(s string) string {
-	const skip = 3
-	_, file, line, _ := runtime.Caller(skip)
-	if file != "" {
-		// Truncate file name at last file name separator.
-		if index := strings.LastIndex(file, "/"); index >= 0 {
-			file = file[index+1:]
-		} else if index = strings.LastIndex(file, "\\"); index >= 0 {
-			file = file[index+1:]
-		}
-	} else {
-		file = "???"
-	}
-	if line == 0 {
-		line = 1
-	}
-	buf := &strings.Builder{}
-	// Every line is indented at least 6 spaces.
-	buf.WriteString("      ")
-	fmt.Fprintf(buf, "%s:%d: ", file, line)
-	lines := strings.Split(s, "\n")
-	if l := len(lines); l > 1 && lines[l-1] == "" {
-		lines = lines[:l-1]
-	}
-	for i, line := range lines {
-		if i > 0 {
-			// Second and subsequent lines are indented an additional 4 spaces.
-			buf.WriteString("\n          ")
-		}
-		buf.WriteString(line)
-	}
-	buf.WriteByte('\n')
-	return buf.String()
 }

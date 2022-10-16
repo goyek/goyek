@@ -10,9 +10,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
-- Add `Flow.LogDecorator` for setting a custom log decorator
+- Add `Flow.LogDecorator` for setting a custom log decorator.
   that is used by `TF` logging methods.
-- Add `DecorateLog` function which is the default `Flow.LogDecorator`.
+- Add `CodeLineLogDecorator` which is the default for `Flow.LogDecorator`.
 
 ## Changed
 

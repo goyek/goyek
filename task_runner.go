@@ -11,7 +11,7 @@ type Input struct {
 	Context      context.Context
 	TaskName     string
 	Output       io.Writer
-	LogDecorator func(string) string
+	LogDecorator LogDecorator
 }
 
 // Result banana.
@@ -46,12 +46,28 @@ type taskRunner struct {
 }
 
 func (r taskRunner) run(in Input) Result {
-	tf := &TF{
-		ctx:       in.Context,
-		name:      in.TaskName,
-		output:    &syncWriter{Writer: in.Output},
-		decorator: in.LogDecorator,
+	ctx := in.Context
+	if ctx == nil {
+		ctx = context.Background()
 	}
+
+	out := in.Output
+	if out == nil {
+		out = io.Discard
+	}
+
+	decorator := in.LogDecorator
+	if decorator == nil {
+		decorator = LogDecoratorFunc(func(s string) string { return s })
+	}
+
+	tf := &TF{
+		ctx:       ctx,
+		name:      in.TaskName,
+		output:    &syncWriter{Writer: out},
+		decorator: decorator,
+	}
+
 	return tf.run(r.action)
 }
 

@@ -11,7 +11,7 @@ import (
 type flowRunner struct {
 	output       io.Writer
 	defined      map[string]taskSnapshot
-	logDecorator func(string) string
+	logDecorator LogDecorator
 	middlewares  []func(Runner) Runner
 }
 

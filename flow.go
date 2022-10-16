@@ -32,8 +32,10 @@ type Flow struct {
 	Usage func()
 
 	// LogDecorator used by TF's logging functions to decorate the text.
-	// DecorateLog by default.
-	LogDecorator func(string) string
+	// CodeLineLogDecorator by default.
+	//
+	// TODO: If Helper() is implemented then it is called when TF.Helper() is called.
+	LogDecorator LogDecorator
 
 	tasks       map[string]taskSnapshot // snapshot of defined tasks
 	defaultTask string                  // task to run when none is explicitly provided
@@ -112,6 +114,11 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 		out = os.Stdout
 	}
 
+	decorator := f.LogDecorator
+	if decorator == nil {
+		decorator = &CodeLineLogDecorator{}
+	}
+
 	var tasks []string
 	for _, arg := range args {
 		if arg == "" {
@@ -138,7 +145,7 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 	r := &flowRunner{
 		output:       out,
 		defined:      f.tasks,
-		logDecorator: f.LogDecorator,
+		logDecorator: decorator,
 		middlewares:  middlewares,
 	}
 	if ctx == nil {
