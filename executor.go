@@ -58,10 +58,7 @@ func (r *executor) runTask(ctx context.Context, task taskSnapshot) bool {
 	}
 	runner := NewRunner(action)
 
-	// apply defined middlewares or the default one
-	if len(r.middlewares) == 0 {
-		r.middlewares = append(r.middlewares, reporter)
-	}
+	// apply defined middlewares
 	for _, middleware := range r.middlewares {
 		runner = middleware(runner)
 	}
@@ -75,43 +72,4 @@ func (r *executor) runTask(ctx context.Context, task taskSnapshot) bool {
 	}
 	result := runner(in)
 	return result.Status != StatusFailed
-}
-
-// reporter is a middleware is copy-pasted from middleware/reporter.go
-// It is done so to avoid cyclic reference, yet to expose all the middlewares
-// under one package for a more user-friendly API.
-func reporter(next Runner) Runner {
-	return func(in Input) Result {
-		// report start task
-		fmt.Fprintf(in.Output, "===== TASK  %s\n", in.TaskName)
-		start := time.Now()
-
-		// run
-		res := next(in)
-
-		// report task end
-		status := "PASS"
-		switch res.Status {
-		case StatusFailed:
-			status = "FAIL"
-		case StatusSkipped:
-			status = "SKIP"
-		case StatusNotRun:
-			status = "NOOP"
-		}
-		fmt.Fprintf(in.Output, "----- %s: %s (%.2fs)\n", status, in.TaskName, time.Since(start).Seconds())
-
-		// report panic if happened
-		if res.PanicStack != nil {
-			if res.PanicValue != nil {
-				io.WriteString(in.Output, fmt.Sprintf("panic: %v", res.PanicValue)) //nolint:errcheck,gosec // not checking errors when writing to output
-			} else {
-				io.WriteString(in.Output, "panic(nil) or runtime.Goexit() called") //nolint:errcheck,gosec // not checking errors when writing to output
-			}
-			io.WriteString(in.Output, "\n\n") //nolint:errcheck,gosec // not checking errors when writing to output
-			in.Output.Write(res.PanicStack)   //nolint:errcheck,gosec // not checking errors when writing to output
-		}
-
-		return res
-	}
 }
