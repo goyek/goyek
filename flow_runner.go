@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 	"sync"
 	"time"
 )
@@ -57,54 +56,29 @@ func (r *flowRunner) runTask(ctx context.Context, task taskSnapshot) bool {
 		return true
 	}
 
-	writer := r.output
-	var streamWriter *strings.Builder
+	// prepare default interceptors
+	var interceptors []interceptor
+	interceptors = append(interceptors, reporter)
 	if !r.verbose {
-		streamWriter = &strings.Builder{}
-		writer = streamWriter
-	}
-	writer = &syncWriter{Writer: writer}
-
-	// report task start
-	fmt.Fprintf(writer, "===== TASK  %s\n", task.name)
-	start := time.Now()
-
-	// run task
-	tf := &TF{
-		ctx:       ctx,
-		name:      task.name,
-		output:    writer,
-		decorator: r.logDecorator,
-	}
-	result := tf.run(task.action)
-
-	// report task end
-	status := "PASS"
-	passed := true
-	switch result.status {
-	case statusFailed, statusPanicked:
-		status = "FAIL"
-		passed = false
-	case statusNotRun, statusSkipped:
-		status = "SKIP"
-	}
-	fmt.Fprintf(writer, "----- %s: %s (%.2fs)\n", status, task.name, time.Since(start).Seconds())
-
-	// report panic if happened
-	if result.status == statusPanicked {
-		if result.panicValue != nil {
-			io.WriteString(tf.output, fmt.Sprintf("panic: %v", result.panicValue)) //nolint:errcheck,gosec // not checking errors when writing to output
-		} else {
-			io.WriteString(tf.output, "panic(nil) or runtime.Goexit() called") //nolint:errcheck,gosec // not checking errors when writing to output
-		}
-		io.WriteString(tf.output, "\n\n")  //nolint:errcheck,gosec // not checking errors when writing to output
-		tf.output.Write(result.panicStack) //nolint:errcheck,gosec // not checking errors when writing to output
+		interceptors = append(interceptors, silentNonFailed)
 	}
 
-	if streamWriter != nil && !passed {
-		io.Copy(r.output, strings.NewReader(streamWriter.String())) //nolint:errcheck,gosec // not checking errors when writing to output
+	// prepare runner with interceptors
+	taskRunner := taskRunner{task.action}
+	runner := taskRunner.run
+	for _, interceptor := range interceptors {
+		runner = interceptor(runner)
 	}
 
+	// run action
+	in := input{
+		Context:      ctx,
+		TaskName:     task.name,
+		Output:       r.output,
+		LogDecorator: r.logDecorator,
+	}
+	result := runner(in)
+	passed := result.status != statusFailed && result.status != statusPanicked
 	return passed
 }
 
