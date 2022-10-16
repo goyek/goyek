@@ -107,9 +107,7 @@ Run:
 ```shell
 $ go mod tidy
 $ go run . hello
-===== TASK  hello
       main.go:14: Hello world!
------ PASS: hello (0.00s)
 ok      0.001s
 ```
 

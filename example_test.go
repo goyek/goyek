@@ -42,6 +42,9 @@ func Example() {
 	// set the pipeline as the default task
 	flow.SetDefault(all)
 
+	// configure middlewares
+	flow.Use(middleware.Reporter)
+
 	// run the build pipeline
 	flow.Main(os.Args[1:])
 
