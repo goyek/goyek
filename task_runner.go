@@ -3,6 +3,7 @@ package goyek
 import (
 	"context"
 	"io"
+	"sync"
 )
 
 // Input banana.
@@ -51,3 +52,14 @@ func (r taskRunner) run(in Input) Result {
 
 // Interceptor banana.
 type Interceptor func(Runner) Runner
+
+type syncWriter struct {
+	io.Writer
+	mtx sync.Mutex
+}
+
+func (w *syncWriter) Write(p []byte) (int, error) {
+	defer func() { w.mtx.Unlock() }()
+	w.mtx.Lock()
+	return w.Writer.Write(p)
+}
