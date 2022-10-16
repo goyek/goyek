@@ -74,8 +74,7 @@ func (r *flowRunner) runTask(ctx context.Context, task taskSnapshot) bool {
 		LogDecorator: r.logDecorator,
 	}
 	result := runner(in)
-	passed := result.Status != StatusFailed && result.Status != StatusPanicked
-	return passed
+	return result.Status != StatusFailed
 }
 
 func reporter(next Runner) Runner {
@@ -92,7 +91,7 @@ func reporter(next Runner) Runner {
 		// report task end
 		status := "PASS"
 		switch res.Status {
-		case StatusFailed, StatusPanicked:
+		case StatusFailed:
 			status = "FAIL"
 		case StatusNotRun, StatusSkipped:
 			status = "SKIP"
@@ -100,7 +99,7 @@ func reporter(next Runner) Runner {
 		fmt.Fprintf(in.Output, "----- %s: %s (%.2fs)\n", status, in.TaskName, time.Since(start).Seconds())
 
 		// report panic if happened
-		if res.Status == StatusPanicked {
+		if res.PanicStack != nil {
 			if res.PanicValue != nil {
 				io.WriteString(in.Output, fmt.Sprintf("panic: %v", res.PanicValue)) //nolint:errcheck,gosec // not checking errors when writing to output
 			} else {

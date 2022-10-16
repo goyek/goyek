@@ -154,7 +154,7 @@ func (tf *TF) run(action func(tf *TF)) Result {
 			case finished:
 				res.Status = StatusPassed
 			default:
-				res.Status = StatusPanicked
+				res.Status = StatusFailed
 				res.PanicValue = recover()
 				res.PanicStack = debug.Stack()
 			}

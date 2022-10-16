@@ -28,7 +28,6 @@ type Status uint8
 const (
 	StatusNotRun Status = iota
 	StatusPassed
-	StatusPanicked
 	StatusFailed
 	StatusSkipped
 )
