@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/goyek/goyek/v2"
-	"github.com/goyek/goyek/v2/intercept"
+	"github.com/goyek/goyek/v2/middleware"
 )
 
 func Example() {
@@ -63,9 +63,9 @@ func Example() {
 	flag.Parse()
 
 	// configure middlewares
-	flow.Use(intercept.Reporter)
+	flow.Use(middleware.Reporter)
 	if !*verbose {
-		flow.Use(intercept.SilentNonFailed)
+		flow.Use(middleware.SilentNonFailed)
 	}
 
 	// change working directory to repo root

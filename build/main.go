@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/goyek/goyek/v2"
-	"github.com/goyek/goyek/v2/intercept"
+	"github.com/goyek/goyek/v2/middleware"
 )
 
 var flow = &goyek.Flow{}
@@ -66,9 +66,9 @@ func main() {
 	flag.Parse()
 
 	// configure middlewares
-	flow.Use(intercept.Reporter)
+	flow.Use(middleware.Reporter)
 	if !*verbose {
-		flow.Use(intercept.SilentNonFailed)
+		flow.Use(middleware.SilentNonFailed)
 	}
 
 	flow.Main(flag.Args())

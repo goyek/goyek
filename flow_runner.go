@@ -79,7 +79,7 @@ func (r *flowRunner) runTask(ctx context.Context, task taskSnapshot) bool {
 }
 
 func reporter(next Runner) Runner {
-	// this middleware is copy-pasted from intercept/reporter.go
+	// this middleware is copy-pasted from middleware/reporter.go
 	// in order to avoid cyclic reference, yet expose all the middlewares under one package
 	return func(in Input) Result {
 		// report start task
