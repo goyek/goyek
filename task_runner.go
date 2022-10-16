@@ -36,6 +36,12 @@ const (
 // Runner banana.
 type Runner func(Input) Result
 
+// NewRunner banana.
+func NewRunner(action func(tf *TF)) Runner {
+	r := taskRunner{action: action}
+	return r.run
+}
+
 type taskRunner struct {
 	action func(tf *TF)
 }

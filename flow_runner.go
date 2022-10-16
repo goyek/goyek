@@ -61,8 +61,7 @@ func (r *flowRunner) runTask(ctx context.Context, task taskSnapshot) bool {
 	}
 
 	// prepare runner with middlewares
-	taskRunner := taskRunner{task.action}
-	runner := taskRunner.run
+	runner := NewRunner(task.action)
 	for _, middleware := range r.middlewares {
 		runner = middleware(runner)
 	}
