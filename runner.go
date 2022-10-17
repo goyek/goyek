@@ -4,26 +4,33 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"runtime/debug"
 	"sync"
 )
 
-// Input received by the task runner.
-type Input struct {
-	Context  context.Context
-	TaskName string
-	Output   io.Writer
-	Logger   Logger
-}
+// Task runner types.
+type (
+	// Runner represents a task runner function.
+	Runner func(Input) Result
 
-// Result of a task run.
-type Result struct {
-	Status     Status
-	PanicValue interface{}
-	PanicStack []byte
-}
+	// Input received by the task runner.
+	Input struct {
+		Context  context.Context
+		TaskName string
+		Output   io.Writer
+		Logger   Logger
+	}
 
-// Status represents the status of a task run.
-type Status uint8
+	// Result of a task run.
+	Result struct {
+		Status     Status
+		PanicValue interface{}
+		PanicStack []byte
+	}
+
+	// Status of a task run.
+	Status uint8
+)
 
 // Statuses of task run.
 const (
@@ -33,13 +40,11 @@ const (
 	StatusSkipped
 )
 
-// Runner represents a task runner function.
-type Runner func(Input) Result
-
 // NewRunner returns a task runner used by Flow.
 //
 // It can be useful when for testing and debugging
 // a task action or middleware.
+//
 // The following defaults are set for Input
 // (take notice that they are different than Flow defaults):
 //
@@ -59,6 +64,8 @@ type taskRunner struct {
 	action func(tf *TF)
 }
 
+// run executes the action in a separate goroutine to enable
+// interuption using runtime.Goexit().
 func (r taskRunner) run(in Input) Result {
 	ctx := in.Context
 	if ctx == nil {
@@ -82,7 +89,29 @@ func (r taskRunner) run(in Input) Result {
 		logger: logger,
 	}
 
-	return tf.run(r.action)
+	ch := make(chan Result, 1)
+	go func() {
+		finished := false
+		defer func() {
+			res := Result{}
+			switch {
+			case tf.Failed():
+				res.Status = StatusFailed
+			case tf.Skipped():
+				res.Status = StatusSkipped
+			case finished:
+				res.Status = StatusPassed
+			default:
+				res.Status = StatusFailed
+				res.PanicValue = recover()
+				res.PanicStack = debug.Stack()
+			}
+			ch <- res
+		}()
+		r.action(tf)
+		finished = true
+	}()
+	return <-ch
 }
 
 type syncWriter struct {
