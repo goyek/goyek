@@ -2,29 +2,27 @@ package goyek
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"runtime"
 	"runtime/debug"
-	"strings"
 )
 
 // TF is a type passed to Task's Action function to manage task state.
 //
-// A Task ends when its Action function returns or calls any of the methods
+// A task ends when its Action function returns or calls any of the methods
 // FailNow, Fatal, Fatalf, SkipNow, Skip, or Skipf.
 //
 // All methods must be called only from the goroutine running the
 // Action function.
 type TF struct {
-	ctx       context.Context
-	name      string
-	output    io.Writer
-	decorator func(string) string
-	failed    bool
-	skipped   bool
+	ctx     context.Context
+	name    string
+	output  io.Writer
+	logger  Logger
+	failed  bool
+	skipped bool
 }
 
 // Context returns the flows' run context.
@@ -57,25 +55,25 @@ func (tf *TF) Cmd(name string, args ...string) *exec.Cmd {
 // and prints the text to Output. A final newline is added.
 // The text will be printed only if the task fails or flow is run in Verbose mode.
 func (tf *TF) Log(args ...interface{}) {
-	tf.log(args...)
+	tf.logger.Log(tf.output, args...)
 }
 
 // Logf formats its arguments according to the format, analogous to Printf,
 // and prints the text to Output. A final newline is added.
 // The text will be printed only if the task fails or flow is run in Verbose mode.
 func (tf *TF) Logf(format string, args ...interface{}) {
-	tf.logf(format, args...)
+	tf.logger.Logf(tf.output, format, args...)
 }
 
 // Error is equivalent to Log followed by Fail.
 func (tf *TF) Error(args ...interface{}) {
-	tf.log(args...)
+	tf.logger.Log(tf.output, args...)
 	tf.Fail()
 }
 
 // Errorf is equivalent to Logf followed by Fail.
 func (tf *TF) Errorf(format string, args ...interface{}) {
-	tf.logf(format, args...)
+	tf.logger.Logf(tf.output, format, args...)
 	tf.Fail()
 }
 
@@ -91,13 +89,13 @@ func (tf *TF) Fail() {
 
 // Fatal is equivalent to Log followed by FailNow.
 func (tf *TF) Fatal(args ...interface{}) {
-	tf.log(args...)
+	tf.logger.Log(tf.output, args...)
 	tf.FailNow()
 }
 
 // Fatalf is equivalent to Logf followed by FailNow.
 func (tf *TF) Fatalf(format string, args ...interface{}) {
-	tf.logf(format, args...)
+	tf.logger.Logf(tf.output, format, args...)
 	tf.FailNow()
 }
 
@@ -117,13 +115,13 @@ func (tf *TF) Skipped() bool {
 
 // Skip is equivalent to Log followed by SkipNow.
 func (tf *TF) Skip(args ...interface{}) {
-	tf.log(args...)
+	tf.logger.Log(tf.output, args...)
 	tf.SkipNow()
 }
 
 // Skipf is equivalent to Logf followed by SkipNow.
 func (tf *TF) Skipf(format string, args ...interface{}) {
-	tf.logf(format, args...)
+	tf.logger.Logf(tf.output, format, args...)
 	tf.SkipNow()
 }
 
@@ -138,42 +136,25 @@ func (tf *TF) SkipNow() {
 	runtime.Goexit()
 }
 
-type result struct {
-	status     status
-	panicValue interface{}
-	panicStack []byte
-}
-
-// status represents the status of an action run.
-type status uint8
-
-const (
-	statusNotRun status = iota
-	statusPassed
-	statusPanicked
-	statusFailed
-	statusSkipped
-)
-
 // run executes the action in a separate goroutine to enable
 // interuption using runtime.Goexit().
-func (tf *TF) run(action func(tf *TF)) result {
-	ch := make(chan result, 1)
+func (tf *TF) run(action func(tf *TF)) Result {
+	ch := make(chan Result, 1)
 	go func() {
 		finished := false
 		defer func() {
-			res := result{}
+			res := Result{}
 			switch {
 			case tf.failed:
-				res.status = statusFailed
+				res.Status = StatusFailed
 			case tf.skipped:
-				res.status = statusSkipped
+				res.Status = StatusSkipped
 			case finished:
-				res.status = statusPassed
+				res.Status = StatusPassed
 			default:
-				res.status = statusPanicked
-				res.panicValue = recover()
-				res.panicStack = debug.Stack()
+				res.Status = StatusFailed
+				res.PanicValue = recover()
+				res.PanicStack = debug.Stack()
 			}
 			ch <- res
 		}()
@@ -181,63 +162,4 @@ func (tf *TF) run(action func(tf *TF)) result {
 		finished = true
 	}()
 	return <-ch
-}
-
-// log is used internally in order to provide proper prefix.
-func (tf *TF) log(args ...interface{}) {
-	txt := fmt.Sprint(args...)
-	if tf.decorator != nil {
-		txt = tf.decorator(txt)
-	} else {
-		txt = DecorateLog(txt)
-	}
-	io.WriteString(tf.output, txt) //nolint:errcheck,gosec // not checking errors when writing to output
-}
-
-// lof is used internally in order to provide proper prefix.
-func (tf *TF) logf(format string, args ...interface{}) {
-	txt := fmt.Sprintf(format, args...)
-	if tf.decorator != nil {
-		txt = tf.decorator(txt)
-	} else {
-		txt = DecorateLog(txt)
-	}
-	io.WriteString(tf.output, txt) //nolint:errcheck,gosec // not checking errors when writing to output
-}
-
-// DecorateLog prefixes the string with the file and line of the call site
-// and inserts the final newline and indentation spaces for formatting.
-func DecorateLog(s string) string {
-	const skip = 3
-	_, file, line, _ := runtime.Caller(skip)
-	if file != "" {
-		// Truncate file name at last file name separator.
-		if index := strings.LastIndex(file, "/"); index >= 0 {
-			file = file[index+1:]
-		} else if index = strings.LastIndex(file, "\\"); index >= 0 {
-			file = file[index+1:]
-		}
-	} else {
-		file = "???"
-	}
-	if line == 0 {
-		line = 1
-	}
-	buf := &strings.Builder{}
-	// Every line is indented at least 6 spaces.
-	buf.WriteString("      ")
-	fmt.Fprintf(buf, "%s:%d: ", file, line)
-	lines := strings.Split(s, "\n")
-	if l := len(lines); l > 1 && lines[l-1] == "" {
-		lines = lines[:l-1]
-	}
-	for i, line := range lines {
-		if i > 0 {
-			// Second and subsequent lines are indented an additional 4 spaces.
-			buf.WriteString("\n          ")
-		}
-		buf.WriteString(line)
-	}
-	buf.WriteByte('\n')
-	return buf.String()
 }

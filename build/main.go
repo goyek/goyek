@@ -1,3 +1,4 @@
+// Build is the build pipeline for this repository.
 package main
 
 import (
@@ -6,20 +7,26 @@ import (
 	"os"
 
 	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v2/middleware"
+)
+
+// Directories used in repository.
+const (
+	dirRoot  = "."
+	dirBuild = "build"
+	dirTools = "tools"
+)
+
+// Reusable flags used by the build pipeline.
+var (
+	v = flag.Bool("v", false, "print all tasks and tests as they are run")
 )
 
 var flow = &goyek.Flow{}
 
 func main() {
-	// change working directory to repo root
-	if err := os.Chdir(".."); err != nil {
-		fmt.Println(err)
-		os.Exit(goyek.CodeInvalidArgs)
-	}
+	flow.SetDefault(all)
 
-	configure()
-
-	flow.Output = os.Stdout
 	flag.CommandLine.SetOutput(os.Stdout)
 	usage := func() {
 		fmt.Println("Usage of build: [flags] [--] [tasks]")
@@ -31,5 +38,11 @@ func main() {
 	flag.Usage = usage
 
 	flag.Parse()
+
+	flow.Use(middleware.Reporter)
+	if !*v {
+		flow.Use(middleware.SilentNonFailed)
+	}
+
 	flow.Main(flag.Args())
 }

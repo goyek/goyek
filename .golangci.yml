@@ -29,13 +29,13 @@ linters:
     - errcheck
     - exportloopref
     - funlen
-    - gochecknoinits
     - gocritic
     - goconst
     - gocyclo
     - gofumpt
     - goimports
     - revive
+    - godot
     - gomnd
     - goprintffuncname
     - gosec

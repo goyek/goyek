@@ -24,21 +24,25 @@ const (
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
 type Flow struct {
-	Output  io.Writer // output where text is printed; os.Stdout by default
-	Verbose bool      // control the printing
+	Output io.Writer // output where text is printed; os.Stdout by default
 
 	// Usage is the function called when an error occurs while parsing tasks.
 	// The field is a function that may be changed to point to
 	// a custom error handler. By default it calls Print.
 	Usage func()
 
-	// LogDecorator used by TF's logging functions to decorate the text.
-	// DecorateLog by default.
-	LogDecorator func(string) string
+	// Logger used by TF's logging functions. CodeLineLogger by default.
+	//
+	// TODO: If Helper() is implemented then it is called when TF.Helper() is called.
+	Logger Logger
 
 	tasks       map[string]taskSnapshot // snapshot of defined tasks
 	defaultTask string                  // task to run when none is explicitly provided
+	middlewares []Middleware
 }
+
+// Middleware represents a task runner interceptor.
+type Middleware func(Runner) Runner
 
 // taskSnapshot is a copy of the task to make the flow usage safer.
 type taskSnapshot struct {
@@ -46,6 +50,16 @@ type taskSnapshot struct {
 	usage  string
 	deps   []string
 	action func(tf *TF)
+}
+
+// Tasks returns all tasks sorted in lexicographical order.
+func (f *Flow) Tasks() []DefinedTask {
+	var tasks []DefinedTask
+	for _, task := range f.tasks {
+		tasks = append(tasks, registeredTask{task})
+	}
+	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
+	return tasks
 }
 
 // Define registers the task. It panics in case of any error.
@@ -85,6 +99,15 @@ func (f *Flow) isDefined(name string) bool {
 	return ok
 }
 
+// Default returns the default task.
+// Returns nil of there is no default task.
+func (f *Flow) Default() DefinedTask {
+	if f.defaultTask == "" {
+		return nil
+	}
+	return registeredTask{f.tasks[f.defaultTask]}
+}
+
 // SetDefault sets a task to run when none is explicitly provided.
 // It panics in case of any error.
 func (f *Flow) SetDefault(task DefinedTask) {
@@ -94,12 +117,27 @@ func (f *Flow) SetDefault(task DefinedTask) {
 	f.defaultTask = task.Name()
 }
 
-// Run runs provided tasks and all their dependencies.
+// Use adds task runner middlewares (iterceptors).
+func (f *Flow) Use(middlewares ...Middleware) {
+	for _, m := range middlewares {
+		if m == nil {
+			panic("middleware cannot be nil")
+		}
+		f.middlewares = append(f.middlewares, m)
+	}
+}
+
+// Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (f *Flow) Run(ctx context.Context, args ...string) int {
+func (f *Flow) Execute(ctx context.Context, args ...string) int {
 	out := f.Output
 	if out == nil {
 		out = os.Stdout
+	}
+
+	logger := f.Logger
+	if logger == nil {
+		logger = &CodeLineLogger{}
 	}
 
 	var tasks []string
@@ -122,16 +160,19 @@ func (f *Flow) Run(ctx context.Context, args ...string) int {
 		return f.invalid()
 	}
 
-	r := &flowRunner{
-		output:       out,
-		defined:      f.tasks,
-		verbose:      f.Verbose,
-		logDecorator: f.LogDecorator,
+	var middlewares []Middleware
+	middlewares = append(middlewares, f.middlewares...)
+
+	r := &executor{
+		output:      out,
+		defined:     f.tasks,
+		logger:      logger,
+		middlewares: middlewares,
 	}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	if !r.Run(ctx, tasks) {
+	if !r.Execute(ctx, tasks) {
 		return CodeFail
 	}
 	return CodePass
@@ -151,46 +192,40 @@ func (f *Flow) invalid() int {
 // It exits the current program when after the run is finished
 // or SIGINT was send to interrupt the execution.
 func (f *Flow) Main(args []string) {
+	out := f.Output
+	if out == nil {
+		out = os.Stdout
+	}
+
 	// trap Ctrl+C and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		<-c // first signal, cancel context
-		fmt.Fprintln(f.Output, "first interrupt, graceful stop")
+		fmt.Fprintln(out, "first interrupt, graceful stop")
 		cancel()
 
 		<-c // second signal, hard exit
-		fmt.Fprintln(f.Output, "second interrupt, exit")
+		fmt.Fprintln(out, "second interrupt, exit")
 		os.Exit(CodeFail)
 	}()
 
+	// change working directory to repo root (per convention)
+	if err := os.Chdir(".."); err != nil {
+		fmt.Println(err)
+		fmt.Fprintln(out, err)
+		os.Exit(CodeInvalidArgs)
+	}
+
 	// run flow
-	exitCode := f.Run(ctx, args...)
+	exitCode := f.Execute(ctx, args...)
 	os.Exit(exitCode)
-}
-
-// Tasks returns all tasks sorted in lexicographical order.
-func (f *Flow) Tasks() []DefinedTask {
-	var tasks []DefinedTask
-	for _, task := range f.tasks {
-		tasks = append(tasks, registeredTask{task})
-	}
-	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
-	return tasks
-}
-
-// Default returns the default task.
-// Returns nil of there is no default task.
-func (f *Flow) Default() DefinedTask {
-	if f.defaultTask == "" {
-		return nil
-	}
-	return registeredTask{f.tasks[f.defaultTask]}
 }
 
 // Print prints, to os.Stdout unless configured otherwise,
 // the information about the registered tasks.
+// Tasks with empty Usage are not printed.
 func (f *Flow) Print() {
 	out := f.Output
 	if out == nil {
@@ -203,14 +238,21 @@ func (f *Flow) Print() {
 
 	fmt.Fprintln(out, "Tasks:")
 	var (
-		minwidth      = 3
-		tabwidth      = 1
-		padding       = 3
+		minwidth      = 5
+		tabwidth      = 0
+		padding       = 2
 		padchar  byte = ' '
 	)
 	w := tabwriter.NewWriter(out, minwidth, tabwidth, padding, padchar, 0)
 	for _, task := range f.Tasks() {
-		fmt.Fprintf(w, "\t%s\t%s\t%s\n", task.Name(), task.Usage(), strings.Join(task.Deps(), ", "))
+		if task.Usage() == "" {
+			continue
+		}
+		deps := ""
+		if len(task.Deps()) > 0 {
+			deps = " (depends on: " + strings.Join(task.Deps(), ", ") + ")"
+		}
+		fmt.Fprintf(w, "  %s\t%s\n", task.Name(), task.Usage()+deps)
 	}
 	w.Flush() //nolint:errcheck,gosec // not checking errors when writing to output
 }

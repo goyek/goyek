@@ -14,8 +14,8 @@ jobs:
       - uses: actions/setup-go@v3.3.0
         with:
           go-version: '1.19'
-      - name: Build
-        run: ./goyek.sh -v -ci
+      - run: go run . -v ci
+        working-directory: build
       - name: Upload HTML coverage
         uses: actions/upload-artifact@v3.1.0
         with:
@@ -47,3 +47,21 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - run: go test -race ./...
+
+  bash-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.1.0
+      - uses: actions/setup-go@v3.3.0
+        with:
+          go-version: '1.19'
+      - run: ./goyek.sh -h
+
+  pwsh-script:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3.1.0
+      - uses: actions/setup-go@v3.3.0
+        with:
+          go-version: '1.19'
+      - run: .\goyek.ps1 -h

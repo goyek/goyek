@@ -69,15 +69,15 @@ func Test_successful(t *testing.T) {
 		return []int{executed1, executed2, executed3}
 	}
 
-	exitCode := flow.Run(ctx, "task-1")
+	exitCode := flow.Execute(ctx, "task-1")
 	requireEqual(t, exitCode, 0, "first execution should pass")
 	requireEqual(t, got(), []int{1, 0, 0}, "should execute task 1")
 
-	exitCode = flow.Run(ctx, "task-2")
+	exitCode = flow.Execute(ctx, "task-2")
 	requireEqual(t, exitCode, 0, "second execution should pass")
 	requireEqual(t, got(), []int{2, 1, 0}, "should execute task 1 and 2")
 
-	exitCode = flow.Run(ctx, "task-1", "task-2", "task-3")
+	exitCode = flow.Execute(ctx, "task-1", "task-2", "task-3")
 	requireEqual(t, exitCode, 0, "third execution should pass")
 	requireEqual(t, got(), []int{3, 2, 1}, "should execute task 1 and 2 and 3")
 }
@@ -115,7 +115,7 @@ func Test_dependency_failure(t *testing.T) {
 		return []int{executed1, executed2, executed3}
 	}
 
-	exitCode := flow.Run(context.Background(), "task-2", "task-3")
+	exitCode := flow.Execute(context.Background(), "task-2", "task-3")
 
 	assertEqual(t, exitCode, 1, "should return error from first task")
 	assertEqual(t, got(), []int{11, 0, 0}, "should execute task 1")
@@ -134,7 +134,7 @@ func Test_fail(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "task")
+	exitCode := flow.Execute(context.Background(), "task")
 
 	assertEqual(t, exitCode, 1, "should return error")
 	assertTrue(t, failed, "tf.Failed() should return true")
@@ -153,7 +153,7 @@ func Test_skip(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), "task")
+	exitCode := flow.Execute(context.Background(), "task")
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertTrue(t, skipped, "tf.Skipped() should return true")
@@ -185,7 +185,7 @@ func Test_task_panics(t *testing.T) {
 				Action: tc.action,
 			})
 
-			exitCode := flow.Run(context.Background(), "task")
+			exitCode := flow.Execute(context.Background(), "task")
 
 			assertEqual(t, exitCode, 1, "should return error from first task")
 		})
@@ -200,7 +200,7 @@ func Test_cancelation(t *testing.T) {
 		Name: "task",
 	})
 
-	exitCode := flow.Run(ctx, "task")
+	exitCode := flow.Execute(ctx, "task")
 
 	assertEqual(t, exitCode, 1, "should return error canceled")
 }
@@ -216,7 +216,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(ctx, "task")
+	exitCode := flow.Execute(ctx, "task")
 
 	assertEqual(t, exitCode, 0, "should pass as the flow completed")
 }
@@ -227,7 +227,7 @@ func Test_empty_action(t *testing.T) {
 		Name: "task",
 	})
 
-	exitCode := flow.Run(context.Background(), "task")
+	exitCode := flow.Execute(context.Background(), "task")
 
 	assertEqual(t, exitCode, 0, "should pass")
 }
@@ -252,7 +252,7 @@ func Test_invalid_args(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			exitCode := flow.Run(context.Background(), tc.args...)
+			exitCode := flow.Execute(context.Background(), tc.args...)
 
 			assertEqual(t, exitCode, 2, "should return error bad args")
 		})
@@ -262,8 +262,7 @@ func Test_invalid_args(t *testing.T) {
 func Test_printing(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{
-		Output:  out,
-		Verbose: true,
+		Output: out,
 	}
 	skipped := flow.Define(goyek.Task{
 		Name: "skipped",
@@ -283,47 +282,35 @@ func Test_printing(t *testing.T) {
 		},
 	})
 
-	flow.Run(context.Background(), "failing")
+	flow.Execute(context.Background(), "failing")
 
 	assertContains(t, out, "Skipf 0", "should contain proper output from \"skipped\" task")
 	assertContains(t, out, "Fatalf 5", "should contain proper output from \"failing\" task")
 }
 
 func Test_concurrent_printing(t *testing.T) {
-	testCases := []struct {
-		verbose bool
-	}{
-		{verbose: false},
-		{verbose: true},
+	out := &strings.Builder{}
+	flow := goyek.Flow{
+		Output: out,
 	}
-	for _, tc := range testCases {
-		testName := fmt.Sprintf("Verbose:%v", tc.verbose)
-		t.Run(testName, func(t *testing.T) {
-			out := &strings.Builder{}
-			flow := goyek.Flow{
-				Output:  out,
-				Verbose: tc.verbose,
-			}
-			flow.Define(goyek.Task{
-				Name: "task",
-				Action: func(tf *goyek.TF) {
-					ch := make(chan struct{})
-					go func() {
-						defer func() { ch <- struct{}{} }()
-						tf.Log("from child goroutine\nwith new line")
-					}()
-					tf.Error("from main goroutine")
-					<-ch
-				},
-			})
+	flow.Define(goyek.Task{
+		Name: "task",
+		Action: func(tf *goyek.TF) {
+			ch := make(chan struct{})
+			go func() {
+				defer func() { ch <- struct{}{} }()
+				tf.Log("from child goroutine\nwith new line")
+			}()
+			tf.Error("from main goroutine")
+			<-ch
+		},
+	})
 
-			exitCode := flow.Run(context.Background(), "task")
+	exitCode := flow.Execute(context.Background(), "task")
 
-			assertEqual(t, exitCode, goyek.CodeFail, "should fail")
-			assertContains(t, out, "from child goroutine", "should contain log from child goroutine")
-			assertContains(t, out, "from main goroutine", "should contain log from main goroutine")
-		})
-	}
+	assertEqual(t, exitCode, goyek.CodeFail, "should fail")
+	assertContains(t, out, "from child goroutine", "should contain log from child goroutine")
+	assertContains(t, out, "from main goroutine", "should contain log from main goroutine")
 }
 
 func Test_name(t *testing.T) {
@@ -337,7 +324,7 @@ func Test_name(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), taskName)
+	exitCode := flow.Execute(context.Background(), taskName)
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertEqual(t, got, taskName, "should return proper Name value")
@@ -345,7 +332,7 @@ func Test_name(t *testing.T) {
 
 func Test_output(t *testing.T) {
 	out := &strings.Builder{}
-	flow := &goyek.Flow{Output: out, Verbose: true}
+	flow := &goyek.Flow{Output: out}
 	msg := "hello there"
 	flow.Define(goyek.Task{
 		Name: "task",
@@ -354,7 +341,7 @@ func Test_output(t *testing.T) {
 		},
 	})
 
-	flow.Run(context.Background(), "task")
+	flow.Execute(context.Background(), "task")
 
 	assertContains(t, out, msg, "should contain message send via output")
 }
@@ -370,7 +357,7 @@ func Test_SetDefault(t *testing.T) {
 	})
 	flow.SetDefault(task)
 
-	exitCode := flow.Run(context.Background())
+	exitCode := flow.Execute(context.Background())
 
 	assertEqual(t, exitCode, 0, "should pass")
 	assertTrue(t, taskRan, "task should have run")
@@ -392,8 +379,7 @@ func TestCmd_success(t *testing.T) {
 	taskName := "exec"
 	out := &strings.Builder{}
 	flow := &goyek.Flow{
-		Output:  out,
-		Verbose: true,
+		Output: out,
 	}
 	flow.Define(goyek.Task{
 		Name: taskName,
@@ -404,7 +390,7 @@ func TestCmd_success(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(context.Background(), taskName)
+	exitCode := flow.Execute(context.Background(), taskName)
 
 	assertContains(t, out, "go version go", "output should contain prefix of version report")
 	assertEqual(t, exitCode, goyek.CodePass, "task should pass")
@@ -422,7 +408,7 @@ func TestCmd_error(t *testing.T) {
 		},
 	})
 
-	exitCode := flow.Run(nil, taskName) //nolint:staticcheck // present that nil context is handled
+	exitCode := flow.Execute(nil, taskName) //nolint:staticcheck // present that nil context is handled
 
 	assertEqual(t, exitCode, goyek.CodeFail, "task should pass")
 }
@@ -460,13 +446,28 @@ func TestFlow_Default_empty(t *testing.T) {
 	assertEqual(t, got, nil, "should return nil")
 }
 
+func TestFlow_Print(t *testing.T) {
+	out := &strings.Builder{}
+	flow := &goyek.Flow{Output: out}
+	task := flow.Define(goyek.Task{Name: "task", Usage: "use it"})
+	flow.Define(goyek.Task{Name: "hidden"})
+	flow.Define(goyek.Task{Name: "with-dependency", Usage: "print", Deps: goyek.Deps{task}})
+	flow.SetDefault(task)
+
+	flow.Print()
+
+	assertContains(t, out, "use it", "should print the usage of the task")
+	assertContains(t, out, "Default task: task", "should print the default task")
+	assertNotContains(t, out, "hidden", "should not print task with no usage")
+	assertContains(t, out, "(depends on: task)", "should print the task dependencies")
+}
+
 func TestFlow_Usage_default(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{Output: out}
-	task := flow.Define(goyek.Task{Name: "task"})
-	flow.SetDefault(task)
+	flow.Define(goyek.Task{Name: "task"})
 
-	exitCode := flow.Run(context.Background(), "bad")
+	exitCode := flow.Execute(context.Background(), "bad")
 
 	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should work when invalid code returned")
 	assertContains(t, out, "Tasks:", "should print the default usage if not overridden")
@@ -477,15 +478,15 @@ func TestFlow_Usage_custom(t *testing.T) {
 	called := false
 	flow.Usage = func() { called = true }
 
-	exitCode := flow.Run(context.Background(), "bad")
+	exitCode := flow.Execute(context.Background(), "bad")
 
 	assertEqual(t, exitCode, goyek.CodeInvalidArgs, "should work when invalid code returned")
 	assertTrue(t, called, "should invoke the custom message instead")
 }
 
-func TestFlow_LogDecorator(t *testing.T) {
+func TestFlow_Logger(t *testing.T) {
 	out := &strings.Builder{}
-	flow := &goyek.Flow{Output: out, Verbose: true, LogDecorator: strings.ToUpper}
+	flow := &goyek.Flow{Output: out, Logger: goyek.FmtLogger{}}
 	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {
@@ -494,10 +495,38 @@ func TestFlow_LogDecorator(t *testing.T) {
 		},
 	})
 
-	flow.Run(context.Background(), "task")
+	flow.Execute(context.Background(), "task")
 
-	assertContains(t, out, "FIRST", "should decorate Log")
-	assertContains(t, out, "SECOND", "should decorate Logf")
+	assertContains(t, out, "first", "should call Log")
+	assertContains(t, out, "second", "should call Logf")
+}
+
+func TestFlow_Use(t *testing.T) {
+	out := &strings.Builder{}
+	flow := &goyek.Flow{Output: out}
+	flow.Define(goyek.Task{
+		Name: "task",
+	})
+	flow.Use(func(next goyek.Runner) goyek.Runner {
+		return func(i goyek.Input) goyek.Result {
+			i.Output.Write([]byte("message")) //nolint:errcheck,gosec // not checking errors when writing to output
+			return goyek.Result{}
+		}
+	})
+
+	flow.Execute(context.Background(), "task")
+
+	assertContains(t, out, "message", "should call middleware with proper input")
+}
+
+func TestFlow_Use_nil_middleware(t *testing.T) {
+	flow := &goyek.Flow{}
+
+	act := func() {
+		flow.Use(nil)
+	}
+
+	assertPanics(t, act, "should panic on nil middleware")
 }
 
 func assertTrue(tb testing.TB, got bool, msg string) {
@@ -515,6 +544,15 @@ func assertContains(tb testing.TB, got fmt.Stringer, want string, msg string) {
 		return
 	}
 	tb.Errorf("%s\nGOT:\n%s\nSHOULD CONTAIN:\n%s", msg, gotTxt, want)
+}
+
+func assertNotContains(tb testing.TB, got fmt.Stringer, want string, msg string) {
+	tb.Helper()
+	gotTxt := got.String()
+	if !strings.Contains(gotTxt, want) {
+		return
+	}
+	tb.Errorf("%s\nGOT:\n%s\nSHOULD NOT CONTAIN:\n%s", msg, gotTxt, want)
 }
 
 func requireEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
