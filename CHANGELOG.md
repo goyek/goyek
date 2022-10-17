@@ -17,7 +17,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Add `NOOP` status report for tasks that were intentionally not run
   to differentiate from being skipped during execution.
 - Add `Flow.Use` method o support task run interception using middlewares.
-- Add `middleware` package with `Reporter` and `SilentNonFailed` middlewares. 
+- Add `middleware` package with `Reporter` and `SilentNonFailed` middlewares.
 
 ## Changed
 
