@@ -10,14 +10,14 @@ import (
 	"github.com/goyek/goyek/v2/middleware"
 )
 
-// directories used in repository
+// Directories used in repository.
 const (
 	dirRoot  = "."
 	dirBuild = "build"
 	dirTools = "tools"
 )
 
-// flags
+// Reusable flags used by the build pipeline.
 var (
 	v = flag.Bool("v", false, "print all tasks and tests as they are run")
 )

@@ -38,8 +38,11 @@ type Flow struct {
 
 	tasks       map[string]taskSnapshot // snapshot of defined tasks
 	defaultTask string                  // task to run when none is explicitly provided
-	middlewares []func(Runner) Runner
+	middlewares []Middleware
 }
+
+// Middleware represents a task runner interceptor.
+type Middleware func(Runner) Runner
 
 // taskSnapshot is a copy of the task to make the flow usage safer.
 type taskSnapshot struct {
@@ -47,6 +50,16 @@ type taskSnapshot struct {
 	usage  string
 	deps   []string
 	action func(tf *TF)
+}
+
+// Tasks returns all tasks sorted in lexicographical order.
+func (f *Flow) Tasks() []DefinedTask {
+	var tasks []DefinedTask
+	for _, task := range f.tasks {
+		tasks = append(tasks, registeredTask{task})
+	}
+	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
+	return tasks
 }
 
 // Define registers the task. It panics in case of any error.
@@ -86,6 +99,15 @@ func (f *Flow) isDefined(name string) bool {
 	return ok
 }
 
+// Default returns the default task.
+// Returns nil of there is no default task.
+func (f *Flow) Default() DefinedTask {
+	if f.defaultTask == "" {
+		return nil
+	}
+	return registeredTask{f.tasks[f.defaultTask]}
+}
+
 // SetDefault sets a task to run when none is explicitly provided.
 // It panics in case of any error.
 func (f *Flow) SetDefault(task DefinedTask) {
@@ -95,8 +117,8 @@ func (f *Flow) SetDefault(task DefinedTask) {
 	f.defaultTask = task.Name()
 }
 
-// Use banana.
-func (f *Flow) Use(middlewares ...func(Runner) Runner) {
+// Use adds task runner middlewares (iterceptors).
+func (f *Flow) Use(middlewares ...Middleware) {
 	for _, m := range middlewares {
 		if m == nil {
 			panic("middleware cannot be nil")
@@ -138,7 +160,7 @@ func (f *Flow) Execute(ctx context.Context, args ...string) int {
 		return f.invalid()
 	}
 
-	var middlewares []func(Runner) Runner
+	var middlewares []Middleware
 	middlewares = append(middlewares, f.middlewares...)
 
 	r := &executor{
@@ -199,25 +221,6 @@ func (f *Flow) Main(args []string) {
 	// run flow
 	exitCode := f.Execute(ctx, args...)
 	os.Exit(exitCode)
-}
-
-// Tasks returns all tasks sorted in lexicographical order.
-func (f *Flow) Tasks() []DefinedTask {
-	var tasks []DefinedTask
-	for _, task := range f.tasks {
-		tasks = append(tasks, registeredTask{task})
-	}
-	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
-	return tasks
-}
-
-// Default returns the default task.
-// Returns nil of there is no default task.
-func (f *Flow) Default() DefinedTask {
-	if f.defaultTask == "" {
-		return nil
-	}
-	return registeredTask{f.tasks[f.defaultTask]}
 }
 
 // Print prints, to os.Stdout unless configured otherwise,

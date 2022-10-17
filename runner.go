@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-// Input banana.
+// Input received by the task runner.
 type Input struct {
 	Context  context.Context
 	TaskName string
@@ -15,17 +15,17 @@ type Input struct {
 	Logger   Logger
 }
 
-// Result banana.
+// Result of a task run.
 type Result struct {
 	Status     Status
 	PanicValue interface{}
 	PanicStack []byte
 }
 
-// Status represents the Status of an action run.
+// Status represents the status of a task run.
 type Status uint8
 
-// Statuses banana.
+// Statuses of task run.
 const (
 	StatusNotRun Status = iota
 	StatusPassed
@@ -33,10 +33,23 @@ const (
 	StatusSkipped
 )
 
-// Runner banana.
+// Runner represents a task runner function.
 type Runner func(Input) Result
 
-// NewRunner banana.
+// NewRunner returns a task runner used by Flow.
+//
+// It can be useful when for testing and debugging
+// a task action or middleware.
+// The following defaults are set for Input
+// (take notice that they are different than Flow defaults):
+//
+//	Context = context.Background()
+//	Output = ioutil.Discard
+//	Logger = FmtLogger{}
+//
+// It can be also used as a building block for a custom
+// workflow runner if you are missing any functionalities
+// provided by Flow (like concurrent dependencies execution).
 func NewRunner(action func(tf *TF)) Runner {
 	r := taskRunner{action: action}
 	return r.run

@@ -8,7 +8,9 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-// Reporter banana.
+// Reporter is a middleware which reports the task run status.
+//
+// The format is based on the reports provided by the Go test runner.
 func Reporter(next goyek.Runner) goyek.Runner {
 	return func(in goyek.Input) goyek.Result {
 		// report start task

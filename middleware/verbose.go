@@ -7,7 +7,9 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-// SilentNonFailed banana.
+// SilentNonFailed is a middleware which makes sure that only output from failed tasks is printed.
+//
+// The behavior is based on the Go test runner when it is executed without the -v flag.
 func SilentNonFailed(next goyek.Runner) goyek.Runner {
 	return func(in goyek.Input) goyek.Result {
 		orginalOut := in.Output

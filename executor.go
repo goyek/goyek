@@ -11,7 +11,7 @@ type executor struct {
 	output      io.Writer
 	defined     map[string]taskSnapshot
 	logger      Logger
-	middlewares []func(Runner) Runner
+	middlewares []Middleware
 }
 
 // Execute runs provided tasks and all their dependencies.

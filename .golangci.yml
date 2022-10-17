@@ -35,6 +35,7 @@ linters:
     - gofumpt
     - goimports
     - revive
+    - godot
     - gomnd
     - goprintffuncname
     - gosec
