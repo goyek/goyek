@@ -32,10 +32,9 @@ Table of Contents:
   - [Wrapper scripts](#wrapper-scripts)
   - [Defining tasks](#defining-tasks)
   - [Running programs](#running-programs)
-  - [Customization](#customization)
-    - [Parameters](#parameters)
-    - [Middlewares](#middlewares)
-    - [Custom printing](#custom-printing)
+  - [Parameters](#parameters)
+  - [Middlewares](#middlewares)
+  - [Custom printing](#custom-printing)
 - [Supported Go versions](#supported-go-versions)
 - [Alternatives](#alternatives)
   - [Make](#make)
@@ -72,33 +71,67 @@ Here are some good parts:
   - [`spf13/viper`](https://github.com/spf13/viper)
 - **goyek** does not use any third-party dependency other than the Go standard library.
 
-**goyek** API is mainly inspired by the [`testing`](https://golang.org/pkg/testing),
+**goyek** API is inspired by packages like [`testing`](https://golang.org/pkg/testing),
 [`http`](https://golang.org/pkg/http), and [`flag`](https://golang.org/pkg/flag)
 packages.
 
 ## Quick start
 
+Put the following content in `/build/hello.go`:
+
 ```go
 package main
 
 import (
-  "os"
+	"flag"
 
 	"github.com/goyek/goyek/v2"
 )
 
+var msg = flag.String("msg", "greeting message", "Hello world!")
+
+var hello = flow.Define(goyek.Task{
+	Name:  "hello",
+	Usage: "demonstration",
+	Action: func(tf *goyek.TF) {
+		tf.Log(*msg)
+	},
+})
+```
+
+Put the following content in `/build/main.go`:
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+
+	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v2/middleware"
+)
+
+var flow = &goyek.Flow{}
+
 func main() {
-	flow := &goyek.Flow{Verbose: true}
+	flag.CommandLine.SetOutput(os.Stdout)
+	usage := func() {
+		fmt.Println("Usage of build: [flags] [--] [tasks]")
+		flow.Print()
+		fmt.Println("Flags:")
+		flag.PrintDefaults()
+	}
+	flow.Usage = usage
+	flag.Usage = usage
+	flag.Parse()
 
-	flow.Define(goyek.Task{
-		Name:  "hello",
-		Usage: "demonstration",
-		Action: func(tf *goyek.TF) {
-			tf.Log("Hello world!")
-		},
-	})
+	flow.Use(middleware.Reporter)
 
-	flow.Main(os.Args[1:])
+	flow.SetDefault(hello)
+
+	flow.Main(flag.Args())
 }
 ```
 
@@ -106,8 +139,19 @@ Run:
 
 ```shell
 $ go mod tidy
-$ go run . hello
-      main.go:14: Hello world!
+
+$ go run ./build -h
+Usage of build: [flags] [--] [tasks]
+Tasks:
+  hello  demonstration
+Flags:
+  -msg string
+        Hello world! (default "greeting message")
+
+$ go run ./build
+===== TASK  hello
+      hello.go:15: greeting message
+----- PASS: hello (0.00s)
 ok      0.001s
 ```
 
@@ -159,25 +203,28 @@ git add --chmod=+x goyek.sh goyek.ps1
 
 ### Defining tasks
 
-You can define a task with a given (non-empty) name only once.
+Use [`Flow.Define`](https://pkg.go.dev/github.com/goyek/goyek/v2#Flow.Define)
+to register a a task.
+A task with a given (non-empty) name can be defined only once.
 
 During task registration it is possible to add a dependency
-to another registered task.
-The dependencies are executed in sequential order.
+to another defined task using [`Task.Deps`](https://pkg.go.dev/github.com/goyek/goyek/v2#Task.Deps).
+The dependencies are run in sequential order.
 Therefore, if possible, you should order them from the fastest
 to the slowest.
-Each task will be executed at most once.
+Each task will be run at most once.
 
-The task action is a function which is executed when a task is executed.
+The [`Task.Action`](https://pkg.go.dev/github.com/goyek/goyek/v2#Task.Action)
+is a function which is executed when a task is run.
 It is not required to set a action.
 Not having a action is very handy when registering "pipelines".
 
-Default task can be assigned using the `SetDefault` method.
+Default task can be assigned using [`Flow.SetDefault`](https://pkg.go.dev/github.com/goyek/goyek/v2#Flow.SetDefault).
 When the default task is set, then it is run if no task is provided.
 
 ### Running programs
 
-Use [`func (tf *TF) Cmd(name string, args ...string) *exec.Cmd`](https://pkg.go.dev/github.com/goyek/goyek#TF.Cmd)
+Use [`TF.Cmd`](https://pkg.go.dev/github.com/goyek/goyek/v2#TF.Cmd)
 to run a program inside a task's action.
 
 You can also use it create your own helpers like `Exec` in [build/exec.go](build/exec.go).
@@ -185,9 +232,7 @@ You can also use it create your own helpers like `Exec` in [build/exec.go](build
 [Here](https://github.com/goyek/goyek/issues/60) is the explanation
 why argument splitting is not included out-of-the-box.
 
-### Customization
-
-#### Parameters
+### Parameters
 
 As of `v2` the parameters support has been removed
 in order to improve customization.
@@ -199,19 +244,31 @@ With the new API it is easy to integrate **goyek** with any of these packages:
 - [`viper`](https://github.com/spf13/viper)
 - [`cobra`](https://github.com/spf13/cobra)
 
-#### Middlewares
+### Middlewares
 
-> Describe
+**goyek** supports the addition of task run middlewares,
+which are executed in the order they are added.
 
-Enable verbose output by setting the `Verbose` field to `true`.
-It works similar to `go test -v`.
-When enabled it prints all tasks as they are run.
+You can use a middleware for example to:
+generate a task execution report,
+skip some tasks,
+add retry logic,
+export build execution telemetry, etc.
 
-If it is disabled, only output from a failed task is printed.
+You can use some reusalbe middlewares from the
+[`middleware`](https://pkg.go.dev/github.com/goyek/goyek/v2/middleware)
+package. [`Reporter`](https://pkg.go.dev/github.com/goyek/goyek/v2/middleware#Reporter)
+is the most commonly used.
 
-#### Custom printing
+### Custom printing
 
-> Describe all extensibility points to change the pritning.
+You can customize the default output by using:
+
+- [`Flow.SetOutput`](https://pkg.go.dev/github.com/goyek/goyek/v2#Flow.SetOutput)
+- [`Flow.SetLogger`](https://pkg.go.dev/github.com/goyek/goyek/v2#Flow.SetLogger)
+- [`Flow.SetUsage`](https://pkg.go.dev/github.com/goyek/goyek/v2#Flow.SetUsage)
+- [`Flow.Execute`](https://pkg.go.dev/github.com/goyek/goyek/v2#Flow.Execute)
+  instead of [`Flow.Main`](https://pkg.go.dev/github.com/goyek/goyek/v2#Flow.Main)
 
 ## Supported Go versions
 
