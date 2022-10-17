@@ -6,12 +6,11 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"runtime/debug"
 )
 
-// TF is a type passed to Task's Action function to manage task state.
+// TF is a type passed to task's action function to manage task state.
 //
-// A task ends when its Action function returns or calls any of the methods
+// A task ends when its action function returns or calls any of the methods
 // FailNow, Fatal, Fatalf, SkipNow, Skip, or Skipf.
 //
 // All methods must be called only from the goroutine running the
@@ -25,7 +24,7 @@ type TF struct {
 	skipped bool
 }
 
-// Context returns the flows' run context.
+// Context returns the run context.
 func (tf *TF) Context() context.Context {
 	return tf.ctx
 }
@@ -134,32 +133,4 @@ func (tf *TF) Skipf(format string, args ...interface{}) {
 func (tf *TF) SkipNow() {
 	tf.skipped = true
 	runtime.Goexit()
-}
-
-// run executes the action in a separate goroutine to enable
-// interuption using runtime.Goexit().
-func (tf *TF) run(action func(tf *TF)) Result {
-	ch := make(chan Result, 1)
-	go func() {
-		finished := false
-		defer func() {
-			res := Result{}
-			switch {
-			case tf.failed:
-				res.Status = StatusFailed
-			case tf.skipped:
-				res.Status = StatusSkipped
-			case finished:
-				res.Status = StatusPassed
-			default:
-				res.Status = StatusFailed
-				res.PanicValue = recover()
-				res.PanicStack = debug.Stack()
-			}
-			ch <- res
-		}()
-		action(tf)
-		finished = true
-	}()
-	return <-ch
 }
