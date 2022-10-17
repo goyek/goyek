@@ -8,26 +8,29 @@ import (
 	"sync"
 )
 
-// Runner represents a task runner function.
-type Runner func(Input) Result
+// Task runner types.
+type (
+	// Runner represents a task runner function.
+	Runner func(Input) Result
 
-// Input received by the task runner.
-type Input struct {
-	Context  context.Context
-	TaskName string
-	Output   io.Writer
-	Logger   Logger
-}
+	// Input received by the task runner.
+	Input struct {
+		Context  context.Context
+		TaskName string
+		Output   io.Writer
+		Logger   Logger
+	}
 
-// Result of a task run.
-type Result struct {
-	Status     Status
-	PanicValue interface{}
-	PanicStack []byte
-}
+	// Result of a task run.
+	Result struct {
+		Status     Status
+		PanicValue interface{}
+		PanicStack []byte
+	}
 
-// Status represents the status of a task run.
-type Status uint8
+	// Status of a task run.
+	Status uint8
+)
 
 // Statuses of task run.
 const (
