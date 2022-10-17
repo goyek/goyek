@@ -39,11 +39,11 @@ func Example() {
 		Deps: goyek.Deps{hi, goVer},
 	})
 
-	// set the pipeline as the default task
-	flow.SetDefault(all)
-
 	// configure middlewares
 	flow.Use(middleware.Reporter)
+
+	// set the pipeline as the default task
+	flow.SetDefault(all)
 
 	// run the build pipeline
 	flow.Main(os.Args[1:])
@@ -87,10 +87,9 @@ func Example_flag() {
 		fmt.Println("Flags:")
 		flag.PrintDefaults()
 	}
-	flow.Usage = usage
-	flag.Usage = usage
 
 	// parse the args
+	flag.Usage = usage
 	flag.Parse()
 
 	// configure middlewares
@@ -100,6 +99,7 @@ func Example_flag() {
 	}
 
 	// run the build pipeline
+	flow.Usage = usage
 	flow.Main(flag.Args())
 
 	/*

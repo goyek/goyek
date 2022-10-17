@@ -117,22 +117,22 @@ var flow = &goyek.Flow{}
 
 func main() {
 	flag.CommandLine.SetOutput(os.Stdout)
-	usage := func() {
-		fmt.Println("Usage of build: [flags] [--] [tasks]")
-		flow.Print()
-		fmt.Println("Flags:")
-		flag.PrintDefaults()
-	}
-	flow.Usage = usage
 	flag.Usage = usage
 	flag.Parse()
 
 	flow.Use(middleware.Reporter)
-
 	flow.SetDefault(hello)
-
+	flow.Usage = usage
 	flow.Main(flag.Args())
 }
+
+func usage() {
+	fmt.Println("Usage of build: [flags] [--] [tasks]")
+	flow.Print()
+	fmt.Println("Flags:")
+	flag.PrintDefaults()
+}
+
 ```
 
 Run:
@@ -181,11 +181,7 @@ of **goyek**.
 The convention is to have the build pipeline
 in the `/build` directory (or even module).
 
-You may want to call `os.Chdir("..")` in the beginning
-of your `main` so that the flow has
-the repository root as the working directory.
-
-Instead of executing `go run /build`,
+Instead of executing `go run ./build`,
 you can use the wrapper scripts,
 which can be invoked from any location.
 
