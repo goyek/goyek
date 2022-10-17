@@ -12,10 +12,12 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Add `Flow.Logger` for setting a custom log decorator.
   that is used by `TF` logging methods.
-- Add `CodeLineLogger` which is the default for `Flow.LogDecorator`.
+- Add `CodeLineLogger` which is the default for `Flow.Logger`.
 - Add `FmtLogger` which is the default when using `NewRunner`.
 - Add `NOOP` status report for tasks that were intentionally not run
   to differentiate from being skipped during execution.
+- Add `Flow.Use` method o support task run interception using middlewares.
+- Add `middleware` package with `Reporter` and `SilentNonFailed` middlewares. 
 
 ## Changed
 
@@ -25,6 +27,15 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - `Flow.Main` changes the working directory to parent.
 - Rename `Flow.Run` to `Flow.Execute` to reduce possible confusion with `Runner`.
 - Report `PASS` for a task without an action.
+- Task status reporting is disabled by default.
+  It can be enabled by calling `Flow.Use(middleware.Reporter)`.
+- `Flow.Print` output format is similar to `flag.PrintDefaults`.
+  Moreover, it does not print tasks with empty `Task.Usage`.
+
+## Removed
+
+- `Flow.Verbose` is removed.
+  To be non-verbose use `Flow.Use(middleware.SilentNonFailed)` instead.
 
 ### Fixed
 
