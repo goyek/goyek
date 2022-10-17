@@ -451,6 +451,7 @@ func TestFlow_Print(t *testing.T) {
 	flow := &goyek.Flow{Output: out}
 	task := flow.Define(goyek.Task{Name: "task", Usage: "use it"})
 	flow.Define(goyek.Task{Name: "hidden"})
+	flow.Define(goyek.Task{Name: "with-dependency", Usage: "print", Deps: goyek.Deps{task}})
 	flow.SetDefault(task)
 
 	flow.Print()
@@ -458,13 +459,13 @@ func TestFlow_Print(t *testing.T) {
 	assertContains(t, out, "use it", "should print the usage of the task")
 	assertContains(t, out, "Default task: task", "should print the default task")
 	assertNotContains(t, out, "hidden", "should not print task with no usage")
+	assertContains(t, out, "(depends on: task)", "should print the task dependencies")
 }
 
 func TestFlow_Usage_default(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{Output: out}
-	task := flow.Define(goyek.Task{Name: "task"})
-	flow.SetDefault(task)
+	flow.Define(goyek.Task{Name: "task"})
 
 	exitCode := flow.Execute(context.Background(), "bad")
 
@@ -498,6 +499,34 @@ func TestFlow_Logger(t *testing.T) {
 
 	assertContains(t, out, "first", "should call Log")
 	assertContains(t, out, "second", "should call Logf")
+}
+
+func TestFlow_Use(t *testing.T) {
+	out := &strings.Builder{}
+	flow := &goyek.Flow{Output: out}
+	flow.Define(goyek.Task{
+		Name: "task",
+	})
+	flow.Use(func(next goyek.Runner) goyek.Runner {
+		return func(i goyek.Input) goyek.Result {
+			i.Output.Write([]byte("message")) //nolint:errcheck,gosec // not checking errors when writing to output
+			return goyek.Result{}
+		}
+	})
+
+	flow.Execute(context.Background(), "task")
+
+	assertContains(t, out, "message", "should call middleware with proper input")
+}
+
+func TestFlow_Use_nil_middleware(t *testing.T) {
+	flow := &goyek.Flow{}
+
+	act := func() {
+		flow.Use(nil)
+	}
+
+	assertPanics(t, act, "should panic on nil middleware")
 }
 
 func assertTrue(tb testing.TB, got bool, msg string) {
