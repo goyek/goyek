@@ -14,7 +14,6 @@ import (
 const (
 	dirRoot  = "."
 	dirBuild = "build"
-	dirTools = "tools"
 )
 
 // Reusable flags used by the build pipeline.

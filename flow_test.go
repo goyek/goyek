@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/goyek/goyek/v2"
 )
@@ -296,7 +297,7 @@ func Test_concurrent_printing(t *testing.T) {
 	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(tf *goyek.TF) {
-			ch := make(chan struct{})
+			ch := make(chan struct{}, 1)
 			go func() {
 				defer func() { ch <- struct{}{} }()
 				tf.Log("from child goroutine\nwith new line")
@@ -311,6 +312,39 @@ func Test_concurrent_printing(t *testing.T) {
 	assertEqual(t, exitCode, goyek.CodeFail, "should fail")
 	assertContains(t, out, "from child goroutine", "should contain log from child goroutine")
 	assertContains(t, out, "from main goroutine", "should contain log from main goroutine")
+}
+
+func Test_concurrent_error(t *testing.T) {
+	timeout := time.NewTimer(10 * time.Second)
+	defer timeout.Stop()
+
+	out := &strings.Builder{}
+	flow := goyek.Flow{
+		Output: out,
+	}
+	flow.Define(goyek.Task{
+		Name: "task",
+		Action: func(tf *goyek.TF) {
+			go func() {
+				tf.Fail()
+			}()
+			for {
+				if tf.Failed() {
+					return
+				}
+				select {
+				case <-timeout.C:
+					t.Error("test timeout")
+					return
+				default:
+				}
+			}
+		},
+	})
+
+	exitCode := flow.Execute(context.Background(), "task")
+
+	assertEqual(t, exitCode, goyek.CodeFail, "should fail")
 }
 
 func Test_name(t *testing.T) {

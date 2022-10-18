@@ -6,22 +6,25 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"sync"
 )
 
 // TF is a type passed to task's action function to manage task state.
 //
 // A task ends when its action function returns or calls any of the methods
 // FailNow, Fatal, Fatalf, SkipNow, Skip, or Skipf.
+// Those methods must be called only from the goroutine running the action function.
 //
-// All methods must be called only from the goroutine running the
-// Action function.
+// The other reporting methods, such as the variations of Log and Error,
+// may be called simultaneously from multiple goroutines.
 type TF struct {
-	ctx     context.Context
-	name    string
-	output  io.Writer
-	logger  Logger
-	failed  bool
-	skipped bool
+	ctx      context.Context
+	name     string
+	output   io.Writer
+	logger   Logger
+	failedMu sync.Mutex
+	failed   bool
+	skipped  bool
 }
 
 // Context returns the run context.
@@ -78,12 +81,17 @@ func (tf *TF) Errorf(format string, args ...interface{}) {
 
 // Failed reports whether the function has failed.
 func (tf *TF) Failed() bool {
-	return tf.failed
+	tf.failedMu.Lock()
+	res := tf.failed
+	tf.failedMu.Unlock()
+	return res
 }
 
 // Fail marks the function as having failed but continues execution.
 func (tf *TF) Fail() {
+	tf.failedMu.Lock()
 	tf.failed = true
+	tf.failedMu.Unlock()
 }
 
 // Fatal is equivalent to Log followed by FailNow.

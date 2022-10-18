@@ -7,7 +7,6 @@ var all = flow.Define(goyek.Task{
 	Usage: "build pipeline",
 	Deps: goyek.Deps{
 		mod,
-		install,
 		lint,
 		test,
 	},
