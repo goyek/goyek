@@ -1,7 +1,7 @@
 //go:build tools
 // +build tools
 
-package tools
+package main
 
 // Manage tool dependencies via go.mod.
 //

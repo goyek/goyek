@@ -18,6 +18,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   to differentiate from being skipped during execution.
 - Add `Flow.Use` method o support task run interception using middlewares.
 - Add `middleware` package with `Reporter` and `SilentNonFailed` middlewares.
+- `TF.Error`, `TF.Errorf`, `TF.Fail` may be called simultaneously from multiple goroutines.
 
 ## Changed
 
