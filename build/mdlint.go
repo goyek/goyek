@@ -1,10 +1,8 @@
 package main
 
 import (
-	"io/fs"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/goyek/goyek/v2"
@@ -21,24 +19,11 @@ var mdlint = flow.Define(goyek.Task{
 		if err != nil {
 			tf.Fatal(err)
 		}
-
-		var mdFiles []string
-		err = filepath.WalkDir(dirRoot, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if filepath.Ext(d.Name()) == ".md" {
-				mdFiles = append(mdFiles, path)
-			}
-			return nil
-		})
-		if err != nil {
-			tf.Fatal(err)
+		mdFiles := find(tf, ".md")
+		if len(mdFiles) == 0 {
+			tf.Skip("no .md files")
 		}
-
-		if len(mdFiles) > 0 {
-			dockerImage := "ghcr.io/igorshubovych/markdownlint-cli:v0.32.2"
-			Exec(tf, dirRoot, "docker run --rm -v '"+curDir+":/workdir' "+dockerImage+" "+strings.Join(mdFiles, " "))
-		}
+		dockerImage := "ghcr.io/igorshubovych/markdownlint-cli:v0.32.2"
+		Exec(tf, dirRoot, "docker run --rm -v '"+curDir+":/workdir' "+dockerImage+" "+strings.Join(mdFiles, " "))
 	},
 })

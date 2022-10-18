@@ -1,6 +1,10 @@
 package main
 
-import "github.com/goyek/goyek/v2"
+import (
+	"strings"
+
+	"github.com/goyek/goyek/v2"
+)
 
 var spell = flow.Define(goyek.Task{
 	Name:  "spell",
@@ -9,6 +13,10 @@ var spell = flow.Define(goyek.Task{
 		if ok := Exec(tf, dirBuild, "go install github.com/client9/misspell/cmd/misspell"); !ok {
 			return
 		}
-		Exec(tf, dirRoot, "misspell -error -locale=US -i=importas -w .")
+		mdFiles := find(tf, ".md")
+		if len(mdFiles) == 0 {
+			tf.Skip("no .md files")
+		}
+		Exec(tf, dirRoot, "misspell -error -locale=US -w "+strings.Join(mdFiles, " "))
 	},
 })
