@@ -26,6 +26,10 @@ type Flow struct {
 	middlewares []Middleware
 }
 
+// DefaultFlow is the default flow.
+// The top-level functions such as Define, Main, and so on are wrappers for the methods of Flow.
+var DefaultFlow = &Flow{}
+
 // Middleware represents a task runner interceptor.
 type Middleware func(Runner) Runner
 
@@ -38,6 +42,11 @@ type taskSnapshot struct {
 }
 
 // Tasks returns all tasks sorted in lexicographical order.
+func Tasks() []DefinedTask {
+	return DefaultFlow.Tasks()
+}
+
+// Tasks returns all tasks sorted in lexicographical order.
 func (f *Flow) Tasks() []DefinedTask {
 	var tasks []DefinedTask
 	for _, task := range f.tasks {
@@ -45,6 +54,11 @@ func (f *Flow) Tasks() []DefinedTask {
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
 	return tasks
+}
+
+// Define registers the task. It panics in case of any error.
+func Define(task Task) DefinedTask {
+	return DefaultFlow.Define(task)
 }
 
 // Define registers the task. It panics in case of any error.
@@ -86,6 +100,12 @@ func (f *Flow) isDefined(name string) bool {
 
 // Output returns the io.Writer used when printing.
 // os.Stdout by default.
+func Output() io.Writer {
+	return DefaultFlow.Output()
+}
+
+// Output returns the io.Writer used when printing.
+// os.Stdout by default.
 func (f *Flow) Output() io.Writer {
 	if f.output == nil {
 		return os.Stdout
@@ -94,8 +114,19 @@ func (f *Flow) Output() io.Writer {
 }
 
 // SetOutput sets the io.Writer used when printing.
+func SetOutput(out io.Writer) {
+	DefaultFlow.SetOutput(out)
+}
+
+// SetOutput sets the io.Writer used when printing.
 func (f *Flow) SetOutput(out io.Writer) {
 	f.output = out
+}
+
+// GetLogger returns the logger used by TF's logging functions.
+// CodeLineLogger by default.
+func GetLogger() Logger {
+	return DefaultFlow.Logger()
 }
 
 // Logger returns the logger used by TF's logging functions.
@@ -108,8 +139,19 @@ func (f *Flow) Logger() Logger {
 }
 
 // SetLogger sets the logger used by TF's logging functions.
+func SetLogger(logger Logger) {
+	DefaultFlow.SetLogger(logger)
+}
+
+// SetLogger sets the logger used by TF's logging functions.
 func (f *Flow) SetLogger(logger Logger) {
 	f.logger = logger
+}
+
+// Usage returns the function called when an error occurs while parsing tasks.
+// Print by default.
+func Usage() func() {
+	return DefaultFlow.Usage()
 }
 
 // Usage returns the function called when an error occurs while parsing tasks.
@@ -122,8 +164,19 @@ func (f *Flow) Usage() func() {
 }
 
 // SetUsage sets the function called when an error occurs while parsing tasks.
+func SetUsage(fn func()) {
+	DefaultFlow.SetUsage(fn)
+}
+
+// SetUsage sets the function called when an error occurs while parsing tasks.
 func (f *Flow) SetUsage(fn func()) {
 	f.usage = fn
+}
+
+// Default returns the default task.
+// Returns nil of there is no default task.
+func Default() DefinedTask {
+	return DefaultFlow.Default()
 }
 
 // Default returns the default task.
@@ -137,11 +190,22 @@ func (f *Flow) Default() DefinedTask {
 
 // SetDefault sets a task to run when none is explicitly provided.
 // It panics in case of any error.
+func SetDefault(task DefinedTask) {
+	DefaultFlow.SetDefault(task)
+}
+
+// SetDefault sets a task to run when none is explicitly provided.
+// It panics in case of any error.
 func (f *Flow) SetDefault(task DefinedTask) {
 	if !f.isDefined(task.Name()) {
 		panic(fmt.Sprintf("task was not defined: %s", task.Name()))
 	}
 	f.defaultTask = task.Name()
+}
+
+// Use adds task runner middlewares (iterceptors).
+func Use(middlewares ...Middleware) {
+	DefaultFlow.Use(middlewares...)
 }
 
 // Use adds task runner middlewares (iterceptors).
@@ -161,6 +225,15 @@ type FailError struct {
 
 func (err *FailError) Error() string {
 	return "task failed: " + err.Task
+}
+
+// Execute runs provided tasks and all their dependencies.
+// Each task is executed at most once.
+// Returns nil if no task has failed.
+// Returns FailError if a task failed.
+// Returns other error in case of invalid input or context error.
+func Execute(ctx context.Context, args ...string) error {
+	return DefaultFlow.Execute(ctx, args...)
 }
 
 // Execute runs provided tasks and all their dependencies.
@@ -206,6 +279,18 @@ const (
 	exitCodeFail    = 1
 	exitCodeInvalid = 2
 )
+
+// Main runs provided tasks and all their dependencies.
+// Each task is executed at most once.
+// It exits the current program when after the run is finished
+// or SIGINT was send to interrupt the execution.
+// 0 exit code means that non of the tasks failed.
+// 1 exit code means that a task has failed or the execution was interrupted.
+// 2 exit code means that the input was invalid.
+// Calls Usage when invalid args are provided.
+func Main(args []string) {
+	DefaultFlow.Main(args)
+}
 
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
@@ -263,6 +348,13 @@ func (f *Flow) main(ctx context.Context, args ...string) int {
 	}
 	fmt.Fprintf(out, "ok\t%.3fs\n", time.Since(from).Seconds())
 	return exitCodePass
+}
+
+// Print prints, to os.Stdout unless configured otherwise,
+// the information about the registered tasks.
+// Tasks with empty Usage are not printed.
+func Print() {
+	DefaultFlow.Print()
 }
 
 // Print prints, to os.Stdout unless configured otherwise,
