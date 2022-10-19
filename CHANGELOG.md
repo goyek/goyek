@@ -26,7 +26,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Add the top-level functions such as `Define`, `Main`, and so on which are wrappers
   for the methods of `Flow` called for `DefaultFlow`.
 
-## Changed
+### Changed
 
 - Usually, the task does not call `panic` directly.
   `panic` failure message no longer contains a prefix with file and line information.
@@ -43,7 +43,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Change `Flow.Output` field to `Flow.SetOutput` setter and `Flow.Output` getter.
 - Change `Flow.Usage` field to `Flow.SetUsage` setter and `Flow.Usage` getter.
 
-## Removed
+### Removed
 
 - `Flow.Verbose` is removed.
   To be non-verbose use `Flow.Use(middleware.SilentNonFailed)` instead.
