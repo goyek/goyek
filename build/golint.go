@@ -2,7 +2,7 @@ package main
 
 import "github.com/goyek/goyek/v2"
 
-var golint = flow.Define(goyek.Task{
+var golint = goyek.Define(goyek.Task{
 	Name:  "golint",
 	Usage: "golangci-lint run --fix",
 	Action: func(tf *goyek.TF) {

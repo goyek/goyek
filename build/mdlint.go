@@ -8,7 +8,7 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-var mdlint = flow.Define(goyek.Task{
+var mdlint = goyek.Define(goyek.Task{
 	Name:  "mdlint",
 	Usage: "markdownlint-cli (uses docker)",
 	Action: func(tf *goyek.TF) {
