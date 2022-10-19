@@ -12,7 +12,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
-- Add `Flow.SetLogger` for setting a custom log decorator.
+- Add `Flow.SetLogger` for setting a custom log decorator
   that is used by `TF` logging methods.
 - Add `Flow.Logger` for getting the log decorator (`CodeLineLogger` by default).
 - Add `CodeLineLogger` which is the default for `Flow.Logger`.
@@ -22,7 +22,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Add `Flow.Use` method o support task run interception using middlewares.
 - Add `middleware` package with `Reporter` and `SilentNonFailed` middlewares.
 - `TF.Error`, `TF.Errorf`, `TF.Fail` may be called simultaneously from multiple goroutines.
-- Add `DefaultFlow` that is the default flowa
+- Add `DefaultFlow` that is the default flow.
 - Add the top-level functions such as `Define`, `Main`, and so on which are wrappers
   for the methods of `Flow` called for `DefaultFlow`.
 
