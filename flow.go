@@ -2,6 +2,7 @@ package goyek
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -9,15 +10,7 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
-)
-
-const (
-	// CodePass indicates that no task has failed.
-	CodePass = 0
-	// CodeFail indicates that a task has failed or the run was interrupted.
-	CodeFail = 1
-	// CodeInvalidArgs indicates that an error occurerd while parsing tasks.
-	CodeInvalidArgs = 2
+	"time"
 )
 
 // Flow is the root type of the package.
@@ -127,9 +120,21 @@ func (f *Flow) Use(middlewares ...Middleware) {
 	}
 }
 
+// FailError is returned by Flow.Execute when a task failed.
+type FailError struct {
+	Task string
+}
+
+func (err *FailError) Error() string {
+	return "task failed: " + err.Task
+}
+
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (f *Flow) Execute(ctx context.Context, args ...string) int {
+// Returns nil if no task has failed.
+// Returns FailError if a task failed.
+// Returns other error in case of invalid input or context error.
+func (f *Flow) Execute(ctx context.Context, args ...string) error {
 	out := f.Output
 	if out == nil {
 		out = os.Stdout
@@ -143,12 +148,10 @@ func (f *Flow) Execute(ctx context.Context, args ...string) int {
 	var tasks []string
 	for _, arg := range args {
 		if arg == "" {
-			fmt.Fprintln(out, "task name cannot be empty") // TODO: move to Main
-			return f.invalid()
+			return errors.New("task name cannot be empty")
 		}
 		if _, ok := f.tasks[arg]; !ok {
-			fmt.Fprintf(out, "task provided but not defined: %s\n", arg) // TODO: move to Main
-			return f.invalid()
+			return errors.New("task provided but not defined: " + arg)
 		}
 		tasks = append(tasks, arg)
 	}
@@ -156,8 +159,7 @@ func (f *Flow) Execute(ctx context.Context, args ...string) int {
 		tasks = append(tasks, f.defaultTask)
 	}
 	if len(tasks) == 0 {
-		fmt.Fprintln(out, "no task provided") // TODO: move to Main
-		return f.invalid()
+		return errors.New("no task provided")
 	}
 
 	var middlewares []Middleware
@@ -172,25 +174,23 @@ func (f *Flow) Execute(ctx context.Context, args ...string) int {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	if !r.Execute(ctx, tasks) {
-		return CodeFail
-	}
-	return CodePass
+	return r.Execute(ctx, tasks)
 }
 
-func (f *Flow) invalid() int {
-	if f.Usage != nil {
-		f.Usage()
-	} else {
-		f.Print()
-	}
-	return CodeInvalidArgs
-}
+const (
+	exitCodePass    = 0
+	exitCodeFail    = 1
+	exitCodeInvalid = 2
+)
 
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
 // or SIGINT was send to interrupt the execution.
+// 0 exit code means that non of the tasks failed.
+// 1 exit code means that a task has failed or the execution was interrupted.
+// 2 exit code means that the input was invalid.
+// Calls Usage when invalid args are provided.
 func (f *Flow) Main(args []string) {
 	out := f.Output
 	if out == nil {
@@ -208,19 +208,34 @@ func (f *Flow) Main(args []string) {
 
 		<-c // second signal, hard exit
 		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(CodeFail)
+		os.Exit(exitCodeFail)
 	}()
 
 	// change working directory to repo root (per convention)
 	if err := os.Chdir(".."); err != nil {
 		fmt.Println(err)
 		fmt.Fprintln(out, err)
-		os.Exit(CodeInvalidArgs)
+		os.Exit(exitCodeInvalid)
 	}
 
 	// run flow
-	exitCode := f.Execute(ctx, args...)
-	os.Exit(exitCode)
+	from := time.Now()
+	err := f.Execute(ctx, args...)
+	if _, ok := err.(*FailError); ok {
+		fmt.Fprintf(out, "%v\t%.3fs\n", err, time.Since(from).Seconds())
+		os.Exit(exitCodeFail)
+	}
+	if err != nil {
+		fmt.Fprintln(out, err.Error())
+		if f.Usage != nil {
+			f.Usage()
+		} else {
+			f.Print()
+		}
+		os.Exit(exitCodeInvalid)
+	}
+	fmt.Fprintf(out, "ok\t%.3fs\n", time.Since(from).Seconds())
+	os.Exit(exitCodePass)
 }
 
 // Print prints, to os.Stdout unless configured otherwise,
