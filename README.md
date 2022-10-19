@@ -51,6 +51,13 @@ Table of Contents:
 is used to create build pipelines in Go.
 As opposed to many other tools, it is just a Go library.
 
+The API is mainly inspired by
+[`testing`](https://golang.org/pkg/testing),
+[`flag`](https://golang.org/pkg/flag),
+[`http`](https://golang.org/pkg/http),
+[`cobra`](https://github.com/spf13/cobra)
+packages.
+
 Here are some good parts:
 
 - It is cross-platform and shell independent.
@@ -70,10 +77,6 @@ Here are some good parts:
   - [`rjeczalik/notify`](https://github.com/rjeczalik/notify)
   - [`spf13/viper`](https://github.com/spf13/viper)
 - **goyek** does not use any third-party dependency other than the Go standard library.
-
-**goyek** API is inspired by packages like [`testing`](https://golang.org/pkg/testing),
-[`http`](https://golang.org/pkg/http), and [`flag`](https://golang.org/pkg/flag)
-packages.
 
 ## Quick start
 
@@ -236,7 +239,6 @@ With the new API it is easy to integrate **goyek** with any of these packages:
 - [`flag`](https://pkg.go.dev/flag)
 - [`pflag`](https://github.com/spf13/pflag)
 - [`viper`](https://github.com/spf13/viper)
-- [`cobra`](https://github.com/spf13/cobra)
 
 ### Middlewares
 
