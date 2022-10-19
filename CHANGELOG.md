@@ -10,8 +10,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
-- Add `Flow.Logger` for setting a custom log decorator.
+- Add `Flow.SetLogger` for setting a custom log decorator.
   that is used by `TF` logging methods.
+- Add `Flow.Logger` for getting the log decorator (`CodeLineLogger` by default).
 - Add `CodeLineLogger` which is the default for `Flow.Logger`.
 - Add `FmtLogger` which is the default when using `NewRunner`.
 - Add `NOOP` status report for tasks that were intentionally not run
@@ -34,6 +35,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   Moreover, it does not print tasks with empty `Task.Usage`.
 - Change `Flow.Execute` to return an error instead of returning the exit code
   and printing to output.
+- Change `Flow.Output` field to `Flow.SetOutput` setter and `Flow.Output` getter.
+- Change `Flow.Usage` field to `Flow.SetUsage` setter and `Flow.Usage` getter.
 
 ## Removed
 

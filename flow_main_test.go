@@ -2,12 +2,14 @@ package goyek
 
 import (
 	"context"
+	"io/ioutil"
 	"strings"
 	"testing"
 )
 
 func TestFlow_main(t *testing.T) {
-	flow := &Flow{Output: &strings.Builder{}}
+	flow := &Flow{}
+	flow.SetOutput(&strings.Builder{})
 	flow.Define(Task{Name: "task"})
 	flow.Define(Task{Name: "failing", Action: func(tf *TF) { tf.Fail() }})
 
@@ -51,9 +53,10 @@ func TestFlow_main(t *testing.T) {
 }
 
 func Test_main_usage(t *testing.T) {
-	flow := &Flow{Output: &strings.Builder{}}
+	flow := &Flow{}
+	flow.SetOutput(ioutil.Discard)
 	called := false
-	flow.Usage = func() { called = true }
+	flow.SetUsage(func() { called = true })
 
 	flow.main(context.Background())
 

@@ -17,17 +17,9 @@ import (
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
 type Flow struct {
-	Output io.Writer // output where text is printed; os.Stdout by default
-
-	// Usage is the function called when an error occurs while parsing tasks.
-	// The field is a function that may be changed to point to
-	// a custom error handler. By default it calls Print.
-	Usage func()
-
-	// Logger used by TF's logging functions. CodeLineLogger by default.
-	//
-	// TODO: If Helper() is implemented then it is called when TF.Helper() is called.
-	Logger Logger
+	output io.Writer
+	usage  func()
+	logger Logger // TODO: If Helper() is implemented then it is called when TF.Helper() is called.
 
 	tasks       map[string]taskSnapshot // snapshot of defined tasks
 	defaultTask string                  // task to run when none is explicitly provided
@@ -92,6 +84,48 @@ func (f *Flow) isDefined(name string) bool {
 	return ok
 }
 
+// Output returns the io.Writer used when printing.
+// os.Stdout by default.
+func (f *Flow) Output() io.Writer {
+	if f.output == nil {
+		return os.Stdout
+	}
+	return f.output
+}
+
+// SetOutput sets the io.Writer used when printing.
+func (f *Flow) SetOutput(out io.Writer) {
+	f.output = out
+}
+
+// Logger returns the logger used by TF's logging functions.
+// CodeLineLogger by default.
+func (f *Flow) Logger() Logger {
+	if f.logger == nil {
+		return &CodeLineLogger{}
+	}
+	return f.logger
+}
+
+// SetLogger sets the logger used by TF's logging functions.
+func (f *Flow) SetLogger(logger Logger) {
+	f.logger = logger
+}
+
+// Usage returns the function called when an error occurs while parsing tasks.
+// Flow.Print by default.
+func (f *Flow) Usage() func() {
+	if f.usage == nil {
+		return f.Print
+	}
+	return f.usage
+}
+
+// SetUsage sets the function called when an error occurs while parsing tasks.
+func (f *Flow) SetUsage(fn func()) {
+	f.usage = fn
+}
+
 // Default returns the default task.
 // Returns nil of there is no default task.
 func (f *Flow) Default() DefinedTask {
@@ -135,16 +169,6 @@ func (err *FailError) Error() string {
 // Returns FailError if a task failed.
 // Returns other error in case of invalid input or context error.
 func (f *Flow) Execute(ctx context.Context, args ...string) error {
-	out := f.Output
-	if out == nil {
-		out = os.Stdout
-	}
-
-	logger := f.Logger
-	if logger == nil {
-		logger = &CodeLineLogger{}
-	}
-
 	var tasks []string
 	for _, arg := range args {
 		if arg == "" {
@@ -166,9 +190,9 @@ func (f *Flow) Execute(ctx context.Context, args ...string) error {
 	middlewares = append(middlewares, f.middlewares...)
 
 	r := &executor{
-		output:      out,
+		output:      f.Output(),
 		defined:     f.tasks,
-		logger:      logger,
+		logger:      f.Logger(),
 		middlewares: middlewares,
 	}
 	if ctx == nil {
@@ -192,10 +216,7 @@ const (
 // 2 exit code means that the input was invalid.
 // Calls Usage when invalid args are provided.
 func (f *Flow) Main(args []string) {
-	out := f.Output
-	if out == nil {
-		out = os.Stdout
-	}
+	out := f.Output()
 
 	// trap Ctrl+C and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
@@ -223,10 +244,7 @@ func (f *Flow) Main(args []string) {
 }
 
 func (f *Flow) main(ctx context.Context, args ...string) int {
-	out := f.Output
-	if out == nil {
-		out = os.Stdout
-	}
+	out := f.Output()
 
 	from := time.Now()
 	err := f.Execute(ctx, args...)
@@ -240,11 +258,7 @@ func (f *Flow) main(ctx context.Context, args ...string) int {
 	}
 	if err != nil {
 		fmt.Fprintln(out, err.Error())
-		if f.Usage != nil {
-			f.Usage()
-		} else {
-			f.Print()
-		}
+		f.Usage()()
 		return exitCodeInvalid
 	}
 	fmt.Fprintf(out, "ok\t%.3fs\n", time.Since(from).Seconds())
@@ -255,10 +269,7 @@ func (f *Flow) main(ctx context.Context, args ...string) int {
 // the information about the registered tasks.
 // Tasks with empty Usage are not printed.
 func (f *Flow) Print() {
-	out := f.Output
-	if out == nil {
-		out = os.Stdout
-	}
+	out := f.Output()
 
 	if f.defaultTask != "" {
 		fmt.Fprintf(out, "Default task: %s\n", f.defaultTask)

@@ -62,8 +62,8 @@ func Example() {
 
 func Example_flag() {
 	// use the same output for flow and flag
-	flow := &goyek.Flow{Output: os.Stdout}
-	flag.CommandLine.SetOutput(os.Stdout)
+	flow := &goyek.Flow{}
+	flag.CommandLine.SetOutput(flow.Output())
 
 	// define a flag to configure flow output verbosity
 	verbose := flag.Bool("v", true, "print all tasks as they are run")
@@ -99,7 +99,7 @@ func Example_flag() {
 	}
 
 	// run the build pipeline
-	flow.Usage = usage
+	flow.SetUsage(usage)
 	flow.Main(flag.Args())
 
 	/*
