@@ -20,25 +20,24 @@ var (
 	v = flag.Bool("v", false, "print all tasks and tests as they are run")
 )
 
-var flow = &goyek.Flow{}
-
 func main() {
-	flag.CommandLine.SetOutput(flow.Output())
+	goyek.SetDefault(all)
+
+	flag.CommandLine.SetOutput(goyek.Output())
 	flag.Usage = usage
 	flag.Parse()
 
-	flow.SetDefault(all)
-	flow.Use(middleware.Reporter)
+	goyek.Use(middleware.Reporter)
 	if !*v {
-		flow.Use(middleware.SilentNonFailed)
+		goyek.Use(middleware.SilentNonFailed)
 	}
-	flow.SetUsage(usage)
-	flow.Main(flag.Args())
+	goyek.SetUsage(usage)
+	goyek.Main(flag.Args())
 }
 
 func usage() {
 	fmt.Println("Usage of build: [flags] [--] [tasks]")
-	flow.Print()
+	goyek.Print()
 	fmt.Println("Flags:")
 	flag.PrintDefaults()
 }

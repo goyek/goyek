@@ -20,6 +20,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Add `Flow.Use` method o support task run interception using middlewares.
 - Add `middleware` package with `Reporter` and `SilentNonFailed` middlewares.
 - `TF.Error`, `TF.Errorf`, `TF.Fail` may be called simultaneously from multiple goroutines.
+- Add `DefaultFlow` that is the default flowa
+- Add the top-level functions such as `Define`, `Main`, and so on which are wrappers
+  for the methods of `Flow` called for `DefaultFlow`.
 
 ## Changed
 

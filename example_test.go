@@ -10,11 +10,8 @@ import (
 )
 
 func Example() {
-	// use the same output for flow and flag
-	flow := &goyek.Flow{}
-
 	// define a task printing the message (configurable via flag)
-	hi := flow.Define(goyek.Task{
+	hi := goyek.Define(goyek.Task{
 		Name:  "hi",
 		Usage: "Greetings",
 		Action: func(tf *goyek.TF) {
@@ -23,7 +20,7 @@ func Example() {
 	})
 
 	// define a task running a command
-	goVer := flow.Define(goyek.Task{
+	goVer := goyek.Define(goyek.Task{
 		Name:  "go-ver",
 		Usage: `Run "go version"`,
 		Action: func(tf *goyek.TF) {
@@ -34,19 +31,19 @@ func Example() {
 	})
 
 	// define a pipeline
-	all := flow.Define(goyek.Task{
+	all := goyek.Define(goyek.Task{
 		Name: "all",
 		Deps: goyek.Deps{hi, goVer},
 	})
 
 	// configure middlewares
-	flow.Use(middleware.Reporter)
+	goyek.Use(middleware.Reporter)
 
 	// set the pipeline as the default task
-	flow.SetDefault(all)
+	goyek.SetDefault(all)
 
 	// run the build pipeline
-	flow.Main(os.Args[1:])
+	goyek.Main(os.Args[1:])
 
 	/*
 		$ go run .
@@ -62,8 +59,7 @@ func Example() {
 
 func Example_flag() {
 	// use the same output for flow and flag
-	flow := &goyek.Flow{}
-	flag.CommandLine.SetOutput(flow.Output())
+	flag.CommandLine.SetOutput(goyek.Output())
 
 	// define a flag to configure flow output verbosity
 	verbose := flag.Bool("v", true, "print all tasks as they are run")
@@ -72,7 +68,7 @@ func Example_flag() {
 	msg := flag.String("msg", "hello world", `message to display by "hi" task`)
 
 	// define a task printing the message (configurable via flag)
-	flow.Define(goyek.Task{
+	goyek.Define(goyek.Task{
 		Name:  "hi",
 		Usage: "Greetings",
 		Action: func(tf *goyek.TF) {
@@ -83,7 +79,7 @@ func Example_flag() {
 	// set the help message
 	usage := func() {
 		fmt.Println("Usage of build: [flags] [--] [tasks]")
-		flow.Print()
+		goyek.Print()
 		fmt.Println("Flags:")
 		flag.PrintDefaults()
 	}
@@ -93,14 +89,14 @@ func Example_flag() {
 	flag.Parse()
 
 	// configure middlewares
-	flow.Use(middleware.Reporter)
+	goyek.Use(middleware.Reporter)
 	if !*verbose {
-		flow.Use(middleware.SilentNonFailed)
+		goyek.Use(middleware.SilentNonFailed)
 	}
 
 	// run the build pipeline
-	flow.SetUsage(usage)
-	flow.Main(flag.Args())
+	goyek.SetUsage(usage)
+	goyek.Main(flag.Args())
 
 	/*
 		$ go run .

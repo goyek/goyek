@@ -14,6 +14,26 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
+func Test_DefaultTask(t *testing.T) {
+	goyek.SetOutput(ioutil.Discard)
+	assertEqual(t, goyek.Output(), ioutil.Discard, "Output")
+
+	goyek.SetLogger(goyek.FmtLogger{})
+	assertEqual(t, goyek.GetLogger(), goyek.FmtLogger{}, "Logger")
+
+	goyek.SetUsage(goyek.Print)
+	goyek.Usage()()
+
+	task := goyek.Define(goyek.Task{Name: "task"})
+	assertEqual(t, goyek.Tasks()[0].Name(), "task", "Tasks")
+
+	goyek.SetDefault(task)
+	assertEqual(t, goyek.Default(), task, "Default")
+
+	goyek.Use(func(r goyek.Runner) goyek.Runner { return r })
+	assertPass(t, goyek.Execute(context.Background()), "Execute")
+}
+
 func Test_Define_empty_name(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)

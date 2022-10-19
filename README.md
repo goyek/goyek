@@ -113,22 +113,21 @@ import (
 	"github.com/goyek/goyek/v2/middleware"
 )
 
-var flow = &goyek.Flow{}
-
 func main() {
-	flag.CommandLine.SetOutput(flow.Output())
+  goyek.SetDefault(hello)
+
+	flag.CommandLine.SetOutput(goyek.Output())
 	flag.Usage = usage
 	flag.Parse()
 
-	flow.Use(middleware.Reporter)
-	flow.SetDefault(hello)
-	flow.SetUsage(usage)
-	flow.Main(flag.Args())
+	goyek.Use(middleware.Reporter)
+	goyek.SetUsage(usage)
+	goyek.Main(flag.Args())
 }
 
 func usage() {
 	fmt.Println("Usage of build: [flags] [--] [tasks]")
-	flow.Print()
+	goyek.Print()
 	fmt.Println("Flags:")
 	flag.PrintDefaults()
 }

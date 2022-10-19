@@ -6,7 +6,7 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-var spell = flow.Define(goyek.Task{
+var spell = goyek.Define(goyek.Task{
 	Name:  "spell",
 	Usage: "misspell",
 	Action: func(tf *goyek.TF) {
