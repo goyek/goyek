@@ -6,11 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
-## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.2...HEAD)
+## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.3...HEAD)
+
+## [2.0.0-rc.3](https://github.com/goyek/goyek/compare/v2.0.0-rc.2...v2.0.0-rc.3)
 
 ### Added
 
-- Add `Flow.SetLogger` for setting a custom log decorator.
+- Add `Flow.SetLogger` for setting a custom log decorator
   that is used by `TF` logging methods.
 - Add `Flow.Logger` for getting the log decorator (`CodeLineLogger` by default).
 - Add `CodeLineLogger` which is the default for `Flow.Logger`.
@@ -20,11 +22,11 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Add `Flow.Use` method o support task run interception using middlewares.
 - Add `middleware` package with `Reporter` and `SilentNonFailed` middlewares.
 - `TF.Error`, `TF.Errorf`, `TF.Fail` may be called simultaneously from multiple goroutines.
-- Add `DefaultFlow` that is the default flowa
+- Add `DefaultFlow` that is the default flow.
 - Add the top-level functions such as `Define`, `Main`, and so on which are wrappers
   for the methods of `Flow` called for `DefaultFlow`.
 
-## Changed
+### Changed
 
 - Usually, the task does not call `panic` directly.
   `panic` failure message no longer contains a prefix with file and line information.
@@ -41,7 +43,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Change `Flow.Output` field to `Flow.SetOutput` setter and `Flow.Output` getter.
 - Change `Flow.Usage` field to `Flow.SetUsage` setter and `Flow.Usage` getter.
 
-## Removed
+### Removed
 
 - `Flow.Verbose` is removed.
   To be non-verbose use `Flow.Use(middleware.SilentNonFailed)` instead.
