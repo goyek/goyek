@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"runtime"
 	"strings"
@@ -528,6 +529,30 @@ func TestFlow_Logger(t *testing.T) {
 
 	assertContains(t, out, "first", "should call Log")
 	assertContains(t, out, "second", "should call Logf")
+}
+
+func TestFlow_Logger_default(t *testing.T) {
+	flow := &goyek.Flow{}
+
+	assertEqual(t, flow.Logger(), &goyek.CodeLineLogger{}, "should have proper default")
+}
+
+func TestFlow_Output_default(t *testing.T) {
+	flow := &goyek.Flow{}
+
+	assertEqual(t, flow.Output(), os.Stdout, "should have proper default")
+}
+
+func TestFlow_Usage_default(t *testing.T) {
+	getFuncName := func(fn func()) string {
+		return runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
+	}
+	flow := &goyek.Flow{}
+
+	want := getFuncName(flow.Print)
+	got := getFuncName(flow.Usage())
+
+	assertEqual(t, got, want, "should have proper default")
 }
 
 func TestFlow_Use(t *testing.T) {
