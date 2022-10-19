@@ -116,13 +116,13 @@ import (
 var flow = &goyek.Flow{}
 
 func main() {
-	flag.CommandLine.SetOutput(os.Stdout)
+	flag.CommandLine.SetOutput(flow.Output())
 	flag.Usage = usage
 	flag.Parse()
 
 	flow.Use(middleware.Reporter)
 	flow.SetDefault(hello)
-	flow.Usage = usage
+	flow.SetUsage(usage)
 	flow.Main(flag.Args())
 }
 
@@ -132,7 +132,6 @@ func usage() {
 	fmt.Println("Flags:")
 	flag.PrintDefaults()
 }
-
 ```
 
 Run:

@@ -4,7 +4,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 
 	"github.com/goyek/goyek/v2"
 	"github.com/goyek/goyek/v2/middleware"
@@ -24,24 +23,22 @@ var (
 var flow = &goyek.Flow{}
 
 func main() {
-	flow.SetDefault(all)
-
-	flag.CommandLine.SetOutput(os.Stdout)
-	usage := func() {
-		fmt.Println("Usage of build: [flags] [--] [tasks]")
-		flow.Print()
-		fmt.Println("Flags:")
-		flag.PrintDefaults()
-	}
-	flow.Usage = usage
+	flag.CommandLine.SetOutput(flow.Output())
 	flag.Usage = usage
-
 	flag.Parse()
 
+	flow.SetDefault(all)
 	flow.Use(middleware.Reporter)
 	if !*v {
 		flow.Use(middleware.SilentNonFailed)
 	}
-
+	flow.SetUsage(usage)
 	flow.Main(flag.Args())
+}
+
+func usage() {
+	fmt.Println("Usage of build: [flags] [--] [tasks]")
+	flow.Print()
+	fmt.Println("Flags:")
+	flag.PrintDefaults()
 }
