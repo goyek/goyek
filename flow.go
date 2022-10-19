@@ -218,14 +218,23 @@ func (f *Flow) Main(args []string) {
 		os.Exit(exitCodeInvalid)
 	}
 
-	exitCode := f.run(ctx, out, args)
+	exitCode := f.main(ctx, args...)
 	os.Exit(exitCode)
 }
 
-func (f *Flow) run(ctx context.Context, out io.Writer, args []string) int {
+func (f *Flow) main(ctx context.Context, args ...string) int {
+	out := f.Output
+	if out == nil {
+		out = os.Stdout
+	}
+
 	from := time.Now()
 	err := f.Execute(ctx, args...)
 	if _, ok := err.(*FailError); ok {
+		fmt.Fprintf(out, "%v\t%.3fs\n", err, time.Since(from).Seconds())
+		return exitCodeFail
+	}
+	if err == context.Canceled || err == context.DeadlineExceeded {
 		fmt.Fprintf(out, "%v\t%.3fs\n", err, time.Since(from).Seconds())
 		return exitCodeFail
 	}
