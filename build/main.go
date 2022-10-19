@@ -21,11 +21,12 @@ var (
 )
 
 func main() {
+	goyek.SetDefault(all)
+
 	flag.CommandLine.SetOutput(goyek.Output())
 	flag.Usage = usage
 	flag.Parse()
 
-	goyek.SetDefault(all)
 	goyek.Use(middleware.Reporter)
 	if !*v {
 		goyek.Use(middleware.SilentNonFailed)
