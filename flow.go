@@ -218,12 +218,16 @@ func (f *Flow) Main(args []string) {
 		os.Exit(exitCodeInvalid)
 	}
 
-	// run flow
+	exitCode := f.run(ctx, out, args)
+	os.Exit(exitCode)
+}
+
+func (f *Flow) run(ctx context.Context, out io.Writer, args []string) int {
 	from := time.Now()
 	err := f.Execute(ctx, args...)
 	if _, ok := err.(*FailError); ok {
 		fmt.Fprintf(out, "%v\t%.3fs\n", err, time.Since(from).Seconds())
-		os.Exit(exitCodeFail)
+		return exitCodeFail
 	}
 	if err != nil {
 		fmt.Fprintln(out, err.Error())
@@ -232,10 +236,10 @@ func (f *Flow) Main(args []string) {
 		} else {
 			f.Print()
 		}
-		os.Exit(exitCodeInvalid)
+		return exitCodeInvalid
 	}
 	fmt.Fprintf(out, "ok\t%.3fs\n", time.Since(from).Seconds())
-	os.Exit(exitCodePass)
+	return exitCodePass
 }
 
 // Print prints, to os.Stdout unless configured otherwise,
