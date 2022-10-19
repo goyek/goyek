@@ -32,6 +32,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   It can be enabled by calling `Flow.Use(middleware.Reporter)`.
 - `Flow.Print` output format is similar to `flag.PrintDefaults`.
   Moreover, it does not print tasks with empty `Task.Usage`.
+- Change `Flow.Execute` to return an error instead of returning the exit code
+  and printing to output.
 
 ## Removed
 

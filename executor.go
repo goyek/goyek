@@ -2,9 +2,7 @@ package goyek
 
 import (
 	"context"
-	"fmt"
 	"io"
-	"time"
 )
 
 type executor struct {
@@ -16,17 +14,14 @@ type executor struct {
 
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (r *executor) Execute(ctx context.Context, tasks []string) bool {
-	from := time.Now()
+func (r *executor) Execute(ctx context.Context, tasks []string) error {
 	executedTasks := map[string]bool{}
 	for _, name := range tasks {
 		if err := r.run(ctx, name, executedTasks); err != nil {
-			fmt.Fprintf(r.output, "%v\t%.3fs\n", err, time.Since(from).Seconds()) // TODO: move to Main
-			return false
+			return err
 		}
 	}
-	fmt.Fprintf(r.output, "ok\t%.3fs\n", time.Since(from).Seconds()) // TODO: move to Main
-	return true
+	return nil
 }
 
 func (r *executor) run(ctx context.Context, name string, executed map[string]bool) error {
@@ -43,7 +38,7 @@ func (r *executor) run(ctx context.Context, name string, executed map[string]boo
 		return err
 	}
 	if !r.runTask(ctx, task) {
-		return fmt.Errorf("task failed: %s", task.name)
+		return &FailError{Task: task.name}
 	}
 	executed[name] = true
 	return nil
