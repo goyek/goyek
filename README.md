@@ -17,8 +17,8 @@ Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
 ---
 
-⚠️ This README refers to the in-development `v2` version.
-See the documentation for the latest release on [pkg.go.dev](https://pkg.go.dev/github.com/goyek/goyek).
+This README documents the latest `v2.0.0-rc.3` release.
+The documentation for `v1.1.0` can be found on [pkg.go.dev](https://pkg.go.dev/github.com/goyek/goyek).
 
 ---
 
@@ -117,7 +117,7 @@ import (
 )
 
 func main() {
-  goyek.SetDefault(hello)
+	goyek.SetDefault(hello)
 
 	flag.CommandLine.SetOutput(goyek.Output())
 	flag.Usage = usage
