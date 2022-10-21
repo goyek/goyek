@@ -10,7 +10,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [2.0.0-rc.3](https://github.com/goyek/goyek/compare/v2.0.0-rc.2...v2.0.0-rc.3)
 
-This release focuses on improving usability, extensibility and customization.
+This release focuses on improving usability, extensibility, and customization.
 
 ### Added
 
