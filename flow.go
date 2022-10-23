@@ -50,7 +50,7 @@ func Tasks() []DefinedTask {
 func (f *Flow) Tasks() []DefinedTask {
 	var tasks []DefinedTask
 	for _, task := range f.tasks {
-		tasks = append(tasks, registeredTask{task})
+		tasks = append(tasks, registeredTask{task, f})
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
 	return tasks
@@ -87,7 +87,7 @@ func (f *Flow) Define(task Task) DefinedTask {
 		action: task.Action,
 	}
 	f.tasks[task.Name] = taskCopy
-	return registeredTask{taskCopy}
+	return registeredTask{taskCopy, f}
 }
 
 func (f *Flow) isDefined(name string) bool {
@@ -185,7 +185,7 @@ func (f *Flow) Default() DefinedTask {
 	if f.defaultTask == "" {
 		return nil
 	}
-	return registeredTask{f.tasks[f.defaultTask]}
+	return registeredTask{f.tasks[f.defaultTask], f}
 }
 
 // SetDefault sets a task to run when none is explicitly provided.
@@ -381,7 +381,11 @@ func (f *Flow) Print() {
 		}
 		deps := ""
 		if len(task.Deps()) > 0 {
-			deps = " (depends on: " + strings.Join(task.Deps(), ", ") + ")"
+			depNames := make([]string, 0, len(task.Deps()))
+			for _, dep := range task.Deps() {
+				depNames = append(depNames, dep.Name())
+			}
+			deps = " (depends on: " + strings.Join(depNames, ", ") + ")"
 		}
 		fmt.Fprintf(w, "  %s\t%s\n", task.Name(), task.Usage()+deps)
 	}
