@@ -493,7 +493,7 @@ func TestFlow_Tasks(t *testing.T) {
 	assertEqual(t, got[1].Name(), "three", "should then return one (sorted)")
 	assertEqual(t, got[2].Name(), "two", "should next return two")
 	assertEqual(t, got[2].Usage(), "action", "should return usage")
-	assertEqual(t, got[2].Deps()[0], "one", "should return dependency")
+	assertEqual(t, got[2].Deps()[0], t1, "should return dependency")
 }
 
 func TestFlow_Default(t *testing.T) {

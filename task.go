@@ -26,7 +26,7 @@ type Task struct {
 type DefinedTask interface {
 	Name() string
 	Usage() string
-	Deps() []string
+	Deps() Deps
 	sealed()
 }
 
@@ -36,6 +36,7 @@ type Deps []DefinedTask
 // registeredTask implements (and encapsulates) DefinedTask.
 type registeredTask struct {
 	taskSnapshot
+	flow *Flow
 }
 
 // Name returns the name of the task.
@@ -49,13 +50,15 @@ func (r registeredTask) Usage() string {
 }
 
 // Deps returns the names of all task's dependencies.
-func (r registeredTask) Deps() []string {
+func (r registeredTask) Deps() Deps {
 	count := len(r.deps)
 	if count == 0 {
 		return nil
 	}
-	deps := make([]string, count)
-	copy(deps, r.deps)
+	deps := make(Deps, 0, count)
+	for _, dep := range r.deps {
+		deps = append(deps, registeredTask{r.flow.tasks[dep], r.flow})
+	}
 	return deps
 }
 

@@ -8,6 +8,11 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.3...HEAD)
 
+### Changed
+
+- `DefinedTask.Deps` returns `Deps` to facilitate reusing defined task's dependencies
+  when creating a new one or redefining existing one.
+
 ## [2.0.0-rc.3](https://github.com/goyek/goyek/compare/v2.0.0-rc.2...v2.0.0-rc.3)
 
 This release focuses on improving usability, extensibility, and customization.
