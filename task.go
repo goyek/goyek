@@ -28,6 +28,8 @@ type DefinedTask interface {
 	SetName(string)
 	Usage() string
 	SetUsage(string)
+	Action() func(tf *TF)
+	SetAction(func(tf *TF))
 	Deps() Deps
 	SetDeps(Deps)
 	sealed()
@@ -52,7 +54,15 @@ func (r registeredTask) SetName(s string) {
 	if _, ok := r.flow.tasks[s]; ok {
 		panic("task with the same name is already defined")
 	}
-	r.name = s
+	oldName := r.name
+	snap := r.flow.tasks[oldName]
+	delete(r.flow.tasks, oldName)
+	snap.name = s
+	r.flow.tasks[s] = snap
+
+	if r.flow.defaultTask == oldName {
+		r.flow.defaultTask = s
+	}
 }
 
 // Usage returns the description of the task.
