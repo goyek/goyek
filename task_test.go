@@ -97,7 +97,7 @@ func TestDefinedTask_SetDeps(t *testing.T) {
 	t3.SetDeps(goyek.Deps{t1, t2})
 
 	got := t3.Deps()
-	assertEqual(t, got, goyek.Deps{t2}, "should update the dependencies")
+	assertEqual(t, got, goyek.Deps{t1, t2}, "should update the dependencies")
 
 	err := flow.Execute(context.Background(), "three")
 	assertPass(t, err, "should pass")
