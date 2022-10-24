@@ -90,6 +90,34 @@ func (f *Flow) Define(task Task) DefinedTask {
 	return registeredTask{taskCopy, f}
 }
 
+// Undefine registers the task. It panics in case of any error.
+func (f *Flow) Undefine(task DefinedTask) {
+	snapshot := task.sealed().taskSnapshot
+	if !f.isDefined(snapshot.name, task.sealed().flow) {
+		panic("task was not defined: " + snapshot.name)
+	}
+
+	delete(f.tasks, snapshot.name)
+
+	for _, task := range f.tasks {
+		if len(task.deps) == 0 {
+			continue
+		}
+		var cleanDep []*taskSnapshot
+		for _, dep := range task.deps {
+			if dep == snapshot {
+				continue
+			}
+			cleanDep = append(cleanDep, dep)
+		}
+		task.deps = cleanDep
+	}
+
+	if f.defaultTask == snapshot {
+		f.defaultTask = nil
+	}
+}
+
 func (f *Flow) isDefined(name string, flow *Flow) bool {
 	if f.tasks == nil {
 		f.tasks = map[string]*taskSnapshot{}
@@ -198,8 +226,14 @@ func SetDefault(task DefinedTask) {
 }
 
 // SetDefault sets a task to run when none is explicitly provided.
+// Passing nil clears the default task.
 // It panics in case of any error.
 func (f *Flow) SetDefault(task DefinedTask) {
+	if task == nil {
+		f.defaultTask = nil
+		return
+	}
+
 	if !f.isDefined(task.Name(), task.sealed().flow) {
 		panic("task was not defined: " + task.Name())
 	}

@@ -480,7 +480,6 @@ func TestCmd_error(t *testing.T) {
 
 func TestFlow_Tasks(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
 	t1 := flow.Define(goyek.Task{Name: "one"})
 	flow.Define(goyek.Task{Name: "two", Usage: "action", Deps: goyek.Deps{t1}})
 	flow.Define(goyek.Task{Name: "three"})
@@ -497,7 +496,6 @@ func TestFlow_Tasks(t *testing.T) {
 
 func TestFlow_Default(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
 	task := flow.Define(goyek.Task{Name: "name"})
 	flow.SetDefault(task)
 
@@ -508,10 +506,20 @@ func TestFlow_Default(t *testing.T) {
 
 func TestFlow_Default_empty(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
 	got := flow.Default()
 
 	assertEqual(t, got, nil, "should return nil")
+}
+
+func TestFlow_Default_nil(t *testing.T) {
+	flow := &goyek.Flow{}
+	task := flow.Define(goyek.Task{Name: "name"})
+	flow.SetDefault(task)
+	flow.SetDefault(nil)
+
+	got := flow.Default()
+
+	assertEqual(t, got, nil, "should clear the default")
 }
 
 func TestFlow_Print(t *testing.T) {
@@ -601,4 +609,31 @@ func TestFlow_Use_nil_middleware(t *testing.T) {
 	}
 
 	assertPanics(t, act, "should panic on nil middleware")
+}
+
+func TestFlow_Undefine(t *testing.T) {
+	flow := &goyek.Flow{}
+	task := flow.Define(goyek.Task{Name: "name"})
+	dep := flow.Define(goyek.Task{Name: "dep"})
+	flow.Define(goyek.Task{Name: "task", Deps: goyek.Deps{dep, task}})
+
+	flow.SetDefault(task)
+	flow.Undefine(task)
+
+	got := flow.Tasks()
+
+	assertEqual(t, len(got), 2, "should return only one task")
+	assertEqual(t, got[1].Name(), "task", "should first return one")
+	assertEqual(t, got[1].Deps(), goyek.Deps{dep}, "should remove dependency")
+	assertEqual(t, flow.Default(), nil, "should clear default")
+}
+
+func Test_Define_bad_task(t *testing.T) {
+	flow := &goyek.Flow{}
+	otherFlow := &goyek.Flow{}
+	task := otherFlow.Define(goyek.Task{Name: "different-flow"})
+
+	act := func() { flow.Undefine(task) }
+
+	assertPanics(t, act, "should not be possible undefine task from different flow")
 }

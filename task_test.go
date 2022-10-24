@@ -127,9 +127,8 @@ func TestDefinedTask_SetDeps_clear(t *testing.T) {
 
 	t2.SetDeps(nil)
 
-	var want goyek.Deps
 	got := t2.Deps()
-	assertEqual(t, got, want, "should clear the dependencies")
+	assertEqual(t, got, noDeps, "should clear the dependencies")
 
 	err := flow.Execute(context.Background(), "two")
 	assertPass(t, err, "should pass")
