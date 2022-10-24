@@ -30,7 +30,7 @@ func (r *executor) run(ctx context.Context, name string, executed map[string]boo
 		return nil
 	}
 	for _, dep := range task.deps {
-		if err := r.run(ctx, dep, executed); err != nil {
+		if err := r.run(ctx, dep.name, executed); err != nil {
 			return err
 		}
 	}

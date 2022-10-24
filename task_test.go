@@ -41,6 +41,20 @@ func TestDefinedTask_SetName_for_default(t *testing.T) {
 	assertTrue(t, called, "should call the action")
 }
 
+func TestDefinedTask_SetName_for_depenency(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(ioutil.Discard)
+	called := false
+	task := flow.Define(goyek.Task{Name: "one", Action: func(tf *goyek.TF) { called = true }})
+	flow.Define(goyek.Task{Name: "two", Deps: goyek.Deps{task}})
+
+	task.SetName("new")
+
+	err := flow.Execute(context.Background(), "two")
+	assertPass(t, err, "should pass")
+	assertTrue(t, called, "should call the dependency with changed name")
+}
+
 func TestDefinedTask_SetName_conflict(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
@@ -134,4 +148,15 @@ func TestDefinedTask_SetDeps_circular(t *testing.T) {
 	}
 
 	assertPanics(t, act, "should panic in case of a cyclic dependency")
+}
+
+func TestDefinedTask_SetDeps_dep(t *testing.T) {
+	flow := &goyek.Flow{}
+	task := flow.Define(goyek.Task{Name: "my-task"})
+	otherFlow := &goyek.Flow{}
+	otherTask := otherFlow.Define(goyek.Task{Name: "different-flow"})
+
+	act := func() { task.SetDeps(goyek.Deps{otherTask}) }
+
+	assertPanics(t, act, "should not be possible use dependencies from different flow")
 }
