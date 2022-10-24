@@ -16,6 +16,8 @@ reusable build pipelines easier.
 - Add `DefinedTask.SetName`, `DefinedTask.SetUsage`, `DefinedTask.Action`,
   `DefinedTask.SetAction`, `DefinedTask.SetAction`, `DefinedTask.SetDeps`
   to enable modifying the task after the initial definition.
+- Add `Flow.Undefine` method and `Undefine` function to unregister a task.
+- Passing `nil` to `Flow.SetDefault` unsets the default task.
 
 ### Changed
 
