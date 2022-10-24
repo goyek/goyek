@@ -25,8 +25,13 @@ type Task struct {
 // It can be used as a dependency for another task.
 type DefinedTask interface {
 	Name() string
+	SetName(string)
 	Usage() string
+	SetUsage(string)
+	Action() func(tf *TF)
+	SetAction(func(tf *TF))
 	Deps() Deps
+	SetDeps(Deps)
 	sealed()
 }
 
@@ -35,7 +40,7 @@ type Deps []DefinedTask
 
 // registeredTask implements (and encapsulates) DefinedTask.
 type registeredTask struct {
-	taskSnapshot
+	*taskSnapshot
 	flow *Flow
 }
 
@@ -44,12 +49,43 @@ func (r registeredTask) Name() string {
 	return r.name
 }
 
+// Name changes the name of the task.
+func (r registeredTask) SetName(s string) {
+	if _, ok := r.flow.tasks[s]; ok {
+		panic("task with the same name is already defined")
+	}
+	oldName := r.name
+	snap := r.flow.tasks[oldName]
+	delete(r.flow.tasks, oldName)
+	snap.name = s
+	r.flow.tasks[s] = snap
+
+	if r.flow.defaultTask == oldName {
+		r.flow.defaultTask = s
+	}
+}
+
 // Usage returns the description of the task.
 func (r registeredTask) Usage() string {
 	return r.usage
 }
 
-// Deps returns the names of all task's dependencies.
+// SetUsage sets the description of the task.
+func (r registeredTask) SetUsage(s string) {
+	r.usage = s
+}
+
+// Action returns the action of the task.
+func (r registeredTask) Action() func(tf *TF) {
+	return r.action
+}
+
+// SetAction changes the action of the task.
+func (r registeredTask) SetAction(fn func(tf *TF)) {
+	r.action = fn
+}
+
+// Deps returns all task's dependencies.
 func (r registeredTask) Deps() Deps {
 	count := len(r.deps)
 	if count == 0 {
@@ -60,6 +96,47 @@ func (r registeredTask) Deps() Deps {
 		deps = append(deps, registeredTask{r.flow.tasks[dep], r.flow})
 	}
 	return deps
+}
+
+// Deps returns all task's dependencies.
+func (r registeredTask) SetDeps(deps Deps) {
+	count := len(deps)
+	if count == 0 {
+		r.deps = nil
+		return
+	}
+
+	visited := map[string]bool{}
+	if ok := r.noCycle(deps, visited); !ok {
+		panic("circular dependency")
+	}
+
+	depNames := make([]string, 0, count)
+	for _, dep := range deps {
+		depNames = append(depNames, dep.Name())
+	}
+
+	r.deps = depNames
+}
+
+func (r registeredTask) noCycle(deps Deps, visited map[string]bool) bool {
+	if len(deps) == 0 {
+		return true
+	}
+	for _, dep := range deps {
+		name := dep.Name()
+		if visited[name] {
+			return true
+		}
+		visited[name] = true
+		if name == r.name {
+			return false
+		}
+		if !r.noCycle(dep.Deps(), visited) {
+			return false
+		}
+	}
+	return true
 }
 
 func (r registeredTask) sealed() {}
