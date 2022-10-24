@@ -32,7 +32,7 @@ type DefinedTask interface {
 	SetAction(func(tf *TF))
 	Deps() Deps
 	SetDeps(Deps)
-	snapshot() *taskSnapshot
+	sealed() registeredTask
 }
 
 // Deps represents a collection of dependencies.
@@ -103,7 +103,7 @@ func (r registeredTask) SetDeps(deps Deps) {
 	}
 
 	for _, dep := range deps {
-		if !r.flow.isDefined(dep.Name()) {
+		if !r.flow.isDefined(dep.Name(), dep.sealed().flow) {
 			panic("dependency was not defined: " + dep.Name())
 		}
 	}
@@ -114,7 +114,7 @@ func (r registeredTask) SetDeps(deps Deps) {
 	}
 	depNames := make([]*taskSnapshot, 0, count)
 	for _, dep := range deps {
-		depNames = append(depNames, dep.snapshot())
+		depNames = append(depNames, dep.sealed().taskSnapshot)
 	}
 
 	r.deps = depNames
@@ -140,6 +140,6 @@ func (r registeredTask) noCycle(deps Deps, visited map[string]bool) bool {
 	return true
 }
 
-func (r registeredTask) snapshot() *taskSnapshot {
-	return r.taskSnapshot
+func (r registeredTask) sealed() registeredTask {
+	return r
 }

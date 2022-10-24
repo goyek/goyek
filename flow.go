@@ -67,18 +67,18 @@ func (f *Flow) Define(task Task) DefinedTask {
 	if task.Name == "" {
 		panic("task name cannot be empty")
 	}
-	if f.isDefined(task.Name) {
+	if f.isDefined(task.Name, f) {
 		panic("task with the same name is already defined")
 	}
 	for _, dep := range task.Deps {
-		if !f.isDefined(dep.Name()) {
+		if !f.isDefined(dep.Name(), dep.sealed().flow) {
 			panic("dependency was not defined: " + dep.Name())
 		}
 	}
 
 	var deps []*taskSnapshot
 	for _, dep := range task.Deps {
-		deps = append(deps, dep.snapshot())
+		deps = append(deps, dep.sealed().taskSnapshot)
 	}
 	taskCopy := &taskSnapshot{
 		name:   task.Name,
@@ -90,9 +90,12 @@ func (f *Flow) Define(task Task) DefinedTask {
 	return registeredTask{taskCopy, f}
 }
 
-func (f *Flow) isDefined(name string) bool {
+func (f *Flow) isDefined(name string, flow *Flow) bool {
 	if f.tasks == nil {
 		f.tasks = map[string]*taskSnapshot{}
+	}
+	if f != flow {
+		return false // defined in other flow
 	}
 	_, ok := f.tasks[name]
 	return ok
@@ -197,10 +200,10 @@ func SetDefault(task DefinedTask) {
 // SetDefault sets a task to run when none is explicitly provided.
 // It panics in case of any error.
 func (f *Flow) SetDefault(task DefinedTask) {
-	if !f.isDefined(task.Name()) {
+	if !f.isDefined(task.Name(), task.sealed().flow) {
 		panic("task was not defined: " + task.Name())
 	}
-	f.defaultTask = task.snapshot()
+	f.defaultTask = task.sealed().taskSnapshot
 }
 
 // Use adds task runner middlewares (iterceptors).
