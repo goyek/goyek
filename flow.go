@@ -21,8 +21,8 @@ type Flow struct {
 	usage  func()
 	logger Logger // TODO: If Helper() is implemented then it is called when TF.Helper() is called.
 
-	tasks       map[string]taskSnapshot // snapshot of defined tasks
-	defaultTask string                  // task to run when none is explicitly provided
+	tasks       map[string]*taskSnapshot // snapshot of defined tasks
+	defaultTask string                   // task to run when none is explicitly provided
 	middlewares []Middleware
 }
 
@@ -68,7 +68,7 @@ func (f *Flow) Define(task Task) DefinedTask {
 		panic("task name cannot be empty")
 	}
 	if f.isDefined(task.Name) {
-		panic(fmt.Sprintf("task was already defined: %s", task.Name))
+		panic("task with the same name is already defined")
 	}
 	for _, dep := range task.Deps {
 		if !f.isDefined(dep.Name()) {
@@ -80,7 +80,7 @@ func (f *Flow) Define(task Task) DefinedTask {
 	for _, dep := range task.Deps {
 		deps = append(deps, dep.Name())
 	}
-	taskCopy := taskSnapshot{
+	taskCopy := &taskSnapshot{
 		name:   task.Name,
 		usage:  task.Usage,
 		deps:   deps,
@@ -92,7 +92,7 @@ func (f *Flow) Define(task Task) DefinedTask {
 
 func (f *Flow) isDefined(name string) bool {
 	if f.tasks == nil {
-		f.tasks = map[string]taskSnapshot{}
+		f.tasks = map[string]*taskSnapshot{}
 	}
 	_, ok := f.tasks[name]
 	return ok

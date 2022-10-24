@@ -2,7 +2,6 @@ package goyek_test
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -14,7 +13,7 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-func Test_DefaultTask(t *testing.T) {
+func Test_DefaultFlow(t *testing.T) {
 	goyek.SetOutput(ioutil.Discard)
 	assertEqual(t, goyek.Output(), ioutil.Discard, "Output")
 
@@ -602,88 +601,4 @@ func TestFlow_Use_nil_middleware(t *testing.T) {
 	}
 
 	assertPanics(t, act, "should panic on nil middleware")
-}
-
-func assertTrue(tb testing.TB, got bool, msg string) {
-	tb.Helper()
-	if got {
-		return
-	}
-	tb.Errorf("%s\nGOT: %v, WANT: true", msg, got)
-}
-
-func assertContains(tb testing.TB, got fmt.Stringer, want string, msg string) {
-	tb.Helper()
-	gotTxt := got.String()
-	if strings.Contains(gotTxt, want) {
-		return
-	}
-	tb.Errorf("%s\nGOT:\n%s\nSHOULD CONTAIN:\n%s", msg, gotTxt, want)
-}
-
-func assertNotContains(tb testing.TB, got fmt.Stringer, want string, msg string) {
-	tb.Helper()
-	gotTxt := got.String()
-	if !strings.Contains(gotTxt, want) {
-		return
-	}
-	tb.Errorf("%s\nGOT:\n%s\nSHOULD NOT CONTAIN:\n%s", msg, gotTxt, want)
-}
-
-func requireEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
-	tb.Helper()
-	if reflect.DeepEqual(got, want) {
-		return
-	}
-	tb.Fatalf("%s\nGOT: %v\nWANT: %v", msg, got, want)
-}
-
-func assertEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
-	tb.Helper()
-	if reflect.DeepEqual(got, want) {
-		return
-	}
-	tb.Errorf("%s\nGOT: %v\nWANT: %v", msg, got, want)
-}
-
-func assertPass(tb testing.TB, got error, msg string) {
-	tb.Helper()
-	if got != nil {
-		tb.Errorf("%s\nGOT: %v\nWANT: <PASS>", msg, got)
-	}
-}
-
-func assertFail(tb testing.TB, got error, msg string) {
-	tb.Helper()
-	if _, ok := got.(*goyek.FailError); !ok {
-		tb.Errorf("%s\nGOT: %v\nWANT: <FAIL>", msg, got)
-	}
-}
-
-func assertInvalid(tb testing.TB, got error, msg string) {
-	tb.Helper()
-	if _, ok := got.(*goyek.FailError); ok || got == nil {
-		tb.Errorf("%s\nGOT: %v\nWANT: <INVALID>", msg, got)
-	}
-}
-
-func assertPanics(tb testing.TB, fn func(), msg string) {
-	tb.Helper()
-	tryPanic := func() bool {
-		didPanic := false
-		func() {
-			defer func() {
-				if info := recover(); info != nil {
-					didPanic = true
-				}
-			}()
-			fn()
-		}()
-		return didPanic
-	}
-
-	if tryPanic() {
-		return
-	}
-	tb.Errorf("%s\ndid not panic, but expected to do so", msg)
 }

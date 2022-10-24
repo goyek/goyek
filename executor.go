@@ -7,7 +7,7 @@ import (
 
 type executor struct {
 	output      io.Writer
-	defined     map[string]taskSnapshot
+	defined     map[string]*taskSnapshot
 	logger      Logger
 	middlewares []Middleware
 }
@@ -44,7 +44,7 @@ func (r *executor) run(ctx context.Context, name string, executed map[string]boo
 	return nil
 }
 
-func (r *executor) runTask(ctx context.Context, task taskSnapshot) bool {
+func (r *executor) runTask(ctx context.Context, task *taskSnapshot) bool {
 	// prepare runner
 	action := task.action
 	if action == nil {
