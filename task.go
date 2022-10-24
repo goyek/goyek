@@ -32,7 +32,7 @@ type DefinedTask interface {
 	SetAction(func(tf *TF))
 	Deps() Deps
 	SetDeps(Deps)
-	sealed()
+	snapshot() *taskSnapshot
 }
 
 // Deps represents a collection of dependencies.
@@ -56,13 +56,9 @@ func (r registeredTask) SetName(s string) {
 	}
 	oldName := r.name
 	snap := r.flow.tasks[oldName]
-	delete(r.flow.tasks, oldName)
 	snap.name = s
 	r.flow.tasks[s] = snap
-
-	if r.flow.defaultTask == oldName {
-		r.flow.defaultTask = s
-	}
+	delete(r.flow.tasks, oldName)
 }
 
 // Usage returns the description of the task.
@@ -93,7 +89,7 @@ func (r registeredTask) Deps() Deps {
 	}
 	deps := make(Deps, 0, count)
 	for _, dep := range r.deps {
-		deps = append(deps, registeredTask{r.flow.tasks[dep], r.flow})
+		deps = append(deps, registeredTask{r.flow.tasks[dep.name], r.flow})
 	}
 	return deps
 }
@@ -106,14 +102,19 @@ func (r registeredTask) SetDeps(deps Deps) {
 		return
 	}
 
+	for _, dep := range deps {
+		if !r.flow.isDefined(dep.Name()) {
+			panic("dependency was not defined: " + dep.Name())
+		}
+	}
+
 	visited := map[string]bool{}
 	if ok := r.noCycle(deps, visited); !ok {
 		panic("circular dependency")
 	}
-
-	depNames := make([]string, 0, count)
+	depNames := make([]*taskSnapshot, 0, count)
 	for _, dep := range deps {
-		depNames = append(depNames, dep.Name())
+		depNames = append(depNames, dep.snapshot())
 	}
 
 	r.deps = depNames
@@ -139,4 +140,6 @@ func (r registeredTask) noCycle(deps Deps, visited map[string]bool) bool {
 	return true
 }
 
-func (r registeredTask) sealed() {}
+func (r registeredTask) snapshot() *taskSnapshot {
+	return r.taskSnapshot
+}

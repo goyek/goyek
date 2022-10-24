@@ -22,7 +22,7 @@ type Flow struct {
 	logger Logger // TODO: If Helper() is implemented then it is called when TF.Helper() is called.
 
 	tasks       map[string]*taskSnapshot // snapshot of defined tasks
-	defaultTask string                   // task to run when none is explicitly provided
+	defaultTask *taskSnapshot            // task to run when none is explicitly provided
 	middlewares []Middleware
 }
 
@@ -37,7 +37,7 @@ type Middleware func(Runner) Runner
 type taskSnapshot struct {
 	name   string
 	usage  string
-	deps   []string
+	deps   []*taskSnapshot
 	action func(tf *TF)
 }
 
@@ -72,13 +72,13 @@ func (f *Flow) Define(task Task) DefinedTask {
 	}
 	for _, dep := range task.Deps {
 		if !f.isDefined(dep.Name()) {
-			panic(fmt.Sprintf("dependency was not defined: %s", dep.Name()))
+			panic("dependency was not defined: " + dep.Name())
 		}
 	}
 
-	var deps []string
+	var deps []*taskSnapshot
 	for _, dep := range task.Deps {
-		deps = append(deps, dep.Name())
+		deps = append(deps, dep.snapshot())
 	}
 	taskCopy := &taskSnapshot{
 		name:   task.Name,
@@ -182,10 +182,10 @@ func Default() DefinedTask {
 // Default returns the default task.
 // Returns nil of there is no default task.
 func (f *Flow) Default() DefinedTask {
-	if f.defaultTask == "" {
+	if f.defaultTask == nil {
 		return nil
 	}
-	return registeredTask{f.tasks[f.defaultTask], f}
+	return registeredTask{f.defaultTask, f}
 }
 
 // SetDefault sets a task to run when none is explicitly provided.
@@ -198,9 +198,9 @@ func SetDefault(task DefinedTask) {
 // It panics in case of any error.
 func (f *Flow) SetDefault(task DefinedTask) {
 	if !f.isDefined(task.Name()) {
-		panic(fmt.Sprintf("task was not defined: %s", task.Name()))
+		panic("task was not defined: " + task.Name())
 	}
-	f.defaultTask = task.Name()
+	f.defaultTask = task.snapshot()
 }
 
 // Use adds task runner middlewares (iterceptors).
@@ -252,8 +252,8 @@ func (f *Flow) Execute(ctx context.Context, args ...string) error {
 		}
 		tasks = append(tasks, arg)
 	}
-	if len(tasks) == 0 && f.defaultTask != "" {
-		tasks = append(tasks, f.defaultTask)
+	if len(tasks) == 0 && f.defaultTask != nil {
+		tasks = append(tasks, f.defaultTask.name)
 	}
 	if len(tasks) == 0 {
 		return errors.New("no task provided")
@@ -363,8 +363,8 @@ func Print() {
 func (f *Flow) Print() {
 	out := f.Output()
 
-	if f.defaultTask != "" {
-		fmt.Fprintf(out, "Default task: %s\n", f.defaultTask)
+	if f.defaultTask != nil {
+		fmt.Fprintf(out, "Default task: %s\n", f.defaultTask.name)
 	}
 
 	fmt.Fprintln(out, "Tasks:")
