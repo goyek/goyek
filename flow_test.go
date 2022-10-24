@@ -615,7 +615,7 @@ func TestFlow_Undefine(t *testing.T) {
 	flow := &goyek.Flow{}
 	task := flow.Define(goyek.Task{Name: "name"})
 	dep := flow.Define(goyek.Task{Name: "dep"})
-	flow.Define(goyek.Task{Name: "task", Deps: goyek.Deps{dep, task}})
+	pipeline := flow.Define(goyek.Task{Name: "task", Deps: goyek.Deps{dep, task}})
 
 	flow.SetDefault(task)
 	flow.Undefine(task)
@@ -625,10 +625,11 @@ func TestFlow_Undefine(t *testing.T) {
 	assertEqual(t, len(got), 2, "should return only one task")
 	assertEqual(t, got[1].Name(), "task", "should first return one")
 	assertEqual(t, got[1].Deps(), goyek.Deps{dep}, "should remove dependency")
+	assertEqual(t, pipeline.Deps(), goyek.Deps{dep}, "should remove dependency")
 	assertEqual(t, flow.Default(), nil, "should clear default")
 }
 
-func Test_Define_bad_task(t *testing.T) {
+func TestFlow_Undefine_bad_task(t *testing.T) {
 	flow := &goyek.Flow{}
 	otherFlow := &goyek.Flow{}
 	task := otherFlow.Define(goyek.Task{Name: "different-flow"})
