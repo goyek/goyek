@@ -90,7 +90,12 @@ func (f *Flow) Define(task Task) DefinedTask {
 	return registeredTask{taskCopy, f}
 }
 
-// Undefine registers the task. It panics in case of any error.
+// Undefine unregisters the task. It panics in case of any error.
+func Undefine(task DefinedTask) {
+	DefaultFlow.Undefine(task)
+}
+
+// Undefine unregisters the task. It panics in case of any error.
 func (f *Flow) Undefine(task DefinedTask) {
 	snapshot := task.sealed().taskSnapshot
 	if !f.isDefined(snapshot.name, task.sealed().flow) {

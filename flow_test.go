@@ -24,6 +24,8 @@ func Test_DefaultFlow(t *testing.T) {
 	goyek.Usage()()
 
 	task := goyek.Define(goyek.Task{Name: "task"})
+	other := goyek.Define(goyek.Task{Name: "other"})
+	goyek.Undefine(other)
 	assertEqual(t, goyek.Tasks()[0].Name(), "task", "Tasks")
 
 	goyek.SetDefault(task)
