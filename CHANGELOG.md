@@ -8,6 +8,15 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.3...HEAD)
 
+This release focuses on improving the API to make creating and customizing
+reusable build pipelines easier.
+
+## Added
+
+- Add `DefinedTask.SetName`, `DefinedTask.SetUsage`, `DefinedTask.Action`,
+  `DefinedTask.SetAction`, `DefinedTask.SetAction`, `DefinedTask.SetDeps`
+  to enable modifying the task after the initial definition.
+
 ### Changed
 
 - `DefinedTask.Deps` returns `Deps` to facilitate reusing defined task's dependencies
