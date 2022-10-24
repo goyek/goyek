@@ -94,7 +94,7 @@ func TestDefinedTask_SetDeps(t *testing.T) {
 	t2 := flow.Define(goyek.Task{Name: "two", Deps: goyek.Deps{t1}})
 	t3 := flow.Define(goyek.Task{Name: "three"})
 
-	t3.SetDeps(goyek.Deps{t2})
+	t3.SetDeps(goyek.Deps{t1, t2})
 
 	got := t3.Deps()
 	assertEqual(t, got, goyek.Deps{t2}, "should update the dependencies")
