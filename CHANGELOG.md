@@ -14,7 +14,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 This release focuses on improving the API to make creating and customizing
 reusable build pipelines easier.
 
-## Added
+### Added
 
 - Add `DefinedTask.SetName`, `DefinedTask.SetUsage`, `DefinedTask.Action`,
   `DefinedTask.SetAction`, `DefinedTask.SetAction`, `DefinedTask.SetDeps`
