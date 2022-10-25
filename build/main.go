@@ -17,7 +17,8 @@ const (
 
 // Reusable flags used by the build pipeline.
 var (
-	v = flag.Bool("v", false, "print all tasks and tests as they are run")
+	v      = flag.Bool("v", false, "print all tasks and tests as they are run")
+	dryRun = flag.Bool("dry-run", false, "print all tasks that would be run without running them")
 )
 
 func main() {
@@ -27,6 +28,13 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
+	if *dryRun {
+		*v = true // needed to report the task status
+	}
+
+	if *dryRun {
+		goyek.Use(middleware.DryRun)
+	}
 	goyek.Use(middleware.Reporter)
 	if !*v {
 		goyek.Use(middleware.SilentNonFailed)
