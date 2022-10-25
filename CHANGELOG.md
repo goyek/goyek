@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
-## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.3...HEAD)
+## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.4...HEAD)
+
+<!-- markdownlint-disable-next-line line-length -->
+## [2.0.0-rc.4](https://github.com/goyek/goyek/compare/v2.0.0-rc.3...v2.0.0-rc.4) - 2022-10-25
 
 This release focuses on improving the API to make creating and customizing
 reusable build pipelines easier.
@@ -25,9 +28,11 @@ reusable build pipelines easier.
 - `DefinedTask.Deps` returns `Deps` to facilitate reusing defined task's dependencies
   when creating a new one or redefining existing one.
 - Rename `Reporter` middleware to `ReportStatus`.
-- Change `Flow.Execute` to accept `[]string` instead of `...string`.
+- Change `Flow.Execute` to accept `[]string` instead of `...string` to make the API
+  forward compatible.
 
-## [2.0.0-rc.3](https://github.com/goyek/goyek/compare/v2.0.0-rc.2...v2.0.0-rc.3)
+<!-- markdownlint-disable-next-line line-length -->
+## [2.0.0-rc.3](https://github.com/goyek/goyek/compare/v2.0.0-rc.2...v2.0.0-rc.3) - 2022-10-19
 
 This release focuses on improving usability, extensibility, and customization.
 
@@ -73,7 +78,8 @@ This release focuses on improving usability, extensibility, and customization.
 
 - Fix panic handling so that `panic(nil)` and `runtime.Goexit()` now cause task failure.
 
-## [2.0.0-rc.2](https://github.com/goyek/goyek/compare/v2.0.0-rc.1...v2.0.0-rc.2)
+<!-- markdownlint-disable-next-line line-length -->
+## [2.0.0-rc.2](https://github.com/goyek/goyek/compare/v2.0.0-rc.1...v2.0.0-rc.2) - 2022-10-14
 
 This release focuses on improving usability and encapsulation.
 
