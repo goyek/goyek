@@ -18,7 +18,7 @@ reusable build pipelines easier.
   to enable modifying the task after the initial definition.
 - Add `Flow.Undefine` method and `Undefine` function to unregister a task.
 - Passing `nil` to `Flow.SetDefault` unsets the default task.
-- Add `DryRun`, `NoRun`, `ReportLongRun` middlewares.
+- Add `DryRun`, `ReportLongRun` middlewares.
 
 ### Changed
 
