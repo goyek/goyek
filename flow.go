@@ -42,27 +42,27 @@ type taskSnapshot struct {
 }
 
 // Tasks returns all tasks sorted in lexicographical order.
-func Tasks() []DefinedTask {
+func Tasks() []*DefinedTask {
 	return DefaultFlow.Tasks()
 }
 
 // Tasks returns all tasks sorted in lexicographical order.
-func (f *Flow) Tasks() []DefinedTask {
-	var tasks []DefinedTask
+func (f *Flow) Tasks() []*DefinedTask {
+	var tasks []*DefinedTask
 	for _, task := range f.tasks {
-		tasks = append(tasks, registeredTask{task, f})
+		tasks = append(tasks, &DefinedTask{task, f})
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
 	return tasks
 }
 
 // Define registers the task. It panics in case of any error.
-func Define(task Task) DefinedTask {
+func Define(task Task) *DefinedTask {
 	return DefaultFlow.Define(task)
 }
 
 // Define registers the task. It panics in case of any error.
-func (f *Flow) Define(task Task) DefinedTask {
+func (f *Flow) Define(task Task) *DefinedTask {
 	// validate
 	if task.Name == "" {
 		panic("task name cannot be empty")
@@ -71,14 +71,14 @@ func (f *Flow) Define(task Task) DefinedTask {
 		panic("task with the same name is already defined")
 	}
 	for _, dep := range task.Deps {
-		if !f.isDefined(dep.Name(), dep.sealed().flow) {
+		if !f.isDefined(dep.Name(), dep.flow) {
 			panic("dependency was not defined: " + dep.Name())
 		}
 	}
 
 	var deps []*taskSnapshot
 	for _, dep := range task.Deps {
-		deps = append(deps, dep.sealed().taskSnapshot)
+		deps = append(deps, dep.taskSnapshot)
 	}
 	taskCopy := &taskSnapshot{
 		name:   task.Name,
@@ -87,18 +87,18 @@ func (f *Flow) Define(task Task) DefinedTask {
 		action: task.Action,
 	}
 	f.tasks[task.Name] = taskCopy
-	return registeredTask{taskCopy, f}
+	return &DefinedTask{taskCopy, f}
 }
 
 // Undefine unregisters the task. It panics in case of any error.
-func Undefine(task DefinedTask) {
+func Undefine(task *DefinedTask) {
 	DefaultFlow.Undefine(task)
 }
 
 // Undefine unregisters the task. It panics in case of any error.
-func (f *Flow) Undefine(task DefinedTask) {
-	snapshot := task.sealed().taskSnapshot
-	if !f.isDefined(snapshot.name, task.sealed().flow) {
+func (f *Flow) Undefine(task *DefinedTask) {
+	snapshot := task.taskSnapshot
+	if !f.isDefined(snapshot.name, task.flow) {
 		panic("task was not defined: " + snapshot.name)
 	}
 
@@ -211,38 +211,38 @@ func (f *Flow) SetUsage(fn func()) {
 
 // Default returns the default task.
 // Returns nil of there is no default task.
-func Default() DefinedTask {
+func Default() *DefinedTask {
 	return DefaultFlow.Default()
 }
 
 // Default returns the default task.
 // Returns nil of there is no default task.
-func (f *Flow) Default() DefinedTask {
+func (f *Flow) Default() *DefinedTask {
 	if f.defaultTask == nil {
 		return nil
 	}
-	return registeredTask{f.defaultTask, f}
+	return &DefinedTask{f.defaultTask, f}
 }
 
 // SetDefault sets a task to run when none is explicitly provided.
 // It panics in case of any error.
-func SetDefault(task DefinedTask) {
+func SetDefault(task *DefinedTask) {
 	DefaultFlow.SetDefault(task)
 }
 
 // SetDefault sets a task to run when none is explicitly provided.
 // Passing nil clears the default task.
 // It panics in case of any error.
-func (f *Flow) SetDefault(task DefinedTask) {
+func (f *Flow) SetDefault(task *DefinedTask) {
 	if task == nil {
 		f.defaultTask = nil
 		return
 	}
 
-	if !f.isDefined(task.Name(), task.sealed().flow) {
+	if !f.isDefined(task.Name(), task.flow) {
 		panic("task was not defined: " + task.Name())
 	}
-	f.defaultTask = task.sealed().taskSnapshot
+	f.defaultTask = task.taskSnapshot
 }
 
 // Use adds task runner middlewares (iterceptors).
