@@ -23,34 +23,21 @@ type Task struct {
 
 // DefinedTask represents a task that has been registered.
 // It can be used as a dependency for another task.
-type DefinedTask interface {
-	Name() string
-	SetName(string)
-	Usage() string
-	SetUsage(string)
-	Action() func(tf *TF)
-	SetAction(func(tf *TF))
-	Deps() Deps
-	SetDeps(Deps)
-	sealed() registeredTask
-}
-
-// Deps represents a collection of dependencies.
-type Deps []DefinedTask
-
-// registeredTask implements (and encapsulates) DefinedTask.
-type registeredTask struct {
+type DefinedTask struct {
 	*taskSnapshot
 	flow *Flow
 }
 
+// Deps represents a collection of dependencies.
+type Deps []*DefinedTask
+
 // Name returns the name of the task.
-func (r registeredTask) Name() string {
+func (r *DefinedTask) Name() string {
 	return r.name
 }
 
-// Name changes the name of the task.
-func (r registeredTask) SetName(s string) {
+// SetName changes the name of the task.
+func (r *DefinedTask) SetName(s string) {
 	if _, ok := r.flow.tasks[s]; ok {
 		panic("task with the same name is already defined")
 	}
@@ -62,40 +49,40 @@ func (r registeredTask) SetName(s string) {
 }
 
 // Usage returns the description of the task.
-func (r registeredTask) Usage() string {
+func (r *DefinedTask) Usage() string {
 	return r.usage
 }
 
 // SetUsage sets the description of the task.
-func (r registeredTask) SetUsage(s string) {
+func (r *DefinedTask) SetUsage(s string) {
 	r.usage = s
 }
 
 // Action returns the action of the task.
-func (r registeredTask) Action() func(tf *TF) {
+func (r *DefinedTask) Action() func(tf *TF) {
 	return r.action
 }
 
 // SetAction changes the action of the task.
-func (r registeredTask) SetAction(fn func(tf *TF)) {
+func (r *DefinedTask) SetAction(fn func(tf *TF)) {
 	r.action = fn
 }
 
 // Deps returns all task's dependencies.
-func (r registeredTask) Deps() Deps {
+func (r *DefinedTask) Deps() Deps {
 	count := len(r.deps)
 	if count == 0 {
 		return nil
 	}
 	deps := make(Deps, 0, count)
 	for _, dep := range r.deps {
-		deps = append(deps, registeredTask{r.flow.tasks[dep.name], r.flow})
+		deps = append(deps, &DefinedTask{r.flow.tasks[dep.name], r.flow})
 	}
 	return deps
 }
 
-// Deps returns all task's dependencies.
-func (r registeredTask) SetDeps(deps Deps) {
+// SetDeps sets all task's dependencies.
+func (r *DefinedTask) SetDeps(deps Deps) {
 	count := len(deps)
 	if count == 0 {
 		r.deps = nil
@@ -103,7 +90,7 @@ func (r registeredTask) SetDeps(deps Deps) {
 	}
 
 	for _, dep := range deps {
-		if !r.flow.isDefined(dep.Name(), dep.sealed().flow) {
+		if !r.flow.isDefined(dep.Name(), dep.flow) {
 			panic("dependency was not defined: " + dep.Name())
 		}
 	}
@@ -114,13 +101,13 @@ func (r registeredTask) SetDeps(deps Deps) {
 	}
 	depNames := make([]*taskSnapshot, 0, count)
 	for _, dep := range deps {
-		depNames = append(depNames, dep.sealed().taskSnapshot)
+		depNames = append(depNames, dep.taskSnapshot)
 	}
 
 	r.deps = depNames
 }
 
-func (r registeredTask) noCycle(deps Deps, visited map[string]bool) bool {
+func (r *DefinedTask) noCycle(deps Deps, visited map[string]bool) bool {
 	if len(deps) == 0 {
 		return true
 	}
@@ -138,8 +125,4 @@ func (r registeredTask) noCycle(deps Deps, visited map[string]bool) bool {
 		}
 	}
 	return true
-}
-
-func (r registeredTask) sealed() registeredTask {
-	return r
 }

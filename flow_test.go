@@ -510,7 +510,9 @@ func TestFlow_Default_empty(t *testing.T) {
 	flow := &goyek.Flow{}
 	got := flow.Default()
 
-	assertEqual(t, got, nil, "should return nil")
+	if got != nil {
+		t.Errorf("should be nil by default, but got: %v", got)
+	}
 }
 
 func TestFlow_Default_nil(t *testing.T) {
@@ -521,7 +523,9 @@ func TestFlow_Default_nil(t *testing.T) {
 
 	got := flow.Default()
 
-	assertEqual(t, got, nil, "should clear the default")
+	if got != nil {
+		t.Errorf("should clear the default, but got: %v", got)
+	}
 }
 
 func TestFlow_Print(t *testing.T) {
@@ -628,7 +632,9 @@ func TestFlow_Undefine(t *testing.T) {
 	assertEqual(t, got[1].Name(), "task", "should first return one")
 	assertEqual(t, got[1].Deps(), goyek.Deps{dep}, "should remove dependency")
 	assertEqual(t, pipeline.Deps(), goyek.Deps{dep}, "should remove dependency")
-	assertEqual(t, flow.Default(), nil, "should clear default")
+	if flow.Default() != nil {
+		t.Errorf("should clear the default, but got: %v", got)
+	}
 }
 
 func TestFlow_Undefine_bad_task(t *testing.T) {
