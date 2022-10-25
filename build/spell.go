@@ -10,7 +10,7 @@ var spell = goyek.Define(goyek.Task{
 	Name:  "spell",
 	Usage: "misspell",
 	Action: func(tf *goyek.TF) {
-		if ok := Exec(tf, dirBuild, "go install github.com/client9/misspell/cmd/misspell"); !ok {
+		if !Exec(tf, dirBuild, "go install github.com/client9/misspell/cmd/misspell") {
 			return
 		}
 		mdFiles := find(tf, ".md")

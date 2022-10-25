@@ -1,11 +1,26 @@
 package main
 
-import "github.com/goyek/goyek/v2"
+import (
+	"os"
+
+	"github.com/goyek/goyek/v2"
+)
 
 var _ = goyek.Define(goyek.Task{
 	Name:  "clean",
-	Usage: "remove git ignored files",
+	Usage: "remove remove files created during build pipeline",
 	Action: func(tf *goyek.TF) {
-		Exec(tf, dirRoot, "git clean -fXd")
+		remove(tf, "coverage.out")
+		remove(tf, "coverage.html")
 	},
 })
+
+func remove(tf *goyek.TF, path string) {
+	if _, err := os.Stat(path); err != nil {
+		return
+	}
+	tf.Log("Remove: " + path)
+	if err := os.RemoveAll(path); err != nil {
+		tf.Error(err)
+	}
+}

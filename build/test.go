@@ -10,6 +10,9 @@ var test = goyek.Define(goyek.Task{
 		if *v {
 			verbose = "-v"
 		}
-		Exec(tf, dirRoot, "go test "+verbose+" -race -covermode=atomic -coverprofile=coverage.out ./...")
+		if !Exec(tf, dirRoot, "go test "+verbose+" -race -covermode=atomic -coverprofile=coverage.out -coverpkg=./... ./...") {
+			return
+		}
+		Exec(tf, dirRoot, "go tool cover -html=coverage.out -o coverage.html")
 	},
 })
