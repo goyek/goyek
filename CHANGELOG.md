@@ -18,11 +18,13 @@ reusable build pipelines easier.
   to enable modifying the task after the initial definition.
 - Add `Flow.Undefine` method and `Undefine` function to unregister a task.
 - Passing `nil` to `Flow.SetDefault` unsets the default task.
+- Add `DryRun`, `NoRun`, `ReportLongRun` middlewares.
 
 ### Changed
 
 - `DefinedTask.Deps` returns `Deps` to facilitate reusing defined task's dependencies
   when creating a new one or redefining existing one.
+- Rename `Reporter` middleware to `ReportStatus`.
 
 ## [2.0.0-rc.3](https://github.com/goyek/goyek/compare/v2.0.0-rc.2...v2.0.0-rc.3)
 
@@ -38,7 +40,7 @@ This release focuses on improving usability, extensibility, and customization.
 - Add `NOOP` status report for tasks that were intentionally not run
   to differentiate from being skipped during execution.
 - Add `Flow.Use` method o support task run interception using middlewares.
-- Add `middleware` package with `Reporter` and `SilentNonFailed` middlewares.
+- Add `middleware` package with `ReportStatus` and `SilentNonFailed` middlewares.
 - `TF.Error`, `TF.Errorf`, `TF.Fail` may be called simultaneously from multiple goroutines.
 - Add `DefaultFlow` that is the default flow.
 - Add the top-level functions such as `Define`, `Main`, and so on which are wrappers
@@ -53,7 +55,7 @@ This release focuses on improving usability, extensibility, and customization.
 - Rename `Flow.Run` to `Flow.Execute` to reduce possible confusion with `Runner`.
 - Report `PASS` for a task without an action.
 - Task status reporting is disabled by default.
-  It can be enabled by calling `Flow.Use(middleware.Reporter)`.
+  It can be enabled by calling `Flow.Use(middleware.ReportStatus)`.
 - `Flow.Print` output format is similar to `flag.PrintDefaults`.
   Moreover, it does not print tasks with empty `Task.Usage`.
 - Change `Flow.Execute` to return an error instead of returning the exit code

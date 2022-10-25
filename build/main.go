@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/goyek/goyek/v2"
 	"github.com/goyek/goyek/v2/middleware"
@@ -23,9 +24,10 @@ const (
 
 // Reusable flags used by the build pipeline.
 var (
-	v      = flag.Bool("v", false, "print all tasks and tests as they are run")
-	dryRun = flag.Bool("dry-run", false, "print all tasks that would be run without running them")
-	skip   = flag.String("skip", "", "do not run actions for given tasks comma-separated names")
+	v       = flag.Bool("v", false, "print all tasks and tests as they are run")
+	dryRun  = flag.Bool("dry-run", false, "print all tasks that would be run without running them")
+	skip    = flag.String("skip", "", "do not run actions for given tasks comma-separated names")
+	longRun = flag.Duration("long-run", time.Minute, "print when a task takes longer")
 )
 
 func main() {
@@ -61,10 +63,13 @@ func main() {
 	if *dryRun {
 		goyek.Use(middleware.DryRun)
 	}
-	goyek.Use(middleware.Skip(skipTasks))
-	goyek.Use(middleware.Reporter)
+	goyek.Use(middleware.NoRun(skipTasks))
+	goyek.Use(middleware.ReportStatus)
 	if !*v {
 		goyek.Use(middleware.SilentNonFailed)
+	}
+	if *longRun > 0 {
+		goyek.Use(middleware.ReportLongRun(*longRun))
 	}
 
 	goyek.SetUsage(usage)

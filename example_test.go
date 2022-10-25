@@ -37,7 +37,7 @@ func Example() {
 	})
 
 	// configure middlewares
-	goyek.Use(middleware.Reporter)
+	goyek.Use(middleware.ReportStatus)
 
 	// set the pipeline as the default task
 	goyek.SetDefault(all)
@@ -89,7 +89,7 @@ func Example_flag() {
 	flag.Parse()
 
 	// configure middlewares
-	goyek.Use(middleware.Reporter)
+	goyek.Use(middleware.ReportStatus)
 	if !*verbose {
 		goyek.Use(middleware.SilentNonFailed)
 	}

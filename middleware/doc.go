@@ -1,2 +1,2 @@
-// Package middleware provides reusable task runner interceptors such as Reporter.
+// Package middleware provides reusable task runner interceptors such as ReportStatus.
 package middleware

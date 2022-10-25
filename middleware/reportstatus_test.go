@@ -8,7 +8,7 @@ import (
 	"github.com/goyek/goyek/v2/middleware"
 )
 
-func TestReporter(t *testing.T) {
+func TestReportStatus(t *testing.T) {
 	taskName := "my-task"
 	tests := []struct {
 		name   string
@@ -40,7 +40,7 @@ func TestReporter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sb := &strings.Builder{}
 			r := goyek.Runner(func(i goyek.Input) goyek.Result { return goyek.Result{Status: tt.status} })
-			r = middleware.Reporter(r)
+			r = middleware.ReportStatus(r)
 
 			r(goyek.Input{TaskName: taskName, Output: sb})
 
@@ -72,7 +72,7 @@ func TestReporter(t *testing.T) {
 			r := goyek.Runner(func(i goyek.Input) goyek.Result {
 				return goyek.Result{PanicStack: []byte("stacktrace"), PanicValue: tt.panicPayload}
 			})
-			r = middleware.Reporter(r)
+			r = middleware.ReportStatus(r)
 
 			r(goyek.Input{TaskName: taskName, Output: sb})
 

@@ -7,13 +7,13 @@ import (
 	"github.com/goyek/goyek/v2/middleware"
 )
 
-func TestSkip_skipped(t *testing.T) {
+func TestNoRun_skipped(t *testing.T) {
 	called := false
 	r := func(i goyek.Input) goyek.Result {
 		called = true
 		return goyek.Result{Status: goyek.StatusPassed}
 	}
-	r = middleware.Skip([]string{"task"})(r)
+	r = middleware.NoRun([]string{"task"})(r)
 
 	got := r(goyek.Input{TaskName: "task"})
 
@@ -25,13 +25,13 @@ func TestSkip_skipped(t *testing.T) {
 	}
 }
 
-func TestSkip_not_skipped(t *testing.T) {
+func TestNoRun_not_skipped(t *testing.T) {
 	called := false
 	r := func(i goyek.Input) goyek.Result {
 		called = true
 		return goyek.Result{Status: goyek.StatusPassed}
 	}
-	r = middleware.Skip([]string{"other"})(r)
+	r = middleware.NoRun([]string{"other"})(r)
 
 	got := r(goyek.Input{TaskName: "task"})
 
