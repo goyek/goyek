@@ -21,17 +21,17 @@ func TestFlow_main(t *testing.T) {
 		{
 			desc: "pass",
 			want: 0,
-			act:  func() int { return flow.main(context.Background(), "task") },
+			act:  func() int { return flow.main(context.Background(), []string{"task"}) },
 		},
 		{
 			desc: "fail",
 			want: 1,
-			act:  func() int { return flow.main(context.Background(), "failing") },
+			act:  func() int { return flow.main(context.Background(), []string{"failing"}) },
 		},
 		{
 			desc: "invalid",
 			want: 2,
-			act:  func() int { return flow.main(context.Background(), "bad") },
+			act:  func() int { return flow.main(context.Background(), []string{"bad"}) },
 		},
 		{
 			desc: "canceled",
@@ -39,7 +39,7 @@ func TestFlow_main(t *testing.T) {
 			act: func() int {
 				ctx, cancel := context.WithCancel(context.Background())
 				cancel()
-				return flow.main(ctx, "task")
+				return flow.main(ctx, []string{"task"})
 			},
 		},
 	}
@@ -58,7 +58,7 @@ func Test_main_usage(t *testing.T) {
 	called := false
 	flow.SetUsage(func() { called = true })
 
-	flow.main(context.Background())
+	flow.main(context.Background(), nil)
 
 	if !called {
 		t.Error("usage should be called for invalid input")

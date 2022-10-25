@@ -274,8 +274,8 @@ func (err *FailError) Error() string {
 // Returns nil if no task has failed.
 // Returns FailError if a task failed.
 // Returns other error in case of invalid input or context error.
-func Execute(ctx context.Context, args ...string) error {
-	return DefaultFlow.Execute(ctx, args...)
+func Execute(ctx context.Context, tasks []string) error {
+	return DefaultFlow.Execute(ctx, tasks)
 }
 
 // Execute runs provided tasks and all their dependencies.
@@ -283,16 +283,14 @@ func Execute(ctx context.Context, args ...string) error {
 // Returns nil if no task has failed.
 // Returns FailError if a task failed.
 // Returns other error in case of invalid input or context error.
-func (f *Flow) Execute(ctx context.Context, args ...string) error {
-	var tasks []string
-	for _, arg := range args {
-		if arg == "" {
+func (f *Flow) Execute(ctx context.Context, tasks []string) error {
+	for _, task := range tasks {
+		if task == "" {
 			return errors.New("task name cannot be empty")
 		}
-		if _, ok := f.tasks[arg]; !ok {
-			return errors.New("task provided but not defined: " + arg)
+		if _, ok := f.tasks[task]; !ok {
+			return errors.New("task provided but not defined: " + task)
 		}
-		tasks = append(tasks, arg)
 	}
 	if len(tasks) == 0 && f.defaultTask != nil {
 		tasks = append(tasks, f.defaultTask.name)
@@ -366,15 +364,15 @@ func (f *Flow) Main(args []string) {
 		os.Exit(exitCodeInvalid)
 	}
 
-	exitCode := f.main(ctx, args...)
+	exitCode := f.main(ctx, args)
 	os.Exit(exitCode)
 }
 
-func (f *Flow) main(ctx context.Context, args ...string) int {
+func (f *Flow) main(ctx context.Context, args []string) int {
 	out := f.Output()
 
 	from := time.Now()
-	err := f.Execute(ctx, args...)
+	err := f.Execute(ctx, args)
 	if _, ok := err.(*FailError); ok {
 		fmt.Fprintf(out, "%v\t%.3fs\n", err, time.Since(from).Seconds())
 		return exitCodeFail

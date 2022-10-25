@@ -32,7 +32,7 @@ func Test_DefaultFlow(t *testing.T) {
 	assertEqual(t, goyek.Default(), task, "Default")
 
 	goyek.Use(func(r goyek.Runner) goyek.Runner { return r })
-	assertPass(t, goyek.Execute(context.Background()), "Execute")
+	assertPass(t, goyek.Execute(context.Background(), nil), "Execute")
 }
 
 func Test_Define_empty_name(t *testing.T) {
@@ -96,15 +96,15 @@ func Test_successful(t *testing.T) {
 		return []int{executed1, executed2, executed3}
 	}
 
-	err := flow.Execute(ctx, "task-1")
+	err := flow.Execute(ctx, []string{"task-1"})
 	requireEqual(t, err, nil, "first execution should pass")
 	requireEqual(t, got(), []int{1, 0, 0}, "should execute task 1")
 
-	err = flow.Execute(ctx, "task-2")
+	err = flow.Execute(ctx, []string{"task-2"})
 	requireEqual(t, err, nil, "second execution should pass")
 	requireEqual(t, got(), []int{2, 1, 0}, "should execute task 1 and 2")
 
-	err = flow.Execute(ctx, "task-1", "task-2", "task-3")
+	err = flow.Execute(ctx, []string{"task-1", "task-2", "task-3"})
 	requireEqual(t, err, nil, "third execution should pass")
 	requireEqual(t, got(), []int{3, 2, 1}, "should execute task 1 and 2 and 3")
 }
@@ -143,7 +143,7 @@ func Test_dependency_failure(t *testing.T) {
 		return []int{executed1, executed2, executed3}
 	}
 
-	err := flow.Execute(context.Background(), "task-2", "task-3")
+	err := flow.Execute(context.Background(), []string{"task-2", "task-3"})
 
 	assertFail(t, err, "should return error from first task")
 	assertEqual(t, got(), []int{11, 0, 0}, "should execute task 1")
@@ -163,7 +163,7 @@ func Test_fail(t *testing.T) {
 		},
 	})
 
-	err := flow.Execute(context.Background(), "task")
+	err := flow.Execute(context.Background(), []string{"task"})
 
 	assertFail(t, err, "should return error")
 	assertTrue(t, failed, "tf.Failed() should return true")
@@ -183,7 +183,7 @@ func Test_skip(t *testing.T) {
 		},
 	})
 
-	err := flow.Execute(context.Background(), "task")
+	err := flow.Execute(context.Background(), []string{"task"})
 
 	assertPass(t, err, "should pass")
 	assertTrue(t, skipped, "tf.Skipped() should return true")
@@ -216,7 +216,7 @@ func Test_task_panics(t *testing.T) {
 				Action: tc.action,
 			})
 
-			err := flow.Execute(context.Background(), "task")
+			err := flow.Execute(context.Background(), []string{"task"})
 
 			assertFail(t, err, "should return error from first task")
 		})
@@ -232,7 +232,7 @@ func Test_cancelation(t *testing.T) {
 		Name: "task",
 	})
 
-	err := flow.Execute(ctx, "task")
+	err := flow.Execute(ctx, []string{"task"})
 
 	assertEqual(t, err, context.Canceled, "should return error canceled")
 }
@@ -249,7 +249,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 		},
 	})
 
-	err := flow.Execute(ctx, "task")
+	err := flow.Execute(ctx, []string{"task"})
 
 	assertPass(t, err, "should pass as the flow completed")
 }
@@ -261,7 +261,7 @@ func Test_empty_action(t *testing.T) {
 		Name: "task",
 	})
 
-	err := flow.Execute(context.Background(), "task")
+	err := flow.Execute(context.Background(), []string{"task"})
 
 	assertPass(t, err, "should pass")
 }
@@ -287,7 +287,7 @@ func Test_invalid_args(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			err := flow.Execute(context.Background(), tc.args...)
+			err := flow.Execute(context.Background(), tc.args)
 
 			assertInvalid(t, err, "should return error bad args")
 		})
@@ -316,7 +316,7 @@ func Test_printing(t *testing.T) {
 		},
 	})
 
-	_ = flow.Execute(context.Background(), "failing")
+	_ = flow.Execute(context.Background(), []string{"failing"})
 
 	assertContains(t, out, "Skipf 0", "should contain proper output from \"skipped\" task")
 	assertContains(t, out, "Fatalf 5", "should contain proper output from \"failing\" task")
@@ -339,7 +339,7 @@ func Test_concurrent_printing(t *testing.T) {
 		},
 	})
 
-	err := flow.Execute(context.Background(), "task")
+	err := flow.Execute(context.Background(), []string{"task"})
 
 	assertFail(t, err, "should fail")
 	assertContains(t, out, "from child goroutine", "should contain log from child goroutine")
@@ -373,7 +373,7 @@ func Test_concurrent_error(t *testing.T) {
 		},
 	})
 
-	err := flow.Execute(context.Background(), "task")
+	err := flow.Execute(context.Background(), []string{"task"})
 
 	assertFail(t, err, "should fail")
 }
@@ -390,7 +390,7 @@ func Test_name(t *testing.T) {
 		},
 	})
 
-	_ = flow.Execute(context.Background(), taskName)
+	_ = flow.Execute(context.Background(), []string{taskName})
 
 	assertEqual(t, got, taskName, "should return proper Name value")
 }
@@ -407,7 +407,7 @@ func Test_output(t *testing.T) {
 		},
 	})
 
-	_ = flow.Execute(context.Background(), "task")
+	_ = flow.Execute(context.Background(), []string{"task"})
 
 	assertContains(t, out, msg, "should contain message send via output")
 }
@@ -424,7 +424,7 @@ func Test_SetDefault(t *testing.T) {
 	})
 	flow.SetDefault(task)
 
-	err := flow.Execute(context.Background())
+	err := flow.Execute(context.Background(), nil)
 
 	assertPass(t, err, "should pass")
 	assertTrue(t, taskRan, "task should have run")
@@ -456,7 +456,7 @@ func TestCmd_success(t *testing.T) {
 		},
 	})
 
-	err := flow.Execute(context.Background(), taskName)
+	err := flow.Execute(context.Background(), []string{taskName})
 
 	assertPass(t, err, "task should pass")
 	assertContains(t, out, "go version go", "output should contain prefix of version report")
@@ -475,7 +475,7 @@ func TestCmd_error(t *testing.T) {
 		},
 	})
 
-	err := flow.Execute(nil, taskName) //nolint:staticcheck // present that nil context is handled
+	err := flow.Execute(nil, []string{taskName}) //nolint:staticcheck // present that nil context is handled
 
 	assertFail(t, err, "task should pass")
 }
@@ -554,7 +554,7 @@ func TestFlow_Logger(t *testing.T) {
 		},
 	})
 
-	_ = flow.Execute(context.Background(), "task")
+	_ = flow.Execute(context.Background(), []string{"task"})
 
 	assertContains(t, out, "first", "should call Log")
 	assertContains(t, out, "second", "should call Logf")
@@ -598,7 +598,7 @@ func TestFlow_Use(t *testing.T) {
 		}
 	})
 
-	_ = flow.Execute(context.Background(), "task")
+	_ = flow.Execute(context.Background(), []string{"task"})
 
 	assertContains(t, out, "message", "should call middleware with proper input")
 }

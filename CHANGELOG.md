@@ -25,6 +25,7 @@ reusable build pipelines easier.
 - `DefinedTask.Deps` returns `Deps` to facilitate reusing defined task's dependencies
   when creating a new one or redefining existing one.
 - Rename `Reporter` middleware to `ReportStatus`.
+- Change `Flow.Execute` to accept `[]string` instead of `...string`.
 
 ## [2.0.0-rc.3](https://github.com/goyek/goyek/compare/v2.0.0-rc.2...v2.0.0-rc.3)
 
