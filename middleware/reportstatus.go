@@ -8,10 +8,10 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-// Reporter is a middleware which reports the task run status.
+// ReportStatus is a middleware which reports the task run status.
 //
 // The format is based on the reports provided by the Go test runner.
-func Reporter(next goyek.Runner) goyek.Runner {
+func ReportStatus(next goyek.Runner) goyek.Runner {
 	return func(in goyek.Input) goyek.Result {
 		// report start task
 		fmt.Fprintf(in.Output, "===== TASK  %s\n", in.TaskName)

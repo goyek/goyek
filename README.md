@@ -123,7 +123,7 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	goyek.Use(middleware.Reporter)
+	goyek.Use(middleware.ReportStatus)
 	goyek.SetUsage(usage)
 	goyek.Main(flag.Args())
 }
@@ -253,7 +253,7 @@ export build execution telemetry, etc.
 
 You can use some reusalbe middlewares from the
 [`middleware`](https://pkg.go.dev/github.com/goyek/goyek/v2/middleware)
-package. [`Reporter`](https://pkg.go.dev/github.com/goyek/goyek/v2/middleware#Reporter)
+package. [`ReportStatus`](https://pkg.go.dev/github.com/goyek/goyek/v2/middleware#ReportStatus)
 is the most commonly used.
 
 ### Custom printing

@@ -20,7 +20,7 @@ func TestDefinedTask_SetName(t *testing.T) {
 
 	got := task.Name()
 	assertEqual(t, got, "new", "should update the name")
-	err := flow.Execute(context.Background(), "new")
+	err := flow.Execute(context.Background(), []string{"new"})
 	assertPass(t, err, "should pass")
 	assertTrue(t, called, "should call the action")
 }
@@ -36,7 +36,7 @@ func TestDefinedTask_SetName_for_default(t *testing.T) {
 
 	got := task.Name()
 	assertEqual(t, got, "new", "should update the name")
-	err := flow.Execute(context.Background())
+	err := flow.Execute(context.Background(), nil)
 	assertPass(t, err, "should pass")
 	assertTrue(t, called, "should call the action")
 }
@@ -50,7 +50,7 @@ func TestDefinedTask_SetName_for_depenency(t *testing.T) {
 
 	task.SetName("new")
 
-	err := flow.Execute(context.Background(), "two")
+	err := flow.Execute(context.Background(), []string{"two"})
 	assertPass(t, err, "should pass")
 	assertTrue(t, called, "should call the dependency with changed name")
 }
@@ -94,7 +94,7 @@ func TestDefinedTask_SetAction(t *testing.T) {
 	got := getFuncName(task.Action())
 
 	assertEqual(t, got, want, "should update the action")
-	err := flow.Execute(context.Background(), "one")
+	err := flow.Execute(context.Background(), []string{"one"})
 	assertPass(t, err, "should pass")
 	assertTrue(t, originalNotCalled, "should not call the previous action")
 	assertTrue(t, newCalled, "should not call the new action")
@@ -113,7 +113,7 @@ func TestDefinedTask_SetDeps(t *testing.T) {
 	got := t3.Deps()
 	assertEqual(t, got, goyek.Deps{t1, t2}, "should update the dependencies")
 
-	err := flow.Execute(context.Background(), "three")
+	err := flow.Execute(context.Background(), []string{"three"})
 	assertPass(t, err, "should pass")
 	assertTrue(t, called, "should call transitive dependency of t3")
 }
@@ -130,7 +130,7 @@ func TestDefinedTask_SetDeps_clear(t *testing.T) {
 	got := t2.Deps()
 	assertEqual(t, got, noDeps, "should clear the dependencies")
 
-	err := flow.Execute(context.Background(), "two")
+	err := flow.Execute(context.Background(), []string{"two"})
 	assertPass(t, err, "should pass")
 	assertTrue(t, notCalled, "should not call any dependency")
 }
