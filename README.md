@@ -61,14 +61,15 @@ packages.
 Here are some good parts:
 
 - It is cross-platform and shell independent.
-- No binary installation is needed. Simply add it to `go.mod` like any other Go module.
-  - You can be sure that everyone uses the same version of **goyek**.
-- It has low learning curve, thanks to the minimal API surface,
-  documentation, and examples.
-- The task's action look like a unit test.
-  It is even possible to use [`testify`](https://github.com/stretchr/testify)
-  or [`is`](https://github.com/matryer/is) for asserting.
+- No binary installation is needed.
 - It is easy to debug, like a regular Go application.
+- The task is defined similarly to a
+  [`cobra`](https://github.com/spf13/cobra) command.
+- The task's action look like a Go unit test.
+  You may even use [`testify`](https://github.com/stretchr/testify)
+  or [`fluentassert`](https://github.com/fluentassert/verify) for asserting.
+- It is highly customizable.
+  For example, you can add middlewares like for `net/http` handlers.
 - You can reuse code like in any Go application.
   It may be helpful to use packages like:
   - [`bitfield/script`](https://github.com/bitfield/script)
