@@ -46,11 +46,7 @@ func (r *executor) run(ctx context.Context, name string, executed map[string]boo
 
 func (r *executor) runTask(ctx context.Context, task *taskSnapshot) bool {
 	// prepare runner
-	action := task.action
-	if action == nil {
-		action = func(tf *TF) {}
-	}
-	runner := NewRunner(action)
+	runner := NewRunner(task.action)
 
 	// apply defined middlewares
 	for _, middleware := range r.middlewares {

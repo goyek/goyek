@@ -67,6 +67,10 @@ type taskRunner struct {
 // run executes the action in a separate goroutine to enable
 // interuption using runtime.Goexit().
 func (r taskRunner) run(in Input) Result {
+	if r.action == nil {
+		return Result{}
+	}
+
 	ctx := in.Context
 	if ctx == nil {
 		ctx = context.Background()
