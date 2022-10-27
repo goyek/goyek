@@ -10,28 +10,39 @@ type executor struct {
 	defined     map[string]*taskSnapshot
 	logger      Logger
 	middlewares []Middleware
+	noDeps      bool
 }
 
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (r *executor) Execute(ctx context.Context, tasks []string) error {
+func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []string) error {
+	tasksToSkip := map[string]bool{}
+	for _, skipTask := range skipTasks {
+		tasksToSkip[skipTask] = true
+	}
+
 	executedTasks := map[string]bool{}
 	for _, name := range tasks {
-		if err := r.run(ctx, name, executedTasks); err != nil {
+		if err := r.run(ctx, name, executedTasks, tasksToSkip); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (r *executor) run(ctx context.Context, name string, executed map[string]bool) error {
+func (r *executor) run(ctx context.Context, name string, executed, tasksToSkip map[string]bool) error {
 	task := r.defined[name]
+	if tasksToSkip[name] {
+		return nil
+	}
 	if executed[name] {
 		return nil
 	}
-	for _, dep := range task.deps {
-		if err := r.run(ctx, dep.name, executed); err != nil {
-			return err
+	if !r.noDeps {
+		for _, dep := range task.deps {
+			if err := r.run(ctx, dep.name, executed, tasksToSkip); err != nil {
+				return err
+			}
 		}
 	}
 	if err := ctx.Err(); err != nil {

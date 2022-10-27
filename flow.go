@@ -260,6 +260,36 @@ func (f *Flow) Use(middlewares ...Middleware) {
 	}
 }
 
+// Option configures the flow execution.
+type Option interface {
+	apply(*config)
+}
+
+type optionFunc func(*config)
+
+func (fn optionFunc) apply(cfg *config) {
+	fn(cfg)
+}
+
+type config struct {
+	noDeps    bool
+	skipTasks []string
+}
+
+// NoDeps is an option to skip processing of all dependencies.
+func NoDeps() Option {
+	return optionFunc(func(c *config) {
+		c.noDeps = true
+	})
+}
+
+// Skip is an option to skip processing of given tasks.
+func Skip(tasks ...string) Option {
+	return optionFunc(func(c *config) {
+		c.skipTasks = append(c.skipTasks, tasks...)
+	})
+}
+
 // FailError is returned by Flow.Execute when a task failed.
 type FailError struct {
 	Task string
@@ -274,8 +304,8 @@ func (err *FailError) Error() string {
 // Returns nil if no task has failed.
 // Returns FailError if a task failed.
 // Returns other error in case of invalid input or context error.
-func Execute(ctx context.Context, tasks []string) error {
-	return DefaultFlow.Execute(ctx, tasks)
+func Execute(ctx context.Context, tasks []string, opts ...Option) error {
+	return DefaultFlow.Execute(ctx, tasks, opts...)
 }
 
 // Execute runs provided tasks and all their dependencies.
@@ -283,7 +313,7 @@ func Execute(ctx context.Context, tasks []string) error {
 // Returns nil if no task has failed.
 // Returns FailError if a task failed.
 // Returns other error in case of invalid input or context error.
-func (f *Flow) Execute(ctx context.Context, tasks []string) error {
+func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) error {
 	for _, task := range tasks {
 		if task == "" {
 			return errors.New("task name cannot be empty")
@@ -302,16 +332,31 @@ func (f *Flow) Execute(ctx context.Context, tasks []string) error {
 	var middlewares []Middleware
 	middlewares = append(middlewares, f.middlewares...)
 
+	cfg := &config{}
+	for _, opt := range opts {
+		opt.apply(cfg)
+	}
+
+	for _, skippedTask := range cfg.skipTasks {
+		if skippedTask == "" {
+			return errors.New("skipped task name cannot be empty")
+		}
+		if _, ok := f.tasks[skippedTask]; !ok {
+			return errors.New("skipped task provided but not defined: " + skippedTask)
+		}
+	}
+
 	r := &executor{
 		output:      f.Output(),
 		defined:     f.tasks,
 		logger:      f.Logger(),
 		middlewares: middlewares,
+		noDeps:      cfg.noDeps,
 	}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return r.Execute(ctx, tasks)
+	return r.Execute(ctx, tasks, cfg.skipTasks)
 }
 
 const (
@@ -328,8 +373,8 @@ const (
 // 1 exit code means that a task has failed or the execution was interrupted.
 // 2 exit code means that the input was invalid.
 // Calls Usage when invalid args are provided.
-func Main(args []string) {
-	DefaultFlow.Main(args)
+func Main(args []string, opts ...Option) {
+	DefaultFlow.Main(args, opts...)
 }
 
 // Main runs provided tasks and all their dependencies.
@@ -340,7 +385,7 @@ func Main(args []string) {
 // 1 exit code means that a task has failed or the execution was interrupted.
 // 2 exit code means that the input was invalid.
 // Calls Usage when invalid args are provided.
-func (f *Flow) Main(args []string) {
+func (f *Flow) Main(args []string, opts ...Option) {
 	out := f.Output()
 
 	// trap Ctrl+C and call cancel on the context
@@ -364,15 +409,15 @@ func (f *Flow) Main(args []string) {
 		os.Exit(exitCodeInvalid)
 	}
 
-	exitCode := f.main(ctx, args)
+	exitCode := f.main(ctx, args, opts...)
 	os.Exit(exitCode)
 }
 
-func (f *Flow) main(ctx context.Context, args []string) int {
+func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	out := f.Output()
 
 	from := time.Now()
-	err := f.Execute(ctx, args)
+	err := f.Execute(ctx, args, opts...)
 	if _, ok := err.(*FailError); ok {
 		fmt.Fprintf(out, "%v\t%.3fs\n", err, time.Since(from).Seconds())
 		return exitCodeFail

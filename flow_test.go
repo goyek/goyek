@@ -269,9 +269,11 @@ func Test_empty_action(t *testing.T) {
 func Test_invalid_args(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
+	flow.Define(goyek.Task{Name: "task"})
 	testCases := []struct {
 		desc string
 		args []string
+		opts []goyek.Option
 	}{
 		{
 			desc: "missing task name",
@@ -284,10 +286,20 @@ func Test_invalid_args(t *testing.T) {
 			desc: "not registered task name",
 			args: []string{"unknown"},
 		},
+		{
+			desc: "empty skip task name",
+			args: []string{"task"},
+			opts: []goyek.Option{goyek.Skip("")},
+		},
+		{
+			desc: "not registered skip task name",
+			args: []string{"task"},
+			opts: []goyek.Option{goyek.Skip("unknown")},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			err := flow.Execute(context.Background(), tc.args)
+			err := flow.Execute(context.Background(), tc.args, tc.opts...)
 
 			assertInvalid(t, err, "should return error bad args")
 		})
@@ -645,4 +657,112 @@ func TestFlow_Undefine_bad_task(t *testing.T) {
 	act := func() { flow.Undefine(task) }
 
 	assertPanics(t, act, "should not be possible undefine task from different flow")
+}
+
+func TestNoDeps(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(ioutil.Discard)
+	depNotRun := true
+	dep := flow.Define(goyek.Task{
+		Name: "dep",
+		Action: func(tf *goyek.TF) {
+			depNotRun = false
+		},
+	})
+	flow.Define(goyek.Task{
+		Name: "task",
+		Deps: goyek.Deps{dep},
+	})
+
+	err := flow.Execute(context.Background(), []string{"task"}, goyek.NoDeps())
+
+	assertPass(t, err, "should pass")
+	assertTrue(t, depNotRun, "deps should not have run")
+}
+
+func TestSkip_dep(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(ioutil.Discard)
+	taskRun := false
+	depNotRun := true
+	dep := flow.Define(goyek.Task{
+		Name: "dep",
+		Action: func(tf *goyek.TF) {
+			depNotRun = false
+		},
+	})
+	flow.Define(goyek.Task{
+		Name: "task",
+		Deps: goyek.Deps{dep},
+		Action: func(tf *goyek.TF) {
+			taskRun = true
+		},
+	})
+
+	err := flow.Execute(context.Background(), []string{"task"}, goyek.Skip("dep"))
+
+	assertPass(t, err, "should pass")
+	assertTrue(t, taskRun, "task should have run")
+	assertTrue(t, depNotRun, "dep should not have run")
+}
+
+func TestSkip_task(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(ioutil.Discard)
+	taskNotRun := true
+	depNotRun := true
+	dep := flow.Define(goyek.Task{
+		Name: "dep",
+		Action: func(tf *goyek.TF) {
+			depNotRun = false
+		},
+	})
+	flow.Define(goyek.Task{
+		Name: "task",
+		Deps: goyek.Deps{dep},
+		Action: func(tf *goyek.TF) {
+			taskNotRun = false
+		},
+	})
+
+	err := flow.Execute(context.Background(), []string{"task"}, goyek.Skip("task"))
+
+	assertPass(t, err, "should pass")
+	assertTrue(t, taskNotRun, "task should not have run")
+	assertTrue(t, depNotRun, "dep should not have run")
+}
+
+func TestSkip_shared_dep(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(ioutil.Discard)
+	taskNotRun := true
+	otherRun := false
+	depRun := false
+	dep := flow.Define(goyek.Task{
+		Name: "dep",
+		Action: func(tf *goyek.TF) {
+			depRun = true
+		},
+	})
+	flow.Define(goyek.Task{
+		Name: "other",
+		Deps: goyek.Deps{dep},
+		Action: func(tf *goyek.TF) {
+			otherRun = true
+		},
+	})
+	flow.Define(goyek.Task{
+		Name: "task",
+		Deps: goyek.Deps{dep},
+		Action: func(tf *goyek.TF) {
+			taskNotRun = false
+		},
+	})
+
+	err := flow.Execute(context.Background(), []string{"task", "other"}, goyek.Skip("task"))
+
+	assertPass(t, err, "should pass")
+	assertTrue(t, taskNotRun, "task should not have run")
+	assertTrue(t, otherRun, "other should have run")
+	assertTrue(t, depRun, "dep should have run")
 }
