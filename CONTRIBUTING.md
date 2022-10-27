@@ -4,7 +4,6 @@ We seek any feedback and are open to contribution.
 
 Feel free to:
 
-- start or join a [discussion](https://github.com/goyek/goyek/discussions),
 - create an [issue](https://github.com/goyek/goyek/issues),
 - propose a [pull request](https://github.com/goyek/goyek/pulls).
 
