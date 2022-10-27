@@ -8,13 +8,21 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.5...HEAD)
 
+### Added
+
+- Add `NoDeps` option to skip processing of all dependencies.
+- Add `Skip` option to skip processing of given tasks.
+
+### Changed
+
+- Report `NOOP` status if the task's action was nil.
+
 <!-- markdownlint-disable-next-line line-length -->
 ## [2.0.0-rc.5](https://github.com/goyek/goyek/compare/v2.0.0-rc.4...v2.0.0-rc.5) - 2022-10-25
 
 ### Changed
 
 - Change `DefinedTask` to struct.
-- Report `NOOP` status if the task's action was nil.
 
 <!-- markdownlint-disable-next-line line-length -->
 ## [2.0.0-rc.4](https://github.com/goyek/goyek/compare/v2.0.0-rc.3...v2.0.0-rc.4) - 2022-10-25

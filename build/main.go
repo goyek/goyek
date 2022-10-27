@@ -4,6 +4,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/goyek/goyek/v2"
@@ -21,6 +22,8 @@ var (
 	v       = flag.Bool("v", false, "print all tasks and tests as they are run")
 	dryRun  = flag.Bool("dry-run", false, "print all tasks that would be run without running them")
 	longRun = flag.Duration("long-run", time.Minute, "print when a task takes longer")
+	noDeps  = flag.Bool("no-deps", false, "do not process dependencies")
+	skip    = flag.String("skip", "", "skip processing the `comma-separated tasks`")
 )
 
 func main() {
@@ -45,8 +48,17 @@ func main() {
 		goyek.Use(middleware.ReportLongRun(*longRun))
 	}
 
+	var opts []goyek.Option
+	if *noDeps {
+		opts = append(opts, goyek.NoDeps())
+	}
+	if *skip != "" {
+		skippedTasks := strings.Split(*skip, ",")
+		opts = append(opts, goyek.Skip(skippedTasks...))
+	}
+
 	goyek.SetUsage(usage)
-	goyek.Main(flag.Args())
+	goyek.Main(flag.Args(), opts...)
 }
 
 func usage() {
