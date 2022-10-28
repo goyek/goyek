@@ -165,6 +165,8 @@ ok      0.001s
   this repository's own build pipeline (dogfooding)
 - [splunk-otel-go](https://github.com/signalfx/splunk-otel-go/tree/main/build) -
   usage in a multi-module monorepo
+- [goyek/demo](https://github.com/goyek/demo) and [goyek/workflow](https://github.com/goyek/workflow)
+  demonstrate the reusability potential
 
 ## Repository template
 
