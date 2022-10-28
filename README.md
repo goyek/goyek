@@ -161,12 +161,17 @@ ok      0.001s
 
 - [example_test.go](example_test.go) -
   demonstrative examples
+- [goyek/template](https://github.com/goyek/template) -
+  Go application repository template
+- [fluentassert](https://github.com/fluentassert/verify) -
+  usage in a Go library
 - [build](build) -
   this repository's own build pipeline (dogfooding)
 - [splunk-otel-go](https://github.com/signalfx/splunk-otel-go/tree/main/build) -
   usage in a multi-module monorepo
-- [goyek/demo](https://github.com/goyek/demo) and [goyek/workflow](https://github.com/goyek/workflow)
-  demonstrate the reusability potential
+- [goyek/demo](https://github.com/goyek/demo)
+  and [goyek/workflow](https://github.com/goyek/workflow) -
+  demonstratation of the reusability potential
 
 ## Repository template
 
