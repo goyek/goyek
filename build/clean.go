@@ -8,7 +8,7 @@ import (
 
 var _ = goyek.Define(goyek.Task{
 	Name:  "clean",
-	Usage: "remove remove files created during build pipeline",
+	Usage: "remove files created during build pipeline",
 	Action: func(tf *goyek.TF) {
 		remove(tf, "coverage.out")
 		remove(tf, "coverage.html")
