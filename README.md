@@ -163,7 +163,7 @@ ok      0.001s
   demonstrative examples
 - [goyek/template](https://github.com/goyek/template) -
   Go application repository template
-- [fluentassert](https://github.com/fluentassert/verify) - 
+- [fluentassert](https://github.com/fluentassert/verify) -
   usage in a Go library
 - [build](build) -
   this repository's own build pipeline (dogfooding)
