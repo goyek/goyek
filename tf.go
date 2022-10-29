@@ -69,13 +69,27 @@ func (tf *TF) Logf(format string, args ...interface{}) {
 
 // Error is equivalent to Log followed by Fail.
 func (tf *TF) Error(args ...interface{}) {
-	tf.logger.Log(tf.output, args...)
+	if l, ok := tf.logger.(interface {
+		Error(w io.Writer, args ...interface{})
+	}); ok {
+		l.Error(tf.output, args...)
+	} else {
+		tf.logger.Log(tf.output, args...)
+	}
+
 	tf.Fail()
 }
 
 // Errorf is equivalent to Logf followed by Fail.
 func (tf *TF) Errorf(format string, args ...interface{}) {
-	tf.logger.Logf(tf.output, format, args...)
+	if l, ok := tf.logger.(interface {
+		Errorf(w io.Writer, format string, args ...interface{})
+	}); ok {
+		l.Errorf(tf.output, format, args...)
+	} else {
+		tf.logger.Logf(tf.output, format, args...)
+	}
+
 	tf.Fail()
 }
 
@@ -96,13 +110,27 @@ func (tf *TF) Fail() {
 
 // Fatal is equivalent to Log followed by FailNow.
 func (tf *TF) Fatal(args ...interface{}) {
-	tf.logger.Log(tf.output, args...)
+	if l, ok := tf.logger.(interface {
+		Fatal(w io.Writer, args ...interface{})
+	}); ok {
+		l.Fatal(tf.output, args...)
+	} else {
+		tf.logger.Log(tf.output, args...)
+	}
+
 	tf.FailNow()
 }
 
 // Fatalf is equivalent to Logf followed by FailNow.
 func (tf *TF) Fatalf(format string, args ...interface{}) {
-	tf.logger.Logf(tf.output, format, args...)
+	if l, ok := tf.logger.(interface {
+		Fatalf(w io.Writer, format string, args ...interface{})
+	}); ok {
+		l.Fatalf(tf.output, format, args...)
+	} else {
+		tf.logger.Logf(tf.output, format, args...)
+	}
+
 	tf.FailNow()
 }
 
@@ -122,13 +150,26 @@ func (tf *TF) Skipped() bool {
 
 // Skip is equivalent to Log followed by SkipNow.
 func (tf *TF) Skip(args ...interface{}) {
-	tf.logger.Log(tf.output, args...)
+	if l, ok := tf.logger.(interface {
+		Skip(w io.Writer, args ...interface{})
+	}); ok {
+		l.Skip(tf.output, args...)
+	} else {
+		tf.logger.Log(tf.output, args...)
+	}
+
 	tf.SkipNow()
 }
 
 // Skipf is equivalent to Logf followed by SkipNow.
 func (tf *TF) Skipf(format string, args ...interface{}) {
-	tf.logger.Logf(tf.output, format, args...)
+	if l, ok := tf.logger.(interface {
+		Skipf(w io.Writer, format string, args ...interface{})
+	}); ok {
+		l.Skipf(tf.output, format, args...)
+	} else {
+		tf.logger.Logf(tf.output, format, args...)
+	}
 	tf.SkipNow()
 }
 
@@ -147,7 +188,9 @@ func (tf *TF) SkipNow() {
 // Is us used to mark the calling function as a helper function.
 // By default, when printing file and line information, that function will be skipped.
 func (tf *TF) Helper() {
-	if h, ok := tf.logger.(interface{ Helper() }); ok {
+	if h, ok := tf.logger.(interface {
+		Helper()
+	}); ok {
 		h.Helper()
 	}
 }

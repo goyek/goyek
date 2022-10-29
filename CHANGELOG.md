@@ -8,6 +8,12 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.7...HEAD)
 
+### Added
+
+- Make logging more customizable. If `Logger` implements
+  `Error`, `Errorf`, `Fatal`, `Fatalf`, `Skip`, `Skipf`
+  then they will be used by the `TF` equivalent methods.
+
 <!-- markdownlint-disable-next-line line-length -->
 ## [2.0.0-rc.7](https://github.com/goyek/goyek/compare/v2.0.0-rc.6...v2.0.0-rc.7) - 2022-10-29
 
