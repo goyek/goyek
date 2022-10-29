@@ -15,6 +15,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Add `NoDeps` option to skip processing of all dependencies.
 - Add `Skip` option to skip processing of given tasks.
+- Add `TF.Helper` and `CodeLineLogger.Helper` methods that work like
+  the equivalent method in the `testing` package.
 
 ### Changed
 
