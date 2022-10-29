@@ -175,6 +175,16 @@ func (f *Flow) Logger() Logger {
 }
 
 // SetLogger sets the logger used by TF's logging functions.
+//
+// The TF will additionally use following methods if implemented:
+//
+//	Error(w io.Writer, args ...interface{})
+//	Errorf(w io.Writer, format string, args ...interface{})
+//	Fatal(w io.Writer, args ...interface{})
+//	Fatalf(w io.Writer, format string, args ...interface{})
+//	Skip(w io.Writer, args ...interface{})
+//	Skipf(w io.Writer, format string, args ...interface{})
+//	Helper()
 func SetLogger(logger Logger) {
 	DefaultFlow.SetLogger(logger)
 }
