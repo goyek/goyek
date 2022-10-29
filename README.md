@@ -17,7 +17,7 @@ Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
 ---
 
-This README documents the latest `v2.0.0-rc.7` release.
+This README documents the latest `v2.0.0-rc.8` release.
 The documentation for `v1.1.0` can be found on [pkg.go.dev](https://pkg.go.dev/github.com/goyek/goyek).
 
 ---
@@ -201,8 +201,8 @@ Simply add them to your repository's root directory
 and make sure to add the `+x` permission:
 
 ```sh
-curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.7/goyek.sh -O
-curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.7/goyek.ps1 -O
+curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.8/goyek.sh -O
+curl -sSfL https://raw.githubusercontent.com/goyek/goyek/v2.0.0-rc.8/goyek.ps1 -O
 git add --chmod=+x goyek.sh goyek.ps1
 ```
 
