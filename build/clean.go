@@ -16,6 +16,7 @@ var _ = goyek.Define(goyek.Task{
 })
 
 func remove(tf *goyek.TF, path string) {
+	tf.Helper()
 	if _, err := os.Stat(path); err != nil {
 		return
 	}

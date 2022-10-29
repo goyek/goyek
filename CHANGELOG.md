@@ -6,7 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
-## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.6...HEAD)
+## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.7...HEAD)
+
+<!-- markdownlint-disable-next-line line-length -->
+## [2.0.0-rc.7](https://github.com/goyek/goyek/compare/v2.0.0-rc.6...v2.0.0-rc.7) - 2022-10-29
+
+This release has all the features and changes planned for `v2`.
+The `v2.0.0` is to be released in two months
+to give the users some time for feedback.
+
+### Added
+
+- Add `TF.Helper` and `CodeLineLogger.Helper` methods that work like
+  the equivalent method in the `testing` package.
 
 <!-- markdownlint-disable-next-line line-length -->
 ## [2.0.0-rc.6](https://github.com/goyek/goyek/compare/v2.0.0-rc.5...v2.0.0-rc.6) - 2022-10-27
@@ -15,8 +27,6 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Add `NoDeps` option to skip processing of all dependencies.
 - Add `Skip` option to skip processing of given tasks.
-- Add `TF.Helper` and `CodeLineLogger.Helper` methods that work like
-  the equivalent method in the `testing` package.
 
 ### Changed
 
