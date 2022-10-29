@@ -28,6 +28,25 @@ func TestCodeLineLogger(t *testing.T) {
 	assertContains(t, out, "      logger_test.go:21: message from helper", "should respect tf.Helper()")
 }
 
+func TestCodeLineLogger_helper_in_action(t *testing.T) {
+	flow := &goyek.Flow{}
+	out := &strings.Builder{}
+	flow.SetOutput(out)
+	loggerSpy := &goyek.CodeLineLogger{}
+	flow.SetLogger(loggerSpy)
+	flow.Define(goyek.Task{
+		Name: "task",
+		Action: func(tf *goyek.TF) {
+			tf.Helper()
+			tf.Log("message")
+		},
+	})
+
+	_ = flow.Execute(context.Background(), []string{"task"})
+
+	assertContains(t, out, "      logger_test.go:41: message", "should contain code line info")
+}
+
 func helperFn(tf *goyek.TF) {
 	tf.Helper()
 	tf.Log("message from helper")
