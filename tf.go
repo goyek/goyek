@@ -142,3 +142,12 @@ func (tf *TF) SkipNow() {
 	tf.skipped = true
 	runtime.Goexit()
 }
+
+// Helper calls logger's Helper method if implemented.
+// Is us used to mark the calling function as a helper function.
+// By default, when printing file and line information, that function will be skipped.
+func (tf *TF) Helper() {
+	if h, ok := tf.logger.(interface{ Helper() }); ok {
+		h.Helper()
+	}
+}

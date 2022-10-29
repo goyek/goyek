@@ -9,6 +9,7 @@ import (
 // Exec runs the command in given directory.
 // It calls tf.Error[f] and returns false in case of any problems.
 func Exec(tf *goyek.TF, workDir, cmdLine string) bool {
+	tf.Helper()
 	tf.Logf("Run %q in %s", cmdLine, workDir)
 	args, err := shellwords.Parse(cmdLine)
 	if err != nil {

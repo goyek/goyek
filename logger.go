@@ -5,6 +5,7 @@ import (
 	"io"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 // Logger is used by TF's logging functions.
@@ -27,7 +28,11 @@ func (l FmtLogger) Logf(w io.Writer, format string, args ...interface{}) {
 }
 
 // CodeLineLogger decorates the log with code line information and identation.
-type CodeLineLogger struct{}
+type CodeLineLogger struct {
+	mu          sync.Mutex
+	helperPCs   map[uintptr]struct{} // functions to be skipped when writing file/line info
+	helperNames map[string]struct{}  // helperPCs converted to function names
+}
 
 // Log is used internally in order to provide proper prefix.
 func (l *CodeLineLogger) Log(w io.Writer, args ...interface{}) {
@@ -41,6 +46,28 @@ func (l *CodeLineLogger) Logf(w io.Writer, format string, args ...interface{}) {
 	txt := fmt.Sprintf(format, args...)
 	txt = l.decorate(txt)
 	io.WriteString(w, txt) //nolint:errcheck,gosec // not checking errors when writing to output
+}
+
+// Helper marks the calling function as a helper function.
+// When printing file and line information, that function will be skipped.
+// Helper may be called simultaneously from multiple goroutines.
+func (l *CodeLineLogger) Helper() {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.helperPCs == nil {
+		l.helperPCs = make(map[uintptr]struct{})
+	}
+	// repeating code from callerName here to save walking a stack frame
+	var pc [1]uintptr
+	const skip = 3
+	n := runtime.Callers(skip, pc[:]) // skip runtime.Callers + CodeLineLogger.Helper + TF.Helper
+	if n == 0 {
+		panic("zero callers found")
+	}
+	if _, found := l.helperPCs[pc[0]]; !found {
+		l.helperPCs[pc[0]] = struct{}{}
+		l.helperNames = nil // map will be recreated next time it is needed
+	}
 }
 
 // decorate prefixes the string with the file and line of the call site
