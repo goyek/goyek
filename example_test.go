@@ -48,12 +48,14 @@ func Example() {
 	/*
 		$ go run .
 		===== TASK  hi
-				main.go:29: hello world
+		      main.go:15: Hello world!
 		----- PASS: hi (0.00s)
 		===== TASK  go-ver
 		go version go1.19.2 windows/amd64
-		----- PASS: go-ver (0.06s)
-		ok      0.061s
+		----- PASS: go-ver (0.04s)
+		===== TASK  all
+		----- NOOP: all (0.00s)
+		ok      0.039s
 	*/
 }
 
