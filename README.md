@@ -73,11 +73,12 @@ Here are some good parts:
 - You can reuse code like in any Go application.
   It may be helpful to use packages like:
   - [`bitfield/script`](https://github.com/bitfield/script)
+  - [`fsnotify`](https://github.com/fsnotify/fsnotify)
   - [`magefile/mage/target`](https://pkg.go.dev/github.com/magefile/mage/target)
   - [`mattn/go-shellwords`](https://pkg.go.dev/github.com/mattn/go-shellwords)
-  - [`rjeczalik/notify`](https://github.com/rjeczalik/notify)
   - [`spf13/viper`](https://github.com/spf13/viper)
 - **goyek** does not use any third-party dependency other than the Go standard library.
+  You can find supplumental features in [goyek/x](https://github.com/goyek/x) module.
 
 ## Quick start
 
@@ -155,6 +156,23 @@ $ go run ./build
       hello.go:15: greeting message
 ----- PASS: hello (0.00s)
 ok      0.001s
+```
+
+You can use the features from [goyek/x](https://github.com/goyek/x)
+for convenience and refactor `/build/main.go` to:
+
+```go
+package main
+
+import (
+	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/x/boot"
+)
+
+func main() {
+	goyek.SetDefault(hello)
+	boot.Main()
+}
 ```
 
 ## Examples
@@ -237,6 +255,9 @@ You can also use it create your own helpers like `Exec` in [build/exec.go](build
 [Here](https://github.com/goyek/goyek/issues/60) is the explanation
 why argument splitting is not included out-of-the-box.
 
+You can use [cmd.Exec](https://pkg.go.dev/github.com/goyek/x/cmd#Exec)
+from [goyek/x](https://github.com/goyek/x) which should cover most use cases.
+
 ### Parameters
 
 As of `v2` the parameters support has been removed
@@ -247,6 +268,10 @@ With the new API it is easy to integrate **goyek** with any of these packages:
 - [`flag`](https://pkg.go.dev/flag)
 - [`pflag`](https://github.com/spf13/pflag)
 - [`viper`](https://github.com/spf13/viper)
+
+You can use [boot.Main](https://pkg.go.dev/github.com/goyek/x/boot#Main)
+from [goyek/x](https://github.com/goyek/x) module to integrate
+with [`flag`](https://pkg.go.dev/flag).
 
 ### Middlewares
 
@@ -263,6 +288,10 @@ You can use some reusalbe middlewares from the
 [`middleware`](https://pkg.go.dev/github.com/goyek/goyek/v2/middleware)
 package. [`ReportStatus`](https://pkg.go.dev/github.com/goyek/goyek/v2/middleware#ReportStatus)
 is the most commonly used.
+
+You can use [boot.Main](https://pkg.go.dev/github.com/goyek/x/boot#Main)
+from [goyek/x](https://github.com/goyek/x) to setup
+all common middlewares.
 
 ### Custom printing
 
