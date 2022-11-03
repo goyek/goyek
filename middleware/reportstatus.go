@@ -21,16 +21,7 @@ func ReportStatus(next goyek.Runner) goyek.Runner {
 		res := next(in)
 
 		// report task end
-		status := "PASS"
-		switch res.Status {
-		case goyek.StatusFailed:
-			status = "FAIL"
-		case goyek.StatusSkipped:
-			status = "SKIP"
-		case goyek.StatusNotRun:
-			status = "NOOP"
-		}
-		fmt.Fprintf(in.Output, "----- %s: %s (%.2fs)\n", status, in.TaskName, time.Since(start).Seconds())
+		fmt.Fprintf(in.Output, "----- %s: %s (%.2fs)\n", res.Status, in.TaskName, time.Since(start).Seconds())
 
 		// report panic if happened
 		if res.PanicStack != nil {

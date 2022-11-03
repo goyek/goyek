@@ -8,6 +8,10 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.8...HEAD)
 
+### Added
+
+- Add `Status.String` method for printing `Status`.
+
 <!-- markdownlint-disable-next-line line-length -->
 ## [2.0.0-rc.8](https://github.com/goyek/goyek/compare/v2.0.0-rc.7...v2.0.0-rc.8) - 2022-10-29
 
