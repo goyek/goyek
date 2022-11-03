@@ -27,17 +27,6 @@ type (
 		PanicValue interface{}
 		PanicStack []byte
 	}
-
-	// Status of a task run.
-	Status uint8
-)
-
-// Statuses of task run.
-const (
-	StatusNotRun Status = iota
-	StatusPassed
-	StatusFailed
-	StatusSkipped
 )
 
 // NewRunner returns a task runner used by Flow.
