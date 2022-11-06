@@ -9,19 +9,19 @@ import (
 var _ = goyek.Define(goyek.Task{
 	Name:  "clean",
 	Usage: "remove files created during build pipeline",
-	Action: func(tf *goyek.TF) {
-		remove(tf, "coverage.out")
-		remove(tf, "coverage.html")
+	Action: func(a *goyek.A) {
+		remove(a, "coverage.out")
+		remove(a, "coverage.html")
 	},
 })
 
-func remove(tf *goyek.TF, path string) {
-	tf.Helper()
+func remove(a *goyek.A, path string) {
+	a.Helper()
 	if _, err := os.Stat(path); err != nil {
 		return
 	}
-	tf.Log("Remove: " + path)
+	a.Log("Remove: " + path)
 	if err := os.RemoveAll(path); err != nil {
-		tf.Error(err)
+		a.Error(err)
 	}
 }

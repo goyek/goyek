@@ -44,13 +44,13 @@ type (
 // It can be also used as a building block for a custom
 // workflow runner if you are missing any functionalities
 // provided by Flow (like concurrent dependencies execution).
-func NewRunner(action func(tf *TF)) Runner {
+func NewRunner(action func(a *A)) Runner {
 	r := taskRunner{action: action}
 	return r.run
 }
 
 type taskRunner struct {
-	action func(tf *TF)
+	action func(a *A)
 }
 
 // run executes the action in a separate goroutine to enable
@@ -75,7 +75,7 @@ func (r taskRunner) run(in Input) Result {
 		logger = FmtLogger{}
 	}
 
-	tf := &TF{
+	a := &A{
 		ctx:    ctx,
 		name:   in.TaskName,
 		output: &syncWriter{Writer: out},
@@ -88,9 +88,9 @@ func (r taskRunner) run(in Input) Result {
 		defer func() {
 			res := Result{}
 			switch {
-			case tf.Failed():
+			case a.Failed():
 				res.Status = StatusFailed
-			case tf.Skipped():
+			case a.Skipped():
 				res.Status = StatusSkipped
 			case finished:
 				res.Status = StatusPassed
@@ -101,7 +101,7 @@ func (r taskRunner) run(in Input) Result {
 			}
 			ch <- res
 		}()
-		r.action(tf)
+		r.action(a)
 		finished = true
 	}()
 	return <-ch

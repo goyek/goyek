@@ -7,8 +7,8 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-func find(tf *goyek.TF, ext string) []string {
-	tf.Helper()
+func find(a *goyek.A, ext string) []string {
+	a.Helper()
 	var files []string
 	err := filepath.WalkDir(dirRoot, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -20,7 +20,7 @@ func find(tf *goyek.TF, ext string) []string {
 		return nil
 	})
 	if err != nil {
-		tf.Fatal(err)
+		a.Fatal(err)
 	}
 	return files
 }

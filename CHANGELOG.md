@@ -12,6 +12,10 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Add `Status.String` method for printing `Status`.
 
+### Changed
+
+- Rename `TF` type to `A` as this is the `Action` parameter.
+
 <!-- markdownlint-disable-next-line line-length -->
 ## [2.0.0-rc.8](https://github.com/goyek/goyek/compare/v2.0.0-rc.7...v2.0.0-rc.8) - 2022-10-29
 

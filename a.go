@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-// TF is a type passed to task's action function to manage task state.
+// A is a type passed to task's action function to manage task state.
 //
 // A task ends when its action function returns or calls any of the methods
 // FailNow, Fatal, Fatalf, SkipNow, Skip, or Skipf.
@@ -17,7 +17,7 @@ import (
 //
 // The other reporting methods, such as the variations of Log and Error,
 // may be called simultaneously from multiple goroutines.
-type TF struct {
+type A struct {
 	ctx      context.Context
 	name     string
 	output   io.Writer
@@ -28,149 +28,149 @@ type TF struct {
 }
 
 // Context returns the run context.
-func (tf *TF) Context() context.Context {
-	return tf.ctx
+func (a *A) Context() context.Context {
+	return a.ctx
 }
 
 // Name returns the name of the running task.
-func (tf *TF) Name() string {
-	return tf.name
+func (a *A) Name() string {
+	return a.name
 }
 
 // Output returns the io.Writer used to print output.
-func (tf *TF) Output() io.Writer {
-	return tf.output
+func (a *A) Output() io.Writer {
+	return a.output
 }
 
 // Cmd is like exec.Command, but it assigns tf's context
 // and assigns Stdout and Stderr to tf's output,
 // and Stdin to os.Stdin.
-func (tf *TF) Cmd(name string, args ...string) *exec.Cmd {
-	cmd := exec.CommandContext(tf.Context(), name, args...)
+func (a *A) Cmd(name string, args ...string) *exec.Cmd {
+	cmd := exec.CommandContext(a.Context(), name, args...)
 	cmd.Stdin = os.Stdin
-	cmd.Stderr = tf.output
-	cmd.Stdout = tf.output
+	cmd.Stderr = a.output
+	cmd.Stdout = a.output
 	return cmd
 }
 
 // Log formats its arguments using default formatting, analogous to Println,
 // and prints the text to Output. A final newline is added.
 // The text will be printed only if the task fails or flow is run in Verbose mode.
-func (tf *TF) Log(args ...interface{}) {
-	tf.logger.Log(tf.output, args...)
+func (a *A) Log(args ...interface{}) {
+	a.logger.Log(a.output, args...)
 }
 
 // Logf formats its arguments according to the format, analogous to Printf,
 // and prints the text to Output. A final newline is added.
 // The text will be printed only if the task fails or flow is run in Verbose mode.
-func (tf *TF) Logf(format string, args ...interface{}) {
-	tf.logger.Logf(tf.output, format, args...)
+func (a *A) Logf(format string, args ...interface{}) {
+	a.logger.Logf(a.output, format, args...)
 }
 
 // Error is equivalent to Log followed by Fail.
-func (tf *TF) Error(args ...interface{}) {
-	if l, ok := tf.logger.(interface {
+func (a *A) Error(args ...interface{}) {
+	if l, ok := a.logger.(interface {
 		Error(w io.Writer, args ...interface{})
 	}); ok {
-		l.Error(tf.output, args...)
+		l.Error(a.output, args...)
 	} else {
-		tf.logger.Log(tf.output, args...)
+		a.logger.Log(a.output, args...)
 	}
 
-	tf.Fail()
+	a.Fail()
 }
 
 // Errorf is equivalent to Logf followed by Fail.
-func (tf *TF) Errorf(format string, args ...interface{}) {
-	if l, ok := tf.logger.(interface {
+func (a *A) Errorf(format string, args ...interface{}) {
+	if l, ok := a.logger.(interface {
 		Errorf(w io.Writer, format string, args ...interface{})
 	}); ok {
-		l.Errorf(tf.output, format, args...)
+		l.Errorf(a.output, format, args...)
 	} else {
-		tf.logger.Logf(tf.output, format, args...)
+		a.logger.Logf(a.output, format, args...)
 	}
 
-	tf.Fail()
+	a.Fail()
 }
 
 // Failed reports whether the function has failed.
-func (tf *TF) Failed() bool {
-	tf.failedMu.Lock()
-	res := tf.failed
-	tf.failedMu.Unlock()
+func (a *A) Failed() bool {
+	a.failedMu.Lock()
+	res := a.failed
+	a.failedMu.Unlock()
 	return res
 }
 
 // Fail marks the function as having failed but continues execution.
-func (tf *TF) Fail() {
-	tf.failedMu.Lock()
-	tf.failed = true
-	tf.failedMu.Unlock()
+func (a *A) Fail() {
+	a.failedMu.Lock()
+	a.failed = true
+	a.failedMu.Unlock()
 }
 
 // Fatal is equivalent to Log followed by FailNow.
-func (tf *TF) Fatal(args ...interface{}) {
-	if l, ok := tf.logger.(interface {
+func (a *A) Fatal(args ...interface{}) {
+	if l, ok := a.logger.(interface {
 		Fatal(w io.Writer, args ...interface{})
 	}); ok {
-		l.Fatal(tf.output, args...)
+		l.Fatal(a.output, args...)
 	} else {
-		tf.logger.Log(tf.output, args...)
+		a.logger.Log(a.output, args...)
 	}
 
-	tf.FailNow()
+	a.FailNow()
 }
 
 // Fatalf is equivalent to Logf followed by FailNow.
-func (tf *TF) Fatalf(format string, args ...interface{}) {
-	if l, ok := tf.logger.(interface {
+func (a *A) Fatalf(format string, args ...interface{}) {
+	if l, ok := a.logger.(interface {
 		Fatalf(w io.Writer, format string, args ...interface{})
 	}); ok {
-		l.Fatalf(tf.output, format, args...)
+		l.Fatalf(a.output, format, args...)
 	} else {
-		tf.logger.Logf(tf.output, format, args...)
+		a.logger.Logf(a.output, format, args...)
 	}
 
-	tf.FailNow()
+	a.FailNow()
 }
 
 // FailNow marks the function as having failed
 // and stops its execution by calling runtime.Goexit
 // (which then runs all deferred calls in the current goroutine).
 // It finishes the whole flow.
-func (tf *TF) FailNow() {
-	tf.Fail()
+func (a *A) FailNow() {
+	a.Fail()
 	runtime.Goexit()
 }
 
 // Skipped reports whether the task was skipped.
-func (tf *TF) Skipped() bool {
-	return tf.skipped
+func (a *A) Skipped() bool {
+	return a.skipped
 }
 
 // Skip is equivalent to Log followed by SkipNow.
-func (tf *TF) Skip(args ...interface{}) {
-	if l, ok := tf.logger.(interface {
+func (a *A) Skip(args ...interface{}) {
+	if l, ok := a.logger.(interface {
 		Skip(w io.Writer, args ...interface{})
 	}); ok {
-		l.Skip(tf.output, args...)
+		l.Skip(a.output, args...)
 	} else {
-		tf.logger.Log(tf.output, args...)
+		a.logger.Log(a.output, args...)
 	}
 
-	tf.SkipNow()
+	a.SkipNow()
 }
 
 // Skipf is equivalent to Logf followed by SkipNow.
-func (tf *TF) Skipf(format string, args ...interface{}) {
-	if l, ok := tf.logger.(interface {
+func (a *A) Skipf(format string, args ...interface{}) {
+	if l, ok := a.logger.(interface {
 		Skipf(w io.Writer, format string, args ...interface{})
 	}); ok {
-		l.Skipf(tf.output, format, args...)
+		l.Skipf(a.output, format, args...)
 	} else {
-		tf.logger.Logf(tf.output, format, args...)
+		a.logger.Logf(a.output, format, args...)
 	}
-	tf.SkipNow()
+	a.SkipNow()
 }
 
 // SkipNow marks the task as having been skipped
@@ -179,16 +179,16 @@ func (tf *TF) Skipf(format string, args ...interface{}) {
 // If a test fails (see Error, Errorf, Fail) and is then skipped,
 // it is still considered to have failed.
 // Flow will continue at the next task.
-func (tf *TF) SkipNow() {
-	tf.skipped = true
+func (a *A) SkipNow() {
+	a.skipped = true
 	runtime.Goexit()
 }
 
 // Helper calls logger's Helper method if implemented.
 // Is us used to mark the calling function as a helper function.
 // By default, when printing file and line information, that function will be skipped.
-func (tf *TF) Helper() {
-	if h, ok := tf.logger.(interface {
+func (a *A) Helper() {
+	if h, ok := a.logger.(interface {
 		Helper()
 	}); ok {
 		h.Helper()

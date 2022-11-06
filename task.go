@@ -15,7 +15,7 @@ type Task struct {
 	// Action executes the task in the given flow context.
 	// A task can be registered without a action and can act as a "collector" task
 	// for a list of dependencies (also called "pipeline").
-	Action func(tf *TF)
+	Action func(a *A)
 
 	// Deps is a collection of registered tasks that need to be run before this task is executed.
 	Deps Deps
@@ -59,12 +59,12 @@ func (r *DefinedTask) SetUsage(s string) {
 }
 
 // Action returns the action of the task.
-func (r *DefinedTask) Action() func(tf *TF) {
+func (r *DefinedTask) Action() func(a *A) {
 	return r.action
 }
 
 // SetAction changes the action of the task.
-func (r *DefinedTask) SetAction(fn func(tf *TF)) {
+func (r *DefinedTask) SetAction(fn func(a *A)) {
 	r.action = fn
 }
 

@@ -14,8 +14,8 @@ func Example() {
 	hi := goyek.Define(goyek.Task{
 		Name:  "hi",
 		Usage: "Greetings",
-		Action: func(tf *goyek.TF) {
-			tf.Log("Hello world!")
+		Action: func(a *goyek.A) {
+			a.Log("Hello world!")
 		},
 	})
 
@@ -23,9 +23,9 @@ func Example() {
 	goVer := goyek.Define(goyek.Task{
 		Name:  "go-ver",
 		Usage: `Run "go version"`,
-		Action: func(tf *goyek.TF) {
-			if err := tf.Cmd("go", "version").Run(); err != nil {
-				tf.Error(err)
+		Action: func(a *goyek.A) {
+			if err := a.Cmd("go", "version").Run(); err != nil {
+				a.Error(err)
 			}
 		},
 	})
@@ -73,8 +73,8 @@ func Example_flag() {
 	goyek.Define(goyek.Task{
 		Name:  "hi",
 		Usage: "Greetings",
-		Action: func(tf *goyek.TF) {
-			tf.Log(*msg)
+		Action: func(a *goyek.A) {
+			a.Log(*msg)
 		},
 	})
 

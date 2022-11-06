@@ -72,14 +72,14 @@ func Test_successful(t *testing.T) {
 	var executed1 int
 	task1 := flow.Define(goyek.Task{
 		Name: "task-1",
-		Action: func(*goyek.TF) {
+		Action: func(*goyek.A) {
 			executed1++
 		},
 	})
 	var executed2 int
 	flow.Define(goyek.Task{
 		Name: "task-2",
-		Action: func(*goyek.TF) {
+		Action: func(*goyek.A) {
 			executed2++
 		},
 		Deps: goyek.Deps{task1},
@@ -87,7 +87,7 @@ func Test_successful(t *testing.T) {
 	var executed3 int
 	flow.Define(goyek.Task{
 		Name: "task-3",
-		Action: func(*goyek.TF) {
+		Action: func(*goyek.A) {
 			executed3++
 		},
 		Deps: goyek.Deps{task1},
@@ -115,18 +115,18 @@ func Test_dependency_failure(t *testing.T) {
 	var executed1 int
 	task1 := flow.Define(goyek.Task{
 		Name: "task-1",
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			executed1++
-			tf.Error("it still runs")
+			a.Error("it still runs")
 			executed1 += 10
-			tf.FailNow()
+			a.FailNow()
 			executed1 += 100
 		},
 	})
 	var executed2 int
 	flow.Define(goyek.Task{
 		Name: "task-2",
-		Action: func(*goyek.TF) {
+		Action: func(*goyek.A) {
 			executed2++
 		},
 		Deps: goyek.Deps{task1},
@@ -134,7 +134,7 @@ func Test_dependency_failure(t *testing.T) {
 	var executed3 int
 	flow.Define(goyek.Task{
 		Name: "task-3",
-		Action: func(*goyek.TF) {
+		Action: func(*goyek.A) {
 			executed3++
 		},
 		Deps: goyek.Deps{task1},
@@ -155,18 +155,18 @@ func Test_fail(t *testing.T) {
 	failed := false
 	flow.Define(goyek.Task{
 		Name: "task",
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			defer func() {
-				failed = tf.Failed()
+				failed = a.Failed()
 			}()
-			tf.Fatal("failing")
+			a.Fatal("failing")
 		},
 	})
 
 	err := flow.Execute(context.Background(), []string{"task"})
 
 	assertFail(t, err, "should return error")
-	assertTrue(t, failed, "tf.Failed() should return true")
+	assertTrue(t, failed, "a.Failed() should return true")
 }
 
 func Test_skip(t *testing.T) {
@@ -175,36 +175,36 @@ func Test_skip(t *testing.T) {
 	skipped := false
 	flow.Define(goyek.Task{
 		Name: "task",
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			defer func() {
-				skipped = tf.Skipped()
+				skipped = a.Skipped()
 			}()
-			tf.Skip("skipping")
+			a.Skip("skipping")
 		},
 	})
 
 	err := flow.Execute(context.Background(), []string{"task"})
 
 	assertPass(t, err, "should pass")
-	assertTrue(t, skipped, "tf.Skipped() should return true")
+	assertTrue(t, skipped, "a.Skipped() should return true")
 }
 
 func Test_task_panics(t *testing.T) {
 	testCases := []struct {
 		desc   string
-		action func(tf *goyek.TF)
+		action func(a *goyek.A)
 	}{
 		{
 			desc:   "regular panic",
-			action: func(tf *goyek.TF) { panic("panicked!") },
+			action: func(a *goyek.A) { panic("panicked!") },
 		},
 		{
 			desc:   "nil panic",
-			action: func(tf *goyek.TF) { panic(nil) },
+			action: func(a *goyek.A) { panic(nil) },
 		},
 		{
 			desc:   "runtime.Goexit()",
-			action: func(tf *goyek.TF) { runtime.Goexit() },
+			action: func(a *goyek.A) { runtime.Goexit() },
 		},
 	}
 	for _, tc := range testCases {
@@ -244,7 +244,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 	flow.SetOutput(ioutil.Discard)
 	flow.Define(goyek.Task{
 		Name: "task",
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			cancel()
 		},
 	})
@@ -312,19 +312,19 @@ func Test_printing(t *testing.T) {
 	flow.SetOutput(out)
 	skipped := flow.Define(goyek.Task{
 		Name: "skipped",
-		Action: func(tf *goyek.TF) {
-			tf.Skipf("Skipf %d", 0)
+		Action: func(a *goyek.A) {
+			a.Skipf("Skipf %d", 0)
 		},
 	})
 	flow.Define(goyek.Task{
 		Name: "failing",
 		Deps: goyek.Deps{skipped},
-		Action: func(tf *goyek.TF) {
-			tf.Log("Log", 1)
-			tf.Logf("Logf %d", 2)
-			tf.Error("Error", 3)
-			tf.Errorf("Errorf %d", 4)
-			tf.Fatalf("Fatalf %d", 5)
+		Action: func(a *goyek.A) {
+			a.Log("Log", 1)
+			a.Logf("Logf %d", 2)
+			a.Error("Error", 3)
+			a.Errorf("Errorf %d", 4)
+			a.Fatalf("Fatalf %d", 5)
 		},
 	})
 
@@ -340,13 +340,13 @@ func Test_concurrent_printing(t *testing.T) {
 	flow.SetOutput(out)
 	flow.Define(goyek.Task{
 		Name: "task",
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			ch := make(chan struct{}, 1)
 			go func() {
 				defer func() { ch <- struct{}{} }()
-				tf.Log("from child goroutine\nwith new line")
+				a.Log("from child goroutine\nwith new line")
 			}()
-			tf.Error("from main goroutine")
+			a.Error("from main goroutine")
 			<-ch
 		},
 	})
@@ -367,12 +367,12 @@ func Test_concurrent_error(t *testing.T) {
 	flow.SetOutput(out)
 	flow.Define(goyek.Task{
 		Name: "task",
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			go func() {
-				tf.Fail()
+				a.Fail()
 			}()
 			for {
-				if tf.Failed() {
+				if a.Failed() {
 					return
 				}
 				select {
@@ -397,8 +397,8 @@ func Test_name(t *testing.T) {
 	var got string
 	flow.Define(goyek.Task{
 		Name: taskName,
-		Action: func(tf *goyek.TF) {
-			got = tf.Name()
+		Action: func(a *goyek.A) {
+			got = a.Name()
 		},
 	})
 
@@ -414,8 +414,8 @@ func Test_output(t *testing.T) {
 	msg := "hello there"
 	flow.Define(goyek.Task{
 		Name: "task",
-		Action: func(tf *goyek.TF) {
-			tf.Output().Write([]byte(msg)) //nolint:errcheck,gosec // not checking errors when writing to output
+		Action: func(a *goyek.A) {
+			a.Output().Write([]byte(msg)) //nolint:errcheck,gosec // not checking errors when writing to output
 		},
 	})
 
@@ -430,7 +430,7 @@ func Test_SetDefault(t *testing.T) {
 	taskRan := false
 	task := flow.Define(goyek.Task{
 		Name: "task",
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			taskRan = true
 		},
 	})
@@ -461,9 +461,9 @@ func TestCmd_success(t *testing.T) {
 	flow.SetOutput(out)
 	flow.Define(goyek.Task{
 		Name: taskName,
-		Action: func(tf *goyek.TF) {
-			if err := tf.Cmd("go", "version").Run(); err != nil {
-				tf.Fatal(err)
+		Action: func(a *goyek.A) {
+			if err := a.Cmd("go", "version").Run(); err != nil {
+				a.Fatal(err)
 			}
 		},
 	})
@@ -480,9 +480,9 @@ func TestCmd_error(t *testing.T) {
 	flow.SetOutput(ioutil.Discard)
 	flow.Define(goyek.Task{
 		Name: taskName,
-		Action: func(tf *goyek.TF) {
-			if err := tf.Cmd("go", "wrong").Run(); err != nil {
-				tf.Fatal(err)
+		Action: func(a *goyek.A) {
+			if err := a.Cmd("go", "wrong").Run(); err != nil {
+				a.Fatal(err)
 			}
 		},
 	})
@@ -564,9 +564,9 @@ func TestFlow_Logger(t *testing.T) {
 	flow.SetLogger(goyek.FmtLogger{})
 	flow.Define(goyek.Task{
 		Name: "task",
-		Action: func(tf *goyek.TF) {
-			tf.Log("first")
-			tf.Logf("second")
+		Action: func(a *goyek.A) {
+			a.Log("first")
+			a.Logf("second")
 		},
 	})
 
@@ -665,7 +665,7 @@ func TestNoDeps(t *testing.T) {
 	depNotRun := true
 	dep := flow.Define(goyek.Task{
 		Name: "dep",
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			depNotRun = false
 		},
 	})
@@ -687,14 +687,14 @@ func TestSkip_dep(t *testing.T) {
 	depNotRun := true
 	dep := flow.Define(goyek.Task{
 		Name: "dep",
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			depNotRun = false
 		},
 	})
 	flow.Define(goyek.Task{
 		Name: "task",
 		Deps: goyek.Deps{dep},
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			taskRun = true
 		},
 	})
@@ -713,14 +713,14 @@ func TestSkip_task(t *testing.T) {
 	depNotRun := true
 	dep := flow.Define(goyek.Task{
 		Name: "dep",
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			depNotRun = false
 		},
 	})
 	flow.Define(goyek.Task{
 		Name: "task",
 		Deps: goyek.Deps{dep},
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			taskNotRun = false
 		},
 	})
@@ -740,21 +740,21 @@ func TestSkip_shared_dep(t *testing.T) {
 	depRun := false
 	dep := flow.Define(goyek.Task{
 		Name: "dep",
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			depRun = true
 		},
 	})
 	flow.Define(goyek.Task{
 		Name: "other",
 		Deps: goyek.Deps{dep},
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			otherRun = true
 		},
 	})
 	flow.Define(goyek.Task{
 		Name: "task",
 		Deps: goyek.Deps{dep},
-		Action: func(tf *goyek.TF) {
+		Action: func(a *goyek.A) {
 			taskNotRun = false
 		},
 	})

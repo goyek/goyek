@@ -9,46 +9,46 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-func TestTF_uses_Logger_dynamic_interface(t *testing.T) {
+func TestA_uses_Logger_dynamic_interface(t *testing.T) {
 	testCases := []struct {
 		desc   string
-		action func(tf *goyek.TF)
+		action func(a *goyek.A)
 	}{
 		{
 			desc:   "Helper",
-			action: func(tf *goyek.TF) { tf.Helper() },
+			action: func(a *goyek.A) { a.Helper() },
 		},
 		{
 			desc:   "Log",
-			action: func(tf *goyek.TF) { tf.Log() },
+			action: func(a *goyek.A) { a.Log() },
 		},
 		{
 			desc:   "Logf",
-			action: func(tf *goyek.TF) { tf.Logf("") },
+			action: func(a *goyek.A) { a.Logf("") },
 		},
 		{
 			desc:   "Error",
-			action: func(tf *goyek.TF) { tf.Error() },
+			action: func(a *goyek.A) { a.Error() },
 		},
 		{
 			desc:   "Errorf",
-			action: func(tf *goyek.TF) { tf.Errorf("") },
+			action: func(a *goyek.A) { a.Errorf("") },
 		},
 		{
 			desc:   "Fatal",
-			action: func(tf *goyek.TF) { tf.Fatal() },
+			action: func(a *goyek.A) { a.Fatal() },
 		},
 		{
 			desc:   "Fatalf",
-			action: func(tf *goyek.TF) { tf.Fatalf("") },
+			action: func(a *goyek.A) { a.Fatalf("") },
 		},
 		{
 			desc:   "Helper",
-			action: func(tf *goyek.TF) { tf.Skip() },
+			action: func(a *goyek.A) { a.Skip() },
 		},
 		{
 			desc:   "Skipf",
-			action: func(tf *goyek.TF) { tf.Skipf("") },
+			action: func(a *goyek.A) { a.Skipf("") },
 		},
 	}
 	for _, tc := range testCases {

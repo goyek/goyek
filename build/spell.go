@@ -9,14 +9,14 @@ import (
 var spell = goyek.Define(goyek.Task{
 	Name:  "spell",
 	Usage: "misspell",
-	Action: func(tf *goyek.TF) {
-		if !Exec(tf, dirBuild, "go install github.com/client9/misspell/cmd/misspell") {
+	Action: func(a *goyek.A) {
+		if !Exec(a, dirBuild, "go install github.com/client9/misspell/cmd/misspell") {
 			return
 		}
-		mdFiles := find(tf, ".md")
+		mdFiles := find(a, ".md")
 		if len(mdFiles) == 0 {
-			tf.Skip("no .md files")
+			a.Skip("no .md files")
 		}
-		Exec(tf, dirRoot, "misspell -error -locale=US -w "+strings.Join(mdFiles, " "))
+		Exec(a, dirRoot, "misspell -error -locale=US -w "+strings.Join(mdFiles, " "))
 	},
 })
