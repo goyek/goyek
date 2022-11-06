@@ -191,14 +191,6 @@ func (a *A) SkipNow() {
 	runtime.Goexit()
 }
 
-// Cleanup registers a function to be called when task's action function completes.
-// Cleanup functions will be called in last added, first called order.
-func (a *A) Cleanup(fn func()) {
-	a.mu.Lock()
-	a.cleanups = append(a.cleanups, fn)
-	a.mu.Unlock()
-}
-
 // Helper calls logger's Helper method if implemented.
 // Is us used to mark the calling function as a helper function.
 // By default, when printing file and line information, that function will be skipped.
@@ -207,6 +199,35 @@ func (a *A) Helper() {
 		Helper()
 	}); ok {
 		h.Helper()
+	}
+}
+
+// Cleanup registers a function to be called when task's action function completes.
+// Cleanup functions will be called in last added, first called order.
+func (a *A) Cleanup(fn func()) {
+	a.mu.Lock()
+	a.cleanups = append(a.cleanups, fn)
+	a.mu.Unlock()
+}
+
+// Setenv calls os.Setenv(key, value) and uses Cleanup to restore the environment variable
+// to its original value after the action.
+func (a *A) Setenv(key, value string) {
+	a.Helper()
+	prevValue, ok := os.LookupEnv(key)
+
+	if err := os.Setenv(key, value); err != nil {
+		a.Fatalf("cannot set environment variable: %v", err)
+	}
+
+	if ok {
+		a.Cleanup(func() {
+			os.Setenv(key, prevValue) //nolint:errcheck,gosec // should never happen
+		})
+	} else {
+		a.Cleanup(func() {
+			os.Unsetenv(key) //nolint:errcheck // should never happen
+		})
 	}
 }
 
