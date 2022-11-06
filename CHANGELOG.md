@@ -8,6 +8,10 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.9...HEAD)
 
+### Added
+
+- Add `A.Cleanup` method that registers an action's cleanup function.
+
 <!-- markdownlint-disable-next-line line-length -->
 ## [2.0.0-rc.9](https://github.com/goyek/goyek/compare/v2.0.0-rc.8...v2.0.0-rc.9) - 2022-11-06
 

@@ -186,9 +186,8 @@ func (a *A) SkipNow() {
 	runtime.Goexit()
 }
 
-// Cleanup registers a function to be called when the test (or subtest) and all its
-// subtests complete. Cleanup functions will be called in last added,
-// first called order.
+// Cleanup registers a function to be called when task's action function completes.
+// Cleanup functions will be called in last added, first called order.
 func (a *A) Cleanup(fn func()) {
 	a.cleanupsMu.Lock()
 	a.cleanups = append(a.cleanups, fn)
