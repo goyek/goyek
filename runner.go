@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
-	"runtime/debug"
 	"sync"
 )
 
@@ -82,29 +81,22 @@ func (r taskRunner) run(in Input) Result {
 		logger: logger,
 	}
 
-	ch := make(chan Result, 1)
-	go func() {
-		finished := false
-		defer func() {
-			res := Result{}
-			switch {
-			case a.Failed():
-				res.Status = StatusFailed
-			case a.Skipped():
-				res.Status = StatusSkipped
-			case finished:
-				res.Status = StatusPassed
-			default:
-				res.Status = StatusFailed
-				res.PanicValue = recover()
-				res.PanicStack = debug.Stack()
-			}
-			ch <- res
-		}()
-		r.action(a)
-		finished = true
-	}()
-	return <-ch
+	finished, panicVal, panicStack := a.run(r.action)
+
+	res := Result{}
+	switch {
+	case a.Failed():
+		res.Status = StatusFailed
+	case a.Skipped():
+		res.Status = StatusSkipped
+	case finished:
+		res.Status = StatusPassed
+	default:
+		res.Status = StatusFailed
+		res.PanicValue = panicVal
+		res.PanicStack = panicStack
+	}
+	return res
 }
 
 type syncWriter struct {

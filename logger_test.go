@@ -19,6 +19,9 @@ func TestCodeLineLogger(t *testing.T) {
 		Action: func(a *goyek.A) {
 			a.Log("message")
 			helperFn(a)
+			a.Cleanup(func() {
+				a.Log("cleanup")
+			})
 		},
 	})
 
@@ -26,6 +29,7 @@ func TestCodeLineLogger(t *testing.T) {
 
 	assertContains(t, out, "      logger_test.go:20: message", "should contain code line info")
 	assertContains(t, out, "      logger_test.go:21: message from helper", "should respect a.Helper()")
+	assertContains(t, out, "      logger_test.go:23: cleanup", "should respect a.Cleanup()")
 }
 
 func TestCodeLineLogger_helper_in_action(t *testing.T) {
@@ -44,7 +48,7 @@ func TestCodeLineLogger_helper_in_action(t *testing.T) {
 
 	_ = flow.Execute(context.Background(), []string{"task"})
 
-	assertContains(t, out, "      logger_test.go:41: message", "should contain code line info")
+	assertContains(t, out, "      logger_test.go:45: message", "should contain code line info")
 }
 
 func helperFn(a *goyek.A) {
