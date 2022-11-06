@@ -34,9 +34,7 @@ The repository contains basic confiugration for
 
 Create a pull request named `Release <version>` that does the following:
 
-1. Review all places where the current version is used:
-   - [`README.md`](README.md)
-   - [`build/go.mod`](build/go.mod)
+1. Review all places where the current version is used [`README.md`](README.md).
 1. Remove the changed API warning in [`README.md`](README.md) if it is present.
 1. Add documentation or examples if it they are missing.
 1. Update [`CHANGELOG.md`](CHANGELOG.md).

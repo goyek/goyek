@@ -2,10 +2,12 @@ module github.com/goyek/goyek/build
 
 go 1.19
 
+replace github.com/goyek/goyek/v2 => ../
+
 require (
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.50.1
-	github.com/goyek/goyek/v2 v2.0.0-rc.8
+	github.com/goyek/goyek/v2 v2.0.0-00010101000000-000000000000
 	github.com/mattn/go-shellwords v1.0.12
 )
 
@@ -179,5 +181,3 @@ require (
 	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect
 	mvdan.cc/unparam v0.0.0-20220706161116-678bad134442 // indirect
 )
-
-replace github.com/goyek/goyek/v2 => ../
