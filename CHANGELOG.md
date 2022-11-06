@@ -12,7 +12,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Add `A.Cleanup` method that registers an action's cleanup function.
 - Add `A.Setenv` method that sets the environment variable
-  and returns the previous value during cleanup.
+  and reverts the previous value during cleanup.
+- Add `A.TempDir` method that creates a temporary directory
+  and removes it during cleanup.
 
 <!-- markdownlint-disable-next-line line-length -->
 ## [2.0.0-rc.9](https://github.com/goyek/goyek/compare/v2.0.0-rc.8...v2.0.0-rc.9) - 2022-11-06

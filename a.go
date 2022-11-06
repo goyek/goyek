@@ -3,11 +3,15 @@ package goyek
 import (
 	"context"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"runtime"
 	"runtime/debug"
+	"strings"
 	"sync"
+	"unicode"
+	"unicode/utf8"
 )
 
 // A is a type passed to task's action function to manage task state.
@@ -229,6 +233,45 @@ func (a *A) Setenv(key, value string) {
 			os.Unsetenv(key) //nolint:errcheck // should never happen
 		})
 	}
+}
+
+// TempDir returns a temporary directory for the action to use.
+// The directory is automatically removed by Cleanup when the action completes.
+// Each subsequent call to t.TempDir returns a unique directory;
+// if the directory creation fails, TempDir terminates the action by calling Fatal.
+func (a *A) TempDir() string {
+	a.Helper()
+	// Drop unusual characters (such as path separators or
+	// characters interacting with globs) from the directory name to
+	// avoid surprising os.MkdirTemp behavior.
+	mapper := func(r rune) rune {
+		if r < utf8.RuneSelf {
+			const allowed = "!#$%&()+,-.=@^_{}~ "
+			if '0' <= r && r <= '9' ||
+				'a' <= r && r <= 'z' ||
+				'A' <= r && r <= 'Z' {
+				return r
+			}
+			if strings.ContainsRune(allowed, r) {
+				return r
+			}
+		} else if unicode.IsLetter(r) || unicode.IsNumber(r) {
+			return r
+		}
+		return -1
+	}
+	name := strings.Map(mapper, a.Name())
+
+	dir, err := ioutil.TempDir("", "goyek-"+name+"-*")
+	if err != nil {
+		a.Fatalf("cannot create temporary directory: %v", err)
+	}
+	a.Cleanup(func() {
+		if err := os.RemoveAll(dir); err != nil {
+			a.Errorf("TempDir RemoveAll cleanup: %v", err)
+		}
+	})
+	return dir
 }
 
 func (a *A) run(action func(a *A)) (finished bool, panicVal interface{}, panicStack []byte) {
