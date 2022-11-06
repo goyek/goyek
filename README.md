@@ -98,8 +98,8 @@ var msg = flag.String("msg", "greeting message", "Hello world!")
 var hello = flow.Define(goyek.Task{
 	Name:  "hello",
 	Usage: "demonstration",
-	Action: func(tf *goyek.TF) {
-		tf.Log(*msg)
+	Action: func(a *goyek.A) {
+		a.Log(*msg)
 	},
 })
 ```
@@ -247,7 +247,7 @@ When the default task is set, then it is run if no task is provided.
 
 ### Running programs
 
-Use [`TF.Cmd`](https://pkg.go.dev/github.com/goyek/goyek/v2#TF.Cmd)
+Use [`A.Cmd`](https://pkg.go.dev/github.com/goyek/goyek/v2#A.Cmd)
 to run a program inside a task's action.
 
 You can also use it create your own helpers like `Exec` in [build/exec.go](build/exec.go).

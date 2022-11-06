@@ -19,7 +19,7 @@ import (
 type Flow struct {
 	output io.Writer
 	usage  func()
-	logger Logger // TODO: If Helper() is implemented then it is called when TF.Helper() is called.
+	logger Logger // TODO: If Helper() is implemented then it is called when A.Helper() is called.
 
 	tasks       map[string]*taskSnapshot // snapshot of defined tasks
 	defaultTask *taskSnapshot            // task to run when none is explicitly provided
@@ -38,7 +38,7 @@ type taskSnapshot struct {
 	name   string
 	usage  string
 	deps   []*taskSnapshot
-	action func(tf *TF)
+	action func(a *A)
 }
 
 // Tasks returns all tasks sorted in lexicographical order.
@@ -159,13 +159,13 @@ func (f *Flow) SetOutput(out io.Writer) {
 	f.output = out
 }
 
-// GetLogger returns the logger used by TF's logging functions.
+// GetLogger returns the logger used by A's logging functions.
 // CodeLineLogger by default.
 func GetLogger() Logger {
 	return DefaultFlow.Logger()
 }
 
-// Logger returns the logger used by TF's logging functions.
+// Logger returns the logger used by A's logging functions.
 // CodeLineLogger by default.
 func (f *Flow) Logger() Logger {
 	if f.logger == nil {
@@ -174,9 +174,9 @@ func (f *Flow) Logger() Logger {
 	return f.logger
 }
 
-// SetLogger sets the logger used by TF's logging functions.
+// SetLogger sets the logger used by A's logging functions.
 //
-// The TF will additionally use following methods if implemented:
+// The A will additionally use following methods if implemented:
 //
 //	Error(w io.Writer, args ...interface{})
 //	Errorf(w io.Writer, format string, args ...interface{})
@@ -189,7 +189,7 @@ func SetLogger(logger Logger) {
 	DefaultFlow.SetLogger(logger)
 }
 
-// SetLogger sets the logger used by TF's logging functions.
+// SetLogger sets the logger used by A's logging functions.
 func (f *Flow) SetLogger(logger Logger) {
 	f.logger = logger
 }

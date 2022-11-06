@@ -10,27 +10,27 @@ func TestRunner(t *testing.T) {
 	testCases := []struct {
 		desc   string
 		want   goyek.Result
-		action func(*goyek.TF)
+		action func(*goyek.A)
 	}{
 		{
 			desc:   "pass",
 			want:   goyek.Result{Status: goyek.StatusPassed},
-			action: func(tf *goyek.TF) {},
+			action: func(a *goyek.A) {},
 		},
 		{
 			desc:   "fail",
 			want:   goyek.Result{Status: goyek.StatusFailed},
-			action: func(tf *goyek.TF) { tf.Fail() },
+			action: func(a *goyek.A) { a.Fail() },
 		},
 		{
 			desc:   "failnow",
 			want:   goyek.Result{Status: goyek.StatusFailed},
-			action: func(tf *goyek.TF) { tf.FailNow() },
+			action: func(a *goyek.A) { a.FailNow() },
 		},
 		{
 			desc:   "skip",
 			want:   goyek.Result{Status: goyek.StatusSkipped},
-			action: func(tf *goyek.TF) { tf.Skip() },
+			action: func(a *goyek.A) { a.Skip() },
 		},
 		{
 			desc:   "nil",
@@ -50,7 +50,7 @@ func TestRunner(t *testing.T) {
 
 func TestRunner_panic(t *testing.T) {
 	payload := "panicked"
-	r := goyek.NewRunner(func(tf *goyek.TF) { panic(payload) })
+	r := goyek.NewRunner(func(a *goyek.A) { panic(payload) })
 
 	got := r(goyek.Input{})
 

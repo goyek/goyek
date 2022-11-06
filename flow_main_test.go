@@ -11,7 +11,7 @@ func TestFlow_main(t *testing.T) {
 	flow := &Flow{}
 	flow.SetOutput(&strings.Builder{})
 	flow.Define(Task{Name: "task"})
-	flow.Define(Task{Name: "failing", Action: func(tf *TF) { tf.Fail() }})
+	flow.Define(Task{Name: "failing", Action: func(a *A) { a.Fail() }})
 
 	testCases := []struct {
 		desc string
