@@ -18,13 +18,15 @@ import (
 // The other reporting methods, such as the variations of Log and Error,
 // may be called simultaneously from multiple goroutines.
 type A struct {
-	ctx      context.Context
-	name     string
-	output   io.Writer
-	logger   Logger
-	failedMu sync.Mutex
-	failed   bool
-	skipped  bool
+	ctx        context.Context
+	name       string
+	output     io.Writer
+	logger     Logger
+	failedMu   sync.Mutex
+	failed     bool
+	skipped    bool
+	cleanupsMu sync.Mutex
+	cleanups   []func()
 }
 
 // Context returns the run context.
@@ -182,6 +184,15 @@ func (a *A) Skipf(format string, args ...interface{}) {
 func (a *A) SkipNow() {
 	a.skipped = true
 	runtime.Goexit()
+}
+
+// Cleanup registers a function to be called when the test (or subtest) and all its
+// subtests complete. Cleanup functions will be called in last added,
+// first called order.
+func (a *A) Cleanup(fn func()) {
+	a.cleanupsMu.Lock()
+	a.cleanups = append(a.cleanups, fn)
+	a.cleanupsMu.Unlock()
 }
 
 // Helper calls logger's Helper method if implemented.
