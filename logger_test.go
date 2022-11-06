@@ -29,7 +29,7 @@ func TestCodeLineLogger(t *testing.T) {
 
 	assertContains(t, out, "      logger_test.go:20: message", "should contain code line info")
 	assertContains(t, out, "      logger_test.go:21: message from helper", "should respect a.Helper()")
-	assertContains(t, out, "      logger_test.go:43: cleanup", "should respect a.Cleanup()")
+	assertContains(t, out, "      logger_test.go:23: cleanup", "should respect a.Cleanup()")
 }
 
 func TestCodeLineLogger_helper_in_action(t *testing.T) {
