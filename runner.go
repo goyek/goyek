@@ -90,7 +90,7 @@ func (r taskRunner) run(in Input) Result {
 	)
 	go func() {
 		defer close(ch)
-		defer runCleanups(a, &finished, &panicVal, &panicStack)
+		defer a.runCleanups(&finished, &panicVal, &panicStack)
 		defer func() {
 			if finished {
 				return
@@ -119,7 +119,7 @@ func (r taskRunner) run(in Input) Result {
 	return res
 }
 
-func runCleanups(a *A, finished *bool, panicVal *interface{}, panicStack *[]byte) {
+func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byte) {
 	// we capture only the first panic
 	cleanupFinished := false
 	if *finished {
@@ -140,23 +140,23 @@ func runCleanups(a *A, finished *bool, panicVal *interface{}, panicStack *[]byte
 	// Make sure that if a cleanup function panics,
 	// we still run the remaining cleanup functions.
 	defer func() {
-		a.cleanupsMu.Lock()
+		a.mu.Lock()
 		recur := len(a.cleanups) > 0
-		a.cleanupsMu.Unlock()
+		a.mu.Unlock()
 		if recur {
-			runCleanups(a, finished, panicVal, panicStack)
+			a.runCleanups(finished, panicVal, panicStack)
 		}
 	}()
 
 	for {
 		var cleanup func()
-		a.cleanupsMu.Lock()
+		a.mu.Lock()
 		if len(a.cleanups) > 0 {
 			last := len(a.cleanups) - 1
 			cleanup = a.cleanups[last]
 			a.cleanups = a.cleanups[:last]
 		}
-		a.cleanupsMu.Unlock()
+		a.mu.Unlock()
 		if cleanup == nil {
 			cleanupFinished = true
 			return
