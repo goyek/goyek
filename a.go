@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"runtime/debug"
 	"sync"
 )
 
@@ -206,5 +207,70 @@ func (a *A) Helper() {
 		Helper()
 	}); ok {
 		h.Helper()
+	}
+}
+
+func (a *A) run(action func(a *A)) (finished bool, panicVal interface{}, panicStack []byte) {
+	ch := make(chan struct{})
+	go func() {
+		defer close(ch)
+		defer a.runCleanups(&finished, &panicVal, &panicStack)
+		defer func() {
+			if finished {
+				return
+			}
+			panicVal = recover()
+			panicStack = debug.Stack()
+		}()
+		action(a)
+		finished = true
+	}()
+	<-ch
+	return
+}
+
+func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byte) {
+	// we capture only the first panic
+	cleanupFinished := false
+	if *finished {
+		defer func() {
+			if cleanupFinished {
+				return
+			}
+			*panicVal = recover()
+			*panicStack = debug.Stack()
+			*finished = false
+		}()
+	} else {
+		defer func() {
+			_ = recover() // ignore next panics
+		}()
+	}
+
+	// Make sure that if a cleanup function panics,
+	// we still run the remaining cleanup functions.
+	defer func() {
+		a.mu.Lock()
+		recur := len(a.cleanups) > 0
+		a.mu.Unlock()
+		if recur {
+			a.runCleanups(finished, panicVal, panicStack)
+		}
+	}()
+
+	for {
+		var cleanup func()
+		a.mu.Lock()
+		if len(a.cleanups) > 0 {
+			last := len(a.cleanups) - 1
+			cleanup = a.cleanups[last]
+			a.cleanups = a.cleanups[:last]
+		}
+		a.mu.Unlock()
+		if cleanup == nil {
+			cleanupFinished = true
+			return
+		}
+		cleanup()
 	}
 }
