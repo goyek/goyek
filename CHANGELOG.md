@@ -13,7 +13,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 This release introduces a breaking change as it renames
 the heavily used `TF` type to `A`. This follows the convention
-used in [`testing`](https://pkg.go.dev/testing)
+used in [`testing`](https://pkg.go.dev/testing) package
 to name the parameter type as the first letter of the "function type".
 
 ### Added
