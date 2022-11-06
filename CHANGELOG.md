@@ -6,7 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
-## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.8...HEAD)
+## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.9...HEAD)
+
+<!-- markdownlint-disable-next-line line-length -->
+## [2.0.0-rc.9](https://github.com/goyek/goyek/compare/v2.0.0-rc.8...v2.0.0-rc.9) - 2022-11-06
+
+This release introduces a breaking change as it renames
+the heavily used `TF` type to `A`. This follows the convention
+used in [`testing`](https://pkg.go.dev/testing) package
+to name the parameter type as the first letter of the "function type".
 
 ### Added
 
