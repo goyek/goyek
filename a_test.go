@@ -77,13 +77,15 @@ func TestA_Cleanup_Fail(t *testing.T) {
 func TestA_Setenv(t *testing.T) {
 	key := "GOYEK_TEST_ENV"
 	val := "1"
-	goyek.NewRunner(func(a *goyek.A) {
+
+	res := goyek.NewRunner(func(a *goyek.A) {
 		a.Setenv(key, val)
 
 		got := os.Getenv(key)
 		assertEqual(t, got, val, "should set the value")
 	})(goyek.Input{})
 
+	assertEqual(t, res.Status, goyek.StatusPassed, "shoud return proper status")
 	got := os.Getenv(key)
 	assertEqual(t, got, "", "should restore the value after the action")
 }
@@ -95,15 +97,30 @@ func TestA_Setenv_restore(t *testing.T) {
 	os.Setenv(key, prev)   //nolint:errcheck,gosec // should never happen
 	defer os.Unsetenv(key) //nolint:errcheck // should never happen
 
-	goyek.NewRunner(func(a *goyek.A) {
+	res := goyek.NewRunner(func(a *goyek.A) {
 		a.Setenv(key, val)
 
 		got := os.Getenv(key)
 		assertEqual(t, got, val, "should set the value")
 	})(goyek.Input{})
 
+	assertEqual(t, res.Status, goyek.StatusPassed, "shoud return proper status")
 	got := os.Getenv(key)
 	assertEqual(t, got, prev, "should restore the value after the action")
+}
+
+func TestA_TempDir(t *testing.T) {
+	var dir string
+	res := goyek.NewRunner(func(a *goyek.A) {
+		dir = a.TempDir()
+
+		_, err := os.Lstat(dir)
+		assertEqual(t, err, nil, "the dir should exixt")
+	})(goyek.Input{TaskName: "0!ą😊"})
+
+	assertEqual(t, res.Status, goyek.StatusPassed, "shoud return proper status")
+	_, err := os.Lstat(dir)
+	assertTrue(t, os.IsNotExist(err), "should remove the dir after the action")
 }
 
 func TestA_uses_Logger_dynamic_interface(t *testing.T) {
