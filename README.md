@@ -17,8 +17,8 @@ Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
 ---
 
-This README documents the latest `v2.0.0-rc.9` release.
-The documentation for `v1.1.0` can be found on [pkg.go.dev](https://pkg.go.dev/github.com/goyek/goyek).
+This README documents the latest `v2` release.
+The documentation for `v1` can be found on [pkg.go.dev](https://pkg.go.dev/github.com/goyek/goyek).
 
 ---
 
