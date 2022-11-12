@@ -1,7 +1,7 @@
 package goyek
 
 // Task represents a named task that can be defined.
-// It can consist of a action (function that will be called when task is run),
+// It can consist of an action (function that will be called when the task is run),
 // dependencies (tasks which has to be run before this one).
 type Task struct {
 	// Name uniquely identifies the task.

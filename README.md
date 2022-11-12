@@ -1,6 +1,6 @@
 # goyek
 
-> Create build pipelines in Go
+> Create build automation in Go
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/goyek/goyek.svg)](https://pkg.go.dev/github.com/goyek/goyek/v2)
 [![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
@@ -41,14 +41,13 @@ Table of Contents:
   - [Mage](#mage)
   - [Task](#task)
   - [Bazel](#bazel)
-- [Presentations](#presentations)
 - [Contributing](#contributing)
 - [License](#license)
 
 ## Description
 
 **goyek** (/ˈɡɔɪæk/ [🔊 listen](http://ipa-reader.xyz/?text=%CB%88%C9%A1%C9%94%C9%AA%C3%A6k))
-is used to create build pipelines in Go.
+is used to create build automation in Go.
 As opposed to many other tools, it is just a Go library.
 
 The API is mainly inspired by
@@ -184,7 +183,7 @@ func main() {
 - [fluentassert](https://github.com/fluentassert/verify) -
   usage in a Go library
 - [build](build) -
-  this repository's own build pipeline (dogfooding)
+  this repository's own build automation (dogfooding)
 - [splunk-otel-go](https://github.com/signalfx/splunk-otel-go/tree/main/build) -
   usage in a multi-module monorepo
 - [goyek/demo](https://github.com/goyek/demo)
@@ -205,7 +204,7 @@ of **goyek**.
 
 ### Wrapper scripts
 
-The convention is to have the build pipeline
+The convention is to have the build automation
 in the `/build` directory (or even module).
 
 Instead of executing `go run ./build`,
@@ -360,20 +359,11 @@ but it still has similar problems:
 [created to efficiently handle complex and long-running build pipelines](https://en.wikipedia.org/wiki/Bazel_(software)#Rationale).
 It requires the build target inputs and outputs to be fully specified.
 
-**goyek** is just a simple Go library that is mainly supposed to create a build pipeline
+**goyek** is just a simple Go library that is mainly supposed to create a build automation
 consisting of commands like `go vet`, `go test`, `go build`.
 However, nothing prevents you from, for example,
 using the [Mage's target package](https://pkg.go.dev/github.com/magefile/mage/target)
-to make your build pipeline more efficient.
-
-## Presentations
-
-| Date       | Presentation                                                                            | Description                                                                                                                        |
-|------------|-----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| 2021-05-05 | [goyek - Create build pipelines in Go](https://github.com/pellared/goyek-demo)          | **goyek** v0.3.0 demo                                                                                                              |
-| 2020-12-14 | [Build pipeline for a Go project](https://github.com/pellared/go-build-pipeline-demo)   | build pipeline using [Make](https://www.gnu.org/software/make/), [Mage](https://github.com/magefile/mage), and **taskflow** v0.1.0 |
-
-Note: **goyek** was named **taskflow** before v0.3.0.
+to make your build automation more efficient.
 
 ## Contributing
 
@@ -382,3 +372,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) if you want to help us.
 ## License
 
 **goyek** is licensed under the terms of the [MIT license](LICENSE).
+
+Note: **goyek** was named **taskflow** before v0.3.0.
