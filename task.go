@@ -1,27 +1,25 @@
 package goyek
 
-// Task represents a named task that can be registered.
+// Task represents a named task that can be defined.
 // It can consist of a action (function that will be called when task is run),
-// dependencies (tasks which has to be run before this one)
-// parameters (which can be used within the action).
+// dependencies (tasks which has to be run before this one).
 type Task struct {
 	// Name uniquely identifies the task.
-	// Names cannot  be empty and should be easily representable on the CLI.
+	// It cannot be empty and should be easily representable on the CLI.
 	Name string
 
 	// Usage provides information what the task does.
 	Usage string
 
 	// Action executes the task in the given flow context.
-	// A task can be registered without a action and can act as a "collector" task
-	// for a list of dependencies (also called "pipeline").
+	// A task can be defined without a action to act as a "collector" task for a list of dependencies.
 	Action func(a *A)
 
-	// Deps is a collection of registered tasks that need to be run before this task is executed.
+	// Deps is a collection of defined tasks that need to be run before this task is executed.
 	Deps Deps
 }
 
-// DefinedTask represents a task that has been registered.
+// DefinedTask represents a task that has been defined.
 // It can be used as a dependency for another task.
 type DefinedTask struct {
 	*taskSnapshot
