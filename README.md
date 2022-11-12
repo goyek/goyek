@@ -41,7 +41,6 @@ Table of Contents:
   - [Mage](#mage)
   - [Task](#task)
   - [Bazel](#bazel)
-- [Presentations](#presentations)
 - [Contributing](#contributing)
 - [License](#license)
 
