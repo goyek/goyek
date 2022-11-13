@@ -338,7 +338,7 @@ which results in some drawbacks:
 - Magical by design (of course one may like it).
 
 **goyek** is a non-magical alternative for [Mage](https://github.com/magefile/mage).
-It is easier to customize and extend as it is a library which offers many extension points.
+It is easier to customize and extend as it is a library that offers extension points.
 Write regular Go code without build tags, special function names and tricky imports.
 
 ### Task
