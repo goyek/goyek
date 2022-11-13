@@ -1,6 +1,6 @@
 # goyek
 
-> Create build automation in Go
+> Build automation in Go
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/goyek/goyek.svg)](https://pkg.go.dev/github.com/goyek/goyek/v2)
 [![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
@@ -334,11 +334,12 @@ which results in some drawbacks:
 - Reusing tasks is [hacky](https://magefile.org/importing/).
 - Requires installation or using [zero install option](https://magefile.org/zeroinstall/)
   which is slow.
-- Debugging would be extermly complex.
+- Debugging is [complex](https://github.com/magefile/mage/issues/280).
 - Magical by design (of course one may like it).
 
 **goyek** is a non-magical alternative for [Mage](https://github.com/magefile/mage).
-Write regular Go code. No build tags, special names for functions, tricky imports.
+It is easier to customize and extend as it is a library which offers many extension points.
+Write regular Go code without build tags, special function names and tricky imports.
 
 ### Task
 
