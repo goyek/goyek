@@ -31,6 +31,7 @@ var (
 
 func main() {
 	out := goyek.Output()
+
 	// change working directory to repo root
 	if err := os.Chdir(".."); err != nil {
 		fmt.Fprintln(out, err)
