@@ -6,11 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
-## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.10...HEAD)
+## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.11...HEAD)
 
-### Change
+<!-- markdownlint-disable-next-line line-length -->
+## [2.0.0-rc.11](https://github.com/goyek/goyek/compare/v2.0.0-rc.10...v2.0.0-rc.11) - 2022-11-07
 
-- `Flow.Main` no longer changes the working directory.
+### Changed
+
+- `Flow.Main` no longer changes the working directory (undocumented behavior).
 
 <!-- markdownlint-disable-next-line line-length -->
 ## [2.0.0-rc.10](https://github.com/goyek/goyek/compare/v2.0.0-rc.9...v2.0.0-rc.10) - 2022-11-07
