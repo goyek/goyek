@@ -4,6 +4,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -17,6 +18,8 @@ const (
 	dirBuild = "build"
 )
 
+const exitCodeInvalid = 2
+
 // Reusable flags used by the build pipeline.
 var (
 	v       = flag.Bool("v", false, "print all tasks and tests as they are run")
@@ -27,9 +30,17 @@ var (
 )
 
 func main() {
+	out := goyek.Output()
+
+	// change working directory to repo root
+	if err := os.Chdir(".."); err != nil {
+		fmt.Fprintln(out, err)
+		os.Exit(exitCodeInvalid)
+	}
+
 	goyek.SetDefault(all)
 
-	flag.CommandLine.SetOutput(goyek.Output())
+	flag.CommandLine.SetOutput(out)
 	flag.Usage = usage
 	flag.Parse()
 
