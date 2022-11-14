@@ -15,10 +15,9 @@
 
 Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
----
+[![Introduction](https://img.youtube.com/vi/e-xWEH-fqJ0/hqdefault.jpg)](https://www.youtube.com/watch?v=e-xWEH-fqJ0)
 
-This README documents the latest `v2` release.
-The documentation for `v1` can be found on [pkg.go.dev](https://pkg.go.dev/github.com/goyek/goyek).
+[Slides](https://docs.google.com/presentation/d/1xFAPXeMiOD-92xeIHkUD-SHmJZwc8mSIIgpjuJXEW3U/edit?usp=sharing).
 
 ---
 
