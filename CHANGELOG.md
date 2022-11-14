@@ -8,6 +8,10 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.10...HEAD)
 
+### Change
+
+- `Flow.Main` no longer changes the working directory.
+
 <!-- markdownlint-disable-next-line line-length -->
 ## [2.0.0-rc.10](https://github.com/goyek/goyek/compare/v2.0.0-rc.9...v2.0.0-rc.10) - 2022-11-07
 

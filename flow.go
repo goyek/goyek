@@ -412,13 +412,6 @@ func (f *Flow) Main(args []string, opts ...Option) {
 		os.Exit(exitCodeFail)
 	}()
 
-	// change working directory to repo root (per convention)
-	if err := os.Chdir(".."); err != nil {
-		fmt.Println(err)
-		fmt.Fprintln(out, err)
-		os.Exit(exitCodeInvalid)
-	}
-
 	exitCode := f.main(ctx, args, opts...)
 	os.Exit(exitCode)
 }
