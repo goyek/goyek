@@ -64,7 +64,7 @@ Here are some good parts:
   or [`fluentassert`](https://github.com/fluentassert/verify) for asserting.
 - You can reuse code like in any Go application.
   It may be helpful to use packages like
-  [`fsnotify`](https://github.com/fsnotify/fsnotify) and [`spf13/viper`](https://github.com/spf13/viper)
+  [`fsnotify`](https://github.com/fsnotify/fsnotify) and [`spf13/viper`](https://github.com/spf13/viper).
 - It is highly customizable.
 - It does not use any third-party dependency other than the Go standard library.
   You can find supplumental features in [`goyek/x`](https://github.com/goyek/x).
@@ -87,7 +87,7 @@ import (
 	"flag"
 
 	"github.com/goyek/goyek/v2"
-  "github.com/goyek/goyek/x/cmd"
+	"github.com/goyek/goyek/x/cmd"
 )
 
 var msg = flag.String("msg", "greeting message", "Hello world!")
@@ -97,7 +97,7 @@ var hello = flow.Define(goyek.Task{
 	Usage: "demonstration",
 	Action: func(a *goyek.A) {
 		a.Log(*msg)
-    cmd.Exec(a, "go version")
+		cmd.Exec(a, "go version")
 	},
 })
 ```
