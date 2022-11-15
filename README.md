@@ -120,7 +120,7 @@ func main() {
 
 Run:
 
-```shell
+```out
 $ go mod tidy
 
 $ go run ./build -h
