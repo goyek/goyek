@@ -306,7 +306,7 @@ but it still has similar problems:
   which it uses.
 - Debugging and testing tasks is not easy.
 - Hard to make reusable tasks.
-- Requires to "install" the tool.
+- Requires to install the tool.
 
 ### Bazel
 
@@ -316,8 +316,8 @@ It requires the build target inputs and outputs to be fully specified.
 
 **goyek** is just a simple Go library.
 However, nothing prevents you from, for example,
-using the [Mage's target package](https://pkg.go.dev/github.com/magefile/mage/target)
-to make your automation more efficient.
+using the [github.com/magefile/mage/target](https://pkg.go.dev/github.com/magefile/mage/target)
+package to make your automation more efficient.
 
 ## Contributing
 
