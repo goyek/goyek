@@ -97,7 +97,7 @@ var hello = flow.Define(goyek.Task{
 	Usage: "demonstration",
 	Action: func(a *goyek.A) {
 		a.Log(*msg)
-    cmd.Exec(a, "go version")
+		cmd.Exec(a, "go version")
 	},
 })
 ```
