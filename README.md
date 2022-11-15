@@ -229,8 +229,8 @@ PowerShell - `goyek.ps`:
 exit $global:LASTEXITCODE
 ```
 
-If `/build` is a seperate Go module,
-then you can use [goyek.sh](goyek.sh) and [goyek.ps1](goyek.ps1) scripts instead.
+If `/build` is a separate Go module,
+then check the [goyek.sh](goyek.sh) and [goyek.ps1](goyek.ps1) scripts.
 
 ## Using middlewares
 
