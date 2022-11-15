@@ -255,11 +255,11 @@ sets the most commonly used middlewares.
 
 You can customize the default output by using:
 
-- [`Flow.SetOutput`](https://pkg.go.dev/github.com/goyek/goyek/v2#Flow.SetOutput)
-- [`Flow.SetLogger`](https://pkg.go.dev/github.com/goyek/goyek/v2#Flow.SetLogger)
-- [`Flow.SetUsage`](https://pkg.go.dev/github.com/goyek/goyek/v2#Flow.SetUsage)
-- [`Flow.Execute`](https://pkg.go.dev/github.com/goyek/goyek/v2#Flow.Execute)
-  instead of [`Flow.Main`](https://pkg.go.dev/github.com/goyek/goyek/v2#Flow.Main)
+- [`SetOutput`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetOutput)
+- [`SetLogger`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetLogger)
+- [`SetUsage`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetUsage)
+- [`Execute`](https://pkg.go.dev/github.com/goyek/goyek/v2#Execute)
+  instead of [`Main`](https://pkg.go.dev/github.com/goyek/goyek/v2#Main)
 
 ## Alternatives
 
