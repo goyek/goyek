@@ -66,7 +66,7 @@ Here are some good parts:
   It may be helpful to use packages like
   [`fsnotify`](https://github.com/fsnotify/fsnotify) and [`spf13/viper`](https://github.com/spf13/viper)
 - It is highly customizable.
-- **goyek** does not use any third-party dependency other than the Go standard library.
+- It does not use any third-party dependency other than the Go standard library.
   You can find supplumental features in [`goyek/x`](https://github.com/goyek/x).
 - Minimal supported Go version is 1.11.
 
