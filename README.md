@@ -31,7 +31,7 @@ Table of Contents:
 - [Running programs](#running-programs)
 - [Wrapper scripts](#wrapper-scripts)
 - [Using middlewares](#using-middlewares)
-- [Customizing printing](#customizing-printing)
+- [Customizing](#customizing)
 - [Alternatives](#alternatives)
   - [Make](#make)
   - [Mage](#mage)
@@ -251,7 +251,7 @@ Take notice that the [`boot.Main`](https://pkg.go.dev/github.com/goyek/x/boot#Ma
 convenient function from [goyek/x](https://github.com/goyek/x)
 sets the most commonly used middlewares.
 
-## Customizing printing
+## Customizing
 
 You can customize the default output by using:
 
@@ -260,6 +260,9 @@ You can customize the default output by using:
 - [`SetUsage`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetUsage)
 - [`Execute`](https://pkg.go.dev/github.com/goyek/goyek/v2#Execute)
   instead of [`Main`](https://pkg.go.dev/github.com/goyek/goyek/v2#Main)
+
+You can take a look at [github.com/goyek/x](https://github.com/goyek/x)
+to find out, how it is customizing the default behavior.
 
 ## Alternatives
 
