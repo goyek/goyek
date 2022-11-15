@@ -222,7 +222,7 @@ cd "$DIR"
 go run ./build $@
 ```
 
-PowerShell - `goyek.ps`:
+PowerShell - `goyek.ps1`:
 
 ```powershell
 & go run .\build $args
