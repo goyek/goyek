@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
-## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.11...HEAD)
+## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.12...HEAD)
+
+<!-- markdownlint-disable-next-line line-length -->
+## [2.0.0-rc.12](https://github.com/goyek/goyek/compare/v2.0.0-rc.11...v2.0.0-rc.12) - 2022-11-24
 
 ### Removed
 
