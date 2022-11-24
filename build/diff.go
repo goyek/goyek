@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"os/exec"
 	"strings"
 
 	"github.com/goyek/goyek/v2"
@@ -14,9 +15,11 @@ var diff = goyek.Define(goyek.Task{
 		Exec(a, dirRoot, "git diff --exit-code")
 
 		a.Log("Cmd: git status --porcelain")
-		cmd := a.Cmd("git", "status", "--porcelain")
+
 		sb := &strings.Builder{}
+		cmd := exec.CommandContext(a.Context(), "git", "status", "--porcelain")
 		cmd.Stdout = io.MultiWriter(a.Output(), sb)
+		cmd.Stderr = io.MultiWriter(a.Output(), sb)
 		if err := cmd.Run(); err != nil {
 			a.Error(err)
 		}

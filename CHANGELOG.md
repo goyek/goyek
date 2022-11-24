@@ -8,6 +8,12 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.11...HEAD)
 
+### Removed
+
+- Remove `A.Cmd`.
+  Use [`github.com/goyek/goyek/x/cmd`](https://pkg.go.dev/github.com/goyek/x/cmd)
+  or your own helper instead.
+
 <!-- markdownlint-disable-next-line line-length -->
 ## [2.0.0-rc.11](https://github.com/goyek/goyek/compare/v2.0.0-rc.10...v2.0.0-rc.11) - 2022-11-07
 

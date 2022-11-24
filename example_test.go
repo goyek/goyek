@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/goyek/goyek/v2"
 	"github.com/goyek/goyek/v2/middleware"
@@ -24,7 +25,10 @@ func Example() {
 		Name:  "go-ver",
 		Usage: `Run "go version"`,
 		Action: func(a *goyek.A) {
-			if err := a.Cmd("go", "version").Run(); err != nil {
+			cmd := exec.CommandContext(a.Context(), "go", "version")
+			cmd.Stdout = a.Output()
+			cmd.Stderr = a.Output()
+			if err := cmd.Run(); err != nil {
 				a.Error(err)
 			}
 		},

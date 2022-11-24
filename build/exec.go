@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os"
+	"os/exec"
+
 	"github.com/mattn/go-shellwords"
 
 	"github.com/goyek/goyek/v2"
@@ -16,8 +19,11 @@ func Exec(a *goyek.A, workDir, cmdLine string) bool {
 		a.Errorf("parse command line: %v", err)
 		return false
 	}
-	cmd := a.Cmd(args[0], args[1:]...)
+	cmd := exec.CommandContext(a.Context(), args[0], args[1:]...) //nolint:gosec // it a convenient function to run programs
 	cmd.Dir = workDir
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = a.Output()
+	cmd.Stderr = a.Output()
 	if err := cmd.Run(); err != nil {
 		a.Error(err)
 		return false

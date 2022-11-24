@@ -454,44 +454,6 @@ func TestFlow_SetDefault_panic(t *testing.T) {
 	assertPanics(t, act, "should panic when using a task defined in other flo")
 }
 
-func TestCmd_success(t *testing.T) {
-	taskName := "exec"
-	out := &strings.Builder{}
-	flow := &goyek.Flow{}
-	flow.SetOutput(out)
-	flow.Define(goyek.Task{
-		Name: taskName,
-		Action: func(a *goyek.A) {
-			if err := a.Cmd("go", "version").Run(); err != nil {
-				a.Fatal(err)
-			}
-		},
-	})
-
-	err := flow.Execute(context.Background(), []string{taskName})
-
-	assertPass(t, err, "task should pass")
-	assertContains(t, out, "go version go", "output should contain prefix of version report")
-}
-
-func TestCmd_error(t *testing.T) {
-	taskName := "exec"
-	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
-	flow.Define(goyek.Task{
-		Name: taskName,
-		Action: func(a *goyek.A) {
-			if err := a.Cmd("go", "wrong").Run(); err != nil {
-				a.Fatal(err)
-			}
-		},
-	})
-
-	err := flow.Execute(nil, []string{taskName}) //nolint:staticcheck // present that nil context is handled
-
-	assertFail(t, err, "task should pass")
-}
-
 func TestFlow_Tasks(t *testing.T) {
 	flow := &goyek.Flow{}
 	t1 := flow.Define(goyek.Task{Name: "one"})
