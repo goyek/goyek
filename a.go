@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"runtime"
 	"runtime/debug"
 	"strings"
@@ -46,17 +45,6 @@ func (a *A) Name() string {
 // Output returns the io.Writer used to print output.
 func (a *A) Output() io.Writer {
 	return a.output
-}
-
-// Cmd is like exec.Command, but it assigns tf's context
-// and assigns Stdout and Stderr to tf's output,
-// and Stdin to os.Stdin.
-func (a *A) Cmd(name string, args ...string) *exec.Cmd {
-	cmd := exec.CommandContext(a.Context(), name, args...)
-	cmd.Stdin = os.Stdin
-	cmd.Stderr = a.output
-	cmd.Stdout = a.output
-	return cmd
 }
 
 // Log formats its arguments using default formatting, analogous to Println,

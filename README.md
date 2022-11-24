@@ -64,7 +64,7 @@ Here are some good parts:
   or [`fluentassert`](https://github.com/fluentassert/verify) for asserting.
 - You can reuse code like in any Go application.
   It may be helpful to use packages like
-  [`fsnotify`](https://github.com/fsnotify/fsnotify) and [`spf13/viper`](https://github.com/spf13/viper).
+  [`fsnotify`](https://github.com/fsnotify/fsnotify) and [`viper`](https://github.com/spf13/viper).
 - It is highly customizable.
 - It does not use any third-party dependency other than the Go standard library.
   You can find supplumental features in [`goyek/x`](https://github.com/goyek/x).
@@ -193,17 +193,15 @@ The default task is run, when no task is provided.
 
 ## Running programs
 
-Use [`A.Cmd`](https://pkg.go.dev/github.com/goyek/goyek/v2#A.Cmd)
-to run a program inside a task's action.
-
-You can also use it create your own helpers like `Exec` in [build/exec.go](build/exec.go).
-
-[Here](https://github.com/goyek/goyek/issues/60) is the explanation
-why argument splitting is not included out-of-the-box.
-
 You can use the [`cmd.Exec`](https://pkg.go.dev/github.com/goyek/x/cmd#Exec)
 convenient function from [goyek/x](https://github.com/goyek/x)
 which should cover most use cases.
+
+Alternatively, you may prefer create your own helpers
+like `Exec` in [build/exec.go](build/exec.go).
+
+[#60](https://github.com/goyek/goyek/issues/60) and [#307](https://github.com/goyek/goyek/issues/307)
+explain why this feature is not included out-of-the-box.
 
 ## Wrapper scripts
 
@@ -249,7 +247,7 @@ is the most commonly used middleware.
 
 Take notice that the [`boot.Main`](https://pkg.go.dev/github.com/goyek/x/boot#Main)
 convenient function from [goyek/x](https://github.com/goyek/x)
-sets the most commonly used middlewares.
+sets the most commonly used middlewares and defines flags to configure them.
 
 ## Customizing
 
