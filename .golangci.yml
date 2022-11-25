@@ -38,7 +38,6 @@ linters:
     - godot
     - gomnd
     - goprintffuncname
-    - gosec
     - gosimple
     - govet
     - ineffassign

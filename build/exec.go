@@ -19,7 +19,7 @@ func Exec(a *goyek.A, workDir, cmdLine string) bool {
 		a.Errorf("parse command line: %v", err)
 		return false
 	}
-	cmd := exec.CommandContext(a.Context(), args[0], args[1:]...) //nolint:gosec // it a convenient function to run programs
+	cmd := exec.CommandContext(a.Context(), args[0], args[1:]...)
 	cmd.Dir = workDir
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = a.Output()

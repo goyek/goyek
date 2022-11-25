@@ -214,7 +214,7 @@ func (a *A) Setenv(key, value string) {
 
 	if ok {
 		a.Cleanup(func() {
-			os.Setenv(key, prevValue) //nolint:errcheck,gosec // should never happen
+			os.Setenv(key, prevValue) //nolint:errcheck // should never happen
 		})
 	} else {
 		a.Cleanup(func() {

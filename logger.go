@@ -38,14 +38,14 @@ type CodeLineLogger struct {
 func (l *CodeLineLogger) Log(w io.Writer, args ...interface{}) {
 	txt := fmt.Sprint(args...)
 	txt = l.decorate(txt)
-	io.WriteString(w, txt) //nolint:errcheck,gosec // not checking errors when writing to output
+	io.WriteString(w, txt) //nolint:errcheck // not checking errors when writing to output
 }
 
 // Logf is used internally in order to provide proper prefix.
 func (l *CodeLineLogger) Logf(w io.Writer, format string, args ...interface{}) {
 	txt := fmt.Sprintf(format, args...)
 	txt = l.decorate(txt)
-	io.WriteString(w, txt) //nolint:errcheck,gosec // not checking errors when writing to output
+	io.WriteString(w, txt) //nolint:errcheck // not checking errors when writing to output
 }
 
 // Helper marks the calling function as a helper function.

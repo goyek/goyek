@@ -477,5 +477,5 @@ func (f *Flow) Print() {
 		}
 		fmt.Fprintf(w, "  %s\t%s\n", task.Name(), task.Usage()+deps)
 	}
-	w.Flush() //nolint:errcheck,gosec // not checking errors when writing to output
+	w.Flush() //nolint:errcheck // not checking errors when writing to output
 }
