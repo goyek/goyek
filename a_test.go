@@ -94,7 +94,7 @@ func TestA_Setenv_restore(t *testing.T) {
 	key := "GOYEK_TEST_ENV"
 	prev := "0"
 	val := "1"
-	os.Setenv(key, prev)   //nolint:errcheck,gosec // should never happen
+	os.Setenv(key, prev)   //nolint:errcheck // should never happen
 	defer os.Unsetenv(key) //nolint:errcheck // should never happen
 
 	res := goyek.NewRunner(func(a *goyek.A) {

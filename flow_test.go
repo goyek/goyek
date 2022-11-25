@@ -415,7 +415,7 @@ func Test_output(t *testing.T) {
 	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(a *goyek.A) {
-			a.Output().Write([]byte(msg)) //nolint:errcheck,gosec // not checking errors when writing to output
+			a.Output().Write([]byte(msg)) //nolint:errcheck // not checking errors when writing to output
 		},
 	})
 
@@ -571,7 +571,7 @@ func TestFlow_Use(t *testing.T) {
 	})
 	flow.Use(func(next goyek.Runner) goyek.Runner {
 		return func(i goyek.Input) goyek.Result {
-			i.Output.Write([]byte("message")) //nolint:errcheck,gosec // not checking errors when writing to output
+			i.Output.Write([]byte("message")) //nolint:errcheck // not checking errors when writing to output
 			return goyek.Result{}
 		}
 	})

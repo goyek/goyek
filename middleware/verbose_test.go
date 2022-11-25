@@ -12,7 +12,7 @@ func TestSilentNonFailed_failed(t *testing.T) {
 	msg := "message"
 	sb := &strings.Builder{}
 	r := func(i goyek.Input) goyek.Result {
-		i.Output.Write([]byte(msg)) //nolint:errcheck,gosec // not checking errors when writing to output
+		i.Output.Write([]byte(msg)) //nolint:errcheck // not checking errors when writing to output
 		return goyek.Result{Status: goyek.StatusFailed}
 	}
 	r = middleware.SilentNonFailed(r)
@@ -47,7 +47,7 @@ func TestSilentNonFailed_notFailed(t *testing.T) {
 			msg := "message"
 			sb := &strings.Builder{}
 			r := func(i goyek.Input) goyek.Result {
-				i.Output.Write([]byte(msg)) //nolint:errcheck,gosec // not checking errors when writing to output
+				i.Output.Write([]byte(msg)) //nolint:errcheck // not checking errors when writing to output
 				return goyek.Result{Status: tt.status}
 			}
 			r = middleware.SilentNonFailed(r)

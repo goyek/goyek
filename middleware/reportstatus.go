@@ -26,12 +26,12 @@ func ReportStatus(next goyek.Runner) goyek.Runner {
 		// report panic if happened
 		if res.PanicStack != nil {
 			if res.PanicValue != nil {
-				io.WriteString(in.Output, fmt.Sprintf("panic: %v", res.PanicValue)) //nolint:errcheck,gosec // not checking errors when writing to output
+				io.WriteString(in.Output, fmt.Sprintf("panic: %v", res.PanicValue)) //nolint:errcheck // not checking errors when writing to output
 			} else {
-				io.WriteString(in.Output, "panic(nil) or runtime.Goexit() called") //nolint:errcheck,gosec // not checking errors when writing to output
+				io.WriteString(in.Output, "panic(nil) or runtime.Goexit() called") //nolint:errcheck // not checking errors when writing to output
 			}
-			io.WriteString(in.Output, "\n\n") //nolint:errcheck,gosec // not checking errors when writing to output
-			in.Output.Write(res.PanicStack)   //nolint:errcheck,gosec // not checking errors when writing to output
+			io.WriteString(in.Output, "\n\n") //nolint:errcheck // not checking errors when writing to output
+			in.Output.Write(res.PanicStack)   //nolint:errcheck // not checking errors when writing to output
 		}
 
 		return res
