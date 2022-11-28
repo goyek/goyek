@@ -13,7 +13,7 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-func Test_DefaultFlow(t *testing.T) {
+func TestDefaultFlow(t *testing.T) {
 	goyek.SetOutput(ioutil.Discard)
 	assertEqual(t, goyek.Output(), ioutil.Discard, "Output")
 
@@ -35,7 +35,7 @@ func Test_DefaultFlow(t *testing.T) {
 	assertPass(t, goyek.Execute(context.Background(), nil), "Execute")
 }
 
-func Test_Define_empty_name(t *testing.T) {
+func TestDefineEmptyName(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 
@@ -44,7 +44,7 @@ func Test_Define_empty_name(t *testing.T) {
 	assertPanics(t, act, "should panic")
 }
 
-func Test_Define_same_name(t *testing.T) {
+func TestDefineSameName(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	task := goyek.Task{Name: "task"}
@@ -55,7 +55,7 @@ func Test_Define_same_name(t *testing.T) {
 	assertPanics(t, act, "should not be possible to register tasks with same name twice")
 }
 
-func Test_Define_bad_dep(t *testing.T) {
+func TestDefineBadDep(t *testing.T) {
 	flow := &goyek.Flow{}
 	otherFlow := &goyek.Flow{}
 	task := otherFlow.Define(goyek.Task{Name: "different-flow"})
@@ -65,7 +65,7 @@ func Test_Define_bad_dep(t *testing.T) {
 	assertPanics(t, act, "should not be possible use dependencies from different flow")
 }
 
-func Test_successful(t *testing.T) {
+func TestExecutePass(t *testing.T) {
 	ctx := context.Background()
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
@@ -109,7 +109,7 @@ func Test_successful(t *testing.T) {
 	requireEqual(t, got(), []int{3, 2, 1}, "should execute task 1 and 2 and 3")
 }
 
-func Test_dependency_failure(t *testing.T) {
+func TestExecuteDepFail(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	var executed1 int
@@ -149,7 +149,7 @@ func Test_dependency_failure(t *testing.T) {
 	assertEqual(t, got(), []int{11, 0, 0}, "should execute task 1")
 }
 
-func Test_fail(t *testing.T) {
+func TestExecuteFail(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	failed := false
@@ -169,7 +169,7 @@ func Test_fail(t *testing.T) {
 	assertTrue(t, failed, "a.Failed() should return true")
 }
 
-func Test_skip(t *testing.T) {
+func TestExecuteSkip(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	skipped := false
@@ -189,7 +189,7 @@ func Test_skip(t *testing.T) {
 	assertTrue(t, skipped, "a.Skipped() should return true")
 }
 
-func Test_task_panics(t *testing.T) {
+func TestExecutePanic(t *testing.T) {
 	testCases := []struct {
 		desc   string
 		action func(a *goyek.A)
@@ -223,7 +223,7 @@ func Test_task_panics(t *testing.T) {
 	}
 }
 
-func Test_cancelation(t *testing.T) {
+func TestExecuteCancel(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	flow := &goyek.Flow{}
@@ -237,7 +237,7 @@ func Test_cancelation(t *testing.T) {
 	assertEqual(t, err, context.Canceled, "should return error canceled")
 }
 
-func Test_cancelation_during_last_task(t *testing.T) {
+func TestExecuteCancelInTask(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	flow := &goyek.Flow{}
@@ -254,7 +254,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 	assertPass(t, err, "should pass as the flow completed")
 }
 
-func Test_empty_action(t *testing.T) {
+func TestExecuteNoop(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	flow.Define(goyek.Task{
@@ -266,7 +266,39 @@ func Test_empty_action(t *testing.T) {
 	assertPass(t, err, "should pass")
 }
 
-func Test_invalid_args(t *testing.T) {
+func TestExecuteErrorParallel(t *testing.T) {
+	timeout := time.NewTimer(10 * time.Second)
+	defer timeout.Stop()
+
+	out := &strings.Builder{}
+	flow := &goyek.Flow{}
+	flow.SetOutput(out)
+	flow.Define(goyek.Task{
+		Name: "task",
+		Action: func(a *goyek.A) {
+			go func() {
+				a.Fail()
+			}()
+			for {
+				if a.Failed() {
+					return
+				}
+				select {
+				case <-timeout.C:
+					t.Error("test timeout")
+					return
+				default:
+				}
+			}
+		},
+	})
+
+	err := flow.Execute(context.Background(), []string{"task"})
+
+	assertFail(t, err, "should fail")
+}
+
+func TestExecuteInvalidArgs(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	flow.Define(goyek.Task{Name: "task"})
@@ -306,7 +338,7 @@ func Test_invalid_args(t *testing.T) {
 	}
 }
 
-func Test_printing(t *testing.T) {
+func TestPrinting(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
 	flow.SetOutput(out)
@@ -334,7 +366,7 @@ func Test_printing(t *testing.T) {
 	assertContains(t, out, "Fatalf 5", "should contain proper output from \"failing\" task")
 }
 
-func Test_concurrent_printing(t *testing.T) {
+func TestPrintingParallel(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
 	flow.SetOutput(out)
@@ -358,39 +390,7 @@ func Test_concurrent_printing(t *testing.T) {
 	assertContains(t, out, "from main goroutine", "should contain log from main goroutine")
 }
 
-func Test_concurrent_error(t *testing.T) {
-	timeout := time.NewTimer(10 * time.Second)
-	defer timeout.Stop()
-
-	out := &strings.Builder{}
-	flow := &goyek.Flow{}
-	flow.SetOutput(out)
-	flow.Define(goyek.Task{
-		Name: "task",
-		Action: func(a *goyek.A) {
-			go func() {
-				a.Fail()
-			}()
-			for {
-				if a.Failed() {
-					return
-				}
-				select {
-				case <-timeout.C:
-					t.Error("test timeout")
-					return
-				default:
-				}
-			}
-		},
-	})
-
-	err := flow.Execute(context.Background(), []string{"task"})
-
-	assertFail(t, err, "should fail")
-}
-
-func Test_name(t *testing.T) {
+func TestName(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	taskName := "my-named-task"
@@ -407,7 +407,7 @@ func Test_name(t *testing.T) {
 	assertEqual(t, got, taskName, "should return proper Name value")
 }
 
-func Test_output(t *testing.T) {
+func TestOutput(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
 	flow.SetOutput(out)
@@ -424,7 +424,7 @@ func Test_output(t *testing.T) {
 	assertContains(t, out, msg, "should contain message send via output")
 }
 
-func Test_SetDefault(t *testing.T) {
+func TestSetDefault(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	taskRan := false
@@ -442,7 +442,7 @@ func Test_SetDefault(t *testing.T) {
 	assertTrue(t, taskRan, "task should have run")
 }
 
-func TestFlow_SetDefault_panic(t *testing.T) {
+func TestSetDefaultPanic(t *testing.T) {
 	flow := &goyek.Flow{}
 	otherFlow := &goyek.Flow{}
 	task := otherFlow.Define(goyek.Task{Name: "different-flow"})
@@ -454,7 +454,7 @@ func TestFlow_SetDefault_panic(t *testing.T) {
 	assertPanics(t, act, "should panic when using a task defined in other flo")
 }
 
-func TestFlow_Tasks(t *testing.T) {
+func TestTasks(t *testing.T) {
 	flow := &goyek.Flow{}
 	t1 := flow.Define(goyek.Task{Name: "one"})
 	flow.Define(goyek.Task{Name: "two", Usage: "action", Deps: goyek.Deps{t1}})
@@ -470,7 +470,7 @@ func TestFlow_Tasks(t *testing.T) {
 	assertEqual(t, got[2].Deps()[0], t1, "should return dependency")
 }
 
-func TestFlow_Default(t *testing.T) {
+func TestDefault(t *testing.T) {
 	flow := &goyek.Flow{}
 	task := flow.Define(goyek.Task{Name: "name"})
 	flow.SetDefault(task)
@@ -480,7 +480,7 @@ func TestFlow_Default(t *testing.T) {
 	assertEqual(t, got.Name(), "name", "should return the default task")
 }
 
-func TestFlow_Default_empty(t *testing.T) {
+func TestDefaultEmpty(t *testing.T) {
 	flow := &goyek.Flow{}
 	got := flow.Default()
 
@@ -489,7 +489,7 @@ func TestFlow_Default_empty(t *testing.T) {
 	}
 }
 
-func TestFlow_Default_nil(t *testing.T) {
+func TestSetDefaultNil(t *testing.T) {
 	flow := &goyek.Flow{}
 	task := flow.Define(goyek.Task{Name: "name"})
 	flow.SetDefault(task)
@@ -502,7 +502,7 @@ func TestFlow_Default_nil(t *testing.T) {
 	}
 }
 
-func TestFlow_Print(t *testing.T) {
+func TestPrint(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
 	flow.SetOutput(out)
@@ -519,7 +519,7 @@ func TestFlow_Print(t *testing.T) {
 	assertContains(t, out, "(depends on: task)", "should print the task dependencies")
 }
 
-func TestFlow_Logger(t *testing.T) {
+func TestSetLogger(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
 	flow.SetOutput(out)
@@ -538,19 +538,19 @@ func TestFlow_Logger(t *testing.T) {
 	assertContains(t, out, "second", "should call Logf")
 }
 
-func TestFlow_Logger_default(t *testing.T) {
+func TestLoggerDefault(t *testing.T) {
 	flow := &goyek.Flow{}
 
 	assertEqual(t, flow.Logger(), &goyek.CodeLineLogger{}, "should have proper default")
 }
 
-func TestFlow_Output_default(t *testing.T) {
+func TestOutputDefault(t *testing.T) {
 	flow := &goyek.Flow{}
 
 	assertEqual(t, flow.Output(), os.Stdout, "should have proper default")
 }
 
-func TestFlow_Usage_default(t *testing.T) {
+func TestUsageDefault(t *testing.T) {
 	getFuncName := func(fn func()) string {
 		return runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
 	}
@@ -562,7 +562,7 @@ func TestFlow_Usage_default(t *testing.T) {
 	assertEqual(t, got, want, "should have proper default")
 }
 
-func TestFlow_Use(t *testing.T) {
+func TestUse(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
 	flow.SetOutput(out)
@@ -581,7 +581,7 @@ func TestFlow_Use(t *testing.T) {
 	assertContains(t, out, "message", "should call middleware with proper input")
 }
 
-func TestFlow_Use_nil_middleware(t *testing.T) {
+func TestUseNil(t *testing.T) {
 	flow := &goyek.Flow{}
 
 	act := func() {
@@ -591,7 +591,7 @@ func TestFlow_Use_nil_middleware(t *testing.T) {
 	assertPanics(t, act, "should panic on nil middleware")
 }
 
-func TestFlow_Undefine(t *testing.T) {
+func TestUndefine(t *testing.T) {
 	flow := &goyek.Flow{}
 	task := flow.Define(goyek.Task{Name: "name"})
 	dep := flow.Define(goyek.Task{Name: "dep"})
@@ -611,7 +611,7 @@ func TestFlow_Undefine(t *testing.T) {
 	}
 }
 
-func TestFlow_Undefine_bad_task(t *testing.T) {
+func TestUndefineBadTask(t *testing.T) {
 	flow := &goyek.Flow{}
 	otherFlow := &goyek.Flow{}
 	task := otherFlow.Define(goyek.Task{Name: "different-flow"})
@@ -642,7 +642,7 @@ func TestNoDeps(t *testing.T) {
 	assertTrue(t, depNotRun, "deps should not have run")
 }
 
-func TestSkip_dep(t *testing.T) {
+func TestSkipDep(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	taskRun := false
@@ -668,7 +668,7 @@ func TestSkip_dep(t *testing.T) {
 	assertTrue(t, depNotRun, "dep should not have run")
 }
 
-func TestSkip_task(t *testing.T) {
+func TestSkipTask(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	taskNotRun := true
@@ -694,7 +694,7 @@ func TestSkip_task(t *testing.T) {
 	assertTrue(t, depNotRun, "dep should not have run")
 }
 
-func TestSkip_shared_dep(t *testing.T) {
+func TestSkipSharedDep(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	taskNotRun := true

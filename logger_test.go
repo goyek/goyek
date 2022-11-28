@@ -32,7 +32,7 @@ func TestCodeLineLogger(t *testing.T) {
 	assertContains(t, out, "      logger_test.go:23: cleanup", "should respect a.Cleanup()")
 }
 
-func TestCodeLineLogger_helper_in_action(t *testing.T) {
+func TestCodeLineLoggerHelperInAction(t *testing.T) {
 	flow := &goyek.Flow{}
 	out := &strings.Builder{}
 	flow.SetOutput(out)

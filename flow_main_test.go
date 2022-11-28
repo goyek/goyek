@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestFlow_main(t *testing.T) {
+func TestMain(t *testing.T) {
 	flow := &Flow{}
 	flow.SetOutput(&strings.Builder{})
 	flow.Define(Task{Name: "task"})
@@ -52,7 +52,7 @@ func TestFlow_main(t *testing.T) {
 	}
 }
 
-func Test_main_usage(t *testing.T) {
+func TestMainUsage(t *testing.T) {
 	flow := &Flow{}
 	flow.SetOutput(ioutil.Discard)
 	called := false

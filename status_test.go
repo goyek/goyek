@@ -6,7 +6,7 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-func TestStatus_String(t *testing.T) {
+func TestStatusString(t *testing.T) {
 	testCases := []struct {
 		name string
 		s    goyek.Status

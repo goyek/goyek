@@ -10,7 +10,7 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-func TestDefinedTask_SetName(t *testing.T) {
+func TestDefinedTaskSetName(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	called := false
@@ -25,7 +25,7 @@ func TestDefinedTask_SetName(t *testing.T) {
 	assertTrue(t, called, "should call the action")
 }
 
-func TestDefinedTask_SetName_for_default(t *testing.T) {
+func TestDefinedTaskSetNameForDefault(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	called := false
@@ -41,7 +41,7 @@ func TestDefinedTask_SetName_for_default(t *testing.T) {
 	assertTrue(t, called, "should call the action")
 }
 
-func TestDefinedTask_SetName_for_depenency(t *testing.T) {
+func TestDefinedTaskSetNameForDep(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	called := false
@@ -55,7 +55,7 @@ func TestDefinedTask_SetName_for_depenency(t *testing.T) {
 	assertTrue(t, called, "should call the dependency with changed name")
 }
 
-func TestDefinedTask_SetName_conflict(t *testing.T) {
+func TestDefinedTaskSetNameConflict(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	task := flow.Define(goyek.Task{Name: "one"})
@@ -66,7 +66,7 @@ func TestDefinedTask_SetName_conflict(t *testing.T) {
 	assertPanics(t, act, "should not allow setting existing task name")
 }
 
-func TestDefinedTask_SetUsage(t *testing.T) {
+func TestDefinedTaskSetUsage(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	task := flow.Define(goyek.Task{Name: "one"})
@@ -77,7 +77,7 @@ func TestDefinedTask_SetUsage(t *testing.T) {
 	assertEqual(t, got, "good task", "should update the usage")
 }
 
-func TestDefinedTask_SetAction(t *testing.T) {
+func TestDefinedTaskSetAction(t *testing.T) {
 	getFuncName := func(fn func(a *goyek.A)) string {
 		return runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
 	}
@@ -100,7 +100,7 @@ func TestDefinedTask_SetAction(t *testing.T) {
 	assertTrue(t, newCalled, "should not call the new action")
 }
 
-func TestDefinedTask_SetDeps(t *testing.T) {
+func TestDefinedTaskSetDeps(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	called := false
@@ -118,7 +118,7 @@ func TestDefinedTask_SetDeps(t *testing.T) {
 	assertTrue(t, called, "should call transitive dependency of t3")
 }
 
-func TestDefinedTask_SetDeps_clear(t *testing.T) {
+func TestDefinedTaskSetDepsClear(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	notCalled := true
@@ -135,7 +135,7 @@ func TestDefinedTask_SetDeps_clear(t *testing.T) {
 	assertTrue(t, notCalled, "should not call any dependency")
 }
 
-func TestDefinedTask_SetDeps_circular(t *testing.T) {
+func TestDefinedTaskSetDepsCircular(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 	t1 := flow.Define(goyek.Task{Name: "one"})
@@ -149,7 +149,7 @@ func TestDefinedTask_SetDeps_circular(t *testing.T) {
 	assertPanics(t, act, "should panic in case of a cyclic dependency")
 }
 
-func TestDefinedTask_SetDeps_dep(t *testing.T) {
+func TestDefinedTaskSetDepsBadDep(t *testing.T) {
 	flow := &goyek.Flow{}
 	task := flow.Define(goyek.Task{Name: "my-task"})
 	otherFlow := &goyek.Flow{}

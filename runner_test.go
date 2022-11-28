@@ -48,7 +48,7 @@ func TestRunner(t *testing.T) {
 	}
 }
 
-func TestRunner_panic(t *testing.T) {
+func TestRunnerPanic(t *testing.T) {
 	payload := "panicked"
 	r := goyek.NewRunner(func(a *goyek.A) { panic(payload) })
 

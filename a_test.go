@@ -11,7 +11,7 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-func TestA_Cleanup(t *testing.T) {
+func TestACleanup(t *testing.T) {
 	out := &strings.Builder{}
 
 	got := goyek.NewRunner(func(a *goyek.A) {
@@ -37,7 +37,7 @@ func TestA_Cleanup(t *testing.T) {
 	assertContains(t, out, "1\n2\n3\n4\n5", "should call cleanup funcs in LIFO order")
 }
 
-func TestA_Cleanup_when_action_panics(t *testing.T) {
+func TestACleanupPanic(t *testing.T) {
 	out := &strings.Builder{}
 
 	got := goyek.NewRunner(func(a *goyek.A) {
@@ -64,7 +64,7 @@ func TestA_Cleanup_when_action_panics(t *testing.T) {
 	assertContains(t, out, "1\n2\n3\n4\n5", "should call cleanup funcs in LIFO order")
 }
 
-func TestA_Cleanup_Fail(t *testing.T) {
+func TestACleanupFail(t *testing.T) {
 	got := goyek.NewRunner(func(a *goyek.A) {
 		a.Cleanup(func() {
 			a.Fail()
@@ -74,7 +74,7 @@ func TestA_Cleanup_Fail(t *testing.T) {
 	assertEqual(t, got.Status, goyek.StatusFailed, "shoud return proper status")
 }
 
-func TestA_Setenv(t *testing.T) {
+func TestASetenv(t *testing.T) {
 	key := "GOYEK_TEST_ENV"
 	val := "1"
 
@@ -90,7 +90,7 @@ func TestA_Setenv(t *testing.T) {
 	assertEqual(t, got, "", "should restore the value after the action")
 }
 
-func TestA_Setenv_restore(t *testing.T) {
+func TestASetenvOverride(t *testing.T) {
 	key := "GOYEK_TEST_ENV"
 	prev := "0"
 	val := "1"
@@ -109,7 +109,7 @@ func TestA_Setenv_restore(t *testing.T) {
 	assertEqual(t, got, prev, "should restore the value after the action")
 }
 
-func TestA_TempDir(t *testing.T) {
+func TestATempDir(t *testing.T) {
 	var dir string
 	res := goyek.NewRunner(func(a *goyek.A) {
 		dir = a.TempDir()
@@ -123,7 +123,7 @@ func TestA_TempDir(t *testing.T) {
 	assertTrue(t, os.IsNotExist(err), "should remove the dir after the action")
 }
 
-func TestA_uses_Logger_dynamic_interface(t *testing.T) {
+func TestALogFuncsCallLogger(t *testing.T) {
 	testCases := []struct {
 		desc   string
 		action func(a *goyek.A)

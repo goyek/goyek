@@ -8,7 +8,7 @@ import (
 	"github.com/goyek/goyek/v2/middleware"
 )
 
-func TestSilentNonFailed_failed(t *testing.T) {
+func TestSilentNonFailedForFail(t *testing.T) {
 	msg := "message"
 	sb := &strings.Builder{}
 	r := func(i goyek.Input) goyek.Result {
@@ -24,7 +24,7 @@ func TestSilentNonFailed_failed(t *testing.T) {
 	}
 }
 
-func TestSilentNonFailed_notFailed(t *testing.T) {
+func TestSilentNonFailedForNotFailed(t *testing.T) {
 	tests := []struct {
 		name   string
 		status goyek.Status
