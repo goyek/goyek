@@ -22,7 +22,9 @@ func TestDefinedTaskSetName(t *testing.T) {
 	assertEqual(t, got, "new", "should update the name")
 	err := flow.Execute(context.Background(), []string{"new"})
 	assertPass(t, err, "should pass")
-	assertTrue(t, called, "should call the action")
+	if !called {
+		t.Errorf("should call the action")
+	}
 }
 
 func TestDefinedTaskSetNameForDefault(t *testing.T) {
@@ -38,7 +40,9 @@ func TestDefinedTaskSetNameForDefault(t *testing.T) {
 	assertEqual(t, got, "new", "should update the name")
 	err := flow.Execute(context.Background(), nil)
 	assertPass(t, err, "should pass")
-	assertTrue(t, called, "should call the action")
+	if !called {
+		t.Errorf("should call the action")
+	}
 }
 
 func TestDefinedTaskSetNameForDep(t *testing.T) {
@@ -52,7 +56,9 @@ func TestDefinedTaskSetNameForDep(t *testing.T) {
 
 	err := flow.Execute(context.Background(), []string{"two"})
 	assertPass(t, err, "should pass")
-	assertTrue(t, called, "should call the dependency with changed name")
+	if !called {
+		t.Errorf("should call the dependency with changed name")
+	}
 }
 
 func TestDefinedTaskSetNameConflict(t *testing.T) {
@@ -84,10 +90,8 @@ func TestDefinedTaskSetAction(t *testing.T) {
 
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
-	originalNotCalled := true
-	task := flow.Define(goyek.Task{Name: "one", Action: func(a *goyek.A) { originalNotCalled = false }})
-
-	newCalled := false
+	var originalCalled, newCalled bool
+	task := flow.Define(goyek.Task{Name: "one", Action: func(a *goyek.A) { originalCalled = true }})
 	fn := func(a *goyek.A) { newCalled = true }
 	task.SetAction(fn)
 	want := getFuncName(fn)
@@ -96,8 +100,12 @@ func TestDefinedTaskSetAction(t *testing.T) {
 	assertEqual(t, got, want, "should update the action")
 	err := flow.Execute(context.Background(), []string{"one"})
 	assertPass(t, err, "should pass")
-	assertTrue(t, originalNotCalled, "should not call the previous action")
-	assertTrue(t, newCalled, "should not call the new action")
+	if originalCalled {
+		t.Errorf("should not call the previous action")
+	}
+	if !newCalled {
+		t.Errorf("should not call the new action")
+	}
 }
 
 func TestDefinedTaskSetDeps(t *testing.T) {
@@ -115,24 +123,29 @@ func TestDefinedTaskSetDeps(t *testing.T) {
 
 	err := flow.Execute(context.Background(), []string{"three"})
 	assertPass(t, err, "should pass")
-	assertTrue(t, called, "should call transitive dependency of t3")
+	if !called {
+		t.Errorf("should call transitive dependency of t3")
+	}
 }
 
 func TestDefinedTaskSetDepsClear(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
-	notCalled := true
-	t1 := flow.Define(goyek.Task{Name: "one", Action: func(a *goyek.A) { notCalled = false }})
+	var called bool
+	t1 := flow.Define(goyek.Task{Name: "one", Action: func(a *goyek.A) { called = true }})
 	t2 := flow.Define(goyek.Task{Name: "two", Deps: goyek.Deps{t1}})
 
 	t2.SetDeps(nil)
 
+	var noDeps goyek.Deps
 	got := t2.Deps()
 	assertEqual(t, got, noDeps, "should clear the dependencies")
 
 	err := flow.Execute(context.Background(), []string{"two"})
 	assertPass(t, err, "should pass")
-	assertTrue(t, notCalled, "should not call any dependency")
+	if called {
+		t.Errorf("should not call any dependency")
+	}
 }
 
 func TestDefinedTaskSetDepsCircular(t *testing.T) {

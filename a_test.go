@@ -119,8 +119,9 @@ func TestATempDir(t *testing.T) {
 	})(goyek.Input{TaskName: "0!ą😊"})
 
 	assertEqual(t, res.Status, goyek.StatusPassed, "shoud return proper status")
-	_, err := os.Lstat(dir)
-	assertTrue(t, os.IsNotExist(err), "should remove the dir after the action")
+	if _, err := os.Lstat(dir); os.IsExist(err) {
+		t.Errorf("dir is not removed after the action finished, dir: %v", dir)
+	}
 }
 
 func TestALogFuncsCallLogger(t *testing.T) {
@@ -179,7 +180,9 @@ func TestALogFuncsCallLogger(t *testing.T) {
 
 			_ = flow.Execute(context.Background(), []string{"task"})
 
-			assertTrue(t, loggerSpy.called, "called logger")
+			if !loggerSpy.called {
+				t.Errorf("logger not called")
+			}
 		})
 	}
 }

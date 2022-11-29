@@ -9,16 +9,6 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-var noDeps goyek.Deps
-
-func assertTrue(tb testing.TB, got bool, msg string) {
-	tb.Helper()
-	if got {
-		return
-	}
-	tb.Errorf("%s\nGOT: %v, WANT: true", msg, got)
-}
-
 func assertContains(tb testing.TB, got fmt.Stringer, want string, msg string) {
 	tb.Helper()
 	gotTxt := got.String()
