@@ -107,6 +107,14 @@ func TestExecutePass(t *testing.T) {
 		return []int{executed1, executed2, executed3}
 	}
 
+	requireEqual := func(tb testing.TB, got interface{}, want interface{}, msg string) {
+		tb.Helper()
+		if reflect.DeepEqual(got, want) {
+			return
+		}
+		tb.Fatalf("%s\nGOT: %v\nWANT: %v", msg, got, want)
+	}
+
 	err := flow.Execute(ctx, []string{"task-1"})
 	requireEqual(t, err, nil, "first execution should pass")
 	requireEqual(t, got(), []int{1, 0, 0}, "should execute task 1")
