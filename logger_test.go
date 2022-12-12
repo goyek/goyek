@@ -28,13 +28,13 @@ func TestCodeLineLogger(t *testing.T) {
 	_ = flow.Execute(context.Background(), []string{"task"})
 
 	if want, got := "      logger_test.go:20: message", out.String(); !strings.Contains(got, want) {
-		t.Errorf("should contain code line info\ngot:%v\nwant substr:%v", got, want)
+		t.Errorf("should contain code line info\ngot = %q\nwant substr = %q", got, want)
 	}
 	if want, got := "      logger_test.go:21: message from helper", out.String(); !strings.Contains(got, want) {
-		t.Errorf("should respect a.Helper()\ngot:%v\nwant substr:%v", got, want)
+		t.Errorf("should respect a.Helper()\ngot = %q\nwant substr = %q", got, want)
 	}
 	if want, got := "      logger_test.go:23: cleanup", out.String(); !strings.Contains(got, want) {
-		t.Errorf("should respect a.Cleanup()\ngot:%v\nwant substr:%v", got, want)
+		t.Errorf("should respect a.Cleanup()\ngot = %q\nwant substr = %q", got, want)
 	}
 }
 
@@ -55,7 +55,7 @@ func TestCodeLineLoggerHelperInAction(t *testing.T) {
 	_ = flow.Execute(context.Background(), []string{"task"})
 
 	if want, got := "      logger_test.go:51: message", out.String(); !strings.Contains(got, want) {
-		t.Errorf("should contain code line info\ngot:%v\nwant substr:%v", got, want)
+		t.Errorf("should contain code line info\ngot = %q\nwant substr = %q", got, want)
 	}
 }
 
