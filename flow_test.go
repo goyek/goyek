@@ -544,10 +544,13 @@ func TestPrint(t *testing.T) {
 	flow.SetDefault(task)
 
 	flow.Print()
+	s := out.String()
 
 	assertContains(t, out, "use it", "should print the usage of the task")
 	assertContains(t, out, "Default task: task", "should print the default task")
-	assertNotContains(t, out, "hidden", "should not print task with no usage")
+	if strings.Contains(s, "hidden") {
+		t.Errorf("should not print task with no usage, was: %v", s)
+	}
 	assertContains(t, out, "(depends on: task)", "should print the task dependencies")
 }
 

@@ -16,15 +16,6 @@ func assertContains(tb testing.TB, got fmt.Stringer, want string, msg string) {
 	tb.Errorf("%s\nGOT:\n%s\nSHOULD CONTAIN:\n%s", msg, gotTxt, want)
 }
 
-func assertNotContains(tb testing.TB, got fmt.Stringer, want string, msg string) {
-	tb.Helper()
-	gotTxt := got.String()
-	if !strings.Contains(gotTxt, want) {
-		return
-	}
-	tb.Errorf("%s\nGOT:\n%s\nSHOULD NOT CONTAIN:\n%s", msg, gotTxt, want)
-}
-
 func requireEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
 	tb.Helper()
 	if reflect.DeepEqual(got, want) {
