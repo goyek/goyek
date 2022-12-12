@@ -389,8 +389,12 @@ func TestPrinting(t *testing.T) {
 
 	_ = flow.Execute(context.Background(), []string{"failing"})
 
-	assertContains(t, out, "Skipf 0", "should contain proper output from \"skipped\" task")
-	assertContains(t, out, "Fatalf 5", "should contain proper output from \"failing\" task")
+	if want, got := "Skipf 0", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should contain proper output from \"skipped\" task\ngot:%v\nwant substr:%v", got, want)
+	}
+	if want, got := "Fatalf 5", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should contain proper output from \"failing\" task\ngot:%v\nwant substr:%v", got, want)
+	}
 }
 
 func TestPrintingParallel(t *testing.T) {
@@ -415,8 +419,12 @@ func TestPrintingParallel(t *testing.T) {
 	if _, ok := err.(*goyek.FailError); !ok {
 		t.Errorf("should return fail error, but was: %v", err)
 	}
-	assertContains(t, out, "from child goroutine", "should contain log from child goroutine")
-	assertContains(t, out, "from main goroutine", "should contain log from main goroutine")
+	if want, got := "from child goroutine", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should contain log from child goroutine\ngot:%v\nwant substr:%v", got, want)
+	}
+	if want, got := "from main goroutine", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should contain log from main goroutine\ngot:%v\nwant substr:%v", got, want)
+	}
 }
 
 func TestName(t *testing.T) {
@@ -450,7 +458,9 @@ func TestOutput(t *testing.T) {
 
 	_ = flow.Execute(context.Background(), []string{"task"})
 
-	assertContains(t, out, msg, "should contain message send via output")
+	if got := out.String(); !strings.Contains(got, msg) {
+		t.Errorf("should contain message send via output\ngot:%v\nwant substr:%v", got, msg)
+	}
 }
 
 func TestSetDefault(t *testing.T) {
@@ -546,12 +556,18 @@ func TestPrint(t *testing.T) {
 	flow.Print()
 	s := out.String()
 
-	assertContains(t, out, "use it", "should print the usage of the task")
-	assertContains(t, out, "Default task: task", "should print the default task")
+	if want, got := "use it", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should print the usage of the task\ngot:%v\nwant substr:%v", got, want)
+	}
+	if want, got := "Default task: task", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should print the default task\ngot:%v\nwant substr:%v", got, want)
+	}
 	if strings.Contains(s, "hidden") {
 		t.Errorf("should not print task with no usage, was: %v", s)
 	}
-	assertContains(t, out, "(depends on: task)", "should print the task dependencies")
+	if want, got := "(depends on: task)", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should print the task dependencies\ngot:%v\nwant substr:%v", got, want)
+	}
 }
 
 func TestSetLogger(t *testing.T) {
@@ -569,8 +585,12 @@ func TestSetLogger(t *testing.T) {
 
 	_ = flow.Execute(context.Background(), []string{"task"})
 
-	assertContains(t, out, "first", "should call Log")
-	assertContains(t, out, "second", "should call Logf")
+	if want, got := "first", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should call Log\ngot:%v\nwant substr:%v", got, want)
+	}
+	if want, got := "second", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should call Logf\ngot:%v\nwant substr:%v", got, want)
+	}
 }
 
 func TestLoggerDefault(t *testing.T) {
@@ -613,7 +633,9 @@ func TestUse(t *testing.T) {
 
 	_ = flow.Execute(context.Background(), []string{"task"})
 
-	assertContains(t, out, "message", "should call middleware with proper input")
+	if want, got := "message", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should call middleware with proper input\ngot:%v\nwant substr:%v", got, want)
+	}
 }
 
 func TestUseNil(t *testing.T) {

@@ -34,7 +34,9 @@ func TestACleanup(t *testing.T) {
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "shoud return proper status")
 	assertEqual(t, got.PanicValue, "first panic", "shoud return proper panic value")
-	assertContains(t, out, "1\n2\n3\n4\n5", "should call cleanup funcs in LIFO order")
+	if want, got := "1\n2\n3\n4\n5", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should call cleanup funcs in LIFO order\ngot:%v\nwant substr:%v", got, want)
+	}
 }
 
 func TestACleanupPanic(t *testing.T) {
@@ -61,7 +63,9 @@ func TestACleanupPanic(t *testing.T) {
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "shoud return proper status")
 	assertEqual(t, got.PanicValue, "action panic", "shoud return proper panic value")
-	assertContains(t, out, "1\n2\n3\n4\n5", "should call cleanup funcs in LIFO order")
+	if want, got := "1\n2\n3\n4\n5", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should call cleanup funcs in LIFO order\ngot:%v\nwant substr:%v", got, want)
+	}
 }
 
 func TestACleanupFail(t *testing.T) {

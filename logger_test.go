@@ -27,9 +27,15 @@ func TestCodeLineLogger(t *testing.T) {
 
 	_ = flow.Execute(context.Background(), []string{"task"})
 
-	assertContains(t, out, "      logger_test.go:20: message", "should contain code line info")
-	assertContains(t, out, "      logger_test.go:21: message from helper", "should respect a.Helper()")
-	assertContains(t, out, "      logger_test.go:23: cleanup", "should respect a.Cleanup()")
+	if want, got := "      logger_test.go:20: message", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should contain code line info\ngot:%v\nwant substr:%v", got, want)
+	}
+	if want, got := "      logger_test.go:21: message from helper", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should respect a.Helper()\ngot:%v\nwant substr:%v", got, want)
+	}
+	if want, got := "      logger_test.go:23: cleanup", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should respect a.Cleanup()\ngot:%v\nwant substr:%v", got, want)
+	}
 }
 
 func TestCodeLineLoggerHelperInAction(t *testing.T) {
@@ -48,7 +54,9 @@ func TestCodeLineLoggerHelperInAction(t *testing.T) {
 
 	_ = flow.Execute(context.Background(), []string{"task"})
 
-	assertContains(t, out, "      logger_test.go:45: message", "should contain code line info")
+	if want, got := "      logger_test.go:51: message", out.String(); !strings.Contains(got, want) {
+		t.Errorf("should contain code line info\ngot:%v\nwant substr:%v", got, want)
+	}
 }
 
 func helperFn(a *goyek.A) {

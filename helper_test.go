@@ -1,20 +1,9 @@
 package goyek_test
 
 import (
-	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 )
-
-func assertContains(tb testing.TB, got fmt.Stringer, want string, msg string) {
-	tb.Helper()
-	gotTxt := got.String()
-	if strings.Contains(gotTxt, want) {
-		return
-	}
-	tb.Errorf("%s\nGOT:\n%s\nSHOULD CONTAIN:\n%s", msg, gotTxt, want)
-}
 
 func requireEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
 	tb.Helper()
