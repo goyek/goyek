@@ -67,9 +67,12 @@ func TestDefinedTaskSetNameConflict(t *testing.T) {
 	task := flow.Define(goyek.Task{Name: "one"})
 	flow.Define(goyek.Task{Name: "two"})
 
-	act := func() { task.SetName("two") }
-
-	assertPanics(t, act, "should not allow setting existing task name")
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("should not allow setting existing task name")
+		}
+	}()
+	task.SetName("two")
 }
 
 func TestDefinedTaskSetUsage(t *testing.T) {
@@ -155,11 +158,12 @@ func TestDefinedTaskSetDepsCircular(t *testing.T) {
 	t2 := flow.Define(goyek.Task{Name: "two", Deps: goyek.Deps{t1}})
 	t3 := flow.Define(goyek.Task{Name: "three", Deps: goyek.Deps{t2}})
 
-	act := func() {
-		t1.SetDeps(goyek.Deps{t3})
-	}
-
-	assertPanics(t, act, "should panic in case of a cyclic dependency")
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("should panic in case of a cyclic dependency")
+		}
+	}()
+	t1.SetDeps(goyek.Deps{t3})
 }
 
 func TestDefinedTaskSetDepsBadDep(t *testing.T) {
@@ -168,7 +172,10 @@ func TestDefinedTaskSetDepsBadDep(t *testing.T) {
 	otherFlow := &goyek.Flow{}
 	otherTask := otherFlow.Define(goyek.Task{Name: "different-flow"})
 
-	act := func() { task.SetDeps(goyek.Deps{otherTask}) }
-
-	assertPanics(t, act, "should not be possible use dependencies from different flow")
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("should not be possible use dependencies from different flow")
+		}
+	}()
+	task.SetDeps(goyek.Deps{otherTask})
 }

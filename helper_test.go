@@ -56,24 +56,3 @@ func assertInvalid(tb testing.TB, got error, msg string) {
 		tb.Errorf("%s\nGOT: %v\nWANT: <INVALID>", msg, got)
 	}
 }
-
-func assertPanics(tb testing.TB, fn func(), msg string) {
-	tb.Helper()
-	tryPanic := func() bool {
-		didPanic := false
-		func() {
-			defer func() {
-				if info := recover(); info != nil {
-					didPanic = true
-				}
-			}()
-			fn()
-		}()
-		return didPanic
-	}
-
-	if tryPanic() {
-		return
-	}
-	tb.Errorf("%s\ndid not panic, but expected to do so", msg)
-}

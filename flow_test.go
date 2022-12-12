@@ -39,9 +39,12 @@ func TestDefineEmptyName(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(ioutil.Discard)
 
-	act := func() { flow.Define(goyek.Task{}) }
-
-	assertPanics(t, act, "should panic")
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("should panic when defining an empty name")
+		}
+	}()
+	flow.Define(goyek.Task{})
 }
 
 func TestDefineSameName(t *testing.T) {
@@ -50,9 +53,12 @@ func TestDefineSameName(t *testing.T) {
 	task := goyek.Task{Name: "task"}
 	flow.Define(task)
 
-	act := func() { flow.Define(task) }
-
-	assertPanics(t, act, "should not be possible to register tasks with same name twice")
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("should not be possible to register tasks with same name twice")
+		}
+	}()
+	flow.Define(task)
 }
 
 func TestDefineBadDep(t *testing.T) {
@@ -60,9 +66,12 @@ func TestDefineBadDep(t *testing.T) {
 	otherFlow := &goyek.Flow{}
 	task := otherFlow.Define(goyek.Task{Name: "different-flow"})
 
-	act := func() { flow.Define(goyek.Task{Name: "dep-from-different-flow", Deps: goyek.Deps{task}}) }
-
-	assertPanics(t, act, "should not be possible use dependencies from different flow")
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("should not be possible use dependencies from different flow")
+		}
+	}()
+	flow.Define(goyek.Task{Name: "dep-from-different-flow", Deps: goyek.Deps{task}})
 }
 
 func TestExecutePass(t *testing.T) {
@@ -463,11 +472,12 @@ func TestSetDefaultPanic(t *testing.T) {
 	otherFlow := &goyek.Flow{}
 	task := otherFlow.Define(goyek.Task{Name: "different-flow"})
 
-	act := func() {
-		flow.SetDefault(task)
-	}
-
-	assertPanics(t, act, "should panic when using a task defined in other flo")
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("should panic when using a task defined in other flow")
+		}
+	}()
+	flow.SetDefault(task)
 }
 
 func TestTasks(t *testing.T) {
@@ -600,11 +610,12 @@ func TestUse(t *testing.T) {
 func TestUseNil(t *testing.T) {
 	flow := &goyek.Flow{}
 
-	act := func() {
-		flow.Use(nil)
-	}
-
-	assertPanics(t, act, "should panic on nil middleware")
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("should panic on nil middleware")
+		}
+	}()
+	flow.Use(nil)
 }
 
 func TestUndefine(t *testing.T) {
@@ -632,9 +643,12 @@ func TestUndefineBadTask(t *testing.T) {
 	otherFlow := &goyek.Flow{}
 	task := otherFlow.Define(goyek.Task{Name: "different-flow"})
 
-	act := func() { flow.Undefine(task) }
-
-	assertPanics(t, act, "should not be possible undefine task from different flow")
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("should not be possible undefine task from different flow")
+		}
+	}()
+	flow.Undefine(task)
 }
 
 func TestNoDeps(t *testing.T) {
