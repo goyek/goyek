@@ -32,7 +32,9 @@ func TestDefaultFlow(t *testing.T) {
 	assertEqual(t, goyek.Default(), task, "Default")
 
 	goyek.Use(func(r goyek.Runner) goyek.Runner { return r })
-	assertPass(t, goyek.Execute(context.Background(), nil), "Execute")
+	if err := goyek.Execute(context.Background(), nil); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 }
 
 func TestDefineEmptyName(t *testing.T) {
@@ -198,9 +200,9 @@ func TestExecuteSkip(t *testing.T) {
 		},
 	})
 
-	err := flow.Execute(context.Background(), []string{"task"})
-
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), []string{"task"}); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 	if !skipped {
 		t.Errorf("a.Skipped() should return true")
 	}
@@ -268,9 +270,9 @@ func TestExecuteCancelInTask(t *testing.T) {
 		},
 	})
 
-	err := flow.Execute(ctx, []string{"task"})
-
-	assertPass(t, err, "should pass as the flow completed")
+	if err := flow.Execute(ctx, []string{"task"}); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 }
 
 func TestExecuteNoop(t *testing.T) {
@@ -280,9 +282,9 @@ func TestExecuteNoop(t *testing.T) {
 		Name: "task",
 	})
 
-	err := flow.Execute(context.Background(), []string{"task"})
-
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), []string{"task"}); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 }
 
 func TestExecuteErrorParallel(t *testing.T) {
@@ -463,9 +465,9 @@ func TestSetDefault(t *testing.T) {
 	})
 	flow.SetDefault(task)
 
-	err := flow.Execute(context.Background(), nil)
-
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), nil); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 	if !taskRan {
 		t.Errorf("task should have run")
 	}
@@ -670,9 +672,9 @@ func TestNoDeps(t *testing.T) {
 		Deps: goyek.Deps{dep},
 	})
 
-	err := flow.Execute(context.Background(), []string{"task"}, goyek.NoDeps())
-
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), []string{"task"}, goyek.NoDeps()); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 	if depRun {
 		t.Errorf("deps should not have run")
 	}
@@ -696,9 +698,9 @@ func TestSkipDep(t *testing.T) {
 		},
 	})
 
-	err := flow.Execute(context.Background(), []string{"task"}, goyek.Skip("dep"))
-
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), []string{"task"}, goyek.Skip("dep")); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 	if !taskRun {
 		t.Errorf("task should have run")
 	}
@@ -725,9 +727,9 @@ func TestSkipTask(t *testing.T) {
 		},
 	})
 
-	err := flow.Execute(context.Background(), []string{"task"}, goyek.Skip("task"))
-
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), []string{"task"}, goyek.Skip("task")); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 	if taskRun {
 		t.Errorf("task should not have run")
 	}
@@ -761,9 +763,9 @@ func TestSkipSharedDep(t *testing.T) {
 		},
 	})
 
-	err := flow.Execute(context.Background(), []string{"task", "other"}, goyek.Skip("task"))
-
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), []string{"task", "other"}, goyek.Skip("task")); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 	if taskRun {
 		t.Errorf("task should not have run")
 	}

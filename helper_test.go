@@ -40,10 +40,3 @@ func assertEqual(tb testing.TB, got interface{}, want interface{}, msg string) {
 	}
 	tb.Errorf("%s\nGOT: %v\nWANT: %v", msg, got, want)
 }
-
-func assertPass(tb testing.TB, got error, msg string) {
-	tb.Helper()
-	if got != nil {
-		tb.Errorf("%s\nGOT: %v\nWANT: <PASS>", msg, got)
-	}
-}

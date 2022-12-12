@@ -20,8 +20,9 @@ func TestDefinedTaskSetName(t *testing.T) {
 
 	got := task.Name()
 	assertEqual(t, got, "new", "should update the name")
-	err := flow.Execute(context.Background(), []string{"new"})
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), []string{"new"}); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 	if !called {
 		t.Errorf("should call the action")
 	}
@@ -38,8 +39,9 @@ func TestDefinedTaskSetNameForDefault(t *testing.T) {
 
 	got := task.Name()
 	assertEqual(t, got, "new", "should update the name")
-	err := flow.Execute(context.Background(), nil)
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), nil); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 	if !called {
 		t.Errorf("should call the action")
 	}
@@ -54,8 +56,9 @@ func TestDefinedTaskSetNameForDep(t *testing.T) {
 
 	task.SetName("new")
 
-	err := flow.Execute(context.Background(), []string{"two"})
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), []string{"two"}); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 	if !called {
 		t.Errorf("should call the dependency with changed name")
 	}
@@ -101,8 +104,9 @@ func TestDefinedTaskSetAction(t *testing.T) {
 	got := getFuncName(task.Action())
 
 	assertEqual(t, got, want, "should update the action")
-	err := flow.Execute(context.Background(), []string{"one"})
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), []string{"one"}); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 	if originalCalled {
 		t.Errorf("should not call the previous action")
 	}
@@ -124,8 +128,9 @@ func TestDefinedTaskSetDeps(t *testing.T) {
 	got := t3.Deps()
 	assertEqual(t, got, goyek.Deps{t1, t2}, "should update the dependencies")
 
-	err := flow.Execute(context.Background(), []string{"three"})
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), []string{"three"}); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 	if !called {
 		t.Errorf("should call transitive dependency of t3")
 	}
@@ -144,8 +149,9 @@ func TestDefinedTaskSetDepsClear(t *testing.T) {
 	got := t2.Deps()
 	assertEqual(t, got, noDeps, "should clear the dependencies")
 
-	err := flow.Execute(context.Background(), []string{"two"})
-	assertPass(t, err, "should pass")
+	if err := flow.Execute(context.Background(), []string{"two"}); err != nil {
+		t.Errorf("should pass, but was: %v", err)
+	}
 	if called {
 		t.Errorf("should not call any dependency")
 	}
