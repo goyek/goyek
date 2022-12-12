@@ -50,13 +50,6 @@ func assertPass(tb testing.TB, got error, msg string) {
 	}
 }
 
-func assertFail(tb testing.TB, got error, msg string) {
-	tb.Helper()
-	if _, ok := got.(*goyek.FailError); !ok {
-		tb.Errorf("%s\nGOT: %v\nWANT: <FAIL>", msg, got)
-	}
-}
-
 func assertInvalid(tb testing.TB, got error, msg string) {
 	tb.Helper()
 	if _, ok := got.(*goyek.FailError); ok || got == nil {

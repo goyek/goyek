@@ -145,7 +145,9 @@ func TestExecuteDepFail(t *testing.T) {
 
 	err := flow.Execute(context.Background(), []string{"task-2", "task-3"})
 
-	assertFail(t, err, "should return error from first task")
+	if _, ok := err.(*goyek.FailError); !ok {
+		t.Errorf("should return fail error from first task, but was: %v", err)
+	}
 	assertEqual(t, got(), []int{11, 0, 0}, "should execute task 1")
 }
 
@@ -165,7 +167,9 @@ func TestExecuteFail(t *testing.T) {
 
 	err := flow.Execute(context.Background(), []string{"task"})
 
-	assertFail(t, err, "should return error")
+	if _, ok := err.(*goyek.FailError); !ok {
+		t.Errorf("should return fail error, but was: %v", err)
+	}
 	if !failed {
 		t.Errorf("a.Failed() should return true")
 	}
@@ -222,7 +226,9 @@ func TestExecutePanic(t *testing.T) {
 
 			err := flow.Execute(context.Background(), []string{"task"})
 
-			assertFail(t, err, "should return error from first task")
+			if _, ok := err.(*goyek.FailError); !ok {
+				t.Errorf("should return fail error, but was: %v", err)
+			}
 		})
 	}
 }
@@ -299,7 +305,9 @@ func TestExecuteErrorParallel(t *testing.T) {
 
 	err := flow.Execute(context.Background(), []string{"task"})
 
-	assertFail(t, err, "should fail")
+	if _, ok := err.(*goyek.FailError); !ok {
+		t.Errorf("should return fail error, but was: %v", err)
+	}
 }
 
 func TestExecuteInvalidArgs(t *testing.T) {
@@ -389,7 +397,9 @@ func TestPrintingParallel(t *testing.T) {
 
 	err := flow.Execute(context.Background(), []string{"task"})
 
-	assertFail(t, err, "should fail")
+	if _, ok := err.(*goyek.FailError); !ok {
+		t.Errorf("should return fail error, but was: %v", err)
+	}
 	assertContains(t, out, "from child goroutine", "should contain log from child goroutine")
 	assertContains(t, out, "from main goroutine", "should contain log from main goroutine")
 }
