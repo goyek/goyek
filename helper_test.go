@@ -5,8 +5,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/goyek/goyek/v2"
 )
 
 func assertContains(tb testing.TB, got fmt.Stringer, want string, msg string) {
@@ -47,12 +45,5 @@ func assertPass(tb testing.TB, got error, msg string) {
 	tb.Helper()
 	if got != nil {
 		tb.Errorf("%s\nGOT: %v\nWANT: <PASS>", msg, got)
-	}
-}
-
-func assertInvalid(tb testing.TB, got error, msg string) {
-	tb.Helper()
-	if _, ok := got.(*goyek.FailError); ok || got == nil {
-		tb.Errorf("%s\nGOT: %v\nWANT: <INVALID>", msg, got)
 	}
 }

@@ -354,7 +354,11 @@ func TestExecuteInvalidArgs(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			err := flow.Execute(context.Background(), tc.args, tc.opts...)
 
-			assertInvalid(t, err, "should return error bad args")
+			if err == nil {
+				t.Errorf("should return a non-nil error")
+			} else if _, ok := err.(*goyek.FailError); ok {
+				t.Errorf("should NOT return a FailError, but was: %v", err)
+			}
 		})
 	}
 }
