@@ -1,6 +1,7 @@
 package goyek_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/goyek/goyek/v2"
@@ -41,9 +42,10 @@ func TestRunner(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			r := goyek.NewRunner(tc.action)
-			got := r(goyek.Input{})
 
-			assertEqual(t, got, tc.want, "shoud return proper result")
+			if got := r(goyek.Input{}); !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("got = %#v\nwant = %#v", got, tc.want)
+			}
 		})
 	}
 }
@@ -54,6 +56,12 @@ func TestRunnerPanic(t *testing.T) {
 
 	got := r(goyek.Input{})
 
-	assertEqual(t, got.Status, goyek.StatusFailed, "shoud return proper status")
-	assertEqual(t, got.PanicValue, payload, "shoud return proper panic value")
+	if got, want := got.Status, goyek.StatusFailed; got != want {
+		msg := "bad status"
+		t.Errorf("%s\ngot = %q\nwant = %q", msg, got, want)
+	}
+	if got, want := got.PanicValue, payload; got != want {
+		msg := "wrong panic value"
+		t.Errorf("%s\ngot = %q\nwant = %q", msg, got, want)
+	}
 }

@@ -16,11 +16,13 @@ func TestDefinedTaskSetName(t *testing.T) {
 	called := false
 	task := flow.Define(goyek.Task{Name: "one", Action: func(a *goyek.A) { called = true }})
 
-	task.SetName("new")
+	want := "new"
+	task.SetName(want)
 
-	got := task.Name()
-	assertEqual(t, got, "new", "should update the name")
-	if err := flow.Execute(context.Background(), []string{"new"}); err != nil {
+	if got := task.Name(); got != want {
+		t.Errorf("should update the name\ngot = %q\nwant = %q", got, want)
+	}
+	if err := flow.Execute(context.Background(), []string{want}); err != nil {
 		t.Errorf("should pass, but was: %v", err)
 	}
 	if !called {
@@ -35,10 +37,12 @@ func TestDefinedTaskSetNameForDefault(t *testing.T) {
 	task := flow.Define(goyek.Task{Name: "one", Action: func(a *goyek.A) { called = true }})
 	flow.SetDefault(task)
 
-	task.SetName("new")
+	want := "new"
+	task.SetName(want)
 
-	got := task.Name()
-	assertEqual(t, got, "new", "should update the name")
+	if got := task.Name(); got != want {
+		t.Errorf("should update the name\ngot = %q\nwant = %q", got, want)
+	}
 	if err := flow.Execute(context.Background(), nil); err != nil {
 		t.Errorf("should pass, but was: %v", err)
 	}
@@ -83,10 +87,12 @@ func TestDefinedTaskSetUsage(t *testing.T) {
 	flow.SetOutput(ioutil.Discard)
 	task := flow.Define(goyek.Task{Name: "one"})
 
-	task.SetUsage("good task")
-	got := flow.Tasks()[0].Usage()
+	want := "good task"
+	task.SetUsage(want)
 
-	assertEqual(t, got, "good task", "should update the usage")
+	if got := flow.Tasks()[0].Usage(); got != want {
+		t.Errorf("should update the usage\ngot = %q\nwant = %q", got, want)
+	}
 }
 
 func TestDefinedTaskSetAction(t *testing.T) {
@@ -98,12 +104,13 @@ func TestDefinedTaskSetAction(t *testing.T) {
 	flow.SetOutput(ioutil.Discard)
 	var originalCalled, newCalled bool
 	task := flow.Define(goyek.Task{Name: "one", Action: func(a *goyek.A) { originalCalled = true }})
+
 	fn := func(a *goyek.A) { newCalled = true }
 	task.SetAction(fn)
-	want := getFuncName(fn)
-	got := getFuncName(task.Action())
 
-	assertEqual(t, got, want, "should update the action")
+	if got, want := getFuncName(task.Action()), getFuncName(fn); got != want {
+		t.Errorf("should update the action\ngot = %q\nwant = %q", got, want)
+	}
 	if err := flow.Execute(context.Background(), []string{"one"}); err != nil {
 		t.Errorf("should pass, but was: %v", err)
 	}
@@ -125,9 +132,9 @@ func TestDefinedTaskSetDeps(t *testing.T) {
 
 	t3.SetDeps(goyek.Deps{t1, t2})
 
-	got := t3.Deps()
-	assertEqual(t, got, goyek.Deps{t1, t2}, "should update the dependencies")
-
+	if got, want := t3.Deps(), (goyek.Deps{t1, t2}); !reflect.DeepEqual(got, want) {
+		t.Errorf("should update the dependencies\ngot = %#v\nwant = %#v", got, want)
+	}
 	if err := flow.Execute(context.Background(), []string{"three"}); err != nil {
 		t.Errorf("should pass, but was: %v", err)
 	}
@@ -145,10 +152,9 @@ func TestDefinedTaskSetDepsClear(t *testing.T) {
 
 	t2.SetDeps(nil)
 
-	var noDeps goyek.Deps
-	got := t2.Deps()
-	assertEqual(t, got, noDeps, "should clear the dependencies")
-
+	if got := t2.Deps(); got != nil {
+		t.Errorf("should clear the dependencies\ngot = %#v\n", got)
+	}
 	if err := flow.Execute(context.Background(), []string{"two"}); err != nil {
 		t.Errorf("should pass, but was: %v", err)
 	}

@@ -32,10 +32,17 @@ func TestACleanup(t *testing.T) {
 		})
 	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: out})
 
-	assertEqual(t, got.Status, goyek.StatusFailed, "shoud return proper status")
-	assertEqual(t, got.PanicValue, "first panic", "shoud return proper panic value")
+	if got, want := got.Status, goyek.StatusFailed; got != want {
+		msg := "bad status"
+		t.Errorf("%s\ngot = %q\nwant = %q", msg, got, want)
+	}
+	if got, want := got.PanicValue, "first panic"; got != want {
+		msg := "wrong panic value"
+		t.Errorf("%s\ngot = %q\nwant = %q", msg, got, want)
+	}
 	if want, got := "1\n2\n3\n4\n5\n", out.String(); !strings.Contains(got, want) {
-		t.Errorf("should call cleanup funcs in LIFO order\ngot = %q\nwant substr = %q", got, want)
+		msg := "should call cleanup funcs in LIFO order"
+		t.Errorf("%s\ngot = %q\nwant substr = %q", msg, got, want)
 	}
 }
 
@@ -61,10 +68,17 @@ func TestACleanupPanic(t *testing.T) {
 		panic("action panic")
 	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: out})
 
-	assertEqual(t, got.Status, goyek.StatusFailed, "shoud return proper status")
-	assertEqual(t, got.PanicValue, "action panic", "shoud return proper panic value")
+	if got, want := got.Status, goyek.StatusFailed; got != want {
+		msg := "bad status"
+		t.Errorf("%s\ngot = %q\nwant = %q", msg, got, want)
+	}
+	if got, want := got.PanicValue, "action panic"; got != want {
+		msg := "wrong panic value"
+		t.Errorf("%s\ngot = %q\nwant = %q", msg, got, want)
+	}
 	if want, got := "1\n2\n3\n4\n5\n", out.String(); !strings.Contains(got, want) {
-		t.Errorf("should call cleanup funcs in LIFO order\ngot = %q\nwant substr = %q", got, want)
+		msg := "should call cleanup funcs in LIFO order"
+		t.Errorf("%s\ngot = %q\nwant substr = %q", msg, got, want)
 	}
 }
 
@@ -75,7 +89,10 @@ func TestACleanupFail(t *testing.T) {
 		})
 	})(goyek.Input{})
 
-	assertEqual(t, got.Status, goyek.StatusFailed, "shoud return proper status")
+	if got, want := got.Status, goyek.StatusFailed; got != want {
+		msg := "bad status"
+		t.Errorf("%s\ngot = %q\nwant = %q", msg, got, want)
+	}
 }
 
 func TestASetenv(t *testing.T) {
@@ -85,13 +102,20 @@ func TestASetenv(t *testing.T) {
 	res := goyek.NewRunner(func(a *goyek.A) {
 		a.Setenv(key, val)
 
-		got := os.Getenv(key)
-		assertEqual(t, got, val, "should set the value")
+		if got := os.Getenv(key); got != val {
+			msg := "should set the value"
+			t.Errorf("%s\ngot = %q\nwant = %q", msg, got, val)
+		}
 	})(goyek.Input{})
 
-	assertEqual(t, res.Status, goyek.StatusPassed, "shoud return proper status")
-	got := os.Getenv(key)
-	assertEqual(t, got, "", "should restore the value after the action")
+	if got, want := res.Status, goyek.StatusPassed; got != want {
+		msg := "bad status"
+		t.Errorf("%s\ngot = %q\nwant = %q", msg, got, want)
+	}
+	if got, want := os.Getenv(key), ""; got != want {
+		msg := "should restore the value after the action"
+		t.Errorf("%s\ngot = %q\nwant = %q", msg, got, want)
+	}
 }
 
 func TestASetenvOverride(t *testing.T) {
@@ -104,13 +128,20 @@ func TestASetenvOverride(t *testing.T) {
 	res := goyek.NewRunner(func(a *goyek.A) {
 		a.Setenv(key, val)
 
-		got := os.Getenv(key)
-		assertEqual(t, got, val, "should set the value")
+		if got := os.Getenv(key); got != val {
+			msg := "should set the value"
+			t.Errorf("%s\ngot = %q\nwant = %q", msg, got, val)
+		}
 	})(goyek.Input{})
 
-	assertEqual(t, res.Status, goyek.StatusPassed, "shoud return proper status")
-	got := os.Getenv(key)
-	assertEqual(t, got, prev, "should restore the value after the action")
+	if got, want := res.Status, goyek.StatusPassed; got != want {
+		msg := "bad status"
+		t.Errorf("%s\ngot = %q\nwant = %q", msg, got, want)
+	}
+	if got, want := os.Getenv(key), prev; got != want {
+		msg := "should restore the value after the action"
+		t.Errorf("%s\ngot = %q\nwant = %q", msg, got, want)
+	}
 }
 
 func TestATempDir(t *testing.T) {
@@ -118,11 +149,15 @@ func TestATempDir(t *testing.T) {
 	res := goyek.NewRunner(func(a *goyek.A) {
 		dir = a.TempDir()
 
-		_, err := os.Lstat(dir)
-		assertEqual(t, err, nil, "the dir should exixt")
+		if _, err := os.Lstat(dir); err != nil {
+			t.Errorf("the dir should exist, dir: %v, err: %v", dir, err)
+		}
 	})(goyek.Input{TaskName: "0!ą😊"})
 
-	assertEqual(t, res.Status, goyek.StatusPassed, "shoud return proper status")
+	if got, want := res.Status, goyek.StatusPassed; got != want {
+		msg := "bad status"
+		t.Errorf("%s\ngot = %q\nwant = %q", msg, got, want)
+	}
 	if _, err := os.Lstat(dir); os.IsExist(err) {
 		t.Errorf("dir is not removed after the action finished, dir: %v", dir)
 	}
