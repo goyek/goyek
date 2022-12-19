@@ -10,7 +10,7 @@ jobs:
   ci-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: actions/checkout@v3.2.0
       - uses: actions/setup-go@v3.5.0
         with:
           go-version: '1.19'
@@ -42,7 +42,7 @@ jobs:
           - '1.19'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: actions/checkout@v3.2.0
       - uses: actions/setup-go@v3.5.0
         with:
           go-version: ${{ matrix.go-version }}
@@ -51,7 +51,7 @@ jobs:
   bash-script:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: actions/checkout@v3.2.0
       - uses: actions/setup-go@v3.5.0
         with:
           go-version: '1.19'
@@ -60,7 +60,7 @@ jobs:
   pwsh-script:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: actions/checkout@v3.2.0
       - uses: actions/setup-go@v3.5.0
         with:
           go-version: '1.19'
