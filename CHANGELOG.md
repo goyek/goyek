@@ -10,7 +10,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 This release contains many **breaking changes**
 that are necessary to improve usability, extensibility, and customization.
-You can also find new supplumental features in
+You can also find new supplemental features in
 [`goyek/x`](https://github.com/goyek/x).
 
 ### Added
