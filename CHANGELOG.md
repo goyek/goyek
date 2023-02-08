@@ -15,9 +15,9 @@ You can also find new supplemental features in
 
 ### Added
 
+- Add `DefaultFlow` which is the default flow.
 - Add the top-level functions such as `Define`, `Main`, and so on which are wrappers
   for the methods of `Flow` called for `DefaultFlow`.
-- Add `DefaultFlow` which is the default flow.
 - `Flow.Main` now exits on receiving the second SIGINT.
 - Add `Flow.Print` for printing the flow usage.
 - `Flow.Main` and `Flow.Execute` allow passing execution options.
