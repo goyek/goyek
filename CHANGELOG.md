@@ -17,7 +17,7 @@ You can also find new supplemental features in
 
 - Add the top-level functions such as `Define`, `Main`, and so on which are wrappers
   for the methods of `Flow` called for `DefaultFlow`.
-- Add `DefaultFlow` that is the default flow.
+- Add `DefaultFlow` which is the default flow.
 - `Flow.Main` now exits on receiving the second SIGINT.
 - Add `Flow.Print` for printing the flow usage.
 - `Flow.Main` and `Flow.Execute` allow passing execution options.
@@ -31,7 +31,7 @@ You can also find new supplemental features in
 - Add `middleware` package with
   `ReportStatus`, `SilentNonFailed`, `DryRun`, `ReportLongRun` middlewares.
 - `TF.Error`, `TF.Errorf`, `TF.Fail` may be called simultaneously from multiple goroutines.
-- Add `NewRunner` that can be useful for testing and debugging
+- Add `NewRunner` which can be useful for testing and debugging
   task actions and middlewares.
 - Add `Flow.Undefine` to unregister a task.
 - Add `DefinedTask.SetName`, `DefinedTask.SetUsage`, `DefinedTask.Action`,
@@ -69,7 +69,7 @@ You can also find new supplemental features in
 - Rename `Flow.Register` to `Flow.Define`.
 - Change `Flow.RegisteredTask` to `Flow.DefinedTask`.
 - `DefinedTask.Deps` returns `Deps` to facilitate reusing defined task's dependencies
-  when creating a new one or redefining existing one.
+  when creating a new one or redefining an existing one.
 - Change the `Flow.DefaultTask` field to `Flow.SetDefault` and `Flow.Default` methods.
 - Change `Flow.Output` field to `Flow.SetOutput` setter and `Flow.Output` getter.
 - Change `Flow.Run` to `Flow.Execute` to reduce possible confusion with `Runner`.
@@ -83,7 +83,7 @@ You can also find new supplemental features in
 - Remove parameters API and out-of-the-box flags (`-v`, `-wd`).
 - Remove `A.Cmd`.
   Use [`github.com/goyek/goyek/x/cmd`](https://pkg.go.dev/github.com/goyek/x/cmd)
-  or your own helper instead.
+  or your helper instead.
 
 ### Fixed
 
