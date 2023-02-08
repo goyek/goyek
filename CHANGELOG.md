@@ -6,200 +6,88 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
-## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0-rc.12...HEAD)
+## [2.0.0](https://github.com/goyek/goyek/compare/v1.1.0...v2.0.0) - 2023-02-08
 
-<!-- markdownlint-disable-next-line line-length -->
-## [2.0.0-rc.12](https://github.com/goyek/goyek/compare/v2.0.0-rc.11...v2.0.0-rc.12) - 2022-11-24
-
-### Removed
-
-- Remove `A.Cmd`.
-  Use [`github.com/goyek/goyek/x/cmd`](https://pkg.go.dev/github.com/goyek/x/cmd)
-  or your own helper instead.
-
-<!-- markdownlint-disable-next-line line-length -->
-## [2.0.0-rc.11](https://github.com/goyek/goyek/compare/v2.0.0-rc.10...v2.0.0-rc.11) - 2022-11-07
-
-### Changed
-
-- `Flow.Main` no longer changes the working directory (undocumented behavior).
-
-<!-- markdownlint-disable-next-line line-length -->
-## [2.0.0-rc.10](https://github.com/goyek/goyek/compare/v2.0.0-rc.9...v2.0.0-rc.10) - 2022-11-07
-
-This release adds helpers methods for type `A` that are commonly used
-in the [`testing`](https://pkg.go.dev/testing) package.
+This release contains many **breaking changes**
+that are necessary to improve usability, extensibility, and customization.
+You can also find new supplumental features in
+[`goyek/x`](https://github.com/goyek/x).
 
 ### Added
 
+- Add the top-level functions such as `Define`, `Main`, and so on which are wrappers
+  for the methods of `Flow` called for `DefaultFlow`.
+- Add `DefaultFlow` that is the default flow.
+- `Flow.Main` now exits on receiving the second SIGINT.
+- Add `Flow.Print` for printing the flow usage.
+- `Flow.Main` and `Flow.Execute` allow passing execution options.
+- Add `NoDeps` option to skip processing of all dependencies.
+- Add `Skip` option to skip processing of given tasks.
+- Add `Flow.Usage`, `Flow.SetUsage` for getting and setting the function
+  that is called when an error occurs while parsing the flow.
+- Add `NOOP` status report for tasks that were intentionally not run
+  to differentiate from being skipped during execution.
+- Add `Flow.Use` method o support task run interception using middlewares.
+- Add `middleware` package with
+  `ReportStatus`, `SilentNonFailed`, `DryRun`, `ReportLongRun` middlewares.
+- `TF.Error`, `TF.Errorf`, `TF.Fail` may be called simultaneously from multiple goroutines.
+- Add `NewRunner` that can be useful for testing and debugging
+  task actions and middlewares.
+- Add `Flow.Undefine` to unregister a task.
+- Add `DefinedTask.SetName`, `DefinedTask.SetUsage`, `DefinedTask.Action`,
+  `DefinedTask.SetAction`, `DefinedTask.SetAction`, `DefinedTask.SetDeps`
+  to enable modifying the task after the initial definition.
+- Add `Flow.SetLogger` for setting a custom log decorator
+  that is used by `A` logging methods.
+  If `Logger` implements
+  `Error`, `Errorf`, `Fatal`, `Fatalf`, `Skip`, `Skipf`
+  then they will be used by the `A` equivalent methods.
+- Add `Flow.Logger` for getting the log decorator (`CodeLineLogger` by default).
+- Add `CodeLineLogger` which is the default for `Flow.Logger`.
+- Add `FmtLogger` which is the default when using `NewRunner`.
+- Add `A.Helper` and `CodeLineLogger.Helper` methods that work like
+  the equivalent method in the `testing` package.
 - Add `A.Cleanup` method that registers an action's cleanup function.
 - Add `A.Setenv` method that sets the environment variable
   and reverts the previous value during cleanup.
 - Add `A.TempDir` method that creates a temporary directory
   and removes it during cleanup.
 
-<!-- markdownlint-disable-next-line line-length -->
-## [2.0.0-rc.9](https://github.com/goyek/goyek/compare/v2.0.0-rc.8...v2.0.0-rc.9) - 2022-11-06
-
-This release introduces a breaking change as it renames
-the heavily used `TF` type to `A`. This follows the convention
-used in the [`testing`](https://pkg.go.dev/testing) package
-to name the parameter type as the first letter of the "function type".
-
-### Added
-
-- Add `Status.String` method for printing `Status`.
-
 ### Changed
 
 - Rename `TF` type to `A` as this is the `Action` parameter.
-
-<!-- markdownlint-disable-next-line line-length -->
-## [2.0.0-rc.8](https://github.com/goyek/goyek/compare/v2.0.0-rc.7...v2.0.0-rc.8) - 2022-10-29
-
-### Added
-
-- Make logging more customizable. If `Logger` implements
-  `Error`, `Errorf`, `Fatal`, `Fatalf`, `Skip`, `Skipf`
-  then they will be used by the `TF` equivalent methods.
-
-<!-- markdownlint-disable-next-line line-length -->
-## [2.0.0-rc.7](https://github.com/goyek/goyek/compare/v2.0.0-rc.6...v2.0.0-rc.7) - 2022-10-29
-
-This release has all the features and changes planned for `v2`.
-The `v2.0.0` is to be released in two months
-to give the users some time for feedback.
-
-### Added
-
-- Add `TF.Helper` and `CodeLineLogger.Helper` methods that work like
-  the equivalent method in the `testing` package.
-
-<!-- markdownlint-disable-next-line line-length -->
-## [2.0.0-rc.6](https://github.com/goyek/goyek/compare/v2.0.0-rc.5...v2.0.0-rc.6) - 2022-10-27
-
-### Added
-
-- Add `NoDeps` option to skip processing of all dependencies.
-- Add `Skip` option to skip processing of given tasks.
-
-### Changed
-
-- Report `NOOP` status if the task's action was nil.
-
-<!-- markdownlint-disable-next-line line-length -->
-## [2.0.0-rc.5](https://github.com/goyek/goyek/compare/v2.0.0-rc.4...v2.0.0-rc.5) - 2022-10-25
-
-### Changed
-
-- Change `DefinedTask` to struct.
-
-<!-- markdownlint-disable-next-line line-length -->
-## [2.0.0-rc.4](https://github.com/goyek/goyek/compare/v2.0.0-rc.3...v2.0.0-rc.4) - 2022-10-25
-
-This release focuses on improving the API to make creating and customizing
-reusable build pipelines easier.
-
-### Added
-
-- Add `DefinedTask.SetName`, `DefinedTask.SetUsage`, `DefinedTask.Action`,
-  `DefinedTask.SetAction`, `DefinedTask.SetAction`, `DefinedTask.SetDeps`
-  to enable modifying the task after the initial definition.
-- Add `Flow.Undefine` to unregister a task.
-- Passing `nil` to `Flow.SetDefault` unsets the default task.
-- Add `DryRun`, `ReportLongRun` middlewares.
-
-### Changed
-
-- `DefinedTask.Deps` returns `Deps` to facilitate reusing defined task's dependencies
-  when creating a new one or redefining existing one.
-- Rename `Reporter` middleware to `ReportStatus`.
-- Change `Flow.Execute` to accept `[]string` instead of `...string` to make the API
-  forward compatible.
-
-<!-- markdownlint-disable-next-line line-length -->
-## [2.0.0-rc.3](https://github.com/goyek/goyek/compare/v2.0.0-rc.2...v2.0.0-rc.3) - 2022-10-19
-
-This release focuses on improving usability, extensibility, and customization.
-
-### Added
-
-- Add `Flow.SetLogger` for setting a custom log decorator
-  that is used by `TF` logging methods.
-- Add `Flow.Logger` for getting the log decorator (`CodeLineLogger` by default).
-- Add `CodeLineLogger` which is the default for `Flow.Logger`.
-- Add `FmtLogger` which is the default when using `NewRunner`.
-- Add `NOOP` status report for tasks that were intentionally not run
-  to differentiate from being skipped during execution.
-- Add `Flow.Use` method o support task run interception using middlewares.
-- Add `middleware` package with `ReportStatus` and `SilentNonFailed` middlewares.
-- `TF.Error`, `TF.Errorf`, `TF.Fail` may be called simultaneously from multiple goroutines.
-- Add `DefaultFlow` that is the default flow.
-- Add the top-level functions such as `Define`, `Main`, and so on which are wrappers
-  for the methods of `Flow` called for `DefaultFlow`.
-
-### Changed
-
+  This is the most impactful breaking change.
+  This follows the convention used in the [`testing`](https://pkg.go.dev/testing)
+  package to name the parameter type as the first letter of the "function type".
+- Task status reporting is disabled by default.
+  It can be enabled by calling `Flow.Use(middleware.ReportStatus)`.
+  It reports `NOOP` for a task without an action.
 - Usually, the task does not call `panic` directly.
   `panic` failure message no longer contains a prefix with file and line information.
   The stack trace is printed instead. The behavior is based on `testing` package.
-- `Flow.Main` changes the working directory to parent.
-- Rename `Flow.Run` to `Flow.Execute` to reduce possible confusion with `Runner`.
-- Report `PASS` for a task without an action.
-- Task status reporting is disabled by default.
-  It can be enabled by calling `Flow.Use(middleware.ReportStatus)`.
-- `Flow.Print` output format is similar to `flag.PrintDefaults`.
-  Moreover, it does not print tasks with empty `Task.Usage`.
-- Change `Flow.Execute` to return an error instead of returning the exit code
-  and printing to output.
-- Change `Flow.Output` field to `Flow.SetOutput` setter and `Flow.Output` getter.
-- Change `Flow.Usage` field to `Flow.SetUsage` setter and `Flow.Usage` getter.
-
-### Removed
-
-- `Flow.Verbose` is removed.
-  To be non-verbose use `Flow.Use(middleware.SilentNonFailed)` instead.
-
-### Fixed
-
-- Fix panic handling so that `panic(nil)` and `runtime.Goexit()` now cause task failure.
-
-<!-- markdownlint-disable-next-line line-length -->
-## [2.0.0-rc.2](https://github.com/goyek/goyek/compare/v2.0.0-rc.1...v2.0.0-rc.2) - 2022-10-14
-
-This release focuses on improving usability and encapsulation.
-
-### Added
-
-- Add `Flow.Usage` for setting a custom parsing tasks error handler.
-
-### Changed
-
-- `Flow.Usage` (or `Flow.Print` if it is `nil`)
-  is called when `Flow.Run` returns `CodeInvalidArgs`.
-- Rename `Flow.Register` to `Flow.Define`.
-- Change `Flow.RegisteredTask` to sealed interface `Flow.DefinedTask`.
-- Change the `Flow.DefaultTask` field to `Flow.SetDefault` and `Flow.Default` methods.
-
-## [2.0.0-rc.1](https://github.com/goyek/goyek/compare/v1.1.0...v2.0.0-rc.1) - 2022-10-14
-
-This release contains **breaking changes** in the Go API.
-It focuses on improving customization mainly by removing the parameters API.
-It gives the user the possibility of parsing the input.
-
-### Added
-
-- Add `Flow.Verbose` for controlling the verbose mode.
-- Add `Flow.Print` for printing the flow usage.
-- `Flow.Main` now exits on receiving the second SIGINT.
-
-### Changed
-
 - `RegisteredTask.Deps` returns `[]string` (dependency names) for easier introspection.
+- Rename `Flow.Register` to `Flow.Define`.
+- Change `Flow.RegisteredTask` to `Flow.DefinedTask`.
+- `DefinedTask.Deps` returns `Deps` to facilitate reusing defined task's dependencies
+  when creating a new one or redefining existing one.
+- Change the `Flow.DefaultTask` field to `Flow.SetDefault` and `Flow.Default` methods.
+- Change `Flow.Output` field to `Flow.SetOutput` setter and `Flow.Output` getter.
+- Change `Flow.Run` to `Flow.Execute` to reduce possible confusion with `Runner`.
+- `Flow.Execute` returns an error instead of returning the exit code
+  and does not print to output. It also has different arguments.
+- `Flow.Execute` accepts `[]string` instead of `...string` to make the API
+  forward compatible.
 
 ### Removed
 
 - Remove parameters API and out-of-the-box flags (`-v`, `-wd`).
+- Remove `A.Cmd`.
+  Use [`github.com/goyek/goyek/x/cmd`](https://pkg.go.dev/github.com/goyek/x/cmd)
+  or your own helper instead.
+
+### Fixed
+
+- Fix panic handling so that `panic(nil)` and `runtime.Goexit()` now cause task failure.
 
 ## [1.1.0](https://github.com/goyek/goyek/compare/v1.0.0...v1.1.0) - 2022-10-12
 
