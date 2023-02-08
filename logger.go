@@ -14,34 +14,34 @@ type Logger interface {
 	Logf(w io.Writer, format string, args ...interface{})
 }
 
-// FmtLogger uses fmt when logging. It only appends new line at the end.
+// FmtLogger uses fmt when logging. It only appends a new line at the end.
 type FmtLogger struct{}
 
-// Log is used internally in order to provide proper prefix.
+// Log is used by [A] logging functions.
 func (l FmtLogger) Log(w io.Writer, args ...interface{}) {
 	fmt.Fprintln(w, args...)
 }
 
-// Logf is used internally in order to provide proper prefix.
+// Logf is used by [A] logging functions.
 func (l FmtLogger) Logf(w io.Writer, format string, args ...interface{}) {
 	fmt.Fprintf(w, format+"\n", args...)
 }
 
-// CodeLineLogger decorates the log with code line information and identation.
+// CodeLineLogger decorates the log with code line information and indentation.
 type CodeLineLogger struct {
 	mu          sync.Mutex
 	helperPCs   map[uintptr]struct{} // functions to be skipped when writing file/line info
 	helperNames map[string]struct{}  // helperPCs converted to function names
 }
 
-// Log is used internally in order to provide proper prefix.
+// Log is used by [A] logging functions.
 func (l *CodeLineLogger) Log(w io.Writer, args ...interface{}) {
 	txt := fmt.Sprint(args...)
 	txt = l.decorate(txt)
 	io.WriteString(w, txt) //nolint:errcheck // not checking errors when writing to output
 }
 
-// Logf is used internally in order to provide proper prefix.
+// Logf is used by [A] logging functions.
 func (l *CodeLineLogger) Logf(w io.Writer, format string, args ...interface{}) {
 	txt := fmt.Sprintf(format, args...)
 	txt = l.decorate(txt)

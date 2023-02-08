@@ -13,7 +13,8 @@ import (
 	"unicode/utf8"
 )
 
-// A is a type passed to task's action function to manage task state.
+// A is a type passed to [Task.Action] functions to manage task state
+// and support formatted task logs.
 //
 // A task ends when its action function returns or calls any of the methods
 // FailNow, Fatal, Fatalf, SkipNow, Skip, or Skipf.
@@ -42,26 +43,24 @@ func (a *A) Name() string {
 	return a.name
 }
 
-// Output returns the io.Writer used to print output.
+// Output returns the destination used for printing messages.
 func (a *A) Output() io.Writer {
 	return a.output
 }
 
 // Log formats its arguments using default formatting, analogous to Println,
-// and prints the text to Output. A final newline is added.
-// The text will be printed only if the task fails or flow is run in Verbose mode.
+// and writes the text to [A.Output]. A final newline is added.
 func (a *A) Log(args ...interface{}) {
 	a.logger.Log(a.output, args...)
 }
 
 // Logf formats its arguments according to the format, analogous to Printf,
-// and prints the text to Output. A final newline is added.
-// The text will be printed only if the task fails or flow is run in Verbose mode.
+// and writes the text to [A.Output]. A final newline is added.
 func (a *A) Logf(format string, args ...interface{}) {
 	a.logger.Logf(a.output, format, args...)
 }
 
-// Error is equivalent to Log followed by Fail.
+// Error is equivalent to [A.Log] followed by [A.Fail].
 func (a *A) Error(args ...interface{}) {
 	if l, ok := a.logger.(interface {
 		Error(w io.Writer, args ...interface{})
@@ -74,7 +73,7 @@ func (a *A) Error(args ...interface{}) {
 	a.Fail()
 }
 
-// Errorf is equivalent to Logf followed by Fail.
+// Errorf is equivalent to [A.Logf] followed by [A.Fail].
 func (a *A) Errorf(format string, args ...interface{}) {
 	if l, ok := a.logger.(interface {
 		Errorf(w io.Writer, format string, args ...interface{})
@@ -102,7 +101,7 @@ func (a *A) Fail() {
 	a.mu.Unlock()
 }
 
-// Fatal is equivalent to Log followed by FailNow.
+// Fatal is equivalent to [A.Log] followed by [A.FailNow].
 func (a *A) Fatal(args ...interface{}) {
 	if l, ok := a.logger.(interface {
 		Fatal(w io.Writer, args ...interface{})
@@ -115,7 +114,7 @@ func (a *A) Fatal(args ...interface{}) {
 	a.FailNow()
 }
 
-// Fatalf is equivalent to Logf followed by FailNow.
+// Fatalf is equivalent to [A.Logf] followed by [A.FailNow].
 func (a *A) Fatalf(format string, args ...interface{}) {
 	if l, ok := a.logger.(interface {
 		Fatalf(w io.Writer, format string, args ...interface{})
@@ -131,7 +130,10 @@ func (a *A) Fatalf(format string, args ...interface{}) {
 // FailNow marks the function as having failed
 // and stops its execution by calling runtime.Goexit
 // (which then runs all deferred calls in the current goroutine).
-// It finishes the whole flow.
+// It finishes the whole flow execution.
+// FailNow must be called from the goroutine running the [Task.Action] function,
+// not from other goroutines created during its execution.
+// Calling FailNow does not stop those other goroutines.
 func (a *A) FailNow() {
 	a.Fail()
 	runtime.Goexit()
@@ -145,7 +147,7 @@ func (a *A) Skipped() bool {
 	return res
 }
 
-// Skip is equivalent to Log followed by SkipNow.
+// Skip is equivalent to [A.Log] followed by [A.SkipNow].
 func (a *A) Skip(args ...interface{}) {
 	if l, ok := a.logger.(interface {
 		Skip(w io.Writer, args ...interface{})
@@ -158,7 +160,7 @@ func (a *A) Skip(args ...interface{}) {
 	a.SkipNow()
 }
 
-// Skipf is equivalent to Logf followed by SkipNow.
+// Skipf is equivalent to [A.Logf] followed by [A.SkipNow].
 func (a *A) Skipf(format string, args ...interface{}) {
 	if l, ok := a.logger.(interface {
 		Skipf(w io.Writer, format string, args ...interface{})
@@ -175,7 +177,11 @@ func (a *A) Skipf(format string, args ...interface{}) {
 // (which then runs all deferred calls in the current goroutine).
 // If a test fails (see Error, Errorf, Fail) and is then skipped,
 // it is still considered to have failed.
-// Flow will continue at the next task.
+// The flow execution will continue at the next task.
+// See also [A.FailNow].
+// SkipNow must be called from the goroutine running the [Task.Action] function,
+// not from other goroutines created during its execution.
+// Calling SkipNow does not stop those other goroutines.
 func (a *A) SkipNow() {
 	a.mu.Lock()
 	a.skipped = true
@@ -183,8 +189,8 @@ func (a *A) SkipNow() {
 	runtime.Goexit()
 }
 
-// Helper calls logger's Helper method if implemented.
-// Is us used to mark the calling function as a helper function.
+// Helper marks the calling function as a helper function.
+// It calls logger's Helper method if implemented.
 // By default, when printing file and line information, that function will be skipped.
 func (a *A) Helper() {
 	if h, ok := a.logger.(interface {
@@ -194,8 +200,8 @@ func (a *A) Helper() {
 	}
 }
 
-// Cleanup registers a function to be called when task's action function completes.
-// Cleanup functions will be called in last added, first called order.
+// Cleanup registers a function to be called when [Task.Action] function completes.
+// Cleanup functions will be called in the last-added first-called order.
 func (a *A) Cleanup(fn func()) {
 	a.mu.Lock()
 	a.cleanups = append(a.cleanups, fn)
@@ -225,7 +231,7 @@ func (a *A) Setenv(key, value string) {
 
 // TempDir returns a temporary directory for the action to use.
 // The directory is automatically removed by Cleanup when the action completes.
-// Each subsequent call to t.TempDir returns a unique directory;
+// Each subsequent call to TempDir returns a unique directory;
 // if the directory creation fails, TempDir terminates the action by calling Fatal.
 func (a *A) TempDir() string {
 	a.Helper()

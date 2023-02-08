@@ -30,7 +30,7 @@ type (
 
 // NewRunner returns a task runner used by Flow.
 //
-// It can be useful when for testing and debugging
+// It can be useful for testing and debugging
 // a task action or middleware.
 //
 // The following defaults are set for Input
