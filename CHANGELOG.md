@@ -40,8 +40,8 @@ You can also find new supplemental features in
 - Add `Flow.SetLogger` for setting a custom log decorator
   that is used by `A` logging methods.
   If `Logger` implements
-  `Error`, `Errorf`, `Fatal`, `Fatalf`, `Skip`, `Skipf`
-  then they will be used by the `A` equivalent methods.
+  `Error`, `Errorf`, `Fatal`, `Fatalf`, `Skip`, `Skipf`,
+  they will be used by the `A` equivalent methods.
 - Add `Flow.Logger` for getting the log decorator (`CodeLineLogger` by default).
 - Add `CodeLineLogger` which is the default for `Flow.Logger`.
 - Add `FmtLogger` which is the default when using `NewRunner`.
