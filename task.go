@@ -1,6 +1,6 @@
 package goyek
 
-// Task represents a named task (target) that can have an action and dependencies.
+// Task represents a named task that can have action and dependencies.
 type Task struct {
 	// Name uniquely identifies the task.
 	// It cannot be empty and should be easily representable on the CLI.

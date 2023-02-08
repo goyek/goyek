@@ -134,14 +134,14 @@ func (f *Flow) isDefined(name string, flow *Flow) bool {
 	return ok
 }
 
-// Output returns the io.Writer used when printing.
-// os.Stdout by default.
+// Output returns the destination used for printing messages.
+// [os.Stdout] is returned if output was not set or was set to nil.
 func Output() io.Writer {
 	return DefaultFlow.Output()
 }
 
-// Output returns the io.Writer used when printing.
-// os.Stdout by default.
+// Output returns the destination used for printing messages.
+// [os.Stdout] is returned if output was not set or was set to nil.
 func (f *Flow) Output() io.Writer {
 	if f.output == nil {
 		return os.Stdout
@@ -149,24 +149,24 @@ func (f *Flow) Output() io.Writer {
 	return f.output
 }
 
-// SetOutput sets the io.Writer used when printing.
+// SetOutput sets the output destination.
 func SetOutput(out io.Writer) {
 	DefaultFlow.SetOutput(out)
 }
 
-// SetOutput sets the io.Writer used when printing.
+// SetOutput sets the output destination.
 func (f *Flow) SetOutput(out io.Writer) {
 	f.output = out
 }
 
-// GetLogger returns the logger used by A's logging functions.
-// CodeLineLogger by default.
+// GetLogger returns the logger used by A's logging functions
+// [CodeLineLogger] is returned if logger was not set or was set to nil.
 func GetLogger() Logger {
 	return DefaultFlow.Logger()
 }
 
-// Logger returns the logger used by A's logging functions.
-// CodeLineLogger by default.
+// Logger returns the logger used by A's logging functions
+// [CodeLineLogger] is returned if logger was not set or was set to nil.
 func (f *Flow) Logger() Logger {
 	if f.logger == nil {
 		return &CodeLineLogger{}
@@ -176,7 +176,7 @@ func (f *Flow) Logger() Logger {
 
 // SetLogger sets the logger used by A's logging functions.
 //
-// The A will additionally use following methods if implemented:
+// [A] uses following methods if implemented:
 //
 //	Error(w io.Writer, args ...interface{})
 //	Errorf(w io.Writer, format string, args ...interface{})
@@ -190,18 +190,30 @@ func SetLogger(logger Logger) {
 }
 
 // SetLogger sets the logger used by A's logging functions.
+//
+// [A] uses following methods if implemented:
+//
+//	Error(w io.Writer, args ...interface{})
+//	Errorf(w io.Writer, format string, args ...interface{})
+//	Fatal(w io.Writer, args ...interface{})
+//	Fatalf(w io.Writer, format string, args ...interface{})
+//	Skip(w io.Writer, args ...interface{})
+//	Skipf(w io.Writer, format string, args ...interface{})
+//	Helper()
 func (f *Flow) SetLogger(logger Logger) {
 	f.logger = logger
 }
 
-// Usage returns the function called when an error occurs while parsing tasks.
-// Print by default.
+// Usage returns a function that prints a usage message documenting the flow.
+// It is called when an error occurs while parsing the flow.
+// [Print] is returned if a function was not set or was set to nil.
 func Usage() func() {
 	return DefaultFlow.Usage()
 }
 
-// Usage returns the function called when an error occurs while parsing tasks.
-// Flow.Print by default.
+// Usage returns a function that prints a usage message documenting the flow.
+// It is called when an error occurs while parsing the flow.
+// [Flow.Print] is returned if a function was not set or was set to nil.
 func (f *Flow) Usage() func() {
 	if f.usage == nil {
 		return f.Print
@@ -220,13 +232,13 @@ func (f *Flow) SetUsage(fn func()) {
 }
 
 // Default returns the default task.
-// Returns nil of there is no default task.
+// nil is returned if default was not set.
 func Default() *DefinedTask {
 	return DefaultFlow.Default()
 }
 
 // Default returns the default task.
-// Returns nil of there is no default task.
+// nil is returned if default was not set.
 func (f *Flow) Default() *DefinedTask {
 	if f.defaultTask == nil {
 		return nil
@@ -255,12 +267,12 @@ func (f *Flow) SetDefault(task *DefinedTask) {
 	f.defaultTask = task.taskSnapshot
 }
 
-// Use adds task runner middlewares (iterceptors).
+// Use adds task runner middlewares (interceptors).
 func Use(middlewares ...Middleware) {
 	DefaultFlow.Use(middlewares...)
 }
 
-// Use adds task runner middlewares (iterceptors).
+// Use adds task runner middlewares (interceptors).
 func (f *Flow) Use(middlewares ...Middleware) {
 	for _, m := range middlewares {
 		if m == nil {
@@ -300,7 +312,7 @@ func Skip(tasks ...string) Option {
 	})
 }
 
-// FailError is returned by Flow.Execute when a task failed.
+// FailError pointer is returned by [Flow.Execute] when a task failed.
 type FailError struct {
 	Task string
 }
@@ -311,18 +323,18 @@ func (err *FailError) Error() string {
 
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-// Returns nil if no task has failed.
-// Returns FailError if a task failed.
-// Returns other error in case of invalid input or context error.
+// Returns nil if no task has failed,
+// [FailError] if a task failed,
+// other errors in case of invalid input or context error.
 func Execute(ctx context.Context, tasks []string, opts ...Option) error {
 	return DefaultFlow.Execute(ctx, tasks, opts...)
 }
 
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-// Returns nil if no task has failed.
-// Returns FailError if a task failed.
-// Returns other error in case of invalid input or context error.
+// Returns nil if no task has failed,
+// [FailError] if a task failed,
+// other errors in case of invalid input or context error.
 func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) error {
 	for _, task := range tasks {
 		if task == "" {
@@ -378,11 +390,12 @@ const (
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
-// or SIGINT was send to interrupt the execution.
-// 0 exit code means that non of the tasks failed.
-// 1 exit code means that a task has failed or the execution was interrupted.
-// 2 exit code means that the input was invalid.
-// Calls Usage when invalid args are provided.
+// or SIGINT interrupted the execution.
+//   - 0 exit code means that non of the tasks failed.
+//   - 1 exit code means that a task has failed or the execution was interrupted.
+//   - 2 exit code means that the input was invalid.
+//
+// Calls [Usage] when invalid args are provided.
 func Main(args []string, opts ...Option) {
 	DefaultFlow.Main(args, opts...)
 }
@@ -390,11 +403,12 @@ func Main(args []string, opts ...Option) {
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
-// or SIGINT was send to interrupt the execution.
-// 0 exit code means that non of the tasks failed.
-// 1 exit code means that a task has failed or the execution was interrupted.
-// 2 exit code means that the input was invalid.
-// Calls Usage when invalid args are provided.
+// or SIGINT interrupted the execution.
+//   - 0 exit code means that non of the tasks failed.
+//   - 1 exit code means that a task has failed or the execution was interrupted.
+//   - 2 exit code means that the input was invalid.
+//
+// Calls [Usage] when invalid args are provided.
 func (f *Flow) Main(args []string, opts ...Option) {
 	out := f.Output()
 
@@ -438,16 +452,14 @@ func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	return exitCodePass
 }
 
-// Print prints, to os.Stdout unless configured otherwise,
-// the information about the registered tasks.
-// Tasks with empty Usage are not printed.
+// Print prints the information about the registered tasks.
+// Tasks with empty [Task.Usage] are not printed.
 func Print() {
 	DefaultFlow.Print()
 }
 
-// Print prints, to os.Stdout unless configured otherwise,
-// the information about the registered tasks.
-// Tasks with empty Usage are not printed.
+// Print prints the information about the registered tasks.
+// Tasks with empty [Task.Usage] are not printed.
 func (f *Flow) Print() {
 	out := f.Output()
 

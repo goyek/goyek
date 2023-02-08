@@ -181,33 +181,32 @@ to register a a task.
 
 You can add dependencies to already defineded tasks using
 [`Task.Deps`](https://pkg.go.dev/github.com/goyek/goyek/v2#Task.Deps).
-The dependencies are run in sequential order.
-Each task will be run at most once.
+The dependencies are running in sequential order.
+Each task runs at most once.
 
 The [`Task.Action`](https://pkg.go.dev/github.com/goyek/goyek/v2#Task.Action)
-is a function which is executed when a task is run.
+is a function which executes when a task is running.
 A task can have only dependencies and no action to act as a pipeline.
 
 A default task can be assigned using [`SetDefault`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetDefault).
-The default task is run, when no task is provided.
 
 ## Running programs
 
 You can use the [`cmd.Exec`](https://pkg.go.dev/github.com/goyek/x/cmd#Exec)
 convenient function from [goyek/x](https://github.com/goyek/x)
-which should cover most use cases.
+that should cover most use cases.
 
 Alternatively, you may prefer create your own helpers
 like `Exec` in [build/exec.go](build/exec.go).
 
 [#60](https://github.com/goyek/goyek/issues/60) and [#307](https://github.com/goyek/goyek/issues/307)
-explain why this feature is not included out-of-the-box.
+explain why this feature is not out-of-the-box.
 
 ## Wrapper scripts
 
 Instead of executing `go run ./build`,
-you can use the wrapper scripts,
-which can be invoked from any location.
+you may create wrapper scripts,
+which you can invoke from any locationn.
 
 Bash - `goyek.sh`:
 
@@ -228,14 +227,14 @@ exit $global:LASTEXITCODE
 ```
 
 If `/build` is a separate Go module,
-then check the [goyek.sh](goyek.sh) and [goyek.ps1](goyek.ps1) scripts.
+check the [goyek.sh](goyek.sh) and [goyek.ps1](goyek.ps1) scripts.
 
 ## Using middlewares
 
 Call the [`Use`](https://pkg.go.dev/github.com/goyek/goyek/v2#Use) function
 to setup a task runner interceptor (middleware).
 
-You can use a middleware for example to:
+You can use a middleware, for example to:
 generate a task execution report,
 add retry logic,
 export build execution telemetry, etc.
@@ -245,7 +244,7 @@ You can use some reusable middlewares from the
 package. [`ReportStatus`](https://pkg.go.dev/github.com/goyek/goyek/v2/middleware#ReportStatus)
 is the most commonly used middleware.
 
-Take notice that the [`boot.Main`](https://pkg.go.dev/github.com/goyek/x/boot#Main)
+Notice that the [`boot.Main`](https://pkg.go.dev/github.com/goyek/x/boot#Main)
 convenient function from [goyek/x](https://github.com/goyek/x)
 sets the most commonly used middlewares and defines flags to configure them.
 
@@ -257,10 +256,10 @@ You can customize the default output by using:
 - [`SetLogger`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetLogger)
 - [`SetUsage`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetUsage)
 - [`Execute`](https://pkg.go.dev/github.com/goyek/goyek/v2#Execute)
-  instead of [`Main`](https://pkg.go.dev/github.com/goyek/goyek/v2#Main)
+  (instead of [`Main`](https://pkg.go.dev/github.com/goyek/goyek/v2#Main))
 
-You can take a look at [github.com/goyek/x](https://github.com/goyek/x)
-to find out, how it is customizing the default behavior.
+You can also study how [github.com/goyek/x](https://github.com/goyek/x)
+is customizing the default behavior.
 
 ## Alternatives
 
@@ -284,14 +283,14 @@ which results in some drawbacks.
 
 - It requires using [build tags](https://magefile.org/magefiles/).
 - Reusing tasks is [hacky](https://magefile.org/importing/).
-- It requires installation or using [zero install option](https://magefile.org/zeroinstall/)
+- It needs installation or use of [zero install option](https://magefile.org/zeroinstall/),
   which is slow.
 - Debugging is [complex](https://github.com/magefile/mage/issues/280).
-- It is magical by design (of course one may like it).
+- It is magical by design (of course, one may like it).
 
 **goyek** is a non-magical alternative for [Mage](https://github.com/magefile/mage).
 It is easier to customize and extend as it is a library that offers extension points.
-Write regular Go code without build tags, special function names and tricky imports.
+Write regular Go code without build tags and tricky imports.
 
 ### Task
 
@@ -300,8 +299,7 @@ than [Make](https://www.gnu.org/software/make/),
 but it still has similar problems:
 
 - Requires to learn Task's YAML structure and
-  the [minimalistic, cross-platform interpreter](https://github.com/mvdan/sh#gosh)
-  which it uses.
+  the [minimalistic, cross-platform interpreter](https://github.com/mvdan/sh#gosh).
 - Debugging and testing tasks is not easy.
 - Hard to make reusable tasks.
 - Requires to install the tool.
