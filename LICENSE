@@ -22,5 +22,7 @@ SOFTWARE.
 
 The Initial Developer of some parts of the software, which are copied from,
 or derived from the Go standard library (https://cs.opensource.google/go/go),
+which is available under the MIT License
+(https://cs.opensource.google/go/go/+/master:LICENSE),
 are The Go Authors.
 Copyright (c) 2009 The Go Authors. All rights reserved.
