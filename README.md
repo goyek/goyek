@@ -87,7 +87,7 @@ import (
 	"flag"
 
 	"github.com/goyek/goyek/v2"
-	"github.com/goyek/goyek/x/cmd"
+	"github.com/goyek/x/cmd"
 )
 
 var msg = flag.String("msg", "greeting message", "Hello world!")
@@ -109,7 +109,7 @@ package main
 
 import (
 	"github.com/goyek/goyek/v2"
-	"github.com/goyek/goyek/x/boot"
+	"github.com/goyek/x/boot"
 )
 
 func main() {
