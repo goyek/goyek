@@ -11,9 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.4.0
-      - uses: actions/setup-go@v3.5.0
+      - uses: actions/setup-go@v4.0.0
         with:
           go-version: '1.20'
+          cache-dependency-path: build/go.sum
       - run: go run . -v ci
         working-directory: build
       - name: Upload HTML coverage
@@ -44,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.4.0
-      - uses: actions/setup-go@v3.5.0
+      - uses: actions/setup-go@v4.0.0
         with:
           go-version: ${{ matrix.go-version }}
       - run: go test -race ./...
@@ -53,16 +54,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.4.0
-      - uses: actions/setup-go@v3.5.0
+      - uses: actions/setup-go@v4.0.0
         with:
           go-version: '1.20'
+          cache-dependency-path: build/go.sum
       - run: ./goyek.sh -h
 
   pwsh-script:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3.4.0
-      - uses: actions/setup-go@v3.5.0
+      - uses: actions/setup-go@v4.0.0
         with:
           go-version: '1.20'
+          cache-dependency-path: build/go.sum
       - run: .\goyek.ps1 -h
