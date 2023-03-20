@@ -188,35 +188,35 @@ type helperLoggerSpy struct {
 	called bool
 }
 
-func (l *helperLoggerSpy) Log(w io.Writer, args ...interface{}) {
+func (l *helperLoggerSpy) Log(_ io.Writer, _ ...interface{}) {
 	l.called = true
 }
 
-func (l *helperLoggerSpy) Logf(w io.Writer, format string, args ...interface{}) {
+func (l *helperLoggerSpy) Logf(_ io.Writer, _ string, _ ...interface{}) {
 	l.called = true
 }
 
-func (l *helperLoggerSpy) Error(w io.Writer, args ...interface{}) {
+func (l *helperLoggerSpy) Error(_ io.Writer, _ ...interface{}) {
 	l.called = true
 }
 
-func (l *helperLoggerSpy) Errorf(w io.Writer, format string, args ...interface{}) {
+func (l *helperLoggerSpy) Errorf(_ io.Writer, _ string, _ ...interface{}) {
 	l.called = true
 }
 
-func (l *helperLoggerSpy) Fatal(w io.Writer, args ...interface{}) {
+func (l *helperLoggerSpy) Fatal(_ io.Writer, _ ...interface{}) {
 	l.called = true
 }
 
-func (l *helperLoggerSpy) Fatalf(w io.Writer, format string, args ...interface{}) {
+func (l *helperLoggerSpy) Fatalf(_ io.Writer, _ string, _ ...interface{}) {
 	l.called = true
 }
 
-func (l *helperLoggerSpy) Skip(w io.Writer, args ...interface{}) {
+func (l *helperLoggerSpy) Skip(_ io.Writer, _ ...interface{}) {
 	l.called = true
 }
 
-func (l *helperLoggerSpy) Skipf(w io.Writer, format string, args ...interface{}) {
+func (l *helperLoggerSpy) Skipf(_ io.Writer, _ string, _ ...interface{}) {
 	l.called = true
 }
 
