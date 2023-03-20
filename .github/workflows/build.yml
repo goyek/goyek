@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.4.0
-      - uses: actions/setup-go@v3.5.0
+      - uses: actions/setup-go@v4.0.0
         with:
           go-version: '1.20'
       - run: go run . -v ci
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.4.0
-      - uses: actions/setup-go@v3.5.0
+      - uses: actions/setup-go@v4.0.0
         with:
           go-version: ${{ matrix.go-version }}
       - run: go test -race ./...
@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.4.0
-      - uses: actions/setup-go@v3.5.0
+      - uses: actions/setup-go@v4.0.0
         with:
           go-version: '1.20'
       - run: ./goyek.sh -h
@@ -62,7 +62,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3.4.0
-      - uses: actions/setup-go@v3.5.0
+      - uses: actions/setup-go@v4.0.0
         with:
           go-version: '1.20'
       - run: .\goyek.ps1 -h
