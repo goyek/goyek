@@ -14,6 +14,7 @@ jobs:
       - uses: actions/setup-go@v4.0.0
         with:
           go-version: '1.20'
+          cache-dependency-path: build/go.sum
       - run: go run . -v ci
         working-directory: build
       - name: Upload HTML coverage
@@ -56,6 +57,7 @@ jobs:
       - uses: actions/setup-go@v4.0.0
         with:
           go-version: '1.20'
+          cache-dependency-path: build/go.sum
       - run: ./goyek.sh -h
 
   pwsh-script:
@@ -65,4 +67,5 @@ jobs:
       - uses: actions/setup-go@v4.0.0
         with:
           go-version: '1.20'
+          cache-dependency-path: build/go.sum
       - run: .\goyek.ps1 -h
