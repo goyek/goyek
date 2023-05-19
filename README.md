@@ -216,7 +216,7 @@ set -euo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 cd "$DIR"
-go run ./build $@
+go run ./build "$@"
 ```
 
 PowerShell - `goyek.ps1`:
