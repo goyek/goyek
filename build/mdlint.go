@@ -23,7 +23,7 @@ var mdlint = goyek.Define(goyek.Task{
 		if len(mdFiles) == 0 {
 			a.Skip("no .md files")
 		}
-		dockerImage := "ghcr.io/igorshubovych/markdownlint-cli:v0.35.0"
+		dockerImage := "ghcr.io/igorshubovych/markdownlint-cli:v0.36.0"
 		Exec(a, dirRoot, "docker run --rm -v '"+curDir+":/workdir' "+dockerImage+" "+strings.Join(mdFiles, " "))
 	},
 })
