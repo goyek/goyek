@@ -6,7 +6,7 @@ replace github.com/goyek/goyek/v2 => ../
 
 require (
 	github.com/client9/misspell v0.3.4
-	github.com/golangci/golangci-lint v1.55.1
+	github.com/golangci/golangci-lint v1.55.2
 	github.com/goyek/goyek/v2 v2.0.0-00010101000000-000000000000
 	github.com/mattn/go-shellwords v1.0.12
 )
@@ -36,7 +36,7 @@ require (
 	github.com/bombsimon/wsl/v3 v3.4.0 // indirect
 	github.com/breml/bidichk v0.2.7 // indirect
 	github.com/breml/errchkjson v0.3.6 // indirect
-	github.com/butuzov/ireturn v0.2.1 // indirect
+	github.com/butuzov/ireturn v0.2.2 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
 	github.com/catenacyber/perfsprint v0.2.0 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
@@ -119,7 +119,7 @@ require (
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/nishanths/exhaustive v0.11.0 // indirect
 	github.com/nishanths/predeclared v0.2.2 // indirect
-	github.com/nunnatsa/ginkgolinter v0.14.0 // indirect
+	github.com/nunnatsa/ginkgolinter v0.14.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
