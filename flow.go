@@ -371,7 +371,7 @@ func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) erro
 	}
 
 	r := &executor{
-		output:      f.Output(),
+		output:      &syncWriter{Writer: f.Output()},
 		defined:     f.tasks,
 		logger:      f.Logger(),
 		middlewares: middlewares,

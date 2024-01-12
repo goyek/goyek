@@ -78,7 +78,7 @@ func (r taskRunner) run(in Input) Result {
 	a := &A{
 		ctx:    ctx,
 		name:   in.TaskName,
-		output: &syncWriter{Writer: out},
+		output: out,
 		logger: logger,
 	}
 

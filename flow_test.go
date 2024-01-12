@@ -752,3 +752,28 @@ func TestFlow_Parallel(t *testing.T) {
 
 	assertPass(t, err, "should pass")
 }
+
+func Test_Parallel_concurrent_printing(t *testing.T) {
+	out := &strings.Builder{}
+	flow := &goyek.Flow{}
+	flow.SetOutput(out)
+	flow.Define(goyek.Task{
+		Name:     "task-1",
+		Parallel: true,
+		Action: func(a *goyek.A) {
+			a.Log("from 1")
+		},
+	})
+	flow.Define(goyek.Task{
+		Name:     "task-2",
+		Parallel: true,
+		Action: func(a *goyek.A) {
+			a.Log("from 2")
+		},
+	})
+
+	_ = flow.Execute(context.Background(), []string{"task-1", "task-2"})
+
+	assertContains(t, out, "from 1", "should contain log from task-1")
+	assertContains(t, out, "from 2", "should contain log from task-2")
+}
