@@ -16,6 +16,7 @@ type (
 	Input struct {
 		Context  context.Context
 		TaskName string
+		Parallel bool
 		Output   io.Writer
 		Logger   Logger
 	}

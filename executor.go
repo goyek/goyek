@@ -147,6 +147,7 @@ func (r *executor) runTask(ctx context.Context, task *taskSnapshot) error {
 	in := Input{
 		Context:  ctx,
 		TaskName: task.name,
+		Parallel: task.parallel,
 		Output:   r.output,
 		Logger:   r.logger,
 	}
