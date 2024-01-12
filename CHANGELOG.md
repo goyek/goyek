@@ -13,7 +13,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Add `Task.Parallel` to allow running tasks in parallel.
 - Add `middleware.BufferParallel` that helps in not getting mixed output from
   parallel tasks execution.
-- Add `Input.Parallel` to allow middlewares to have special handling for parallel tasks.
+- Add `Input.Parallel` to allow middlewares to have special handling for
+  parallel tasks.
 
 ## [2.0.0](https://github.com/goyek/goyek/compare/v1.1.0...v2.0.0) - 2023-02-08
 
