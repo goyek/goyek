@@ -15,36 +15,24 @@ type executor struct {
 
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
+
+//nolint:funlen,gocyclo // This alogorithm is complex.
 func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []string) error {
-	tasksToSkip := map[string]bool{}
+	executed := map[string]bool{}
 	for _, skipTask := range skipTasks {
-		tasksToSkip[skipTask] = true
+		executed[skipTask] = true
 	}
 
-	executedTasks := map[string]bool{}
-	return r.run(ctx, tasks, executedTasks, tasksToSkip)
-}
-
-// run iterativly processes the tasks, but runs them in parallel if possible.
-//
-//nolint:funlen,gocyclo // This alogorithm is complex.
-func (r *executor) run(ctx context.Context, tasks []string, executed, tasksToSkip map[string]bool) error {
 	for len(tasks) > 0 {
 		name := tasks[0]
 		tasks = tasks[1:]
 		task := r.defined[name]
-		if tasksToSkip[name] {
-			continue
-		}
 		if executed[name] {
 			continue
 		}
 		if !r.noDeps && len(task.deps) > 0 {
 			deps := make([]string, 0, len(task.deps))
 			for _, dep := range task.deps {
-				if tasksToSkip[dep.name] {
-					continue
-				}
 				if executed[dep.name] {
 					continue
 				}
@@ -75,9 +63,6 @@ func (r *executor) run(ctx context.Context, tasks []string, executed, tasksToSki
 		// Find all parallel tasks that have not beed run
 		// and have no dependencies.
 		for _, other := range tasks {
-			if tasksToSkip[other] {
-				continue
-			}
 			if executed[other] {
 				continue
 			}
@@ -95,9 +80,6 @@ func (r *executor) run(ctx context.Context, tasks []string, executed, tasksToSki
 
 			var hasDep bool
 			for _, dep := range task.deps {
-				if tasksToSkip[dep.name] {
-					continue
-				}
 				if executed[dep.name] {
 					continue
 				}
