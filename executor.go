@@ -111,7 +111,7 @@ func (r *executor) canRunTask(task *taskSnapshot, executed map[string]bool) bool
 		if executed[dep.name] {
 			continue
 		}
-		// The task has a not executed dependency.
+		// The task has a dependency which is not executed yet.
 		return false
 	}
 	return true
