@@ -6,7 +6,6 @@
 [![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
 [![GitHub Release](https://img.shields.io/github/v/release/goyek/goyek)](https://github.com/goyek/goyek/releases)
 [![go.mod](https://img.shields.io/github/go-mod/go-version/goyek/goyek)](go.mod)
-[![LICENSE](https://img.shields.io/github/license/goyek/goyek)](LICENSE)
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/goyek/goyek/build.yml?branch=main)](https://github.com/goyek/goyek/actions?query=workflow%3Abuild+branch%3Amain)
 [![Go Report Card](https://goreportcard.com/badge/github.com/goyek/goyek)](https://goreportcard.com/report/github.com/goyek/goyek)
@@ -216,7 +215,7 @@ set -euo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 cd "$DIR"
-go run ./build $@
+go run ./build "$@"
 ```
 
 PowerShell - `goyek.ps1`:
