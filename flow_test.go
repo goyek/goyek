@@ -728,3 +728,25 @@ func TestSkip_shared_dep(t *testing.T) {
 	assertTrue(t, otherRun, "other should have run")
 	assertTrue(t, depRun, "dep should have run")
 }
+
+func TestFlow_Parallel(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(ioutil.Discard)
+	ch := make(chan struct{})
+	flow.Define(goyek.Task{
+		Name: "task-1",
+		Action: func(a *goyek.A) {
+			ch <- struct{}{}
+		},
+	})
+	flow.Define(goyek.Task{
+		Name: "task-2",
+		Action: func(a *goyek.A) {
+			<-ch
+		},
+	})
+
+	err := flow.Execute(context.Background(), []string{"task-1", "task-2"})
+
+	assertPass(t, err, "should pass")
+}
