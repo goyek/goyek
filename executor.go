@@ -15,8 +15,6 @@ type executor struct {
 
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-
-//nolint:funlen,gocyclo // This alogorithm is complex.
 func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []string) error {
 	executed := map[string]bool{}
 	for _, skipTask := range skipTasks {
@@ -39,6 +37,7 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 				deps = append(deps, dep.name)
 			}
 			if len(deps) > 0 {
+				// Add dependencies to be run first.
 				deps = append(deps, name)
 				tasks = append(deps, tasks...)
 				continue
@@ -63,32 +62,10 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 		// Find all parallel tasks that have not beed run
 		// and have no dependencies.
 		for _, other := range tasks {
-			if executed[other] {
-				continue
-			}
 			nextTask := r.defined[other]
-			if !nextTask.parallel {
-				// We cannot run a non-parallel task in parallel.
+			if !r.canRunTask(nextTask, executed) {
 				continue
 			}
-
-			if r.noDeps {
-				// Dependencies are not honored so we can just run the task.
-				tasksToRun = append(tasksToRun, nextTask)
-				continue
-			}
-
-			var hasDep bool
-			for _, dep := range task.deps {
-				if executed[dep.name] {
-					continue
-				}
-				hasDep = true
-			}
-			if hasDep {
-				continue
-			}
-
 			// Parallel task has no not-executed dependencies so we can run it.
 			tasksToRun = append(tasksToRun, nextTask)
 		}
@@ -114,6 +91,30 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 	}
 
 	return nil
+}
+
+func (r *executor) canRunTask(task *taskSnapshot, executed map[string]bool) bool {
+	if executed[task.name] {
+		return false
+	}
+	if !task.parallel {
+		// We cannot run a non-parallel task in parallel.
+		return false
+	}
+
+	if r.noDeps {
+		// Dependencies are not honored so we can just run the task.
+		return true
+	}
+
+	for _, dep := range task.deps {
+		if executed[dep.name] {
+			continue
+		}
+		// The task has a not executed dependency.
+		return false
+	}
+	return true
 }
 
 func (r *executor) runTask(ctx context.Context, task *taskSnapshot) error {
