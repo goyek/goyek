@@ -48,12 +48,13 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 			return err
 		}
 
+		executed[name] = true
+
 		if !task.parallel {
 			// Run task sychronously.
 			if err := r.runTask(ctx, task); err != nil {
 				return err
 			}
-			executed[name] = true
 			continue
 		}
 
@@ -67,6 +68,7 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 				continue
 			}
 			// Parallel task has no not-executed dependencies so we can run it.
+			executed[nextTask.name] = true
 			tasksToRun = append(tasksToRun, nextTask)
 		}
 
@@ -78,7 +80,6 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 			go func() {
 				errCh <- r.runTask(ctx, parallelTask)
 			}()
-			executed[parallelTask.name] = true
 		}
 		for range tasksToRun {
 			if runErr := <-errCh; runErr != nil {

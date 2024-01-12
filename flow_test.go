@@ -753,6 +753,70 @@ func TestFlow_Parallel(t *testing.T) {
 	assertPass(t, err, "should pass")
 }
 
+func TestFlow_Parallel_complex(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(ioutil.Discard)
+
+	var executed int
+
+	taskSync := flow.Define(goyek.Task{
+		Name: "task-sync-1",
+	})
+	taskSync2 := flow.Define(goyek.Task{
+		Name: "task-sync-2",
+	})
+	flow.Define(goyek.Task{
+		Name: "task-sync-3",
+	})
+
+	flow.Define(goyek.Task{
+		Name:     "task-1",
+		Parallel: true,
+		Deps:     goyek.Deps{taskSync},
+		Action:   func(a *goyek.A) { executed++ },
+	})
+	flow.Define(goyek.Task{
+		Name:     "task-2",
+		Parallel: true,
+		Action: func(a *goyek.A) {
+			a.FailNow()
+		},
+		Deps: goyek.Deps{taskSync, taskSync2},
+	})
+
+	err := flow.Execute(context.Background(), []string{"task-1", "task-2", "task-sync-1", "task-sync-3", "task-1"})
+
+	assertFail(t, err, "should return error from parallel task")
+	assertEqual(t, executed, 1, "should execute parallel task only once")
+}
+
+func TestFlow_Parallel_NoDeps(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(ioutil.Discard)
+	depNotRun := true
+	dep := flow.Define(goyek.Task{
+		Name: "dep",
+		Action: func(a *goyek.A) {
+			depNotRun = false
+		},
+	})
+	flow.Define(goyek.Task{
+		Name:     "task",
+		Parallel: true,
+		Deps:     goyek.Deps{dep},
+	})
+	flow.Define(goyek.Task{
+		Name:     "task-2",
+		Parallel: true,
+		Deps:     goyek.Deps{dep},
+	})
+
+	err := flow.Execute(context.Background(), []string{"task", "task-2"}, goyek.NoDeps())
+
+	assertPass(t, err, "should pass")
+	assertTrue(t, depNotRun, "deps should not have run")
+}
+
 func Test_Parallel_concurrent_printing(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
