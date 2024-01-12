@@ -734,13 +734,15 @@ func TestFlow_Parallel(t *testing.T) {
 	flow.SetOutput(ioutil.Discard)
 	ch := make(chan struct{})
 	flow.Define(goyek.Task{
-		Name: "task-1",
+		Name:     "task-1",
+		Parallel: true,
 		Action: func(a *goyek.A) {
 			ch <- struct{}{}
 		},
 	})
 	flow.Define(goyek.Task{
-		Name: "task-2",
+		Name:     "task-2",
+		Parallel: true,
 		Action: func(a *goyek.A) {
 			<-ch
 		},
