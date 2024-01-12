@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
+## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0...HEAD)
+
+### Added
+
+- Add `Task.Parallel` to allow running tasks in parallel.
+- Add `middleware.BufferParallel` that helps in not getting mixed output from
+  parallel tasks execution.
+
 ## [2.0.0](https://github.com/goyek/goyek/compare/v1.1.0...v2.0.0) - 2023-02-08
 
 This release contains many **breaking changes**

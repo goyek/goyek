@@ -187,6 +187,9 @@ The [`Task.Action`](https://pkg.go.dev/github.com/goyek/goyek/v2#Task.Action)
 is a function which executes when a task is running.
 A task can have only dependencies and no action to act as a pipeline.
 
+The [`Task.Parallel`](https://pkg.go.dev/github.com/goyek/goyek/v2#Task.Parallel)
+can be set to allow a task to be run in parallel with other parallel tasks.
+
 A default task can be assigned using [`SetDefault`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetDefault).
 
 ## Running programs
