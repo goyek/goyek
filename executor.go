@@ -16,22 +16,22 @@ type executor struct {
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []string) error {
-	executed := map[string]bool{}
+	visited := map[string]bool{}
 	for _, skipTask := range skipTasks {
-		executed[skipTask] = true
+		visited[skipTask] = true
 	}
 
 	for len(tasks) > 0 {
 		name := tasks[0]
 		tasks = tasks[1:]
 		task := r.defined[name]
-		if executed[name] {
+		if visited[name] {
 			continue
 		}
 		if !r.noDeps && len(task.deps) > 0 {
 			deps := make([]string, 0, len(task.deps))
 			for _, dep := range task.deps {
-				if executed[dep.name] {
+				if visited[dep.name] {
 					continue
 				}
 				deps = append(deps, dep.name)
@@ -48,7 +48,7 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 			return err
 		}
 
-		executed[name] = true
+		visited[name] = true
 
 		if !task.parallel {
 			// Run task sychronously.
@@ -64,11 +64,11 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 		// and have no dependencies.
 		for _, other := range tasks {
 			nextTask := r.defined[other]
-			if !r.canRunTask(nextTask, executed) {
+			if !r.canRunTask(nextTask, visited) {
 				continue
 			}
-			// Parallel task has no not-executed dependencies so we can run it.
-			executed[nextTask.name] = true
+			// Parallel task has none not-executed dependencies so we can run it.
+			visited[nextTask.name] = true
 			tasksToRun = append(tasksToRun, nextTask)
 		}
 
@@ -81,8 +81,8 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 	return nil
 }
 
-func (r *executor) canRunTask(task *taskSnapshot, executed map[string]bool) bool {
-	if executed[task.name] {
+func (r *executor) canRunTask(task *taskSnapshot, visited map[string]bool) bool {
+	if visited[task.name] {
 		return false
 	}
 	if !task.parallel {
@@ -96,7 +96,7 @@ func (r *executor) canRunTask(task *taskSnapshot, executed map[string]bool) bool
 	}
 
 	for _, dep := range task.deps {
-		if executed[dep.name] {
+		if visited[dep.name] {
 			continue
 		}
 		// The task has a dependency which is not executed yet.
