@@ -73,20 +73,7 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 		}
 
 		// Run parallel tasks.
-		var err error
-		errCh := make(chan error, len(tasksToRun))
-		for _, parallelTask := range tasksToRun {
-			parallelTask := parallelTask
-			go func() {
-				errCh <- r.runTask(ctx, parallelTask)
-			}()
-		}
-		for range tasksToRun {
-			if runErr := <-errCh; runErr != nil {
-				err = runErr
-			}
-		}
-		if err != nil {
+		if err := r.runParallelTasks(ctx, tasksToRun); err != nil {
 			return err
 		}
 	}
@@ -116,6 +103,23 @@ func (r *executor) canRunTask(task *taskSnapshot, executed map[string]bool) bool
 		return false
 	}
 	return true
+}
+
+func (r *executor) runParallelTasks(ctx context.Context, tasks []*taskSnapshot) error {
+	var err error
+	errCh := make(chan error, len(tasks))
+	for _, parallelTask := range tasks {
+		parallelTask := parallelTask
+		go func() {
+			errCh <- r.runTask(ctx, parallelTask)
+		}()
+	}
+	for range tasks {
+		if runErr := <-errCh; runErr != nil {
+			err = runErr
+		}
+	}
+	return err
 }
 
 func (r *executor) runTask(ctx context.Context, task *taskSnapshot) error {
