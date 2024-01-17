@@ -35,10 +35,11 @@ type Middleware func(Runner) Runner
 
 // taskSnapshot is a copy of the task to make the flow usage safer.
 type taskSnapshot struct {
-	name   string
-	usage  string
-	deps   []*taskSnapshot
-	action func(a *A)
+	name     string
+	usage    string
+	deps     []*taskSnapshot
+	action   func(a *A)
+	parallel bool
 }
 
 // Tasks returns all tasks sorted in lexicographical order.
@@ -81,10 +82,11 @@ func (f *Flow) Define(task Task) *DefinedTask {
 		deps = append(deps, dep.taskSnapshot)
 	}
 	taskCopy := &taskSnapshot{
-		name:   task.Name,
-		usage:  task.Usage,
-		deps:   deps,
-		action: task.Action,
+		name:     task.Name,
+		usage:    task.Usage,
+		deps:     deps,
+		action:   task.Action,
+		parallel: task.Parallel,
 	}
 	f.tasks[task.Name] = taskCopy
 	return &DefinedTask{taskCopy, f}
@@ -369,7 +371,7 @@ func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) erro
 	}
 
 	r := &executor{
-		output:      f.Output(),
+		output:      &syncWriter{Writer: f.Output()},
 		defined:     f.tasks,
 		logger:      f.Logger(),
 		middlewares: middlewares,

@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
-	"sync"
 )
 
 // Task runner types.
@@ -16,6 +15,7 @@ type (
 	Input struct {
 		Context  context.Context
 		TaskName string
+		Parallel bool
 		Output   io.Writer
 		Logger   Logger
 	}
@@ -77,7 +77,7 @@ func (r taskRunner) run(in Input) Result {
 	a := &A{
 		ctx:    ctx,
 		name:   in.TaskName,
-		output: &syncWriter{Writer: out},
+		output: out,
 		logger: logger,
 	}
 
@@ -97,15 +97,4 @@ func (r taskRunner) run(in Input) Result {
 		res.PanicStack = panicStack
 	}
 	return res
-}
-
-type syncWriter struct {
-	io.Writer
-	mtx sync.Mutex
-}
-
-func (w *syncWriter) Write(p []byte) (int, error) {
-	defer func() { w.mtx.Unlock() }()
-	w.mtx.Lock()
-	return w.Writer.Write(p)
 }

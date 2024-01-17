@@ -16,6 +16,10 @@ type Task struct {
 	// Deps is a collection of defined tasks
 	// that need to be run before this task is executed.
 	Deps Deps
+
+	// Parallel marks that this task can be run in parallel
+	// with (and only with) other parallel tasks.
+	Parallel bool
 }
 
 // DefinedTask represents a task that has been defined.
