@@ -8,6 +8,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.0.0...HEAD)
 
+This release adds parallel task execution support.
+
 ### Added
 
 - Add `Task.Parallel` to allow running tasks in parallel.
