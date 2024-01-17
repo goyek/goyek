@@ -1,4 +1,4 @@
 /*
-Package goyek helps implementing build automation.
+Package goyek helps implementing task automation.
 */
 package goyek

@@ -1,6 +1,6 @@
 # goyek
 
-> Build automation in Go
+> Task automation in Go
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/goyek/goyek.svg)](https://pkg.go.dev/github.com/goyek/goyek/v2)
 [![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
@@ -42,7 +42,7 @@ Table of Contents:
 ## Description
 
 **goyek** (/ˈɡɔɪæk/ [🔊 listen](http://ipa-reader.xyz/?text=%CB%88%C9%A1%C9%94%C9%AA%C3%A6k))
-is used to create build automation in Go.
+is a task automation tool.
 As opposed to many other tools, it is just a Go library
 with API inspired by
 [`testing`](https://golang.org/pkg/testing),
@@ -239,7 +239,7 @@ to setup a task runner interceptor (middleware).
 You can use a middleware, for example to:
 generate a task execution report,
 add retry logic,
-export build execution telemetry, etc.
+export task execution telemetry, etc.
 
 You can use some reusable middlewares from the
 [`middleware`](https://pkg.go.dev/github.com/goyek/goyek/v2/middleware)
