@@ -62,8 +62,8 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 
 		// Find all parallel tasks that have not beed run
 		// and have no dependencies.
-		for _, other := range tasks {
-			nextTask := r.defined[other]
+		for _, next := range tasks {
+			nextTask := r.defined[next]
 			if !r.canRunTask(nextTask, visited) {
 				continue
 			}
