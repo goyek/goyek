@@ -208,7 +208,7 @@ explain why this feature is not out-of-the-box.
 
 Instead of executing `go run ./build`,
 you may create wrapper scripts,
-which you can invoke from any locationn.
+which you can invoke from any location.
 
 Bash - `goyek.sh`:
 
