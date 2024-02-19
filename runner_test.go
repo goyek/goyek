@@ -15,7 +15,7 @@ func TestRunner(t *testing.T) {
 		{
 			desc:   "pass",
 			want:   goyek.Result{Status: goyek.StatusPassed},
-			action: func(a *goyek.A) {},
+			action: func(*goyek.A) {},
 		},
 		{
 			desc:   "fail",
@@ -50,7 +50,7 @@ func TestRunner(t *testing.T) {
 
 func TestRunner_panic(t *testing.T) {
 	payload := "panicked"
-	r := goyek.NewRunner(func(a *goyek.A) { panic(payload) })
+	r := goyek.NewRunner(func(*goyek.A) { panic(payload) })
 
 	got := r(goyek.Input{})
 

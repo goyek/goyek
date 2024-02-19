@@ -39,7 +39,7 @@ func TestReportStatus(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sb := &strings.Builder{}
-			r := goyek.Runner(func(i goyek.Input) goyek.Result { return goyek.Result{Status: tt.status} })
+			r := goyek.Runner(func(goyek.Input) goyek.Result { return goyek.Result{Status: tt.status} })
 			r = middleware.ReportStatus(r)
 
 			r(goyek.Input{TaskName: taskName, Output: sb})
@@ -69,7 +69,7 @@ func TestReportStatus(t *testing.T) {
 	for _, tt := range panicTests {
 		t.Run(tt.name, func(t *testing.T) {
 			sb := &strings.Builder{}
-			r := goyek.Runner(func(i goyek.Input) goyek.Result {
+			r := goyek.Runner(func(goyek.Input) goyek.Result {
 				return goyek.Result{PanicStack: []byte("stacktrace"), PanicValue: tt.panicPayload}
 			})
 			r = middleware.ReportStatus(r)
