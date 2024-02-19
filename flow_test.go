@@ -196,15 +196,15 @@ func Test_task_panics(t *testing.T) {
 	}{
 		{
 			desc:   "regular panic",
-			action: func(a *goyek.A) { panic("panicked!") },
+			action: func(*goyek.A) { panic("panicked!") },
 		},
 		{
 			desc:   "nil panic",
-			action: func(a *goyek.A) { panic(nil) },
+			action: func(*goyek.A) { panic(nil) },
 		},
 		{
 			desc:   "runtime.Goexit()",
-			action: func(a *goyek.A) { runtime.Goexit() },
+			action: func(*goyek.A) { runtime.Goexit() },
 		},
 	}
 	for _, tc := range testCases {
@@ -244,7 +244,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 	flow.SetOutput(ioutil.Discard)
 	flow.Define(goyek.Task{
 		Name: "task",
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			cancel()
 		},
 	})
@@ -430,7 +430,7 @@ func Test_SetDefault(t *testing.T) {
 	taskRan := false
 	task := flow.Define(goyek.Task{
 		Name: "task",
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			taskRan = true
 		},
 	})
@@ -569,7 +569,7 @@ func TestFlow_Use(t *testing.T) {
 	flow.Define(goyek.Task{
 		Name: "task",
 	})
-	flow.Use(func(next goyek.Runner) goyek.Runner {
+	flow.Use(func(goyek.Runner) goyek.Runner {
 		return func(i goyek.Input) goyek.Result {
 			i.Output.Write([]byte("message")) //nolint:errcheck // not checking errors when writing to output
 			return goyek.Result{}
@@ -627,7 +627,7 @@ func TestNoDeps(t *testing.T) {
 	depNotRun := true
 	dep := flow.Define(goyek.Task{
 		Name: "dep",
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			depNotRun = false
 		},
 	})
@@ -649,14 +649,14 @@ func TestSkip_dep(t *testing.T) {
 	depNotRun := true
 	dep := flow.Define(goyek.Task{
 		Name: "dep",
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			depNotRun = false
 		},
 	})
 	flow.Define(goyek.Task{
 		Name: "task",
 		Deps: goyek.Deps{dep},
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			taskRun = true
 		},
 	})
@@ -675,14 +675,14 @@ func TestSkip_task(t *testing.T) {
 	depNotRun := true
 	dep := flow.Define(goyek.Task{
 		Name: "dep",
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			depNotRun = false
 		},
 	})
 	flow.Define(goyek.Task{
 		Name: "task",
 		Deps: goyek.Deps{dep},
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			taskNotRun = false
 		},
 	})
@@ -702,21 +702,21 @@ func TestSkip_shared_dep(t *testing.T) {
 	depRun := false
 	dep := flow.Define(goyek.Task{
 		Name: "dep",
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			depRun = true
 		},
 	})
 	flow.Define(goyek.Task{
 		Name: "other",
 		Deps: goyek.Deps{dep},
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			otherRun = true
 		},
 	})
 	flow.Define(goyek.Task{
 		Name: "task",
 		Deps: goyek.Deps{dep},
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			taskNotRun = false
 		},
 	})
@@ -736,14 +736,14 @@ func TestFlow_Parallel(t *testing.T) {
 	flow.Define(goyek.Task{
 		Name:     "task-1",
 		Parallel: true,
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			ch <- struct{}{}
 		},
 	})
 	flow.Define(goyek.Task{
 		Name:     "task-2",
 		Parallel: true,
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			<-ch
 		},
 	})
@@ -761,22 +761,22 @@ func TestFlow_Parallel_complex(t *testing.T) {
 
 	taskSync := flow.Define(goyek.Task{
 		Name:   "task-sync-1",
-		Action: func(a *goyek.A) { executed1++ },
+		Action: func(*goyek.A) { executed1++ },
 	})
 	taskSync2 := flow.Define(goyek.Task{
 		Name:   "task-sync-2",
-		Action: func(a *goyek.A) { executed2++ },
+		Action: func(*goyek.A) { executed2++ },
 	})
 	flow.Define(goyek.Task{
 		Name:   "task-sync-3",
-		Action: func(a *goyek.A) { executed3++ },
+		Action: func(*goyek.A) { executed3++ },
 	})
 
 	flow.Define(goyek.Task{
 		Name:     "task-parallel-4",
 		Parallel: true,
 		Deps:     goyek.Deps{taskSync},
-		Action:   func(a *goyek.A) { executed4++ },
+		Action:   func(*goyek.A) { executed4++ },
 	})
 	flow.Define(goyek.Task{
 		Name:     "task-parallel-5",
@@ -804,7 +804,7 @@ func TestFlow_Parallel_NoDeps(t *testing.T) {
 	depNotRun := true
 	dep := flow.Define(goyek.Task{
 		Name: "dep",
-		Action: func(a *goyek.A) {
+		Action: func(*goyek.A) {
 			depNotRun = false
 		},
 	})

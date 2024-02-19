@@ -12,7 +12,7 @@ import (
 func TestReportLongRun(t *testing.T) {
 	taskName := "my-task"
 	sb := &strings.Builder{}
-	r := goyek.NewRunner(func(a *goyek.A) { time.Sleep(time.Second) })
+	r := goyek.NewRunner(func(*goyek.A) { time.Sleep(time.Second) })
 	r = middleware.ReportLongRun(10 * time.Millisecond)(r)
 
 	r(goyek.Input{TaskName: taskName, Output: sb})

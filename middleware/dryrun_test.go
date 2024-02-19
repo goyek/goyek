@@ -9,7 +9,7 @@ import (
 
 func TestDryRun(t *testing.T) {
 	called := false
-	r := func(i goyek.Input) goyek.Result {
+	r := func(goyek.Input) goyek.Result {
 		called = true
 		return goyek.Result{Status: goyek.StatusPassed}
 	}
