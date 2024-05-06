@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.3
-      - uses: actions/setup-go@v5.0.0
+      - uses: actions/setup-go@v5.0.1
         with:
           go-version: '1.22'
           cache-dependency-path: build/go.sum
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.3
-      - uses: actions/setup-go@v5.0.0
+      - uses: actions/setup-go@v5.0.1
         with:
           go-version: ${{ matrix.go-version }}
       - run: go test -race ./...
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.3
-      - uses: actions/setup-go@v5.0.0
+      - uses: actions/setup-go@v5.0.1
         with:
           go-version: '1.22'
           cache-dependency-path: build/go.sum
@@ -71,7 +71,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4.1.3
-      - uses: actions/setup-go@v5.0.0
+      - uses: actions/setup-go@v5.0.1
         with:
           go-version: '1.22'
           cache-dependency-path: build/go.sum
