@@ -7,7 +7,10 @@ linters-settings:
   goimports:
     local-prefixes: github.com/goyek/goyek/v2
   govet:
-    check-shadowing: true
+    enable-all: true
+    disable:
+    - fieldalignment
+    - nilness
   misspell:
     locale: US
     ignore-words:
@@ -16,16 +19,16 @@ linters-settings:
     allow-leading-space: false # require machine-readable nolint directives (with no leading space)
     allow-unused: false # report any unused nolint directives
     require-explanation: true # require an explanation for nolint directives
-    require-specific: false # don't require nolint directives to be specific about which linter is being skipped
+    require-specific: true # require nolint directives to be specific about which linter is being skipped
   revive:
     confidence: 0
 
 linters:
-  # please, do not use `enable-all`: it's deprecated and will be removed soon.
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
+    - asasalint
     - dogsled
+    - dupword
     - errcheck
     - exportloopref
     - funlen
@@ -36,13 +39,14 @@ linters:
     - goimports
     - revive
     - godot
-    - gomnd
     - goprintffuncname
     - gosimple
     - govet
     - ineffassign
     - misspell
+    - mnd
     - nolintlint
+    - perfsprint
     - staticcheck
     - stylecheck
     - typecheck
@@ -52,5 +56,5 @@ linters:
     - whitespace
 
 issues:
-  # enable issues excluded by default 
-  exclude-use-default: false
+  exclude:
+    - EXC0001
