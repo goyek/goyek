@@ -13,8 +13,6 @@ linters-settings:
     - nilness
   misspell:
     locale: US
-    ignore-words:
-      - importas
   nolintlint:
     allow-leading-space: false # require machine-readable nolint directives (with no leading space)
     allow-unused: false # report any unused nolint directives
