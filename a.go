@@ -220,11 +220,11 @@ func (a *A) Setenv(key, value string) {
 
 	if ok {
 		a.Cleanup(func() {
-			os.Setenv(key, prevValue) //nolint:errcheck // should never happen
+			os.Setenv(key, prevValue)
 		})
 	} else {
 		a.Cleanup(func() {
-			os.Unsetenv(key) //nolint:errcheck // should never happen
+			os.Unsetenv(key)
 		})
 	}
 }
