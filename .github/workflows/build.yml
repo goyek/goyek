@@ -13,20 +13,20 @@ jobs:
   ci-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.6
-      - uses: actions/setup-go@v5.0.1
+      - uses: actions/checkout@v4.1.7
+      - uses: actions/setup-go@v5.0.2
         with:
           go-version: '1.22'
           cache-dependency-path: build/go.sum
       - run: go run . -v ci
         working-directory: build
       - name: Upload HTML coverage
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.4
         with:
           name: coverage
           path: coverage.*
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4.4.1
+        uses: codecov/codecov-action@v4.5.0
         with:
           fail_ci_if_error: true
           file: ./coverage.out
@@ -51,8 +51,8 @@ jobs:
           - '1.22'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.6
-      - uses: actions/setup-go@v5.0.1
+      - uses: actions/checkout@v4.1.7
+      - uses: actions/setup-go@v5.0.2
         with:
           go-version: ${{ matrix.go-version }}
       - run: go test -race ./...
@@ -60,8 +60,8 @@ jobs:
   bash-script:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.6
-      - uses: actions/setup-go@v5.0.1
+      - uses: actions/checkout@v4.1.7
+      - uses: actions/setup-go@v5.0.2
         with:
           go-version: '1.22'
           cache-dependency-path: build/go.sum
@@ -70,8 +70,8 @@ jobs:
   pwsh-script:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4.1.6
-      - uses: actions/setup-go@v5.0.1
+      - uses: actions/checkout@v4.1.7
+      - uses: actions/setup-go@v5.0.2
         with:
           go-version: '1.22'
           cache-dependency-path: build/go.sum
