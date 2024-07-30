@@ -26,6 +26,7 @@ linters:
   enable:
     - asasalint
     - dogsled
+    - dupl
     - dupword
     - errcheck
     - exportloopref
@@ -38,11 +39,14 @@ linters:
     - revive
     - godot
     - goprintffuncname
+    - gosec
     - gosimple
     - govet
     - ineffassign
     - misspell
     - mnd
+    - nakedret
+    - noctx
     - nolintlint
     - perfsprint
     - staticcheck
