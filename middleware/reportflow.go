@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -16,17 +15,8 @@ func ReportFlow(next goyek.Executor) goyek.Executor {
 		out := in.Output
 
 		from := time.Now()
-		err := next(in)
-		if _, ok := err.(*goyek.FailError); ok {
+		if err := next(in); err != nil {
 			fmt.Fprintf(out, "%v\t%.3fs\n", err, time.Since(from).Seconds())
-			return err
-		}
-		if err == context.Canceled || err == context.DeadlineExceeded {
-			fmt.Fprintf(out, "%v\t%.3fs\n", err, time.Since(from).Seconds())
-			return err
-		}
-		if err != nil {
-			fmt.Fprintln(out, err.Error())
 			return err
 		}
 		fmt.Fprintf(out, "ok\t%.3fs\n", time.Since(from).Seconds())

@@ -20,6 +20,10 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   Add the middleware using `Flow.UseExecutor` to achieve  a backwards compatible
   behavior.
 
+### Removed
+
+- Drop support for Go 1.11 and 1.12.
+
 ## [2.1.0](https://github.com/goyek/goyek/compare/v2.0.0...v2.1.0) - 2024-01-17
 
 This release adds parallel task execution support.

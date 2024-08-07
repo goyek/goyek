@@ -2,6 +2,7 @@ package goyek
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -435,7 +436,7 @@ func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	if _, ok := err.(*FailError); ok {
 		return exitCodeFail
 	}
-	if err == context.Canceled || err == context.DeadlineExceeded {
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return exitCodeFail
 	}
 	if err != nil {
