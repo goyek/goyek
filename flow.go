@@ -276,7 +276,7 @@ func Use(middlewares ...Middleware) {
 func (f *Flow) Use(middlewares ...Middleware) {
 	for _, m := range middlewares {
 		if m == nil {
-			panic("middlewares cannot be nil")
+			panic("middleware cannot be nil")
 		}
 		f.middlewares = append(f.middlewares, m)
 	}
@@ -291,7 +291,7 @@ func UseExecutor(middlewares ...ExecutorMiddleware) {
 func (f *Flow) UseExecutor(middlewares ...ExecutorMiddleware) {
 	for _, m := range middlewares {
 		if m == nil {
-			panic("middlewares cannot be nil")
+			panic("middleware cannot be nil")
 		}
 		f.executorMiddlewares = append(f.executorMiddlewares, m)
 	}
