@@ -32,6 +32,7 @@ func Test_DefaultFlow(t *testing.T) {
 	assertEqual(t, goyek.Default(), task, "Default")
 
 	goyek.Use(func(r goyek.Runner) goyek.Runner { return r })
+	goyek.UseExecutor(func(e goyek.Executor) goyek.Executor { return e })
 	assertPass(t, goyek.Execute(context.Background(), nil), "Execute")
 }
 
