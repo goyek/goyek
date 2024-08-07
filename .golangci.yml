@@ -3,7 +3,7 @@ linters-settings:
     lines: 100
     statements: 50
   gocyclo:
-    min-complexity: 20
+    min-complexity: 15
   goimports:
     local-prefixes: github.com/goyek/goyek/v2
   govet:

@@ -32,6 +32,8 @@ type (
 
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
+//
+//nolint:gocyclo // Contains graph traversal logic.
 func (r *executor) Execute(in ExecuteInput) error {
 	// Handle default task.
 	if len(in.Tasks) == 0 && r.defaultTask != nil {
