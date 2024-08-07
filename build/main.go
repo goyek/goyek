@@ -44,6 +44,8 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
+	goyek.UseExecutor(middleware.ReportFlow)
+
 	if *dryRun {
 		*v = true // needed to report the task status
 	}
