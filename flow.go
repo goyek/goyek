@@ -21,17 +21,15 @@ type Flow struct {
 	usage  func()
 	logger Logger // TODO: If Helper() is implemented then it is called when A.Helper() is called.
 
-	tasks       map[string]*taskSnapshot // snapshot of defined tasks
-	defaultTask *taskSnapshot            // task to run when none is explicitly provided
-	middlewares []Middleware
+	tasks               map[string]*taskSnapshot // snapshot of defined tasks
+	defaultTask         *taskSnapshot            // task to run when none is explicitly provided
+	middlewares         []Middleware
+	executorMiddlewares []ExecutorMiddleware
 }
 
 // DefaultFlow is the default flow.
 // The top-level functions such as Define, Main, and so on are wrappers for the methods of Flow.
 var DefaultFlow = &Flow{}
-
-// Middleware represents a task runner interceptor.
-type Middleware func(Runner) Runner
 
 // taskSnapshot is a copy of the task to make the flow usage safer.
 type taskSnapshot struct {
@@ -278,9 +276,24 @@ func Use(middlewares ...Middleware) {
 func (f *Flow) Use(middlewares ...Middleware) {
 	for _, m := range middlewares {
 		if m == nil {
-			panic("middleware cannot be nil")
+			panic("middlewares cannot be nil")
 		}
 		f.middlewares = append(f.middlewares, m)
+	}
+}
+
+// UseExecutor adds flow executor middlewares (interceptors).
+func UseExecutor(middlewares ...ExecutorMiddleware) {
+	DefaultFlow.UseExecutor(middlewares...)
+}
+
+// Use adds flow executor middlewares (interceptors).
+func (f *Flow) UseExecutor(middlewares ...ExecutorMiddleware) {
+	for _, m := range middlewares {
+		if m == nil {
+			panic("middlewares cannot be nil")
+		}
+		f.executorMiddlewares = append(f.executorMiddlewares, m)
 	}
 }
 
@@ -370,17 +383,27 @@ func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) erro
 		}
 	}
 
+	// prepare runner
 	r := &executor{
-		output:      &syncWriter{Writer: f.Output()},
 		defined:     f.tasks,
-		logger:      f.Logger(),
 		middlewares: middlewares,
-		noDeps:      cfg.noDeps,
 	}
-	if ctx == nil {
-		ctx = context.Background()
+	runner := r.Execute
+
+	// apply defined executor middlewares
+	for _, middleware := range f.executorMiddlewares {
+		runner = middleware(runner)
 	}
-	return r.Execute(ctx, tasks, cfg.skipTasks)
+
+	in := ExecuteInput{
+		Context:   ctx,
+		Tasks:     tasks,
+		SkipTasks: cfg.skipTasks,
+		NoDeps:    cfg.noDeps,
+		Output:    f.Output(),
+		Logger:    f.Logger(),
+	}
+	return runner(in)
 }
 
 const (

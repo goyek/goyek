@@ -234,7 +234,8 @@ check the [goyek.sh](goyek.sh) and [goyek.ps1](goyek.ps1) scripts.
 ## Using middlewares
 
 Call the [`Use`](https://pkg.go.dev/github.com/goyek/goyek/v2#Use) function
-to setup a task runner interceptor (middleware).
+or [`UseExecutor`](https://pkg.go.dev/github.com/goyek/goyek/v2#UseExecutor)
+to setup a task runner or flow executor interceptor (middleware).
 
 You can use a middleware, for example to:
 generate a task execution report,

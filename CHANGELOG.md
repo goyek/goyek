@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
+## [Unreleased](https://github.com/goyek/goyek/compare/v2.1.0...HEAD)
+
+### Added
+
+- Add `Flow.UseExecutor` method to support flow execution interception using middlewares.
+
 ## [2.1.0](https://github.com/goyek/goyek/compare/v2.0.0...v2.1.0) - 2024-01-17
 
 This release adds parallel task execution support.
