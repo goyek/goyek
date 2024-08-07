@@ -11,7 +11,6 @@ import (
 
 func TestReportFlow(t *testing.T) {
 	flow := &goyek.Flow{}
-
 	flow.Define(goyek.Task{Name: "task"})
 	flow.Define(goyek.Task{Name: "failing", Action: func(a *goyek.A) { a.Fail() }})
 	flow.UseExecutor(middleware.ReportFlow)
