@@ -17,7 +17,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 ### Change
 
 - Extract the flow result reporting from `Flow.Main` to `middleware.ReportFlow`.
-  Add the middleware using `Flow.UseExecutor` to achieve a backwards compatible
+  Add the middleware using `Flow.UseExecutor` to achieve a backward compatible
   behavior.
 
 ### Removed
