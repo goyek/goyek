@@ -2,6 +2,7 @@ package goyek
 
 import (
 	"context"
+	"errors"
 	"io"
 )
 
@@ -25,12 +26,22 @@ type (
 	executor struct {
 		defined     map[string]*taskSnapshot
 		middlewares []Middleware
+		defaultTask *taskSnapshot
 	}
 )
 
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 func (r *executor) Execute(in ExecuteInput) error {
+	// Handle default task.
+	if len(in.Tasks) == 0 && r.defaultTask != nil {
+		in.Tasks = append(in.Tasks, r.defaultTask.name)
+	}
+
+	if err := r.validate(in); err != nil {
+		return err
+	}
+
 	visited := map[string]bool{}
 	for _, skipTask := range in.SkipTasks {
 		visited[skipTask] = true
@@ -39,7 +50,6 @@ func (r *executor) Execute(in ExecuteInput) error {
 	ctx := in.Context
 	tasks := in.Tasks
 	out := &syncWriter{Writer: in.Output}
-
 	for len(tasks) > 0 {
 		name := tasks[0]
 		tasks = tasks[1:]
@@ -94,6 +104,32 @@ func (r *executor) Execute(in ExecuteInput) error {
 		// Run parallel tasks.
 		if err := r.runParallelTasks(ctx, tasksToRun, out, in.Logger); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *executor) validate(in ExecuteInput) error {
+	for _, task := range in.Tasks {
+		if task == "" {
+			return errors.New("task name cannot be empty")
+		}
+		if _, ok := r.defined[task]; !ok {
+			return errors.New("task provided but not defined: " + task)
+		}
+	}
+
+	if len(in.Tasks) == 0 {
+		return errors.New("no task provided")
+	}
+
+	for _, skippedTask := range in.SkipTasks {
+		if skippedTask == "" {
+			return errors.New("skipped task name cannot be empty")
+		}
+		if _, ok := r.defined[skippedTask]; !ok {
+			return errors.New("skipped task provided but not defined: " + skippedTask)
 		}
 	}
 

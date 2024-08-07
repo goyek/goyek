@@ -2,7 +2,6 @@ package goyek
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,7 +9,6 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
-	"time"
 )
 
 // Flow is the root type of the package.
@@ -351,21 +349,6 @@ func Execute(ctx context.Context, tasks []string, opts ...Option) error {
 // [FailError] if a task failed,
 // other errors in case of invalid input or context error.
 func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) error {
-	for _, task := range tasks {
-		if task == "" {
-			return errors.New("task name cannot be empty")
-		}
-		if _, ok := f.tasks[task]; !ok {
-			return errors.New("task provided but not defined: " + task)
-		}
-	}
-	if len(tasks) == 0 && f.defaultTask != nil {
-		tasks = append(tasks, f.defaultTask.name)
-	}
-	if len(tasks) == 0 {
-		return errors.New("no task provided")
-	}
-
 	var middlewares []Middleware
 	middlewares = append(middlewares, f.middlewares...)
 
@@ -374,19 +357,11 @@ func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) erro
 		opt.apply(cfg)
 	}
 
-	for _, skippedTask := range cfg.skipTasks {
-		if skippedTask == "" {
-			return errors.New("skipped task name cannot be empty")
-		}
-		if _, ok := f.tasks[skippedTask]; !ok {
-			return errors.New("skipped task provided but not defined: " + skippedTask)
-		}
-	}
-
 	// prepare runner
 	r := &executor{
 		defined:     f.tasks,
 		middlewares: middlewares,
+		defaultTask: f.defaultTask,
 	}
 	runner := r.Execute
 
@@ -456,24 +431,17 @@ func (f *Flow) Main(args []string, opts ...Option) {
 }
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
-	out := f.Output()
-
-	from := time.Now()
 	err := f.Execute(ctx, args, opts...)
 	if _, ok := err.(*FailError); ok {
-		fmt.Fprintf(out, "%v\t%.3fs\n", err, time.Since(from).Seconds())
 		return exitCodeFail
 	}
 	if err == context.Canceled || err == context.DeadlineExceeded {
-		fmt.Fprintf(out, "%v\t%.3fs\n", err, time.Since(from).Seconds())
 		return exitCodeFail
 	}
 	if err != nil {
-		fmt.Fprintln(out, err.Error())
 		f.Usage()()
 		return exitCodeInvalid
 	}
-	fmt.Fprintf(out, "ok\t%.3fs\n", time.Since(from).Seconds())
 	return exitCodePass
 }
 
