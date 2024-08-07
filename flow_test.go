@@ -591,6 +591,35 @@ func TestFlow_Use_nil_middleware(t *testing.T) {
 	assertPanics(t, act, "should panic on nil middleware")
 }
 
+func TestFlow_UseExecutor(t *testing.T) {
+	out := &strings.Builder{}
+	flow := &goyek.Flow{}
+	flow.SetOutput(out)
+	flow.Define(goyek.Task{
+		Name: "task",
+	})
+	flow.UseExecutor(func(goyek.Executor) goyek.Executor {
+		return func(i goyek.ExecuteInput) error {
+			i.Output.Write([]byte("message")) //nolint:errcheck // not checking errors when writing to output
+			return nil
+		}
+	})
+
+	_ = flow.Execute(context.Background(), []string{"task"})
+
+	assertContains(t, out, "message", "should call executor middleware")
+}
+
+func TestFlow_UseExecutor_nil_middleware(t *testing.T) {
+	flow := &goyek.Flow{}
+
+	act := func() {
+		flow.UseExecutor(nil)
+	}
+
+	assertPanics(t, act, "should panic on nil middleware")
+}
+
 func TestFlow_Undefine(t *testing.T) {
 	flow := &goyek.Flow{}
 	task := flow.Define(goyek.Task{Name: "name"})

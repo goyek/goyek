@@ -26,6 +26,9 @@ type (
 		PanicValue interface{}
 		PanicStack []byte
 	}
+
+	// Middleware represents a task runner interceptor.
+	Middleware func(Runner) Runner
 )
 
 // NewRunner returns a task runner used by Flow.

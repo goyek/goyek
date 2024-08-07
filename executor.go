@@ -5,21 +5,40 @@ import (
 	"io"
 )
 
-type executor struct {
-	output      io.Writer
-	defined     map[string]*taskSnapshot
-	logger      Logger
-	middlewares []Middleware
-	noDeps      bool
-}
+type (
+	// Executor represents a flow execution function.
+	Executor func(ExecuteInput) error
+
+	// ExecuteInput received by the flow executor.
+	ExecuteInput struct {
+		Context   context.Context
+		Tasks     []string
+		SkipTasks []string
+		NoDeps    bool
+		Output    io.Writer
+		Logger    Logger
+	}
+
+	// ExecutorMiddleware represents a flow execution interceptor.
+	ExecutorMiddleware func(Executor) Executor
+
+	executor struct {
+		defined     map[string]*taskSnapshot
+		middlewares []Middleware
+	}
+)
 
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
-func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []string) error {
+func (r *executor) Execute(in ExecuteInput) error {
 	visited := map[string]bool{}
-	for _, skipTask := range skipTasks {
+	for _, skipTask := range in.SkipTasks {
 		visited[skipTask] = true
 	}
+
+	ctx := in.Context
+	tasks := in.Tasks
+	out := &syncWriter{Writer: in.Output}
 
 	for len(tasks) > 0 {
 		name := tasks[0]
@@ -28,7 +47,7 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 		if visited[name] {
 			continue
 		}
-		if !r.noDeps && len(task.deps) > 0 {
+		if !in.NoDeps && len(task.deps) > 0 {
 			deps := make([]string, 0, len(task.deps))
 			for _, dep := range task.deps {
 				if visited[dep.name] {
@@ -52,7 +71,7 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 
 		if !task.parallel {
 			// Run task sychronously.
-			if err := r.runTask(ctx, task); err != nil {
+			if err := r.runTask(ctx, task, out, in.Logger); err != nil {
 				return err
 			}
 			continue
@@ -64,7 +83,7 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 		// and have no dependencies.
 		for _, next := range tasks {
 			nextTask := r.defined[next]
-			if !r.canRunTask(nextTask, visited) {
+			if !r.canRunTask(nextTask, visited, in.NoDeps) {
 				continue
 			}
 			// Parallel task has none not-executed dependencies so we can run it.
@@ -73,7 +92,7 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 		}
 
 		// Run parallel tasks.
-		if err := r.runParallelTasks(ctx, tasksToRun); err != nil {
+		if err := r.runParallelTasks(ctx, tasksToRun, out, in.Logger); err != nil {
 			return err
 		}
 	}
@@ -81,7 +100,7 @@ func (r *executor) Execute(ctx context.Context, tasks []string, skipTasks []stri
 	return nil
 }
 
-func (r *executor) canRunTask(task *taskSnapshot, visited map[string]bool) bool {
+func (r *executor) canRunTask(task *taskSnapshot, visited map[string]bool, noDeps bool) bool {
 	if visited[task.name] {
 		return false
 	}
@@ -90,7 +109,7 @@ func (r *executor) canRunTask(task *taskSnapshot, visited map[string]bool) bool 
 		return false
 	}
 
-	if r.noDeps {
+	if noDeps {
 		// Dependencies are not honored so we can just run the task.
 		return true
 	}
@@ -105,13 +124,13 @@ func (r *executor) canRunTask(task *taskSnapshot, visited map[string]bool) bool 
 	return true
 }
 
-func (r *executor) runParallelTasks(ctx context.Context, tasks []*taskSnapshot) error {
+func (r *executor) runParallelTasks(ctx context.Context, tasks []*taskSnapshot, output io.Writer, logger Logger) error {
 	var err error
 	errCh := make(chan error, len(tasks))
 	for _, parallelTask := range tasks {
 		parallelTask := parallelTask
 		go func() {
-			errCh <- r.runTask(ctx, parallelTask)
+			errCh <- r.runTask(ctx, parallelTask, output, logger)
 		}()
 	}
 	for range tasks {
@@ -122,7 +141,7 @@ func (r *executor) runParallelTasks(ctx context.Context, tasks []*taskSnapshot) 
 	return err
 }
 
-func (r *executor) runTask(ctx context.Context, task *taskSnapshot) error {
+func (r *executor) runTask(ctx context.Context, task *taskSnapshot, output io.Writer, logger Logger) error {
 	// prepare runner
 	runner := NewRunner(task.action)
 
@@ -136,8 +155,8 @@ func (r *executor) runTask(ctx context.Context, task *taskSnapshot) error {
 		Context:  ctx,
 		TaskName: task.name,
 		Parallel: task.parallel,
-		Output:   r.output,
-		Logger:   r.logger,
+		Output:   output,
+		Logger:   logger,
 	}
 	result := runner(in)
 	if result.Status == StatusFailed {
