@@ -11,7 +11,7 @@ import (
 )
 
 func Example() {
-	// define a task printing the message (configurable via flag)
+	// Define a task printing a message.
 	hi := goyek.Define(goyek.Task{
 		Name:  "hi",
 		Usage: "Greetings",
@@ -20,7 +20,7 @@ func Example() {
 		},
 	})
 
-	// define a task running a command
+	// Define a task running a command.
 	goVer := goyek.Define(goyek.Task{
 		Name:  "go-ver",
 		Usage: `Run "go version"`,
@@ -34,20 +34,20 @@ func Example() {
 		},
 	})
 
-	// define a pipeline
+	// Define a pipeline and set it as the default task.
 	all := goyek.Define(goyek.Task{
 		Name: "all",
 		Deps: goyek.Deps{hi, goVer},
 	})
-
-	// configure middlewares
-	goyek.Use(middleware.ReportStatus)
-
-	// set the pipeline as the default task
 	goyek.SetDefault(all)
 
-	// run the build pipeline
-	goyek.Main(os.Args[1:])
+	// Configure middlewares.
+	goyek.UseExecutor(middleware.ReportFlow)
+	goyek.Use(middleware.ReportStatus)
+
+	// Run the tasks.
+	tasks := os.Args[1:]
+	goyek.Main(tasks)
 
 	/*
 		$ go run .
@@ -64,16 +64,16 @@ func Example() {
 }
 
 func Example_flag() {
-	// use the same output for flow and flag
+	// Use the same output for flow and flag.
 	flag.CommandLine.SetOutput(goyek.Output())
 
-	// define a flag to configure flow output verbosity
+	// Define a flag to configure flow output verbosity.
 	verbose := flag.Bool("v", true, "print all tasks as they are run")
 
-	// define a flag used by a task
+	// Define a flag used by a task.
 	msg := flag.String("msg", "hello world", `message to display by "hi" task`)
 
-	// define a task printing the message (configurable via flag)
+	// Define a task printing the message (configurable via flag).
 	goyek.Define(goyek.Task{
 		Name:  "hi",
 		Usage: "Greetings",
@@ -82,7 +82,7 @@ func Example_flag() {
 		},
 	})
 
-	// set the help message
+	// Set the help message.
 	usage := func() {
 		fmt.Println("Usage of build: [flags] [--] [tasks]")
 		goyek.Print()
@@ -90,18 +90,18 @@ func Example_flag() {
 		flag.PrintDefaults()
 	}
 
-	// parse the args
+	// Parse the args.
 	flag.Usage = usage
 	flag.Parse()
 
-	// configure middlewares
+	// Configure middlewares.
 	goyek.UseExecutor(middleware.ReportFlow)
 	goyek.Use(middleware.ReportStatus)
 	if !*verbose {
 		goyek.Use(middleware.SilentNonFailed)
 	}
 
-	// run the build pipeline
+	// Run the tasks.
 	goyek.SetUsage(usage)
 	goyek.Main(flag.Args())
 
