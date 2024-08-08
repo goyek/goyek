@@ -18,7 +18,7 @@ import (
 type Flow struct {
 	output io.Writer
 	usage  func()
-	logger Logger // TODO: If Helper() is implemented then it is called when A.Helper() is called.
+	logger Logger
 
 	tasks               map[string]*taskSnapshot // snapshot of defined tasks
 	defaultTask         *taskSnapshot            // task to run when none is explicitly provided
