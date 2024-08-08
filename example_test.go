@@ -11,7 +11,7 @@ import (
 )
 
 func Example() {
-	// define a task printing the message (configurable via flag)
+	// define a task printing a message
 	hi := goyek.Define(goyek.Task{
 		Name:  "hi",
 		Usage: "Greetings",
@@ -41,6 +41,7 @@ func Example() {
 	})
 
 	// configure middlewares
+	goyek.UseExecutor(middleware.ReportFlow)
 	goyek.Use(middleware.ReportStatus)
 
 	// set the pipeline as the default task
