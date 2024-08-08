@@ -1,6 +1,7 @@
 package goyek_test
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -62,14 +63,16 @@ func assertPass(tb testing.TB, got error, msg string) {
 
 func assertFail(tb testing.TB, got error, msg string) {
 	tb.Helper()
-	if _, ok := got.(*goyek.FailError); !ok {
+	var ferr *goyek.FailError
+	if !errors.As(got, &ferr) {
 		tb.Errorf("%s\nGOT: %v\nWANT: <FAIL>", msg, got)
 	}
 }
 
 func assertInvalid(tb testing.TB, got error, msg string) {
 	tb.Helper()
-	if _, ok := got.(*goyek.FailError); ok || got == nil {
+	var ferr *goyek.FailError
+	if errors.As(got, &ferr) || got == nil {
 		tb.Errorf("%s\nGOT: %v\nWANT: <INVALID>", msg, got)
 	}
 }
