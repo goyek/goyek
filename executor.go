@@ -113,6 +113,9 @@ func (r *executor) Execute(in ExecuteInput) error {
 }
 
 func (r *executor) validate(in ExecuteInput) error {
+	if len(in.Tasks) == 0 {
+		return errors.New("no task provided")
+	}
 	for _, task := range in.Tasks {
 		if task == "" {
 			return errors.New("task name cannot be empty")
@@ -120,10 +123,6 @@ func (r *executor) validate(in ExecuteInput) error {
 		if _, ok := r.defined[task]; !ok {
 			return errors.New("task provided but not defined: " + task)
 		}
-	}
-
-	if len(in.Tasks) == 0 {
-		return errors.New("no task provided")
 	}
 
 	for _, skippedTask := range in.SkipTasks {
