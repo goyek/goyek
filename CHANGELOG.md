@@ -11,6 +11,18 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 ### Added
 
 - Add `Flow.UseExecutor` method to support flow execution interception using middlewares.
+- Add `middleware.ReportFlow` flow execution middleware which reports the flow
+  execution status.
+
+### Change
+
+- Extract the flow result reporting from `Flow.Main` to `middleware.ReportFlow`.
+  Add the middleware using `Flow.UseExecutor` to achieve a backward compatible
+  behavior.
+
+### Removed
+
+- Drop support for Go 1.11 and 1.12.
 
 ## [2.1.0](https://github.com/goyek/goyek/compare/v2.0.0...v2.1.0) - 2024-01-17
 

@@ -95,6 +95,7 @@ func Example_flag() {
 	flag.Parse()
 
 	// configure middlewares
+	goyek.UseExecutor(middleware.ReportFlow)
 	goyek.Use(middleware.ReportStatus)
 	if !*verbose {
 		goyek.Use(middleware.SilentNonFailed)
