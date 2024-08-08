@@ -338,7 +338,7 @@ func (err *FailError) Error() string {
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // Returns nil if no task has failed,
-// [FailError] if a task failed,
+// [*FailError] if a task failed,
 // other errors in case of invalid input or context error.
 func Execute(ctx context.Context, tasks []string, opts ...Option) error {
 	return DefaultFlow.Execute(ctx, tasks, opts...)
@@ -347,7 +347,7 @@ func Execute(ctx context.Context, tasks []string, opts ...Option) error {
 // Execute runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // Returns nil if no task has failed,
-// [FailError] if a task failed,
+// [*FailError] if a task failed,
 // other errors in case of invalid input or context error.
 func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) error {
 	var middlewares []Middleware
@@ -433,7 +433,8 @@ func (f *Flow) Main(args []string, opts ...Option) {
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	err := f.Execute(ctx, args, opts...)
-	if _, ok := err.(*FailError); ok {
+	var ferr *FailError
+	if errors.As(err, &ferr) {
 		return exitCodeFail
 	}
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
