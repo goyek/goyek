@@ -44,6 +44,7 @@ func Example() {
 	// Configure middlewares.
 	goyek.UseExecutor(middleware.ReportFlow)
 	goyek.Use(middleware.ReportStatus)
+	goyek.Use(middleware.BufferParallel)
 
 	// Run the tasks.
 	tasks := os.Args[1:]
@@ -97,7 +98,9 @@ func Example_flag() {
 	// Configure middlewares.
 	goyek.UseExecutor(middleware.ReportFlow)
 	goyek.Use(middleware.ReportStatus)
-	if !*verbose {
+	if *verbose {
+		goyek.Use(middleware.BufferParallel)
+	} else {
 		goyek.Use(middleware.SilentNonFailed)
 	}
 
