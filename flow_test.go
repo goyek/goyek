@@ -2,7 +2,7 @@ package goyek_test
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"os"
 	"reflect"
 	"runtime"
@@ -14,8 +14,8 @@ import (
 )
 
 func Test_DefaultFlow(t *testing.T) {
-	goyek.SetOutput(ioutil.Discard)
-	assertEqual(t, goyek.Output(), ioutil.Discard, "Output")
+	goyek.SetOutput(io.Discard)
+	assertEqual(t, goyek.Output(), io.Discard, "Output")
 
 	goyek.SetLogger(goyek.FmtLogger{})
 	assertEqual(t, goyek.GetLogger(), goyek.FmtLogger{}, "Logger")
@@ -38,7 +38,7 @@ func Test_DefaultFlow(t *testing.T) {
 
 func Test_Define_empty_name(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 
 	act := func() { flow.Define(goyek.Task{}) }
 
@@ -47,7 +47,7 @@ func Test_Define_empty_name(t *testing.T) {
 
 func Test_Define_same_name(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	task := goyek.Task{Name: "task"}
 	flow.Define(task)
 
@@ -69,7 +69,7 @@ func Test_Define_bad_dep(t *testing.T) {
 func Test_successful(t *testing.T) {
 	ctx := context.Background()
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	var executed1 int
 	task1 := flow.Define(goyek.Task{
 		Name: "task-1",
@@ -112,7 +112,7 @@ func Test_successful(t *testing.T) {
 
 func Test_dependency_failure(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	var executed1 int
 	task1 := flow.Define(goyek.Task{
 		Name: "task-1",
@@ -152,7 +152,7 @@ func Test_dependency_failure(t *testing.T) {
 
 func Test_fail(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	failed := false
 	flow.Define(goyek.Task{
 		Name: "task",
@@ -172,7 +172,7 @@ func Test_fail(t *testing.T) {
 
 func Test_skip(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	skipped := false
 	flow.Define(goyek.Task{
 		Name: "task",
@@ -211,7 +211,7 @@ func Test_task_panics(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			flow := &goyek.Flow{}
-			flow.SetOutput(ioutil.Discard)
+			flow.SetOutput(io.Discard)
 			flow.Define(goyek.Task{
 				Name:   "task",
 				Action: tc.action,
@@ -228,7 +228,7 @@ func Test_cancelation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	flow.Define(goyek.Task{
 		Name: "task",
 	})
@@ -242,7 +242,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(*goyek.A) {
@@ -257,7 +257,7 @@ func Test_cancelation_during_last_task(t *testing.T) {
 
 func Test_empty_action(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	flow.Define(goyek.Task{
 		Name: "task",
 	})
@@ -269,7 +269,7 @@ func Test_empty_action(t *testing.T) {
 
 func Test_invalid_args(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	flow.Define(goyek.Task{Name: "task"})
 	testCases := []struct {
 		desc string
@@ -393,7 +393,7 @@ func Test_concurrent_error(t *testing.T) {
 
 func Test_name(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	taskName := "my-named-task"
 	var got string
 	flow.Define(goyek.Task{
@@ -427,7 +427,7 @@ func Test_output(t *testing.T) {
 
 func Test_SetDefault(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	taskRan := false
 	task := flow.Define(goyek.Task{
 		Name: "task",
@@ -653,7 +653,7 @@ func TestFlow_Undefine_bad_task(t *testing.T) {
 
 func TestNoDeps(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	depNotRun := true
 	dep := flow.Define(goyek.Task{
 		Name: "dep",
@@ -674,7 +674,7 @@ func TestNoDeps(t *testing.T) {
 
 func TestSkip_dep(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	taskRun := false
 	depNotRun := true
 	dep := flow.Define(goyek.Task{
@@ -700,7 +700,7 @@ func TestSkip_dep(t *testing.T) {
 
 func TestSkip_task(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	taskNotRun := true
 	depNotRun := true
 	dep := flow.Define(goyek.Task{
@@ -726,7 +726,7 @@ func TestSkip_task(t *testing.T) {
 
 func TestSkip_shared_dep(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	taskNotRun := true
 	otherRun := false
 	depRun := false
@@ -761,7 +761,7 @@ func TestSkip_shared_dep(t *testing.T) {
 
 func TestFlow_Parallel(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	ch := make(chan struct{})
 	flow.Define(goyek.Task{
 		Name:     "task-1",
@@ -785,7 +785,7 @@ func TestFlow_Parallel(t *testing.T) {
 
 func TestFlow_Parallel_complex(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 
 	var executed1, executed2, executed3, executed4, executed5 int
 
@@ -830,7 +830,7 @@ func TestFlow_Parallel_complex(t *testing.T) {
 
 func TestFlow_Parallel_NoDeps(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	depNotRun := true
 	dep := flow.Define(goyek.Task{
 		Name: "dep",

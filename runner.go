@@ -3,7 +3,6 @@ package goyek
 import (
 	"context"
 	"io"
-	"io/ioutil"
 )
 
 // Task runner types.
@@ -40,7 +39,7 @@ type (
 // (take notice that they are different than Flow defaults):
 //
 //	Context = context.Background()
-//	Output = ioutil.Discard
+//	Output = io.Discard
 //	Logger = FmtLogger{}
 //
 // It can be also used as a building block for a custom
@@ -69,7 +68,7 @@ func (r taskRunner) run(in Input) Result {
 
 	out := in.Output
 	if out == nil {
-		out = ioutil.Discard
+		out = io.Discard
 	}
 
 	logger := in.Logger

@@ -3,7 +3,6 @@ package goyek
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"runtime"
 	"runtime/debug"
@@ -256,7 +255,7 @@ func (a *A) TempDir() string {
 	}
 	name := strings.Map(mapper, a.Name())
 
-	dir, err := ioutil.TempDir("", "goyek-"+name+"-*")
+	dir, err := os.MkdirTemp("", "goyek-"+name+"-*")
 	if err != nil {
 		a.Fatalf("cannot create temporary directory: %v", err)
 	}

@@ -2,7 +2,7 @@ package goyek_test
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"reflect"
 	"runtime"
 	"testing"
@@ -12,7 +12,7 @@ import (
 
 func TestDefinedTask_SetName(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	called := false
 	task := flow.Define(goyek.Task{Name: "one", Action: func(*goyek.A) { called = true }})
 
@@ -27,7 +27,7 @@ func TestDefinedTask_SetName(t *testing.T) {
 
 func TestDefinedTask_SetName_for_default(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	called := false
 	task := flow.Define(goyek.Task{Name: "one", Action: func(*goyek.A) { called = true }})
 	flow.SetDefault(task)
@@ -43,7 +43,7 @@ func TestDefinedTask_SetName_for_default(t *testing.T) {
 
 func TestDefinedTask_SetName_for_depenency(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	called := false
 	task := flow.Define(goyek.Task{Name: "one", Action: func(*goyek.A) { called = true }})
 	flow.Define(goyek.Task{Name: "two", Deps: goyek.Deps{task}})
@@ -57,7 +57,7 @@ func TestDefinedTask_SetName_for_depenency(t *testing.T) {
 
 func TestDefinedTask_SetName_conflict(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	task := flow.Define(goyek.Task{Name: "one"})
 	flow.Define(goyek.Task{Name: "two"})
 
@@ -68,7 +68,7 @@ func TestDefinedTask_SetName_conflict(t *testing.T) {
 
 func TestDefinedTask_SetUsage(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	task := flow.Define(goyek.Task{Name: "one"})
 
 	task.SetUsage("good task")
@@ -83,7 +83,7 @@ func TestDefinedTask_SetAction(t *testing.T) {
 	}
 
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	originalNotCalled := true
 	task := flow.Define(goyek.Task{Name: "one", Action: func(*goyek.A) { originalNotCalled = false }})
 
@@ -102,7 +102,7 @@ func TestDefinedTask_SetAction(t *testing.T) {
 
 func TestDefinedTask_SetDeps(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	called := false
 	t1 := flow.Define(goyek.Task{Name: "one", Action: func(*goyek.A) { called = true }})
 	t2 := flow.Define(goyek.Task{Name: "two", Deps: goyek.Deps{t1}})
@@ -120,7 +120,7 @@ func TestDefinedTask_SetDeps(t *testing.T) {
 
 func TestDefinedTask_SetDeps_clear(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	notCalled := true
 	t1 := flow.Define(goyek.Task{Name: "one", Action: func(*goyek.A) { notCalled = false }})
 	t2 := flow.Define(goyek.Task{Name: "two", Deps: goyek.Deps{t1}})
@@ -137,7 +137,7 @@ func TestDefinedTask_SetDeps_clear(t *testing.T) {
 
 func TestDefinedTask_SetDeps_circular(t *testing.T) {
 	flow := &goyek.Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	t1 := flow.Define(goyek.Task{Name: "one"})
 	t2 := flow.Define(goyek.Task{Name: "two", Deps: goyek.Deps{t1}})
 	t3 := flow.Define(goyek.Task{Name: "three", Deps: goyek.Deps{t2}})
