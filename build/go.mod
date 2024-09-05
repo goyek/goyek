@@ -1,7 +1,6 @@
 module github.com/goyek/goyek/build
 
-go 1.22
-toolchain go1.22.5
+go 1.23
 
 replace github.com/goyek/goyek/v2 => ../
 

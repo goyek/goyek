@@ -3,7 +3,6 @@ package goyek_test
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -169,7 +168,7 @@ func TestA_uses_Logger_dynamic_interface(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			flow := &goyek.Flow{}
 
-			flow.SetOutput(ioutil.Discard)
+			flow.SetOutput(io.Discard)
 			loggerSpy := &helperLoggerSpy{}
 			flow.SetLogger(loggerSpy)
 			flow.Define(goyek.Task{

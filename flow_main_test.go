@@ -2,7 +2,7 @@ package goyek
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 )
@@ -54,7 +54,7 @@ func TestFlow_main(t *testing.T) {
 
 func Test_main_usage(t *testing.T) {
 	flow := &Flow{}
-	flow.SetOutput(ioutil.Discard)
+	flow.SetOutput(io.Discard)
 	called := false
 	flow.SetUsage(func() { called = true })
 

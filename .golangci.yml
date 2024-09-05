@@ -29,7 +29,6 @@ linters:
     - dupl
     - dupword
     - errcheck
-    - exportloopref
     - funlen
     - gocritic
     - goconst

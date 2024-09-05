@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
+## [Unreleased](https://github.com/goyek/goyek/compare/v2.2.0...HEAD)
+
+### Removed
+
+- Drop support for Go 1.13, 1.14, and 1.15.
+
 ## [2.2.0](https://github.com/goyek/goyek/compare/v2.1.0...v2.2.0) - 2024-08-19
 
 This release adds flow execution middlewares.
