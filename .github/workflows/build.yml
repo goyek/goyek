@@ -21,7 +21,7 @@ jobs:
       - run: go run . -v ci
         working-directory: build
       - name: Upload HTML coverage
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: coverage
           path: coverage.*
