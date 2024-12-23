@@ -91,7 +91,7 @@ import (
 
 var msg = flag.String("msg", "greeting message", "Hello world!")
 
-var hello = flow.Define(goyek.Task{
+var hello = goyek.Define(goyek.Task{
 	Name:  "hello",
 	Usage: "demonstration",
 	Action: func(a *goyek.A) {
