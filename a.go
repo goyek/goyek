@@ -125,13 +125,11 @@ func (a *A) Failed() bool {
 
 // Fail marks the function as having failed but continues execution.
 func (a *A) Fail() {
-	var call func()
 	a.mu.Lock()
 	a.failed = true
-	call = a.failedCall
 	a.mu.Unlock()
-	if call != nil {
-		call()
+	if a.failedCall != nil {
+		a.failedCall()
 	}
 }
 
@@ -217,13 +215,11 @@ func (a *A) Skipf(format string, args ...interface{}) {
 // not from other goroutines created during its execution.
 // Calling SkipNow does not stop those other goroutines.
 func (a *A) SkipNow() {
-	var call func()
 	a.mu.Lock()
 	a.skipped = true
-	call = a.skippedCall
 	a.mu.Unlock()
-	if call != nil {
-		call()
+	if a.skippedCall != nil {
+		a.skippedCall()
 	}
 	runtime.Goexit()
 }
