@@ -365,7 +365,7 @@ func TestA_WithContextFatal(t *testing.T) {
 
 			expectedFatalCalls := 1
 			if parallel {
-				expectedFatalCalls = len(childTasksResults)
+				expectedFatalCalls = len(childTasks)
 			}
 
 			assertTrue(t, loggerSpy.called, "logger call")
