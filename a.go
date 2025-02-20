@@ -61,8 +61,7 @@ func (a *A) WithContext(ctx context.Context) *A {
 	}
 
 	a.cleanups = append(a.cleanups, func() {
-		for result.callLastCleanup() {
-		}
+		result.callCleanups()
 	})
 
 	return result
@@ -356,8 +355,7 @@ func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byt
 		}
 	}()
 
-	for a.callLastCleanup() {
-	}
+	a.callCleanups()
 	cleanupFinished = true
 }
 
@@ -375,4 +373,9 @@ func (a *A) callLastCleanup() bool {
 	}
 	cleanup()
 	return true
+}
+
+func (a *A) callCleanups() {
+	for a.callLastCleanup() {
+	}
 }
