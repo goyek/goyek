@@ -245,7 +245,7 @@ func TestA_WithContext(t *testing.T) {
 							}
 
 							prevCtx := a.Context()
-							newA := a.WithContext(context.WithValue(a.Context(), ctxKey, i))
+							newA := a.WithContext(context.WithValue(prevCtx, ctxKey, i))
 							assertEqual(t, newA.Name(), a.Name(), "name changed for "+a.Name())
 							assertEqual(t, a.Context(), prevCtx, "context changed for "+a.Name())
 
@@ -278,6 +278,25 @@ func TestA_WithContext(t *testing.T) {
 			})
 		}
 	}
+}
+
+func TestA_WithContextNilCtx(t *testing.T) {
+	t.Parallel()
+
+	flow := &goyek.Flow{}
+
+	flow.SetOutput(io.Discard)
+	loggerSpy := &helperLoggerSpy{}
+	flow.SetLogger(loggerSpy)
+
+	task := flow.Define(goyek.Task{
+		Name: "test",
+		Action: func(a *goyek.A) {
+			a.WithContext(nil)
+		},
+	})
+
+	assertFail(t, flow.Execute(context.Background(), []string{task.Name()}), "must contain error")
 }
 
 func onceCall(t *testing.T, name string) func() {
