@@ -39,7 +39,7 @@ func (a *A) Context() context.Context {
 	return a.ctx
 }
 
-// WithContext returns a shallow copy of a with its context changed
+// WithContext returns a derived a with its context changed
 // to ctx. The provided ctx must be non-nil.
 func (a *A) WithContext(ctx context.Context) *A {
 	if ctx == nil {

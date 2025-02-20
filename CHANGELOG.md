@@ -8,6 +8,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.2.0...HEAD)
 
+- Added `A.WithContext` to support changing the context of an action by the user.
+  The intended use is to pass task parameters via context.
+
 ### Removed
 
 - Drop support for Go 1.13, 1.14, and 1.15.
