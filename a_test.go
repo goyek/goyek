@@ -280,7 +280,7 @@ func TestA_WithContext(t *testing.T) {
 	}
 }
 
-func TestA_WithContextFailed(t *testing.T) {
+func TestA_WithContextFatal(t *testing.T) {
 	t.Parallel()
 	type ctxKeyT struct{}
 	var ctxKey ctxKeyT
@@ -320,7 +320,7 @@ func TestA_WithContextFailed(t *testing.T) {
 
 					childTasksResults[k] = true
 
-					a.Fail()
+					a.Fatal()
 				},
 				Deps: goyek.Deps{depsTask},
 			})
@@ -362,6 +362,14 @@ func TestA_WithContextFailed(t *testing.T) {
 
 				chkFunc(t, result, "child result "+strconv.Itoa(index)+" is false")
 			}
+
+			expectedFatalCalls := 1
+			if parallel {
+				expectedFatalCalls = len(childTasksResults)
+			}
+
+			assertTrue(t, loggerSpy.called, "logger call")
+			assertEqual(t, loggerSpy.fatalCallCount, expectedFatalCalls, "fatal calls count")
 		})
 	}
 }
@@ -445,6 +453,7 @@ func TestA_WithContextSkipped(t *testing.T) {
 			}
 
 			assertTrue(t, loggerSpy.called, "logger call")
+			assertEqual(t, loggerSpy.skipCallCount, len(childTasks), "skip calls count")
 		})
 	}
 }
@@ -486,41 +495,64 @@ func onceCall(t *testing.T, name string) func() {
 }
 
 type helperLoggerSpy struct {
-	called bool
+	called         bool
+	skipCallCount  int
+	fatalCallCount int
+	mu             sync.Mutex
 }
 
 func (l *helperLoggerSpy) Log(_ io.Writer, _ ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.called = true
 }
 
 func (l *helperLoggerSpy) Logf(_ io.Writer, _ string, _ ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.called = true
 }
 
 func (l *helperLoggerSpy) Error(_ io.Writer, _ ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.called = true
 }
 
 func (l *helperLoggerSpy) Errorf(_ io.Writer, _ string, _ ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.called = true
 }
 
 func (l *helperLoggerSpy) Fatal(_ io.Writer, _ ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.called = true
+	l.fatalCallCount++
 }
 
 func (l *helperLoggerSpy) Fatalf(_ io.Writer, _ string, _ ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.called = true
 }
 
 func (l *helperLoggerSpy) Skip(_ io.Writer, _ ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.called = true
+	l.skipCallCount++
 }
 
 func (l *helperLoggerSpy) Skipf(_ io.Writer, _ string, _ ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.called = true
 }
 
 func (l *helperLoggerSpy) Helper() {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.called = true
 }
