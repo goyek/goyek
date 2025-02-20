@@ -280,6 +280,175 @@ func TestA_WithContext(t *testing.T) {
 	}
 }
 
+func TestA_WithContextFailed(t *testing.T) {
+	t.Parallel()
+	type ctxKeyT struct{}
+	var ctxKey ctxKeyT
+
+	for _, parallel := range []bool{false, true} {
+		parallel := parallel
+		t.Run("Parallel="+strconv.FormatBool(parallel), func(t *testing.T) {
+			t.Parallel()
+
+			flow := &goyek.Flow{}
+
+			flow.SetOutput(io.Discard)
+			loggerSpy := &helperLoggerSpy{}
+			flow.SetLogger(loggerSpy)
+
+			depsTask := flow.Define(goyek.Task{
+				Name: "deps",
+				Action: func(a *goyek.A) {
+					a.Cleanup(onceCall(t, a.Name()+" cleanup"))
+					onceCall(t, a.Name())()
+				},
+			})
+
+			childTasks := make(goyek.Deps, 10)
+			childTasksResults := make([]bool, len(childTasks))
+
+			task := flow.Define(goyek.Task{
+				Name: "task",
+				Action: func(a *goyek.A) {
+					a.Cleanup(onceCall(t, a.Name()+" cleanup"))
+					onceCall(t, a.Name())()
+
+					k, ok := a.Context().Value(ctxKey).(int)
+					if !ok {
+						return
+					}
+
+					childTasksResults[k] = true
+
+					a.Fail()
+				},
+				Deps: goyek.Deps{depsTask},
+			})
+
+			for i := 0; i < len(childTasks); i++ {
+				i := i
+				childTasks[i] = flow.Define(goyek.Task{
+					Name: "child task " + strconv.Itoa(i),
+					Action: func(a *goyek.A) {
+						a.Cleanup(onceCall(t, a.Name()+" cleanup"))
+						onceCall(t, a.Name())()
+
+						prevCtx := a.Context()
+						newA := a.WithContext(context.WithValue(prevCtx, ctxKey, i))
+						assertEqual(t, newA.Name(), a.Name(), "name changed for "+a.Name())
+						assertEqual(t, a.Context(), prevCtx, "context changed for "+a.Name())
+
+						task.Action()(newA)
+					},
+					Deps:     goyek.Deps{depsTask},
+					Parallel: parallel,
+				})
+			}
+
+			main := flow.Define(goyek.Task{
+				Name: "main",
+				Deps: childTasks,
+			})
+
+			err := flow.Execute(context.Background(), []string{main.Name()})
+			assertFail(t, err, "flow execute")
+			assertErrorContains(t, err, "task failed", "must be a failed error")
+
+			for index, result := range childTasksResults {
+				chkFunc := assertTrue
+				if !parallel && index != 0 { // only first will be true if not parallel and with panic
+					chkFunc = assertFalse
+				}
+
+				chkFunc(t, result, "child result "+strconv.Itoa(index)+" is false")
+			}
+		})
+	}
+}
+
+func TestA_WithContextSkipped(t *testing.T) {
+	t.Parallel()
+	type ctxKeyT struct{}
+	var ctxKey ctxKeyT
+
+	for _, parallel := range []bool{false, true} {
+		parallel := parallel
+		t.Run("Parallel="+strconv.FormatBool(parallel), func(t *testing.T) {
+			t.Parallel()
+
+			flow := &goyek.Flow{}
+
+			flow.SetOutput(io.Discard)
+			loggerSpy := &helperLoggerSpy{}
+			flow.SetLogger(loggerSpy)
+
+			depsTask := flow.Define(goyek.Task{
+				Name: "deps",
+				Action: func(a *goyek.A) {
+					a.Cleanup(onceCall(t, a.Name()+" cleanup"))
+					onceCall(t, a.Name())()
+				},
+			})
+
+			childTasks := make(goyek.Deps, 10)
+			childTasksResults := make([]bool, len(childTasks))
+
+			task := flow.Define(goyek.Task{
+				Name: "task",
+				Action: func(a *goyek.A) {
+					a.Cleanup(onceCall(t, a.Name()+" cleanup"))
+					onceCall(t, a.Name())()
+
+					k, ok := a.Context().Value(ctxKey).(int)
+					if !ok {
+						return
+					}
+
+					childTasksResults[k] = true
+
+					a.Skip(k)
+					a.Helper()
+				},
+				Deps: goyek.Deps{depsTask},
+			})
+
+			for i := 0; i < len(childTasks); i++ {
+				i := i
+				childTasks[i] = flow.Define(goyek.Task{
+					Name: "child task " + strconv.Itoa(i),
+					Action: func(a *goyek.A) {
+						a.Cleanup(onceCall(t, a.Name()+" cleanup"))
+						onceCall(t, a.Name())()
+
+						prevCtx := a.Context()
+						newA := a.WithContext(context.WithValue(prevCtx, ctxKey, i))
+						assertEqual(t, newA.Name(), a.Name(), "name changed for "+a.Name())
+						assertEqual(t, a.Context(), prevCtx, "context changed for "+a.Name())
+
+						task.Action()(newA)
+					},
+					Deps:     goyek.Deps{depsTask},
+					Parallel: parallel,
+				})
+			}
+
+			main := flow.Define(goyek.Task{
+				Name: "main",
+				Deps: childTasks,
+			})
+
+			err := flow.Execute(context.Background(), []string{main.Name()})
+			assertPass(t, err, "flow execute")
+
+			for index, result := range childTasksResults {
+				assertTrue(t, result, "child result "+strconv.Itoa(index)+" is false")
+			}
+
+			assertTrue(t, loggerSpy.called, "logger call")
+		})
+	}
+}
+
 func TestA_WithContextNilCtx(t *testing.T) {
 	t.Parallel()
 

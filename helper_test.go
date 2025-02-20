@@ -85,6 +85,18 @@ func assertInvalid(tb testing.TB, got error, msg string) {
 	}
 }
 
+func assertErrorContains(tb testing.TB, got error, want string, msg string) {
+	tb.Helper()
+	if got == nil {
+		tb.Errorf("%s\nGOT: nil\nSHOULD CONTAIN:\n%s", msg, want)
+		return
+	}
+	if strings.Contains(got.Error(), want) {
+		return
+	}
+	tb.Errorf("%s\nGOT:\n%s\nSHOULD CONTAIN:\n%s", msg, got.Error(), want)
+}
+
 func assertPanics(tb testing.TB, fn func(), msg string) {
 	tb.Helper()
 	tryPanic := func() bool {

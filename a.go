@@ -22,14 +22,16 @@ import (
 // The other reporting methods, such as the variations of Log and Error,
 // may be called simultaneously from multiple goroutines.
 type A struct {
-	ctx      context.Context
-	name     string
-	output   io.Writer
-	logger   Logger
-	mu       sync.Mutex
-	failed   bool
-	skipped  bool
-	cleanups []func()
+	ctx         context.Context
+	name        string
+	output      io.Writer
+	logger      Logger
+	mu          sync.Mutex
+	failed      bool
+	failedCall  func()
+	skipped     bool
+	skippedCall func()
+	cleanups    []func()
 }
 
 // Context returns the run context.
@@ -48,12 +50,14 @@ func (a *A) WithContext(ctx context.Context) *A {
 	defer a.mu.Unlock()
 
 	result := &A{
-		ctx:     ctx,
-		name:    a.name,
-		output:  a.output,
-		logger:  a.logger,
-		failed:  a.failed,
-		skipped: a.skipped,
+		ctx:         ctx,
+		name:        a.name,
+		output:      a.output,
+		logger:      a.logger,
+		failed:      a.failed,
+		failedCall:  a.Fail,
+		skipped:     a.skipped,
+		skippedCall: a.SkipNow,
 	}
 
 	a.cleanups = append(a.cleanups, func() {
@@ -138,9 +142,14 @@ func (a *A) Failed() bool {
 
 // Fail marks the function as having failed but continues execution.
 func (a *A) Fail() {
+	var call func()
 	a.mu.Lock()
 	a.failed = true
+	call = a.failedCall
 	a.mu.Unlock()
+	if call != nil {
+		call()
+	}
 }
 
 // Fatal is equivalent to [A.Log] followed by [A.FailNow].
@@ -225,9 +234,14 @@ func (a *A) Skipf(format string, args ...interface{}) {
 // not from other goroutines created during its execution.
 // Calling SkipNow does not stop those other goroutines.
 func (a *A) SkipNow() {
+	var call func()
 	a.mu.Lock()
 	a.skipped = true
+	call = a.skippedCall
 	a.mu.Unlock()
+	if call != nil {
+		call()
+	}
 	runtime.Goexit()
 }
 
