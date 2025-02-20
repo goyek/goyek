@@ -61,23 +61,7 @@ func (a *A) WithContext(ctx context.Context) *A {
 	}
 
 	a.cleanups = append(a.cleanups, func() {
-		for {
-			var cleanup func()
-			result.mu.Lock()
-
-			if len(result.cleanups) > 0 {
-				last := len(result.cleanups) - 1
-				cleanup = result.cleanups[last]
-				result.cleanups = result.cleanups[:last]
-			}
-
-			result.mu.Unlock()
-
-			if cleanup == nil {
-				return
-			}
-
-			cleanup()
+		for result.callLastCleanup() {
 		}
 	})
 
@@ -372,19 +356,23 @@ func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byt
 		}
 	}()
 
-	for {
-		var cleanup func()
-		a.mu.Lock()
-		if len(a.cleanups) > 0 {
-			last := len(a.cleanups) - 1
-			cleanup = a.cleanups[last]
-			a.cleanups = a.cleanups[:last]
-		}
-		a.mu.Unlock()
-		if cleanup == nil {
-			cleanupFinished = true
-			return
-		}
-		cleanup()
+	for a.callLastCleanup() {
 	}
+	cleanupFinished = true
+}
+
+func (a *A) callLastCleanup() bool {
+	var cleanup func()
+	a.mu.Lock()
+	if len(a.cleanups) > 0 {
+		last := len(a.cleanups) - 1
+		cleanup = a.cleanups[last]
+		a.cleanups = a.cleanups[:last]
+	}
+	a.mu.Unlock()
+	if cleanup == nil {
+		return false
+	}
+	cleanup()
+	return true
 }
