@@ -37,14 +37,47 @@ func (a *A) Context() context.Context {
 	return a.ctx
 }
 
-// WithContext modifies ctx in the current object a and returns it.
-// The provided ctx must be non-null.
+// WithContext returns a shallow copy of a with its context changed
+// to ctx. The provided ctx must be non-nil.
 func (a *A) WithContext(ctx context.Context) *A {
 	if ctx == nil {
 		panic("nil context")
 	}
-	a.ctx = ctx
-	return a
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	result := &A{
+		ctx:     ctx,
+		name:    a.name,
+		output:  a.output,
+		logger:  a.logger,
+		failed:  a.failed,
+		skipped: a.skipped,
+	}
+
+	a.cleanups = append(a.cleanups, func() {
+		for {
+			var cleanup func()
+			result.mu.Lock()
+
+			if len(result.cleanups) > 0 {
+				last := len(result.cleanups) - 1
+				cleanup = result.cleanups[last]
+				result.cleanups = result.cleanups[:last]
+			}
+
+			result.mu.Unlock()
+
+			if cleanup == nil {
+				return
+			}
+
+			cleanup()
+		}
+	})
+
+	return result
 }
 
 // Name returns the name of the running task.
