@@ -37,6 +37,16 @@ func (a *A) Context() context.Context {
 	return a.ctx
 }
 
+// WithContext modifies ctx in the current object a and returns it.
+// The provided ctx must be non-null.
+func (a *A) WithContext(ctx context.Context) *A {
+	if ctx == nil {
+		panic("nil context")
+	}
+	a.ctx = ctx
+	return a
+}
+
 // Name returns the name of the running task.
 func (a *A) Name() string {
 	return a.name
