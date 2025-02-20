@@ -247,8 +247,9 @@ func TestA_WithContext(t *testing.T) {
 							prevCtx := a.Context()
 							newA := a.WithContext(context.WithValue(a.Context(), ctxKey, i))
 							assertEqual(t, newA.Name(), a.Name(), "name changed for "+a.Name())
-							task.Action()(newA)
 							assertEqual(t, a.Context(), prevCtx, "context changed for "+a.Name())
+
+							task.Action()(newA)
 						},
 						Deps:     goyek.Deps{depsTask},
 						Parallel: parallel,
