@@ -4,7 +4,9 @@ import (
 	"context"
 	"io"
 	"os"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/goyek/goyek/v2"
@@ -180,6 +182,117 @@ func TestA_uses_Logger_dynamic_interface(t *testing.T) {
 
 			assertTrue(t, loggerSpy.called, "called logger")
 		})
+	}
+}
+
+func TestA_WithContext(t *testing.T) {
+	t.Parallel()
+	type ctxKeyT struct{}
+	var ctxKey ctxKeyT
+
+	for _, parallel := range []bool{false, true} {
+		parallel := parallel
+		for _, throwPanic := range []bool{false, true} {
+			throwPanic := throwPanic
+			t.Run("Parallel="+strconv.FormatBool(parallel)+" and panic="+strconv.FormatBool(throwPanic), func(t *testing.T) {
+				t.Parallel()
+
+				flow := &goyek.Flow{}
+
+				flow.SetOutput(io.Discard)
+				loggerSpy := &helperLoggerSpy{}
+				flow.SetLogger(loggerSpy)
+
+				depsTask := flow.Define(goyek.Task{
+					Name: "deps",
+					Action: func(a *goyek.A) {
+						a.Cleanup(onceCall(t, a.Name()+" cleanup"))
+						onceCall(t, a.Name())()
+					},
+				})
+
+				childTasks := make(goyek.Deps, 10)
+				childTasksResults := make([]bool, len(childTasks))
+
+				task := flow.Define(goyek.Task{
+					Name: "task",
+					Action: func(a *goyek.A) {
+						a.Cleanup(onceCall(t, a.Name()+" cleanup"))
+						onceCall(t, a.Name())()
+
+						k, ok := a.Context().Value(ctxKey).(int)
+						if !ok {
+							return
+						}
+
+						childTasksResults[k] = true
+					},
+					Deps: goyek.Deps{depsTask},
+				})
+
+				for i := 0; i < len(childTasks); i++ {
+					i := i
+					childTasks[i] = flow.Define(goyek.Task{
+						Name: "child task " + strconv.Itoa(i),
+						Action: func(a *goyek.A) {
+							a.Cleanup(onceCall(t, a.Name()+" cleanup"))
+							onceCall(t, a.Name())()
+
+							if throwPanic {
+								a.Cleanup(func() {
+									panic("some panic")
+								})
+							}
+
+							prevCtx := a.Context()
+							newA := a.WithContext(context.WithValue(a.Context(), ctxKey, i))
+							assertEqual(t, newA.Name(), a.Name(), "name changed for "+a.Name())
+							task.Action()(newA)
+							assertEqual(t, a.Context(), prevCtx, "context changed for "+a.Name())
+						},
+						Deps:     goyek.Deps{depsTask},
+						Parallel: parallel,
+					})
+				}
+
+				main := flow.Define(goyek.Task{
+					Name: "main",
+					Deps: childTasks,
+				})
+
+				chkFunc := assertPass
+				if throwPanic {
+					chkFunc = assertFail
+				}
+				chkFunc(t, flow.Execute(context.Background(), []string{main.Name()}), "flow execute")
+
+				for index, result := range childTasksResults {
+					chkFunc := assertTrue
+					if !parallel && throwPanic && index != 0 { // only first will be true if not parallel and with panic
+						chkFunc = assertFalse
+					}
+
+					chkFunc(t, result, "child result "+strconv.Itoa(index)+" is false")
+				}
+			})
+		}
+	}
+}
+
+func onceCall(t *testing.T, name string) func() {
+	t.Helper()
+
+	var callsCount int
+	var callsCountM sync.Mutex
+
+	t.Cleanup(func() {
+		assertEqual(t, callsCount, 1, "unexpected number of calls '"+name+"'")
+	})
+
+	return func() {
+		callsCountM.Lock()
+		defer callsCountM.Unlock()
+		callsCount++
 	}
 }
 
