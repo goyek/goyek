@@ -355,23 +355,19 @@ func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byt
 	cleanupFinished = true
 }
 
-func (a *A) callLastCleanup() bool {
-	var cleanup func()
-	a.mu.Lock()
-	if len(a.cleanups) > 0 {
-		last := len(a.cleanups) - 1
-		cleanup = a.cleanups[last]
-		a.cleanups = a.cleanups[:last]
-	}
-	a.mu.Unlock()
-	if cleanup == nil {
-		return false
-	}
-	cleanup()
-	return true
-}
-
 func (a *A) callCleanups() {
-	for a.callLastCleanup() {
+	for {
+		var cleanup func()
+		a.mu.Lock()
+		if len(a.cleanups) > 0 {
+			last := len(a.cleanups) - 1
+			cleanup = a.cleanups[last]
+			a.cleanups = a.cleanups[:last]
+		}
+		a.mu.Unlock()
+		if cleanup == nil {
+			return
+		}
+		cleanup()
 	}
 }
