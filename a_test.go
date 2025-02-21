@@ -90,7 +90,7 @@ func TestA_WithContext(t *testing.T) {
 				t.Errorf("status was %s but want %s", got.Status, tc.wantStatus)
 			}
 			if got1 != ctx {
-				t.Errorf("orginal Context returned %v but want %v", got1, ctx)
+				t.Errorf("original Context returned %v but want %v", got1, ctx)
 			}
 			if got2 != newCtx {
 				t.Errorf("derived Context returned %v but want %v", got2, newCtx)
@@ -99,10 +99,10 @@ func TestA_WithContext(t *testing.T) {
 				t.Errorf("logging or cleanup failed, out was %q but want %q", out, want)
 			}
 			if failed != tc.wantFailed {
-				t.Errorf("orginal Failed returned %v but want %v", failed, tc.wantFailed)
+				t.Errorf("original Failed returned %v but want %v", failed, tc.wantFailed)
 			}
 			if skipped != tc.wantSkipped {
-				t.Errorf("orginal Skipped returned %v but want %v", skipped, tc.wantSkipped)
+				t.Errorf("original Skipped returned %v but want %v", skipped, tc.wantSkipped)
 			}
 			if failed2 != tc.wantFailed {
 				t.Errorf("derived Failed returned %v but want %v", failed2, tc.wantFailed)
