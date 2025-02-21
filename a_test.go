@@ -73,6 +73,21 @@ func TestA_Cleanup_Fail(t *testing.T) {
 	assertEqual(t, got.Status, goyek.StatusFailed, "shoud return proper status")
 }
 
+func TestA_Cleanup_nil(t *testing.T) {
+	out := &strings.Builder{}
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a.Cleanup(func() {
+			a.Log("3")
+		})
+		a.Log("1")
+		a.Cleanup(nil) // nil cleanup func is gracefully ignored
+		a.Log("2")
+	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: out})
+
+	assertEqual(t, got.Status, goyek.StatusPassed, "shoud return proper status")
+	assertEqual(t, out.String(), "1\n2\n3\n", "should continue execution")
+}
+
 func TestA_Setenv(t *testing.T) {
 	key := "GOYEK_TEST_ENV"
 	val := "1"
