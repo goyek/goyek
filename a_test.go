@@ -69,7 +69,6 @@ func TestA_WithContext(t *testing.T) {
 				failed, skipped   bool
 				failed2, skipped2 bool
 			)
-
 			res := goyek.NewRunner(func(a *goyek.A) {
 				a2 := a.WithContext(newCtx)
 				got = a.Context()   // ctx
@@ -120,7 +119,7 @@ func TestA_WithContext_nil(t *testing.T) {
 	out := &strings.Builder{}
 	got := goyek.NewRunner(func(a *goyek.A) {
 		a.Log("1")
-		a.WithContext(nil) // panics
+		a.WithContext(nil) //nolint:staticcheck // panic intentionally
 		a.Log("2")
 	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: out})
 
