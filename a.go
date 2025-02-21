@@ -209,6 +209,8 @@ func (a *A) Cleanup(fn func()) {
 
 // Setenv calls os.Setenv(key, value) and uses Cleanup to restore the environment variable
 // to its original value after the action.
+//
+// Because Setenv affects the whole process, it cannot be used in parallel tasks.
 func (a *A) Setenv(key, value string) {
 	a.Helper()
 	prevValue, ok := os.LookupEnv(key)
