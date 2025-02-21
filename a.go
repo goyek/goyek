@@ -193,6 +193,7 @@ func (a *A) SkipNow() {
 // to ctx. The provided ctx must be non-nil.
 func (a *A) WithContext(ctx context.Context) *A {
 	res := *a
+	res.ctx = ctx
 	return &res
 }
 
