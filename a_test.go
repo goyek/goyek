@@ -470,14 +470,14 @@ func TestA_WithContextNilCtx(t *testing.T) {
 func onceCall(t *testing.T, name string) func() {
 	t.Helper()
 
-	var callsCount atomic.Int64
+	var callsCount int64
 
 	t.Cleanup(func() {
-		assertEqual(t, callsCount.Load(), int64(1), "unexpected number of calls '"+name+"'")
+		assertEqual(t, callsCount, int64(1), "unexpected number of calls '"+name+"'")
 	})
 
 	return func() {
-		callsCount.Add(1)
+		atomic.AddInt64(&callsCount, 1)
 	}
 }
 
