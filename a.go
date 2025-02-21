@@ -22,14 +22,15 @@ import (
 // The other reporting methods, such as the variations of Log and Error,
 // may be called simultaneously from multiple goroutines.
 type A struct {
-	ctx      context.Context
-	name     string
-	output   io.Writer
-	logger   Logger
-	mu       sync.Mutex
-	failed   bool
-	skipped  bool
-	cleanups []func()
+	ctx    context.Context
+	name   string
+	output io.Writer
+	logger Logger
+
+	mu       *sync.Mutex
+	failed   *bool
+	skipped  *bool
+	cleanups *[]func()
 }
 
 // Context returns the run context.
@@ -88,7 +89,7 @@ func (a *A) Errorf(format string, args ...interface{}) {
 // Failed reports whether the function has failed.
 func (a *A) Failed() bool {
 	a.mu.Lock()
-	res := a.failed
+	res := *a.failed
 	a.mu.Unlock()
 	return res
 }
@@ -96,7 +97,7 @@ func (a *A) Failed() bool {
 // Fail marks the function as having failed but continues execution.
 func (a *A) Fail() {
 	a.mu.Lock()
-	a.failed = true
+	*a.failed = true
 	a.mu.Unlock()
 }
 
@@ -141,7 +142,7 @@ func (a *A) FailNow() {
 // Skipped reports whether the task was skipped.
 func (a *A) Skipped() bool {
 	a.mu.Lock()
-	res := a.skipped
+	res := *a.skipped
 	a.mu.Unlock()
 	return res
 }
@@ -183,7 +184,7 @@ func (a *A) Skipf(format string, args ...interface{}) {
 // Calling SkipNow does not stop those other goroutines.
 func (a *A) SkipNow() {
 	a.mu.Lock()
-	a.skipped = true
+	*a.skipped = true
 	a.mu.Unlock()
 	runtime.Goexit()
 }
@@ -191,7 +192,8 @@ func (a *A) SkipNow() {
 // WithContext returns a derived a with its context changed
 // to ctx. The provided ctx must be non-nil.
 func (a *A) WithContext(ctx context.Context) *A {
-	return a
+	res := *a
+	return &res
 }
 
 // Helper marks the calling function as a helper function.
@@ -209,7 +211,7 @@ func (a *A) Helper() {
 // Cleanup functions will be called in the last-added first-called order.
 func (a *A) Cleanup(fn func()) {
 	a.mu.Lock()
-	a.cleanups = append(a.cleanups, fn)
+	*a.cleanups = append(*a.cleanups, fn)
 	a.mu.Unlock()
 }
 
@@ -316,7 +318,7 @@ func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byt
 	// we still run the remaining cleanup functions.
 	defer func() {
 		a.mu.Lock()
-		recur := len(a.cleanups) > 0
+		recur := len(*a.cleanups) > 0
 		a.mu.Unlock()
 		if recur {
 			a.runCleanups(finished, panicVal, panicStack)
@@ -326,10 +328,10 @@ func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byt
 	for {
 		var cleanup func()
 		a.mu.Lock()
-		if len(a.cleanups) > 0 {
-			last := len(a.cleanups) - 1
-			cleanup = a.cleanups[last]
-			a.cleanups = a.cleanups[:last]
+		if len(*a.cleanups) > 0 {
+			last := len(*a.cleanups) - 1
+			cleanup = (*a.cleanups)[last]
+			*a.cleanups = (*a.cleanups)[:last]
 		}
 		a.mu.Unlock()
 		if cleanup == nil {
