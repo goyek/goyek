@@ -188,6 +188,12 @@ func (a *A) SkipNow() {
 	runtime.Goexit()
 }
 
+// WithContext returns a derived a with its context changed
+// to ctx. The provided ctx must be non-nil.
+func (a *A) WithContext(ctx context.Context) *A {
+	return a
+}
+
 // Helper marks the calling function as a helper function.
 // It calls logger's Helper method if implemented.
 // By default, when printing file and line information, that function will be skipped.

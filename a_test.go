@@ -10,6 +10,110 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
+func TestA_WithContext(t *testing.T) {
+	testCases := []struct {
+		desc        string
+		fn          func(a, a2 *goyek.A)
+		wantStatus  goyek.Status
+		wantFailed  bool
+		wantSkipped bool
+	}{
+		{
+			desc:       "Pass",
+			fn:         func(_, _ *goyek.A) {},
+			wantStatus: goyek.StatusPassed,
+		},
+		{
+			desc: "Fail",
+			fn: func(a, _ *goyek.A) {
+				a.FailNow()
+			},
+			wantStatus: goyek.StatusFailed,
+			wantFailed: true,
+		},
+		{
+			desc: "FailDerived",
+			fn: func(_, a2 *goyek.A) {
+				a2.FailNow()
+			},
+			wantStatus: goyek.StatusFailed,
+			wantFailed: true,
+		},
+		{
+			desc: "Skip",
+			fn: func(a, _ *goyek.A) {
+				a.SkipNow()
+			},
+			wantStatus:  goyek.StatusSkipped,
+			wantSkipped: true,
+		},
+		{
+			desc: "SkipDerived",
+			fn: func(_, a2 *goyek.A) {
+				a2.SkipNow()
+			},
+			wantStatus:  goyek.StatusSkipped,
+			wantSkipped: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			sb := &strings.Builder{}
+
+			ctx := context.Background()
+			type ctxKey struct{}
+			newCtx := context.WithValue(ctx, ctxKey{}, 0)
+
+			var got1, got2 context.Context
+			var failed2, skipped2 bool
+			var failed, skipped bool
+
+			got := goyek.NewRunner(func(a *goyek.A) {
+				a2 := a.WithContext(newCtx)
+				got1 = a.Context()  // ctx
+				got2 = a2.Context() // newCtx
+				a2.Log("1")
+				a.Cleanup(func() {
+					skipped = a.Skipped()
+					failed = a.Failed()
+					a.Log("3")
+				})
+				a2.Cleanup(func() {
+					skipped2 = a2.Skipped()
+					failed2 = a2.Failed()
+					a2.Log("2")
+				})
+				tc.fn(a, a2)
+			})(goyek.Input{Context: ctx, Output: sb, Logger: goyek.FmtLogger{}})
+
+			if got.Status != tc.wantStatus {
+				t.Errorf("status was %s but want %s", got.Status, tc.wantStatus)
+			}
+			if got1 != ctx {
+				t.Errorf("orginal Context returned %v but want %v", got1, ctx)
+			}
+			if got2 != newCtx {
+				t.Errorf("derived Context returned %v but want %v", got2, newCtx)
+			}
+			if out, want := sb.String(), "1\n2\n3\n"; out != want {
+				t.Errorf("logging or cleanup failed, out was %q but want %q", out, want)
+			}
+			if failed != tc.wantFailed {
+				t.Errorf("orginal Failed returned %v but want %v", failed, tc.wantFailed)
+			}
+			if skipped != tc.wantSkipped {
+				t.Errorf("orginal Skipped returned %v but want %v", skipped, tc.wantSkipped)
+			}
+			if failed2 != tc.wantFailed {
+				t.Errorf("derived Failed returned %v but want %v", failed2, tc.wantFailed)
+			}
+			if skipped2 != tc.wantSkipped {
+				t.Errorf("derived Skipped returned %v but want %v", skipped2, tc.wantSkipped)
+			}
+		})
+	}
+}
+
 func TestA_Cleanup(t *testing.T) {
 	out := &strings.Builder{}
 
