@@ -64,13 +64,15 @@ func TestA_WithContext(t *testing.T) {
 			type ctxKey struct{}
 			newCtx := context.WithValue(ctx, ctxKey{}, 0)
 
-			var got1, got2 context.Context
-			var failed2, skipped2 bool
-			var failed, skipped bool
+			var (
+				got, got2         context.Context
+				failed, skipped   bool
+				failed2, skipped2 bool
+			)
 
-			got := goyek.NewRunner(func(a *goyek.A) {
+			res := goyek.NewRunner(func(a *goyek.A) {
 				a2 := a.WithContext(newCtx)
-				got1 = a.Context()  // ctx
+				got = a.Context()   // ctx
 				got2 = a2.Context() // newCtx
 				a2.Log("1")
 				a.Cleanup(func() {
@@ -86,11 +88,11 @@ func TestA_WithContext(t *testing.T) {
 				tc.fn(a, a2)
 			})(goyek.Input{Context: ctx, Output: sb, Logger: goyek.FmtLogger{}})
 
-			if got.Status != tc.wantStatus {
-				t.Errorf("status was %s but want %s", got.Status, tc.wantStatus)
+			if res.Status != tc.wantStatus {
+				t.Errorf("status was %s but want %s", res.Status, tc.wantStatus)
 			}
-			if got1 != ctx {
-				t.Errorf("original Context returned %v but want %v", got1, ctx)
+			if got != ctx {
+				t.Errorf("original Context returned %v but want %v", got, ctx)
 			}
 			if got2 != newCtx {
 				t.Errorf("derived Context returned %v but want %v", got2, newCtx)
