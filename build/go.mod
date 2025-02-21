@@ -1,7 +1,6 @@
 module github.com/goyek/goyek/build
 
-go 1.23
-replace github.com/goyek/goyek/v2 => ../
+go 1.23.0
 
 require (
 	github.com/client9/misspell v0.3.4
@@ -9,6 +8,8 @@ require (
 	github.com/goyek/goyek/v2 v2.0.0-00010101000000-000000000000
 	github.com/mattn/go-shellwords v1.0.12
 )
+
+replace github.com/goyek/goyek/v2 => ../
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
