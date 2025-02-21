@@ -192,6 +192,9 @@ func (a *A) SkipNow() {
 // WithContext returns a derived a with its context changed
 // to ctx. The provided ctx must be non-nil.
 func (a *A) WithContext(ctx context.Context) *A {
+	if ctx == nil {
+		panic("nil context")
+	}
 	res := *a
 	res.ctx = ctx
 	return &res

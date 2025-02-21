@@ -114,6 +114,19 @@ func TestA_WithContext(t *testing.T) {
 	}
 }
 
+func TestA_WithContext_nil(t *testing.T) {
+	out := &strings.Builder{}
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a.Log("1")
+		a.WithContext(nil) // panics
+		a.Log("2")
+	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: out})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "shoud return proper status")
+	assertEqual(t, got.PanicValue, "nil context", "shoud return proper panic value")
+	assertEqual(t, out.String(), "1\n", "should interrupt execution")
+}
+
 func TestA_Cleanup(t *testing.T) {
 	out := &strings.Builder{}
 
