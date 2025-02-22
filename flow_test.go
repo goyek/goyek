@@ -348,9 +348,9 @@ func Test_concurrent_printing(t *testing.T) {
 	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(a *goyek.A) {
-			ch := make(chan struct{}, 1)
+			ch := make(chan struct{})
 			go func() {
-				defer func() { ch <- struct{}{} }()
+				defer func() { close(ch) }()
 				a.Log("from child goroutine\nwith new line")
 			}()
 			a.Error("from main goroutine")

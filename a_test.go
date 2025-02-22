@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/goyek/goyek/v2"
 )
@@ -126,6 +127,85 @@ func TestA_WithContext_nil(t *testing.T) {
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 	assertEqual(t, got.PanicValue, "nil context", "should return proper panic value")
 	assertEqual(t, out.String(), "1\n", "should interrupt execution")
+}
+
+func Test_WithContext_concurrent_fail_derived(t *testing.T) {
+	timeout := time.NewTimer(10 * time.Second)
+	defer timeout.Stop()
+
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a2 := a.WithContext(a.Context())
+		go func() {
+			a2.Fail()
+		}()
+		for {
+			if a.Failed() {
+				return
+			}
+			select {
+			case <-timeout.C:
+				t.Error("test timeout")
+				return
+			default:
+			}
+		}
+	})(goyek.Input{})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+}
+
+func Test_WithContext_concurrent_fail_original(t *testing.T) {
+	timeout := time.NewTimer(10 * time.Second)
+	defer timeout.Stop()
+
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a2 := a.WithContext(a.Context())
+		go func() {
+			a.Fail()
+		}()
+		for {
+			if a2.Failed() {
+				return
+			}
+			select {
+			case <-timeout.C:
+				t.Error("test timeout")
+				return
+			default:
+			}
+		}
+	})(goyek.Input{})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+}
+
+func Test_WithContext_concurrent_cleanup(t *testing.T) {
+	out := &strings.Builder{}
+
+	timeout := time.NewTimer(10 * time.Second)
+	defer timeout.Stop()
+
+	var derivedCalled, originalCalled bool
+
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a2 := a.WithContext(a.Context())
+
+		ch := make(chan struct{})
+		go func() {
+			defer func() { close(ch) }()
+			a2.Cleanup(func() {
+				derivedCalled = true
+			})
+		}()
+		a.Cleanup(func() {
+			originalCalled = true
+		})
+		<-ch
+	})(goyek.Input{Output: out})
+
+	assertEqual(t, got.Status, goyek.StatusPassed, "should return proper status")
+	assertTrue(t, originalCalled, "original cleanup called")
+	assertTrue(t, derivedCalled, "derived cleanup called")
 }
 
 func TestA_Cleanup(t *testing.T) {
