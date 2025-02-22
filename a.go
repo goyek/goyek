@@ -32,6 +32,7 @@ type A struct {
 	skipped     bool
 	skippedCall func()
 	cleanups    []func()
+	childs      []*A
 }
 
 // Context returns the run context.
@@ -41,7 +42,7 @@ func (a *A) Context() context.Context {
 
 // WithContext returns a derived a with its context changed
 // to ctx. The provided ctx must be non-nil.
-func (a *A) WithContext(ctx context.Context) *A {
+func (a *A) WithContext(ctx context.Context) (*A, context.CancelFunc) {
 	if ctx == nil {
 		panic("nil context")
 	}
@@ -60,11 +61,9 @@ func (a *A) WithContext(ctx context.Context) *A {
 		skippedCall: a.SkipNow,
 	}
 
-	a.cleanups = append(a.cleanups, func() {
-		result.callCleanups()
-	})
+	a.childs = append(a.childs, result)
 
-	return result
+	return result, result.callCleanups
 }
 
 // Name returns the name of the running task.
@@ -127,6 +126,11 @@ func (a *A) Failed() bool {
 func (a *A) Fail() {
 	a.mu.Lock()
 	a.failed = true
+	for _, child := range a.childs {
+		child.mu.Lock()
+		child.failed = true
+		child.mu.Unlock()
+	}
 	a.mu.Unlock()
 	if a.failedCall != nil {
 		a.failedCall()
@@ -217,6 +221,11 @@ func (a *A) Skipf(format string, args ...interface{}) {
 func (a *A) SkipNow() {
 	a.mu.Lock()
 	a.skipped = true
+	for _, child := range a.childs {
+		child.mu.Lock()
+		child.skipped = true
+		child.mu.Unlock()
+	}
 	a.mu.Unlock()
 	if a.skippedCall != nil {
 		a.skippedCall()
