@@ -41,7 +41,8 @@ func (a *A) Context() context.Context {
 }
 
 // WithContext returns a derived a with its context changed
-// to ctx. The provided ctx must be non-nil.
+// to ctx and cancelFunc. The provided ctx must be non-nil and
+// returned cancelFunc must be called with defer.
 func (a *A) WithContext(ctx context.Context) (*A, context.CancelFunc) {
 	if ctx == nil {
 		panic("nil context")
