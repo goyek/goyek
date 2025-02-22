@@ -407,13 +407,6 @@ func prepareFlowAndTask(t *testing.T, childCount int, ctxKey interface{}, additi
 	loggerSpy := &helperLoggerSpy{}
 	flow.SetLogger(loggerSpy)
 
-	depsTask := flow.Define(goyek.Task{
-		Name: "deps",
-		Action: func(a *goyek.A) {
-			a.Cleanup(onceCall(t, a.Name()+" cleanup"))
-		},
-	})
-
 	childTasksResults := make([]bool, childCount)
 	return flow, flow.Define(goyek.Task{
 		Name: "task",
@@ -429,7 +422,6 @@ func prepareFlowAndTask(t *testing.T, childCount int, ctxKey interface{}, additi
 
 			additionalAction(a, k)
 		},
-		Deps: goyek.Deps{depsTask},
 	}), childTasksResults, loggerSpy
 }
 
