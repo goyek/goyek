@@ -8,6 +8,12 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.2.0...HEAD)
 
+### Added
+
+- Add `A.WithContext` that creates a derived `A` with a changed context.
+  Thanks to it `A` can be reused to pass cancelation and values via context
+  to the helper functions.
+
 ### Removed
 
 - Drop support for Go 1.13, 1.14, and 1.15.
