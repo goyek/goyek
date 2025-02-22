@@ -276,12 +276,12 @@ func TestA_WithContextFatal(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			flow, task, childTasksResults, loggerSpy := prepareFlowAndTask(t, 3, ctxKey, func(a *goyek.A, i int) {
-				a.Fatal(i)
-
 				a.Cleanup(func() {
 					failed := a.Failed()
 					assertTrue(t, failed, "a.Failed() should return true for "+a.Name())
 				})
+
+				a.Fatal(i)
 			})
 			childTasks := prepareTasks(t, flow, len(childTasksResults), c.parallel, task, func(i int) func(a *goyek.A) {
 				return func(a *goyek.A) {
@@ -293,14 +293,16 @@ func TestA_WithContextFatal(t *testing.T) {
 					assertEqual(t, newA.Name(), a.Name(), "name changed for "+a.Name())
 					assertEqual(t, a.Context(), prevCtx, "context changed for "+a.Name())
 					call()
-					task.Action()(newA)
 
-					call()
-					assertEqual(t, a.Context(), prevCtx, "context changed for "+a.Name()+" after "+task.Name()+" action call")
 					a.Cleanup(func() {
 						failed := a.Failed()
 						assertTrue(t, failed, "a.Failed() should return true for "+a.Name())
 					})
+
+					task.Action()(newA)
+
+					call()
+					assertEqual(t, a.Context(), prevCtx, "context changed for "+a.Name()+" after "+task.Name()+" action call")
 				}
 			})
 
@@ -352,12 +354,12 @@ func TestA_WithContextSkipped(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			flow, task, childTasksResults, loggerSpy := prepareFlowAndTask(t, 3, ctxKey, func(a *goyek.A, i int) {
-				a.Skip(i)
-
 				a.Cleanup(func() {
 					skipped := a.Skipped()
 					assertTrue(t, skipped, "a.Skipped() should return true for "+a.Name())
 				})
+
+				a.Skip(i)
 			})
 			childTasks := prepareTasks(t, flow, len(childTasksResults), c.parallel, task, func(i int) func(a *goyek.A) {
 				return func(a *goyek.A) {
@@ -370,13 +372,14 @@ func TestA_WithContextSkipped(t *testing.T) {
 					assertEqual(t, newA.Name(), a.Name(), "name changed for "+a.Name())
 					assertEqual(t, a.Context(), prevCtx, "context changed for "+a.Name())
 
-					task.Action()(newA)
-
-					call()
 					a.Cleanup(func() {
 						skipped := a.Skipped()
 						assertTrue(t, skipped, "a.Skipped() should return true for "+a.Name())
 					})
+
+					task.Action()(newA)
+
+					call()
 				}
 			})
 
