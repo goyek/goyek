@@ -3,6 +3,7 @@ package goyek
 import (
 	"context"
 	"io"
+	"sync"
 )
 
 // Task runner types.
@@ -76,11 +77,16 @@ func (r taskRunner) run(in Input) Result {
 		logger = FmtLogger{}
 	}
 
+	var failed, skipped bool
 	a := &A{
-		ctx:    ctx,
-		name:   in.TaskName,
-		output: out,
-		logger: logger,
+		mu:       &sync.Mutex{},
+		failed:   &failed,
+		skipped:  &skipped,
+		cleanups: &[]func(){},
+		ctx:      ctx,
+		name:     in.TaskName,
+		output:   out,
+		logger:   logger,
 	}
 
 	finished, panicVal, panicStack := a.run(r.action)

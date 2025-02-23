@@ -43,7 +43,7 @@ func TestRunner(t *testing.T) {
 			r := goyek.NewRunner(tc.action)
 			got := r(goyek.Input{})
 
-			assertEqual(t, got, tc.want, "shoud return proper result")
+			assertEqual(t, got, tc.want, "should return proper result")
 		})
 	}
 }
@@ -54,6 +54,6 @@ func TestRunner_panic(t *testing.T) {
 
 	got := r(goyek.Input{})
 
-	assertEqual(t, got.Status, goyek.StatusFailed, "shoud return proper status")
-	assertEqual(t, got.PanicValue, payload, "shoud return proper panic value")
+	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+	assertEqual(t, got.PanicValue, payload, "should return proper panic value")
 }

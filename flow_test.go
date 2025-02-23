@@ -7,33 +7,39 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/goyek/goyek/v2"
 )
 
+var onceDefaultFlow sync.Once
+
 func Test_DefaultFlow(t *testing.T) {
-	goyek.SetOutput(io.Discard)
-	assertEqual(t, goyek.Output(), io.Discard, "Output")
+	// Run only once as registering a task with the same name twice panics.
+	onceDefaultFlow.Do(func() {
+		goyek.SetOutput(io.Discard)
+		assertEqual(t, goyek.Output(), io.Discard, "Output")
 
-	goyek.SetLogger(goyek.FmtLogger{})
-	assertEqual(t, goyek.GetLogger(), goyek.FmtLogger{}, "Logger")
+		goyek.SetLogger(goyek.FmtLogger{})
+		assertEqual(t, goyek.GetLogger(), goyek.FmtLogger{}, "Logger")
 
-	goyek.SetUsage(goyek.Print)
-	goyek.Usage()()
+		goyek.SetUsage(goyek.Print)
+		goyek.Usage()()
 
-	task := goyek.Define(goyek.Task{Name: "task"})
-	other := goyek.Define(goyek.Task{Name: "other"})
-	goyek.Undefine(other)
-	assertEqual(t, goyek.Tasks()[0].Name(), "task", "Tasks")
+		task := goyek.Define(goyek.Task{Name: "task"})
+		other := goyek.Define(goyek.Task{Name: "other"})
+		goyek.Undefine(other)
+		assertEqual(t, goyek.Tasks()[0].Name(), "task", "Tasks")
 
-	goyek.SetDefault(task)
-	assertEqual(t, goyek.Default(), task, "Default")
+		goyek.SetDefault(task)
+		assertEqual(t, goyek.Default(), task, "Default")
 
-	goyek.Use(func(r goyek.Runner) goyek.Runner { return r })
-	goyek.UseExecutor(func(e goyek.Executor) goyek.Executor { return e })
-	assertPass(t, goyek.Execute(context.Background(), nil), "Execute")
+		goyek.Use(func(r goyek.Runner) goyek.Runner { return r })
+		goyek.UseExecutor(func(e goyek.Executor) goyek.Executor { return e })
+		assertPass(t, goyek.Execute(context.Background(), nil), "Execute")
+	})
 }
 
 func Test_Define_empty_name(t *testing.T) {
@@ -342,9 +348,9 @@ func Test_concurrent_printing(t *testing.T) {
 	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(a *goyek.A) {
-			ch := make(chan struct{}, 1)
+			ch := make(chan struct{})
 			go func() {
-				defer func() { ch <- struct{}{} }()
+				defer func() { close(ch) }()
 				a.Log("from child goroutine\nwith new line")
 			}()
 			a.Error("from main goroutine")
