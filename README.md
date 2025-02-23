@@ -59,7 +59,7 @@ Here are some good parts:
 - The tasks are defined similarly to
   [`cobra`](https://github.com/spf13/cobra) commands.
 - The task actions look like a Go unit test.
-  [`A`](https://pkg.go.dev/github.com/goyek/goyek/v2#Task)
+  [`A`](https://pkg.go.dev/github.com/goyek/goyek/v2#A)
   has similar methods to [`testing.T`](https://pkg.go.dev/testing#T).
   You may even use [`testify`](https://github.com/stretchr/testify)
   for asserting.
