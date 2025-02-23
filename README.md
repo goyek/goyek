@@ -59,15 +59,17 @@ Here are some good parts:
 - The tasks are defined similarly to
   [`cobra`](https://github.com/spf13/cobra) commands.
 - The task actions look like a Go unit test.
+  [`A`](https://pkg.go.dev/github.com/goyek/goyek/v2#Task)
+  has similar methods to [`testing.T`](https://pkg.go.dev/testing#T).
   You may even use [`testify`](https://github.com/stretchr/testify)
-  or [`fluentassert`](https://github.com/fluentassert/verify) for asserting.
+  for asserting.
 - You can reuse code like in any Go application.
   It may be helpful to use packages like
   [`fsnotify`](https://github.com/fsnotify/fsnotify) and [`viper`](https://github.com/spf13/viper).
 - It is highly customizable.
-- It does not use any third-party dependency other than the Go standard library.
+- It does not use any third-party dependency other than Go.
   You can find supplumental features in [`goyek/x`](https://github.com/goyek/x).
-- Minimal supported Go version is 1.13.
+- Minimal supported Go version is 1.16.
 
 ## Quick start
 
@@ -107,11 +109,16 @@ Put the following content in `/build/main.go`:
 package main
 
 import (
+	"os"
+
 	"github.com/goyek/goyek/v2"
 	"github.com/goyek/x/boot"
 )
 
 func main() {
+	if err := os.Chdir(".."); err != nil {
+		panic(err)
+	}
 	goyek.SetDefault(hello)
 	boot.Main()
 }
