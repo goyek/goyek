@@ -127,9 +127,11 @@ func main() {
 Run:
 
 ```out
+$ cd build
+
 $ go mod tidy
 
-$ go run ./build -h
+$ go run . -h
 Usage of build: [flags] [--] [tasks]
 Tasks:
   hello  demonstration
@@ -148,7 +150,7 @@ Flags:
         skip processing the comma-separated tasks
   -v    print all tasks as they are run
 
-$ go run ./build -v
+$ go run . -v
 ===== TASK  hello
       hello.go:16: greeting message
       hello.go:17: Exec: go version
@@ -209,30 +211,12 @@ explain why this feature is not out-of-the-box.
 
 ## Wrapper scripts
 
-Instead of executing `go run ./build`,
-you may create wrapper scripts,
+Instead of executing `go run .` in `build` directory,
+you may prefer using the wrapper scripts,
 which you can invoke from any location.
 
-Bash - `goyek.sh`:
-
-```bash
-#!/bin/bash
-set -euo pipefail
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-cd "$DIR"
-go run ./build "$@"
-```
-
-PowerShell - `goyek.ps1`:
-
-```powershell
-& go run .\build $args
-exit $global:LASTEXITCODE
-```
-
-If `/build` is a separate Go module,
-check the [goyek.sh](goyek.sh) and [goyek.ps1](goyek.ps1) scripts.
+Bash: [`goyek.sh`](goyek.sh).
+PowerShell: [`goyek.ps1`](goyek.ps1).
 
 ## Customizing
 
