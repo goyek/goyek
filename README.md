@@ -10,43 +10,41 @@
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
 **goyek** (/ˈɡɔɪæk/ [🔊 listen](http://ipa-reader.xyz/?text=%CB%88%C9%A1%C9%94%C9%AA%C3%A6k))
-is a task automation library.
-
-This library is intended to be an alternative to
+is a task automation library intended to be an alternative to
 [Make](https://www.gnu.org/software/make/),
 [Mage](https://github.com/magefile/mage),
 [Task](https://taskfile.dev/).
 
-Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
+Please ⭐ `Star` this repository if you find it valuable.
 
 The primary properties of goyek are: 
 
-- A library, instead of an application,
-  with API inspired by
+- Library, not an application, with API inspired by
   [`testing`](https://golang.org/pkg/testing),
   [`cobra`](https://github.com/spf13/cobra),
   [`flag`](https://golang.org/pkg/flag),
-  [`http`](https://golang.org/pkg/http)
-  packages.
+  [`http`](https://golang.org/pkg/http).
 - Cross-platform and shell independent.
 - No binary installation needed.
-- Easy to debug, like a regular Go code.
-- The tasks are defined similarly to
+- Easy to debug, like regular Go code.
+- Tasks are defined similarly to
   [`cobra`](https://github.com/spf13/cobra) commands.
 - The task action looks like a Go test.
   [`goyek.A`](https://pkg.go.dev/github.com/goyek/goyek/v2#A)
   has similar methods to [`testing.T`](https://pkg.go.dev/testing#T).
 - Reuse any Go code and library e.g. [`viper`](https://github.com/spf13/viper).
 - Highly customizable.
-- No third-party dependencies.
-- Supplumental features in [`goyek/x`](https://github.com/goyek/x).
+- Zero third-party dependencies.
+- Additional features in [`goyek/x`](https://github.com/goyek/x).
 
 ## Usage
 
-For build automation, the convention is to have the code in the `/build`
-directory (or even Go module).
+For build automation, store your code in the `build` directory.
 
-Put the following content in `/build/hello.go`:
+The following example defines a simple `hello` task that logs a message
+and prints the Go version.
+
+Create `build/hello.go`:
 
 ```go
 package main
@@ -70,7 +68,7 @@ var hello = goyek.Define(goyek.Task{
 })
 ```
 
-Put the following content in `/build/main.go`:
+Create `build/main.go`:
 
 ```go
 package main
@@ -92,16 +90,19 @@ func main() {
 ```
 
 The packages from [`github.com/goyek/x`](https://pkg.go.dev/github.com/goyek/x)
-are used for convinence.
+are used for convenience.
 
-Run:
+Run help:
+
+```sh
+cd build
+go mod tidy
+go run . -h
+```
+
+Expected output:
 
 ```out
-$ cd build
-
-$ go mod tidy
-
-$ go run . -h
 Usage of build: [flags] [--] [tasks]
 Tasks:
   hello  demonstration
@@ -119,40 +120,47 @@ Flags:
   -skip comma-separated tasks
         skip processing the comma-separated tasks
   -v    print all tasks as they are run
+```
 
-$ go run . -v
+Run with verbose output:
+
+```sh
+go run . -v
+```
+
+Example output:
+
+```out
 ===== TASK  hello
       hello.go:16: greeting message
       hello.go:17: Exec: go version
-go version go1.19.3 windows/amd64
+go version go1.24.0 linux/amd64
 ----- PASS: hello (0.12s)
 ok      0.123s
 ```
 
-Instead of executing `go run .` in `build` directory,
-you may prefer using the wrapper scripts,
-which you can invoke from any location.
+Instead of running `go run .` inside `build`, you can use wrapper scripts:
 
 - Bash: [`goyek.sh`](goyek.sh).
 - PowerShell: [`goyek.ps1`](goyek.ps1).
 
-You can use [`goyek/template`](https://github.com/goyek/template)
-to create a new repository.
+To quickly set up a new repository:
 
-For an existing repository you can copy most of its files.
+Use [`goyek/template`](https://github.com/goyek/template) when creating
+a new repository. For existing repositories, simply copy the relevant files.
 
-You can watch a 5 min [video]((https://www.youtube.com/watch?v=e-xWEH-fqJ0))
-([slides](https://docs.google.com/presentation/d/1xFAPXeMiOD-92xeIHkUD-SHmJZwc8mSIIgpjuJXEW3U/edit?usp=sharing)).
+Learn more:
 
-If you like looking at real usages, check build pipelines of
-[`goyek/x`](https://github.com/goyek/x/tree/main/build)
-or [`splunk-otel-go`](https://github.com/signalfx/splunk-otel-go/tree/main/build).
-
-See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v2) for more information.
+- 📺 5-minute video: [Watch here](https://www.youtube.com/watch?v=e-xWEH-fqJ0)
+  ([Slides](https://docs.google.com/presentation/d/1xFAPXeMiOD-92xeIHkUD-SHmJZwc8mSIIgpjuJXEW3U/edit?usp=sharing))
+- 🔍 Real-world usage:
+  - [`goyek/x`](https://github.com/goyek/x/tree/main/build)
+  - [`splunk-otel-go`](https://github.com/signalfx/splunk-otel-go/tree/main/build)
+- 📚 [Package documentation](https://pkg.go.dev/github.com/goyek/goyek/v2)
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) if you want to help us.
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 
