@@ -6,7 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
-## [Unreleased](https://github.com/goyek/goyek/compare/v2.2.0...HEAD)
+## [Unreleased](https://github.com/goyek/goyek/compare/v2.3.0...HEAD)
+
+## [2.3.0](https://github.com/goyek/goyek/releases/tag/v2.3.0) - 2025-02-25
+
+This release adds `A.WithContext` inspired by `http.Request.WithContext`
+and `A.Chdir` following `testing.T.Chdir`.
 
 ### Added
 
@@ -20,7 +25,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Drop support for Go 1.13, 1.14, and 1.15.
 
-## [2.2.0](https://github.com/goyek/goyek/compare/v2.1.0...v2.2.0) - 2024-08-19
+## [2.2.0](https://github.com/goyek/goyek/releases/tag/v2.2.0) - 2024-08-19
 
 This release adds flow execution middlewares.
 
@@ -40,7 +45,7 @@ This release adds flow execution middlewares.
 
 - Drop support for Go 1.11 and 1.12.
 
-## [2.1.0](https://github.com/goyek/goyek/compare/v2.0.0...v2.1.0) - 2024-01-17
+## [2.1.0](https://github.com/goyek/goyek/releases/tag/v2.1.0) - 2024-01-17
 
 This release adds parallel task execution support.
 
@@ -52,7 +57,7 @@ This release adds parallel task execution support.
 - Add `Input.Parallel` to allow middlewares to have special handling for
   parallel tasks.
 
-## [2.0.0](https://github.com/goyek/goyek/compare/v1.1.0...v2.0.0) - 2023-02-08
+## [2.0.0](https://github.com/goyek/goyek/releases/tag/v2.0.0) - 2023-02-08
 
 This release contains many **breaking changes**
 that are necessary to improve usability, extensibility, and customization.
@@ -135,7 +140,7 @@ You can also find new supplemental features in
 
 - Fix panic handling so that `panic(nil)` and `runtime.Goexit()` now cause task failure.
 
-## [1.1.0](https://github.com/goyek/goyek/compare/v1.0.0...v1.1.0) - 2022-10-12
+## [1.1.0](https://github.com/goyek/goyek/releases/tag/v1.1.0) - 2022-10-12
 
 This release focuses on improving output printing.
 There are no API changes.
@@ -149,11 +154,11 @@ There are no API changes.
 
 - Remove `TF.Cmd` undocumented behavior (printing command name and arguments).
 
-## [1.0.0](https://github.com/goyek/goyek/compare/v0.6.3...v1.0.0) - 2022-09-08
+## [1.0.0](https://github.com/goyek/goyek/releases/tag/v1.0.0) - 2022-09-08
 
 This is the first stable release.
 
-## [0.6.3](https://github.com/goyek/goyek/compare/v0.6.2...v0.6.3) - 2022-02-23
+## [0.6.3](https://github.com/goyek/goyek/releases/tag/v0.6.3) - 2022-02-23
 
 ### Added
 
@@ -161,14 +166,14 @@ This is the first stable release.
   the plus (`+`) and colon (`:`) characters can be used
   in the task and parameter name (but not as the first character).
   
-## [0.6.2](https://github.com/goyek/goyek/compare/v0.6.1...v0.6.2) - 2022-01-25
+## [0.6.2](https://github.com/goyek/goyek/releases/tag/v0.6.2) - 2022-01-25
 
 ### Fixed
 
 - The `Taskflow` does not fail when it was requested to cancel,
   but was completed successfully.
 
-## [0.6.1](https://github.com/goyek/goyek/compare/v0.6.0...v0.6.1) - 2021-12-27
+## [0.6.1](https://github.com/goyek/goyek/releases/tag/v0.6.1) - 2021-12-27
 
 This release adds the possibility to change the defaults of the global parameters.
 
@@ -177,7 +182,7 @@ This release adds the possibility to change the defaults of the global parameter
 - Add `RegisterVerboseParam` and `RegisterWorkDirParam` to overwrite
   default values for verbose and work dir parameters.
 
-## [0.6.0](https://github.com/goyek/goyek/compare/v0.5.0...v0.6.0) - 2021-08-02
+## [0.6.0](https://github.com/goyek/goyek/releases/tag/v0.6.0) - 2021-08-02
 
 This release contains multiple **breaking changes** in the Go API.
 It is supposed to make it cleaner.
@@ -199,7 +204,7 @@ It is supposed to make it cleaner.
 - Remove `DefaultOutput` global variable.
 - Remove `TF.Exec` method.
 
-## [0.5.0](https://github.com/goyek/goyek/compare/v0.4.0...v0.5.0) - 2021-06-21
+## [0.5.0](https://github.com/goyek/goyek/releases/tag/v0.5.0) - 2021-06-21
 
 ### Added
 
@@ -211,7 +216,7 @@ It is supposed to make it cleaner.
   They were allowed to start with an underscore (`_`), and now no longer are.
 - The PowerShell wrapper scripts `goyek.ps1` better handles `stderr` redirection.
 
-## [0.4.0](https://github.com/goyek/goyek/compare/v0.3.0...v0.4.0) - 2021-05-26
+## [0.4.0](https://github.com/goyek/goyek/releases/tag/v0.4.0) - 2021-05-26
 
 ### Added
 
@@ -220,7 +225,7 @@ It is supposed to make it cleaner.
   The new `Taskflow.WorkDirParam` method can be used to get its value in
   a task's command.
 
-## [0.3.0](https://github.com/goyek/goyek/compare/v0.2.0...v0.3.0) - 2021-05-03
+## [0.3.0](https://github.com/goyek/goyek/releases/tag/v0.3.0) - 2021-05-03
 
 The repository has been migrated from <https://github.com/pellared/taskflow>
 to <https://github.com/goyek/goyek>.
@@ -261,13 +266,13 @@ Moreover, the parameters are set via CLI using the flag syntax.
 - Remove `New` function, create instance using `&Taskflow{}` instead.
 - Drop official support for Go 1.10.
 
-## [0.2.0](https://github.com/goyek/goyek/compare/v0.1.1...v0.2.0) - 2021-03-14
+## [0.2.0](https://github.com/goyek/goyek/releases/tag/v0.2.0) - 2021-03-14
 
 ### Added
 
 - Add the possibility to set a default task.
 
-## [0.1.1](https://github.com/goyek/goyek/compare/v0.1.0...v0.1.1) - 2021-02-28
+## [0.1.1](https://github.com/goyek/goyek/releases/tag/v0.1.1) - 2021-02-28
 
 ### Fixed
 
