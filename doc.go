@@ -4,41 +4,36 @@ Package goyek helps implementing task automation.
 # Defining tasks
 
 Use [Define] to register a [Task].
+Each task consists of an Action function that executes when the task runs.
 
-Action is a function which executes when a task is running.
+Tasks can have dependencies, set via Deps. By default, dependencies run sequentially,
+but setting Parallel allows a task to run concurrently with other parallel tasks.
 
-You can add dependencies to task by setting Deps.
-
-By default, the dependencies are running in sequential order.
-Parallel can be set to allow a task to be run in parallel with other parallel tasks.
-
-Each task during [Flow.Main] or [Flow.Execute] runs at most once.
-
-It is valid to have a task with dependencies and no action.
+A task executes at most once per [Flow.Main] or [Flow.Execute] call.
+It is valid to define a task with dependencies but no action.
 
 A default task can be assigned using [SetDefault].
 
 # Running programs
 
-You can use the [github.com/goyek/x/cmd.Exec] that should cover most use cases.
+For executing external programs, use [github.com/goyek/x/cmd.Exec],
+which covers most cases. See [#60] and [#307] for details on why
+his feature is not built-in. In some cases, you may prefer [os/exec].
 
-[#60] and [#307] explain why this feature is not out-of-the-box.
-In some cases, you may prefer to use [os/exec].
+# Customization
 
-# Customizing
+You can customize output and behavior using [SetOutput], [SetLogger], [SetUsage],
+and [Execute] (as an alternative to [Main]).
 
-You can customize the default output by using
-[SetOutput], [SetLogger], [SetUsage], [Execute] (instead of [Main]).
+Middlewares can be integrated using [Use] and [UseExecutor]
+for additional functionality, such as generating task execution reports,
+adding retry logic, exporting execution telemetry.
 
-[Use] and [UseExecutor] are provided to allow using different types of middlewares.
-You can use a middleware, for example to: generate a task execution report,
-add retry logic, export task execution telemetry, etc.
-Some basic middlewares are provided in [github.com/goyek/goyek/v2/middleware] package.
+Basic middlewares are available in [github.com/goyek/goyek/v2/middleware].
 
-[github.com/goyek/x/boot.Main] convenient function sets the most commonly used middlewares
-nd defines flags to configure them.
-
-Some reusable customization are offered by [github.com/goyek/x].
+For a convenient setup, [github.com/goyek/x/boot.Main] applies commonly
+used middlewares and defines configurable flags.
+Additional customizations are available in [github.com/goyek/x].
 
 [#60]: https://github.com/goyek/goyek/issues/60
 [#307]: https://github.com/goyek/goyek/issues/307
