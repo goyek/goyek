@@ -1,45 +1,13 @@
 # goyek
 
-> Task automation in Go
-
 [![Go Reference](https://pkg.go.dev/badge/github.com/goyek/goyek.svg)](https://pkg.go.dev/github.com/goyek/goyek/v2)
 [![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
 [![GitHub Release](https://img.shields.io/github/v/release/goyek/goyek)](https://github.com/goyek/goyek/releases)
 [![go.mod](https://img.shields.io/github/go-mod/go-version/goyek/goyek)](go.mod)
-
 [![Build Status](https://img.shields.io/github/actions/workflow/status/goyek/goyek/build.yml?branch=main)](https://github.com/goyek/goyek/actions?query=workflow%3Abuild+branch%3Amain)
 [![Go Report Card](https://goreportcard.com/badge/github.com/goyek/goyek)](https://goreportcard.com/report/github.com/goyek/goyek)
 [![codecov](https://codecov.io/gh/goyek/goyek/branch/main/graph/badge.svg)](https://codecov.io/gh/goyek/goyek)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
-
-Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
-
-[![Introduction](https://img.youtube.com/vi/e-xWEH-fqJ0/hqdefault.jpg)](https://www.youtube.com/watch?v=e-xWEH-fqJ0)
-
-[Slides](https://docs.google.com/presentation/d/1xFAPXeMiOD-92xeIHkUD-SHmJZwc8mSIIgpjuJXEW3U/edit?usp=sharing).
-
----
-
-Table of Contents:
-
-- [Description](#description)
-- [Quick start](#quick-start)
-- [Repository template](#repository-template)
-- [Examples](#examples)
-- [Defining tasks](#defining-tasks)
-- [Running programs](#running-programs)
-- [Wrapper scripts](#wrapper-scripts)
-- [Using middlewares](#using-middlewares)
-- [Customizing](#customizing)
-- [Alternatives](#alternatives)
-  - [Make](#make)
-  - [Mage](#mage)
-  - [Task](#task)
-  - [Bazel](#bazel)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Description
 
 **goyek** (/ˈɡɔɪæk/ [🔊 listen](http://ipa-reader.xyz/?text=%CB%88%C9%A1%C9%94%C9%AA%C3%A6k))
 is a task automation library.
@@ -48,6 +16,8 @@ This library is intended to be an alternative to
 [Make](https://www.gnu.org/software/make/),
 [Mage](https://github.com/magefile/mage),
 [Task](https://taskfile.dev/).
+
+Please ⭐ `Star` this repository if you find it valuable and worth maintaining.
 
 The primary properties of goyek are: 
 
@@ -64,17 +34,16 @@ The primary properties of goyek are:
 - The tasks are defined similarly to
   [`cobra`](https://github.com/spf13/cobra) commands.
 - The task action looks like a Go test.
-  [`A`](https://pkg.go.dev/github.com/goyek/goyek/v2#A)
+  [`goyek.A`](https://pkg.go.dev/github.com/goyek/goyek/v2#A)
   has similar methods to [`testing.T`](https://pkg.go.dev/testing#T).
 - Reuse any Go code and library e.g. [`viper`](https://github.com/spf13/viper).
 - Highly customizable.
 - No third-party dependencies.
 - Supplumental features in [`goyek/x`](https://github.com/goyek/x).
 
-## Quick start
+See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v2) for more information.
 
-> Supplemental packages from [`github.com/goyek/x`](https://pkg.go.dev/github.com/goyek/x)
-> are used for convinence.
+## Quick start
 
 The convention is to have the build automation
 in the `/build` directory (or even Go module).
@@ -124,6 +93,9 @@ func main() {
 }
 ```
 
+The packages from [`github.com/goyek/x`](https://pkg.go.dev/github.com/goyek/x)
+are used for convinence.
+
 Run:
 
 ```out
@@ -159,24 +131,17 @@ go version go1.19.3 windows/amd64
 ok      0.123s
 ```
 
-## Repository template
-
 You can use [goyek/template](https://github.com/goyek/template)
 to create a new repository.
 
 For an existing repository you can copy most of its files.
 
-## Examples
+You can watch a 5 min [video]((https://www.youtube.com/watch?v=e-xWEH-fqJ0))
+([slides](https://docs.google.com/presentation/d/1xFAPXeMiOD-92xeIHkUD-SHmJZwc8mSIIgpjuJXEW3U/edit?usp=sharing)).
 
-- [goyek/template](https://github.com/goyek/template) -
-  Go application repository template
-- [build](build) -
-  dogfooding
-- [splunk-otel-go](https://github.com/signalfx/splunk-otel-go/tree/main/build) -
-  multi-module repository
-- [goyek/demo](https://github.com/goyek/demo)
-  and [goyek/workflow](https://github.com/goyek/workflow) -
-  demonstratation of the reusability potential
+If you like looking at real usages, check build pipelines of
+[`goyek/x`](https://github.com/goyek/x/tree/main/build)
+or [`splunk-otel-go`](https://github.com/signalfx/splunk-otel-go/tree/main/build).
 
 ## Defining tasks
 
