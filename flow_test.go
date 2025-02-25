@@ -19,6 +19,14 @@ var onceDefaultFlow sync.Once
 func Test_DefaultFlow(t *testing.T) {
 	// Run only once as registering a task with the same name twice panics.
 	onceDefaultFlow.Do(func() {
+		cleanGlobal := func() {
+			for _, task := range goyek.Tasks() {
+				goyek.Undefine(task)
+			}
+		}
+		cleanGlobal()
+		defer cleanGlobal()
+
 		goyek.SetOutput(io.Discard)
 		assertEqual(t, goyek.Output(), io.Discard, "Output")
 

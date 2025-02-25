@@ -10,8 +10,6 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-var noDeps goyek.Deps
-
 func assertTrue(tb testing.TB, got bool, msg string) {
 	tb.Helper()
 	if got {
