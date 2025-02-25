@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -129,7 +131,7 @@ func TestA_WithContext_nil(t *testing.T) {
 	assertEqual(t, out.String(), "1\n", "should interrupt execution")
 }
 
-func Test_WithContext_concurrent_fail_derived(t *testing.T) {
+func TestA_WithContext_concurrent_fail_derived(t *testing.T) {
 	timeout := time.NewTimer(10 * time.Second)
 	defer timeout.Stop()
 
@@ -154,7 +156,7 @@ func Test_WithContext_concurrent_fail_derived(t *testing.T) {
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 }
 
-func Test_WithContext_concurrent_fail_original(t *testing.T) {
+func TestA_WithContext_concurrent_fail_original(t *testing.T) {
 	timeout := time.NewTimer(10 * time.Second)
 	defer timeout.Stop()
 
@@ -179,7 +181,7 @@ func Test_WithContext_concurrent_fail_original(t *testing.T) {
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 }
 
-func Test_WithContext_concurrent_cleanup(t *testing.T) {
+func TestA_WithContext_concurrent_cleanup(t *testing.T) {
 	out := &strings.Builder{}
 
 	timeout := time.NewTimer(10 * time.Second)
@@ -333,6 +335,100 @@ func TestA_TempDir(t *testing.T) {
 	assertEqual(t, res.Status, goyek.StatusPassed, "should return proper status")
 	_, err := os.Lstat(dir)
 	assertTrue(t, os.IsNotExist(err), "should remove the dir after the action")
+}
+
+func TestA_Chdir(t *testing.T) {
+	oldDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(oldDir) //nolint:errcheck // not checking errors for cleanup
+
+	// The "relative" test case relies on tmp not being a symlink.
+	tmp, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	rel, err := filepath.Rel(oldDir, tmp)
+	if err != nil {
+		// If GOROOT is on C: volume and tmp is on the D: volume, there
+		// is no relative path between them, so skip that test case.
+		rel = "skip"
+	}
+
+	for _, tc := range []struct {
+		name, dir, pwd string
+		extraChdir     bool
+	}{
+		{
+			name: "absolute",
+			dir:  tmp,
+			pwd:  tmp,
+		},
+		{
+			name: "relative",
+			dir:  rel,
+			pwd:  tmp,
+		},
+		{
+			name: "current (absolute)",
+			dir:  oldDir,
+			pwd:  oldDir,
+		},
+		{
+			name: "current (relative) with extra os.Chdir",
+			dir:  ".",
+			pwd:  oldDir,
+
+			extraChdir: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.dir == "skip" {
+				t.Skipf("skipping test because there is no relative path between %s and %s", oldDir, tmp)
+			}
+			if !filepath.IsAbs(tc.pwd) {
+				t.Fatalf("Bad tc.pwd: %q (must be absolute)", tc.pwd)
+			}
+
+			res := goyek.NewRunner(func(a *goyek.A) {
+				a.Chdir(tc.dir)
+
+				newDir, err := os.Getwd()
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				if newDir != tc.pwd {
+					t.Errorf("failed to chdir to %q: getwd: got %q, want %q", tc.dir, newDir, tc.pwd)
+					return
+				}
+
+				switch runtime.GOOS {
+				case "windows", "plan9":
+					// Windows and Plan 9 do not use the PWD variable.
+				default:
+					if pwd := os.Getenv("PWD"); pwd != tc.pwd {
+						t.Errorf("PWD: got %q, want %q", pwd, tc.pwd)
+						return
+					}
+				}
+
+				if tc.extraChdir {
+					_ = os.Chdir("..")
+				}
+			})(goyek.Input{})
+			assertEqual(t, res.Status, goyek.StatusPassed, "should return proper status")
+
+			newDir, err := os.Getwd()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if newDir != oldDir {
+				t.Fatalf("failed to restore wd to %s: getwd: %s", oldDir, newDir)
+			}
+		})
+	}
 }
 
 func TestA_uses_Logger_dynamic_interface(t *testing.T) {
