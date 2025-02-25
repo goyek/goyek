@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"runtime/debug"
 	"strings"
@@ -279,6 +280,47 @@ func (a *A) TempDir() string {
 		}
 	})
 	return dir
+}
+
+// Chdir calls os.Chdir(dir) and uses Cleanup to restore the current
+// working directory to its original value after the test. On Unix, it
+// also sets PWD environment variable for the duration of the test.
+//
+// Because Chdir affects the whole process, it should not be used
+// in parallel tasks.
+func (a *A) Chdir(dir string) {
+	oldwd, err := os.Open(".")
+	if err != nil {
+		a.Fatal(err)
+	}
+	if err = os.Chdir(dir); err != nil {
+		a.Fatal(err)
+	}
+	// On POSIX platforms, PWD represents “an absolute pathname of the
+	// current working directory.” Since we are changing the working
+	// directory, we should also set or update PWD to reflect that.
+	switch runtime.GOOS {
+	case "windows", "plan9":
+		// Windows and Plan 9 do not use the PWD variable.
+	default:
+		if !filepath.IsAbs(dir) {
+			dir, err = os.Getwd()
+			if err != nil {
+				a.Fatal(err)
+			}
+		}
+		a.Setenv("PWD", dir)
+	}
+	a.Cleanup(func() {
+		err := oldwd.Chdir()
+		oldwd.Close()
+		if err != nil {
+			// It's not safe to continue with tests if we can't
+			// get back to the original working directory. Since
+			// we are holding a dirfd, this is highly unlikely.
+			panic("goyek.Chdir: " + err.Error())
+		}
+	})
 }
 
 func (a *A) run(action func(a *A)) (finished bool, panicVal interface{}, panicStack []byte) {
