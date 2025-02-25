@@ -41,12 +41,10 @@ The primary properties of goyek are:
 - No third-party dependencies.
 - Supplumental features in [`goyek/x`](https://github.com/goyek/x).
 
-See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v2) for more information.
+## Usage
 
-## Quick start
-
-The convention is to have the build automation
-in the `/build` directory (or even Go module).
+For build automation, the convention is to have the code in the `/build`
+directory (or even Go module).
 
 Put the following content in `/build/hello.go`:
 
@@ -131,7 +129,14 @@ go version go1.19.3 windows/amd64
 ok      0.123s
 ```
 
-You can use [goyek/template](https://github.com/goyek/template)
+Instead of executing `go run .` in `build` directory,
+you may prefer using the wrapper scripts,
+which you can invoke from any location.
+
+- Bash: [`goyek.sh`](goyek.sh).
+- PowerShell: [`goyek.ps1`](goyek.ps1).
+
+You can use [`goyek/template`](https://github.com/goyek/template)
 to create a new repository.
 
 For an existing repository you can copy most of its files.
@@ -142,6 +147,8 @@ You can watch a 5 min [video]((https://www.youtube.com/watch?v=e-xWEH-fqJ0))
 If you like looking at real usages, check build pipelines of
 [`goyek/x`](https://github.com/goyek/x/tree/main/build)
 or [`splunk-otel-go`](https://github.com/signalfx/splunk-otel-go/tree/main/build).
+
+See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v2) for more information.
 
 ## Defining tasks
 
@@ -173,15 +180,6 @@ like `Exec` in [build/exec.go](build/exec.go).
 
 [#60](https://github.com/goyek/goyek/issues/60) and [#307](https://github.com/goyek/goyek/issues/307)
 explain why this feature is not out-of-the-box.
-
-## Wrapper scripts
-
-Instead of executing `go run .` in `build` directory,
-you may prefer using the wrapper scripts,
-which you can invoke from any location.
-
-Bash: [`goyek.sh`](goyek.sh).
-PowerShell: [`goyek.ps1`](goyek.ps1).
 
 ## Customizing
 
