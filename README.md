@@ -150,68 +150,6 @@ or [`splunk-otel-go`](https://github.com/signalfx/splunk-otel-go/tree/main/build
 
 See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v2) for more information.
 
-## Defining tasks
-
-Use [`Define`](https://pkg.go.dev/github.com/goyek/goyek/v2#Define)
-to register a a task.
-
-You can add dependencies to already defineded tasks using
-[`Task.Deps`](https://pkg.go.dev/github.com/goyek/goyek/v2#Task.Deps).
-The dependencies are running in sequential order.
-Each task runs at most once.
-
-The [`Task.Action`](https://pkg.go.dev/github.com/goyek/goyek/v2#Task.Action)
-is a function which executes when a task is running.
-A task can have only dependencies and no action to act as a pipeline.
-
-The [`Task.Parallel`](https://pkg.go.dev/github.com/goyek/goyek/v2#Task.Parallel)
-can be set to allow a task to be run in parallel with other parallel tasks.
-
-A default task can be assigned using [`SetDefault`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetDefault).
-
-## Running programs
-
-You can use the [`cmd.Exec`](https://pkg.go.dev/github.com/goyek/x/cmd#Exec)
-convenient function from [goyek/x](https://github.com/goyek/x)
-that should cover most use cases.
-
-Alternatively, you may prefer create your own helpers
-like `Exec` in [build/exec.go](build/exec.go).
-
-[#60](https://github.com/goyek/goyek/issues/60) and [#307](https://github.com/goyek/goyek/issues/307)
-explain why this feature is not out-of-the-box.
-
-## Customizing
-
-Call the [`Use`](https://pkg.go.dev/github.com/goyek/goyek/v2#Use) function
-or [`UseExecutor`](https://pkg.go.dev/github.com/goyek/goyek/v2#UseExecutor)
-to setup a task runner or flow executor interceptor (middleware).
-
-You can use a middleware, for example to:
-generate a task execution report,
-add retry logic,
-export task execution telemetry, etc.
-
-You can use some reusable middlewares from the
-[`middleware`](https://pkg.go.dev/github.com/goyek/goyek/v2/middleware)
-package. [`ReportStatus`](https://pkg.go.dev/github.com/goyek/goyek/v2/middleware#ReportStatus)
-is the most commonly used middleware.
-
-Notice that the [`boot.Main`](https://pkg.go.dev/github.com/goyek/x/boot#Main)
-convenient function from [goyek/x](https://github.com/goyek/x)
-sets the most commonly used middlewares and defines flags to configure them.
-
-You can customize the default output by using:
-
-- [`SetOutput`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetOutput)
-- [`SetLogger`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetLogger)
-- [`SetUsage`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetUsage)
-- [`Execute`](https://pkg.go.dev/github.com/goyek/goyek/v2#Execute)
-  (instead of [`Main`](https://pkg.go.dev/github.com/goyek/goyek/v2#Main))
-
-You can also study how [github.com/goyek/x](https://github.com/goyek/x)
-is customizing the default behavior.
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) if you want to help us.
