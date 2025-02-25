@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/gh/goyek/goyek/branch/main/graph/badge.svg)](https://codecov.io/gh/goyek/goyek)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
-**goyek** (/ˈɡɔɪæk/ [🔊 listen](http://ipa-reader.xyz/?text=%CB%88%C9%A1%C9%94%C9%AA%C3%A6k))
+**goyek** (/ˈɡɔɪæk/ [🔊 listen](https://ipa-reader.com/?text=%CB%88%C9%A1%C9%94%C9%AA%C3%A6k))
 is a task automation library intended to be an alternative to
 [Make](https://www.gnu.org/software/make/),
 [Mage](https://github.com/magefile/mage),
