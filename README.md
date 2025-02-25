@@ -17,7 +17,7 @@ is a task automation library intended to be an alternative to
 
 Please ⭐ `Star` this repository if you find it valuable.
 
-The primary properties of goyek are: 
+The primary properties of goyek are:
 
 - Library, not an application, with API inspired by
   [`testing`](https://golang.org/pkg/testing),
