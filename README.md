@@ -42,34 +42,34 @@ Table of Contents:
 ## Description
 
 **goyek** (/ˈɡɔɪæk/ [🔊 listen](http://ipa-reader.xyz/?text=%CB%88%C9%A1%C9%94%C9%AA%C3%A6k))
-is a task automation tool.
-As opposed to many other tools, it is just a Go library
-with API inspired by
-[`testing`](https://golang.org/pkg/testing),
-[`cobra`](https://github.com/spf13/cobra),
-[`flag`](https://golang.org/pkg/flag),
-[`http`](https://golang.org/pkg/http)
-packages.
+is a task automation library.
 
-Here are some good parts:
+This library is intended to be an alternative to
+[Make](https://www.gnu.org/software/make/),
+[Mage](https://github.com/magefile/mage),
+[Task](https://taskfile.dev/).
 
-- It is cross-platform and shell independent.
-- No binary installation is needed.
-- It is easy to debug, like a regular Go application.
+The primary properties of goyek are: 
+
+- A library, instead of an application,
+  with API inspired by
+  [`testing`](https://golang.org/pkg/testing),
+  [`cobra`](https://github.com/spf13/cobra),
+  [`flag`](https://golang.org/pkg/flag),
+  [`http`](https://golang.org/pkg/http)
+  packages.
+- Cross-platform and shell independent.
+- No binary installation needed.
+- Easy to debug, like a regular Go code.
 - The tasks are defined similarly to
   [`cobra`](https://github.com/spf13/cobra) commands.
-- The task actions look like a Go unit test.
+- The task action looks like a Go test.
   [`A`](https://pkg.go.dev/github.com/goyek/goyek/v2#A)
   has similar methods to [`testing.T`](https://pkg.go.dev/testing#T).
-  You may even use [`testify`](https://github.com/stretchr/testify)
-  for asserting.
-- You can reuse code like in any Go application.
-  It may be helpful to use packages like
-  [`fsnotify`](https://github.com/fsnotify/fsnotify) and [`viper`](https://github.com/spf13/viper).
-- It is highly customizable.
-- It does not use any third-party dependency other than Go.
-  You can find supplumental features in [`goyek/x`](https://github.com/goyek/x).
-- Minimal supported Go version is 1.16.
+- Reuse any Go code and library e.g. [`viper`](https://github.com/spf13/viper).
+- Highly customizable.
+- No third-party dependencies.
+- Supplumental features in [`goyek/x`](https://github.com/goyek/x).
 
 ## Quick start
 
@@ -166,12 +166,8 @@ For an existing repository you can copy most of its files.
 
 ## Examples
 
-- [example_test.go](example_test.go) -
-  demonstrative examples
 - [goyek/template](https://github.com/goyek/template) -
   Go application repository template
-- [fluentassert](https://github.com/fluentassert/verify) -
-  Go library
 - [build](build) -
   dogfooding
 - [splunk-otel-go](https://github.com/signalfx/splunk-otel-go/tree/main/build) -
@@ -238,7 +234,7 @@ exit $global:LASTEXITCODE
 If `/build` is a separate Go module,
 check the [goyek.sh](goyek.sh) and [goyek.ps1](goyek.ps1) scripts.
 
-## Using middlewares
+## Customizing
 
 Call the [`Use`](https://pkg.go.dev/github.com/goyek/goyek/v2#Use) function
 or [`UseExecutor`](https://pkg.go.dev/github.com/goyek/goyek/v2#UseExecutor)
@@ -258,8 +254,6 @@ Notice that the [`boot.Main`](https://pkg.go.dev/github.com/goyek/x/boot#Main)
 convenient function from [goyek/x](https://github.com/goyek/x)
 sets the most commonly used middlewares and defines flags to configure them.
 
-## Customizing
-
 You can customize the default output by using:
 
 - [`SetOutput`](https://pkg.go.dev/github.com/goyek/goyek/v2#SetOutput)
@@ -270,60 +264,6 @@ You can customize the default output by using:
 
 You can also study how [github.com/goyek/x](https://github.com/goyek/x)
 is customizing the default behavior.
-
-## Alternatives
-
-### Make
-
-While [Make (Makefile)](https://www.gnu.org/software/make/) is currently
-the _de facto_ standard, it has some pitfalls:
-
-- Requires to learn Make (and often Bash).
-- It is hard to develop a Makefile which is truly cross-platform.
-- Debugging and testing Make targets is not fun.
-
-**goyek** is intended to be simpler, easier to learn,
-more portable, while still being able to handle most use cases.
-
-### Mage
-
-[Mage](https://github.com/magefile/mage) is a framework/tool which magically discovers
-the [targets](https://magefile.org/targets/) from [magefiles](https://magefile.org/magefiles/),
-which results in some drawbacks.
-
-- It requires using [build tags](https://magefile.org/magefiles/).
-- Reusing tasks is [hacky](https://magefile.org/importing/).
-- It needs installation or use of [zero install option](https://magefile.org/zeroinstall/),
-  which is slow.
-- Debugging is [complex](https://github.com/magefile/mage/issues/280).
-- It is magical by design (of course, one may like it).
-
-**goyek** is a non-magical alternative for [Mage](https://github.com/magefile/mage).
-It is easier to customize and extend as it is a library that offers extension points.
-Write regular Go code without build tags and tricky imports.
-
-### Task
-
-While [Task](https://taskfile.dev/) is simpler and easier to use
-than [Make](https://www.gnu.org/software/make/),
-but it still has similar problems:
-
-- Requires to learn Task's YAML structure and
-  the [minimalistic, cross-platform interpreter](https://github.com/mvdan/sh#gosh).
-- Debugging and testing tasks is not easy.
-- Hard to make reusable tasks.
-- Requires to install the tool.
-
-### Bazel
-
-[Bazel](https://bazel.build/) is a very sophisticated tool which is
-[created to efficiently handle complex and long-running build pipelines](https://en.wikipedia.org/wiki/Bazel_(software)#Rationale).
-It requires the build target inputs and outputs to be fully specified.
-
-**goyek** is just a simple Go library.
-However, nothing prevents you from, for example,
-using the [github.com/magefile/mage/target](https://pkg.go.dev/github.com/magefile/mage/target)
-package to make your automation more efficient.
 
 ## Contributing
 
