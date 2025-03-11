@@ -25,7 +25,7 @@ type Task struct {
 // DefinedTask represents a task that has been defined.
 // It can be used as a dependency for another task.
 type DefinedTask struct {
-	*taskSnapshot
+	task *Task
 	flow *Flow
 }
 
@@ -34,7 +34,7 @@ type Deps []*DefinedTask
 
 // Name returns the name of the task.
 func (r *DefinedTask) Name() string {
-	return r.name
+	return r.task.Name
 }
 
 // SetName changes the name of the task.
@@ -42,43 +42,41 @@ func (r *DefinedTask) SetName(s string) {
 	if _, ok := r.flow.tasks[s]; ok {
 		panic("task with the same name is already defined")
 	}
-	oldName := r.name
+	oldName := r.task.Name
 	snap := r.flow.tasks[oldName]
-	snap.name = s
+	snap.Name = s
 	r.flow.tasks[s] = snap
 	delete(r.flow.tasks, oldName)
 }
 
 // Usage returns the description of the task.
 func (r *DefinedTask) Usage() string {
-	return r.usage
+	return r.task.Usage
 }
 
 // SetUsage sets the description of the task.
 func (r *DefinedTask) SetUsage(s string) {
-	r.usage = s
+	r.task.Usage = s
 }
 
 // Action returns the action of the task.
 func (r *DefinedTask) Action() func(a *A) {
-	return r.action
+	return r.task.Action
 }
 
 // SetAction changes the action of the task.
 func (r *DefinedTask) SetAction(fn func(a *A)) {
-	r.action = fn
+	r.task.Action = fn
 }
 
 // Deps returns all task's dependencies.
 func (r *DefinedTask) Deps() Deps {
-	count := len(r.deps)
+	count := len(r.task.Deps)
 	if count == 0 {
 		return nil
 	}
-	deps := make(Deps, 0, count)
-	for _, dep := range r.deps {
-		deps = append(deps, &DefinedTask{r.flow.tasks[dep.name], r.flow})
-	}
+	deps := make(Deps, count)
+	copy(deps, r.task.Deps)
 	return deps
 }
 
@@ -86,7 +84,7 @@ func (r *DefinedTask) Deps() Deps {
 func (r *DefinedTask) SetDeps(deps Deps) {
 	count := len(deps)
 	if count == 0 {
-		r.deps = nil
+		r.task.Deps = nil
 		return
 	}
 
@@ -100,12 +98,9 @@ func (r *DefinedTask) SetDeps(deps Deps) {
 	if ok := r.noCycle(deps, visited); !ok {
 		panic("circular dependency")
 	}
-	depNames := make([]*taskSnapshot, 0, count)
-	for _, dep := range deps {
-		depNames = append(depNames, dep.taskSnapshot)
-	}
-
-	r.deps = depNames
+	depNames := make(Deps, count)
+	copy(depNames, deps)
+	r.task.Deps = depNames
 }
 
 func (r *DefinedTask) noCycle(deps Deps, visited map[string]bool) bool {
@@ -118,7 +113,7 @@ func (r *DefinedTask) noCycle(deps Deps, visited map[string]bool) bool {
 			return true
 		}
 		visited[name] = true
-		if name == r.name {
+		if name == r.task.Name {
 			return false
 		}
 		if !r.noCycle(dep.Deps(), visited) {
