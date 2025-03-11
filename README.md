@@ -142,8 +142,6 @@ Instead of running `go run .` inside `build`, you can use wrapper scripts:
 - Bash: [`goyek.sh`](goyek.sh).
 - PowerShell: [`goyek.ps1`](goyek.ps1).
 
-To quickly set up a new repository:
-
 Use [`goyek/template`](https://github.com/goyek/template) when creating
 a new repository. For existing repositories, simply copy the relevant files.
 
