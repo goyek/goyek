@@ -1,8 +1,6 @@
 module github.com/goyek/goyek/build
 
-go 1.23.0
-
-toolchain go1.24.1
+go 1.24.1
 
 require (
 	github.com/client9/misspell v0.3.4
