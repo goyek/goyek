@@ -4,7 +4,7 @@ go 1.24.1
 
 require (
 	github.com/client9/misspell v0.3.4
-	github.com/golangci/golangci-lint v1.64.7
+	github.com/golangci/golangci-lint v1.64.8
 	github.com/goyek/goyek/v2 v2.0.0-00010101000000-000000000000
 	github.com/mattn/go-shellwords v1.0.12
 )
