@@ -13,8 +13,6 @@ is a task automation library intended to be an alternative to
 [Mage](https://github.com/magefile/mage),
 [Task](https://taskfile.dev/).
 
-Please ⭐ `Star` this repository if you find it valuable.
-
 The primary properties of goyek are:
 
 - Library, not an application, with API inspired by
@@ -34,6 +32,11 @@ The primary properties of goyek are:
 - Highly customizable.
 - Zero third-party dependencies.
 - Additional features in [`goyek/x`](https://github.com/goyek/x).
+
+5-minute video: [Watch here](https://www.youtube.com/watch?v=e-xWEH-fqJ0)
+([Slides](https://docs.google.com/presentation/d/1xFAPXeMiOD-92xeIHkUD-SHmJZwc8mSIIgpjuJXEW3U/edit?usp=sharing)).
+
+Please ⭐ `Star` this repository if you find it valuable.
 
 ## Usage
 
@@ -145,11 +148,7 @@ Instead of running `go run .` inside `build`, you can use wrapper scripts:
 Use [`goyek/template`](https://github.com/goyek/template) when creating
 a new repository. For existing repositories, simply copy the relevant files.
 
-Learn more:
-
-- 📺 5-minute video: [Watch here](https://www.youtube.com/watch?v=e-xWEH-fqJ0)
-  ([Slides](https://docs.google.com/presentation/d/1xFAPXeMiOD-92xeIHkUD-SHmJZwc8mSIIgpjuJXEW3U/edit?usp=sharing))
-- 📚 [Package documentation](https://pkg.go.dev/github.com/goyek/goyek/v2)
+See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v2) for more information.
 
 ## Contributing
 
