@@ -13,8 +13,6 @@ is a task automation library intended to be an alternative to
 [Mage](https://github.com/magefile/mage),
 [Task](https://taskfile.dev/).
 
-Please ⭐ `Star` this repository if you find it valuable.
-
 The primary properties of goyek are:
 
 - Library, not an application, with API inspired by
@@ -37,6 +35,8 @@ The primary properties of goyek are:
 
 5-minute video: [Watch here](https://www.youtube.com/watch?v=e-xWEH-fqJ0)
 ([Slides](https://docs.google.com/presentation/d/1xFAPXeMiOD-92xeIHkUD-SHmJZwc8mSIIgpjuJXEW3U/edit?usp=sharing)).
+
+Please ⭐ `Star` this repository if you find it valuable.
 
 ## Usage
 
