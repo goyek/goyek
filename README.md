@@ -35,6 +35,9 @@ The primary properties of goyek are:
 - Zero third-party dependencies.
 - Additional features in [`goyek/x`](https://github.com/goyek/x).
 
+5-minute video: [Watch here](https://www.youtube.com/watch?v=e-xWEH-fqJ0)
+([Slides](https://docs.google.com/presentation/d/1xFAPXeMiOD-92xeIHkUD-SHmJZwc8mSIIgpjuJXEW3U/edit?usp=sharing)).
+
 ## Usage
 
 For build automation, store your code in the `build` directory.
@@ -145,11 +148,7 @@ Instead of running `go run .` inside `build`, you can use wrapper scripts:
 Use [`goyek/template`](https://github.com/goyek/template) when creating
 a new repository. For existing repositories, simply copy the relevant files.
 
-Learn more:
-
-- 📺 5-minute video: [Watch here](https://www.youtube.com/watch?v=e-xWEH-fqJ0)
-  ([Slides](https://docs.google.com/presentation/d/1xFAPXeMiOD-92xeIHkUD-SHmJZwc8mSIIgpjuJXEW3U/edit?usp=sharing))
-- 📚 [Package documentation](https://pkg.go.dev/github.com/goyek/goyek/v2)
+See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v2) for more information.
 
 ## Contributing
 
