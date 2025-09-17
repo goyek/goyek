@@ -34,6 +34,9 @@ linters:
       statements: 50
     gocyclo:
       min-complexity: 15
+    gosec:
+      excludes:
+        - G104
     govet:
       disable:
         - fieldalignment
@@ -50,13 +53,7 @@ linters:
   exclusions:
     generated: lax
     presets:
-      - comments
-      - common-false-positives
-      - legacy
       - std-error-handling
-    rules:
-      - path: (.+)\.go$
-        text: EXC0001
     paths:
       - third_party$
       - builtin$
@@ -69,9 +66,3 @@ formatters:
     goimports:
       local-prefixes:
         - github.com/goyek/goyek/v2
-  exclusions:
-    generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
