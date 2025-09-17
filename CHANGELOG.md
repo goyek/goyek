@@ -8,8 +8,6 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.3.0...HEAD)
 
-- Upgrade `golangci-lint` to v2 (2.4.0).
-
 ## [2.3.0](https://github.com/goyek/goyek/releases/tag/v2.3.0) - 2025-02-25
 
 This release adds `A.WithContext` inspired by `http.Request.WithContext`
