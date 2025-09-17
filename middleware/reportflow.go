@@ -7,7 +7,7 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
-// ReportStatus is a middleware which reports the flow execution status.
+// ReportFlow is a middleware which reports the flow execution status.
 //
 // The format is based on the reports provided by the Go test runner.
 func ReportFlow(next goyek.Executor) goyek.Executor {
