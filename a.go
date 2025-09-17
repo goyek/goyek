@@ -23,10 +23,11 @@ import (
 // The other reporting methods, such as the variations of Log and Error,
 // may be called simultaneously from multiple goroutines.
 type A struct {
-	ctx    context.Context
-	name   string
-	output io.Writer
-	logger Logger
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+	name      string
+	output    io.Writer
+	logger    Logger
 
 	mu       *sync.Mutex
 	failed   *bool
@@ -34,7 +35,11 @@ type A struct {
 	cleanups *[]func()
 }
 
-// Context returns the run context.
+// Context returns a context that is canceled just before
+// Cleanup-registered functions are called.
+//
+// Cleanup functions can wait for any resources
+// that shut down on [context.Context.Done] before the task action completes.
 func (a *A) Context() context.Context {
 	return a.ctx
 }
@@ -196,8 +201,11 @@ func (a *A) WithContext(ctx context.Context) *A {
 	if ctx == nil {
 		panic("nil context")
 	}
+
+	derivedCtx, cancel := context.WithCancel(ctx)
 	res := *a
-	res.ctx = ctx
+	res.ctx = derivedCtx
+	res.ctxCancel = cancel
 	return &res
 }
 
@@ -343,7 +351,13 @@ func (a *A) run(action func(a *A)) (finished bool, panicVal interface{}, panicSt
 }
 
 func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byte) {
-	// we capture only the first panic
+	// Cancel the context before running cleanup functions,
+	// matching testing.T.Context behavior.
+	if a.ctxCancel != nil {
+		a.ctxCancel()
+	}
+
+	// We capture only the first panic.
 	cleanupFinished := false
 	if *finished {
 		defer func() {

@@ -13,6 +13,41 @@ import (
 	"github.com/goyek/goyek/v2"
 )
 
+func TestA_Context_cancels_before_cleanup(t *testing.T) {
+	sb := &strings.Builder{}
+
+	res := goyek.NewRunner(func(a *goyek.A) {
+		ctx := a.Context()
+
+		a.Cleanup(func() {
+			// The context should be canceled when cleanup functions are called.
+			select {
+			case <-ctx.Done():
+				a.Log("context was canceled before cleanup")
+			default:
+				a.Log("context was NOT canceled before cleanup")
+			}
+		})
+
+		// Context should not be canceled during action execution.
+		select {
+		case <-ctx.Done():
+			t.Error("context should not be canceled during action execution")
+		default:
+			a.Log("context is active during action")
+		}
+	})(goyek.Input{Context: context.Background(), Output: sb, Logger: goyek.FmtLogger{}})
+
+	if res.Status != goyek.StatusPassed {
+		t.Errorf("status was %s but want %s", res.Status, goyek.StatusPassed)
+	}
+
+	want := "context is active during action\ncontext was canceled before cleanup\n"
+	if got := sb.String(); got != want {
+		t.Errorf("output was %q but want %q", got, want)
+	}
+}
+
 func TestA_WithContext(t *testing.T) {
 	testCases := []struct {
 		desc        string
@@ -93,11 +128,13 @@ func TestA_WithContext(t *testing.T) {
 			if res.Status != tc.wantStatus {
 				t.Errorf("status was %s but want %s", res.Status, tc.wantStatus)
 			}
-			if got != ctx {
-				t.Errorf("original Context returned %v but want %v", got, ctx)
+			// Check that context values are preserved rather than exact equality
+			// since the contexts are now derived with cancellation capability.
+			if got.Value(ctxKey{}) != ctx.Value(ctxKey{}) {
+				t.Errorf("original Context value mismatch")
 			}
-			if got2 != newCtx {
-				t.Errorf("derived Context returned %v but want %v", got2, newCtx)
+			if got2.Value(ctxKey{}) != newCtx.Value(ctxKey{}) {
+				t.Errorf("derived Context value mismatch")
 			}
 			if out, want := sb.String(), "1\n2\n3\n"; out != want {
 				t.Errorf("logging or cleanup failed, out was %q but want %q", out, want)

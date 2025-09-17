@@ -8,6 +8,14 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.3.0...HEAD)
 
+### Changed
+
+- **BREAKING**: Change `A.Context` behavior to be canceled just before cleanup
+  functions are called, matching `testing.T.Context` behavior. The context
+  still cancels when the original context is canceled (e.g. flow interruption).
+  This ensures cleanup functions can wait for resources that shut down on
+  `context.Context.Done` before the task action completes.
+
 ## [2.3.0](https://github.com/goyek/goyek/releases/tag/v2.3.0) - 2025-02-25
 
 This release adds `A.WithContext` inspired by `http.Request.WithContext`

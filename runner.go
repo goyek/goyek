@@ -83,11 +83,11 @@ func (r taskRunner) run(in Input) Result {
 		failed:   &failed,
 		skipped:  &skipped,
 		cleanups: &[]func(){},
-		ctx:      ctx,
 		name:     in.TaskName,
 		output:   out,
 		logger:   logger,
 	}
+	a = a.WithContext(ctx)
 
 	finished, panicVal, panicStack := a.run(r.action)
 
