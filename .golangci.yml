@@ -28,6 +28,7 @@ linters:
     - unparam
     - unused
     - whitespace
+
   settings:
     funlen:
       lines: 100
@@ -50,14 +51,12 @@ linters:
       allow-unused: false # report any unused nolint directives
     revive:
       confidence: 0
+
   exclusions:
     generated: lax
     presets:
       - std-error-handling
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
+
 formatters:
   enable:
     - gofumpt
