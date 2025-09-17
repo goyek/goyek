@@ -286,7 +286,7 @@ func UseExecutor(middlewares ...ExecutorMiddleware) {
 	DefaultFlow.UseExecutor(middlewares...)
 }
 
-// Use adds flow executor middlewares (interceptors).
+// UseExecutor adds flow executor middlewares (interceptors).
 func (f *Flow) UseExecutor(middlewares ...ExecutorMiddleware) {
 	for _, m := range middlewares {
 		if m == nil {
