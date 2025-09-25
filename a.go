@@ -347,7 +347,7 @@ func (a *A) run(action func(a *A)) (finished bool, panicVal interface{}, panicSt
 		finished = true
 	}()
 	<-ch
-	return
+	return finished, panicVal, panicStack
 }
 
 func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byte) {
