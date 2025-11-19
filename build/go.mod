@@ -4,7 +4,7 @@ go 1.24.1
 
 require (
 	github.com/client9/misspell v0.3.4
-	github.com/golangci/golangci-lint/v2 v2.6.1
+	github.com/golangci/golangci-lint/v2 v2.6.2
 	github.com/goyek/goyek/v2 v2.0.0-00010101000000-000000000000
 	github.com/mattn/go-shellwords v1.0.12
 )
@@ -128,8 +128,8 @@ require (
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/manuelarte/embeddedstructfieldcheck v0.4.0 // indirect
 	github.com/manuelarte/funcorder v0.5.0 // indirect
-	github.com/maratori/testableexamples v1.0.0 // indirect
-	github.com/maratori/testpackage v1.1.1 // indirect
+	github.com/maratori/testableexamples v1.0.1 // indirect
+	github.com/maratori/testpackage v1.1.2 // indirect
 	github.com/matoous/godox v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -206,7 +206,7 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20251023183803-a4bb9ffd2546 // indirect
 	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/tools v0.38.0 // indirect
