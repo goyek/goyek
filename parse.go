@@ -29,11 +29,11 @@ func Parse(args []string, flagSet *flag.FlagSet) ([]string, error) {
 	}
 
 	// Extract tasks (non-flag arguments at the beginning).
-	tasks := []string{}
+	var tasks []string
 	flagsStart := -1
 
 	for i, arg := range args {
-		// Check if this looks like a flag (starts with -).
+		// Check if this looks like a flag (starts with -) or separator (--).
 		if len(arg) > 0 && arg[0] == '-' {
 			flagsStart = i
 			break
@@ -42,13 +42,15 @@ func Parse(args []string, flagSet *flag.FlagSet) ([]string, error) {
 		tasks = append(tasks, arg)
 	}
 
-	// Build args for flag.Parse()
-	// If we have args after separator, append them after flags.
-	flagArgs := []string{}
+	// Build args for flag.Parse().
+	var flagArgs []string
 	if flagsStart >= 0 {
 		flagArgs = args[flagsStart:]
 	}
-
+	// If no flags, use empty slice so that flag.Parse() works correctly.
+	if flagArgs == nil {
+		flagArgs = []string{}
+	}
 	if err := flagSet.Parse(flagArgs); err != nil {
 		return nil, err
 	}
