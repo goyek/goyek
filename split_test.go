@@ -85,13 +85,11 @@ func TestSplitTasks(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotTasks, gotRest := goyek.SplitTasks(tt.args)
-
 			if !reflect.DeepEqual(gotTasks, tt.wantTasks) {
-				t.Errorf("SplitTasks() tasks = %v, want %v", gotTasks, tt.wantTasks)
+				t.Errorf("SplitTasks(%v) tasks = %v, want %v", tt.args, gotTasks, tt.wantTasks)
 			}
-
 			if !reflect.DeepEqual(gotRest, tt.wantRest) {
-				t.Errorf("SplitTasks() rest = %v, want %v", gotRest, tt.wantRest)
+				t.Errorf("SplitTasks(%v) rest = %v, want %v", tt.args, gotRest, tt.wantRest)
 			}
 		})
 	}
