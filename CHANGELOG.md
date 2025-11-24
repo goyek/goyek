@@ -8,6 +8,17 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.3.0...HEAD)
 
+The recommended command line syntax changed from `[flags] [--] [tasks]` to
+`[tasks] [flags] [--] [args]`. Users should replace `flag.Parse()` with
+`goyek.Parse(nil, flag.CommandLine)` and use the returned tasks list and
+`flag.Args()` for positional arguments.
+
+### Added
+
+- Add `Parse` function to parse command line arguments with new syntax:
+  `[tasks] [flags] [--] [args]`. This allows tasks to come before flags,
+  and supports positional arguments after the `--` separator.
+
 ### Changed
 
 - **BREAKING**: Change `A.Context` behavior to be canceled just before cleanup
