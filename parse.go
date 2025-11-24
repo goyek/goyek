@@ -8,7 +8,7 @@ package goyek
 // To parse flags, use flag.Parse() or similar with the returned rest slice.
 //
 // Examples:
-//   - [task1, task2] -> tasks: [task1, task2], rest: []
+//   - [task1, task2] -> tasks: [task1, task2], rest: nil
 //   - [task1, -v] -> tasks: [task1], rest: [-v]
 //   - [task1, --, arg1, arg2] -> tasks: [task1], rest: [--, arg1, arg2]
 //   - [task1, -v, --, arg1] -> tasks: [task1], rest: [-v, --, arg1]
