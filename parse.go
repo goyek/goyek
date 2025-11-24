@@ -28,30 +28,11 @@ func Parse(args []string, flagSet *flag.FlagSet) ([]string, error) {
 		args = os.Args[1:]
 	}
 
-	// Find the separator "--" if it exists.
-	separatorIdx := -1
-	for i, arg := range args {
-		if arg == "--" {
-			separatorIdx = i
-			break
-		}
-	}
-
-	var beforeSeparator []string
-	var afterSeparator []string
-
-	if separatorIdx >= 0 {
-		beforeSeparator = args[:separatorIdx]
-		afterSeparator = args[separatorIdx+1:]
-	} else {
-		beforeSeparator = args
-	}
-
 	// Extract tasks (non-flag arguments at the beginning).
 	tasks := []string{}
 	flagsStart := -1
 
-	for i, arg := range beforeSeparator {
+	for i, arg := range args {
 		// Check if this looks like a flag (starts with -).
 		if len(arg) > 0 && arg[0] == '-' {
 			flagsStart = i
@@ -65,12 +46,7 @@ func Parse(args []string, flagSet *flag.FlagSet) ([]string, error) {
 	// If we have args after separator, append them after flags.
 	flagArgs := []string{}
 	if flagsStart >= 0 {
-		flagArgs = beforeSeparator[flagsStart:]
-	}
-
-	// Append the positional args after "--" separator.
-	if len(afterSeparator) > 0 {
-		flagArgs = append(flagArgs, afterSeparator...)
+		flagArgs = args[flagsStart:]
 	}
 
 	if err := flagSet.Parse(flagArgs); err != nil {
