@@ -81,7 +81,6 @@ func TestSplitTasks(t *testing.T) {
 			wantRest:  []string{"-v"},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotTasks, gotRest := goyek.SplitTasks(tt.args)
