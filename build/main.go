@@ -42,7 +42,11 @@ func main() {
 
 	flag.CommandLine.SetOutput(out)
 	flag.Usage = usage
-	flag.Parse()
+	tasks, err := goyek.Parse(nil, nil)
+	if err != nil {
+		fmt.Fprintln(out, err)
+		os.Exit(exitCodeInvalid)
+	}
 
 	goyek.UseExecutor(middleware.ReportFlow)
 
@@ -71,11 +75,11 @@ func main() {
 	}
 
 	goyek.SetUsage(usage)
-	goyek.Main(flag.Args(), opts...)
+	goyek.Main(tasks, opts...)
 }
 
 func usage() {
-	fmt.Println("Usage of build: [flags] [--] [tasks]")
+	fmt.Println("Usage of build: [tasks] [flags] [--] [args]")
 	goyek.Print()
 	fmt.Println("Flags:")
 	flag.PrintDefaults()

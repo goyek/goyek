@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -51,7 +52,7 @@ func Example() {
 
 	// Set the help message.
 	usage := func() {
-		fmt.Println("Usage of build: [flags] [--] [tasks]")
+		fmt.Println("Usage of build: [tasks] [flags] [--] [args]")
 		goyek.Print()
 		fmt.Println("Flags:")
 		flag.PrintDefaults()
@@ -59,7 +60,11 @@ func Example() {
 
 	// Parse the args.
 	flag.Usage = usage
-	flag.Parse()
+	tasks, err := goyek.Parse(nil, nil)
+	if err != nil {
+		fmt.Fprintln(goyek.Output(), err)
+		os.Exit(2)
+	}
 
 	// Configure middlewares.
 	if *dryRun {
@@ -84,7 +89,7 @@ func Example() {
 	// Run the tasks.
 	goyek.SetDefault(all)
 	goyek.SetUsage(usage)
-	if err := goyek.Execute(context.Background(), flag.Args(), opts...); err != nil {
+	if err := goyek.Execute(context.Background(), tasks, opts...); err != nil {
 		fmt.Println(err)
 	}
 }
