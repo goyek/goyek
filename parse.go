@@ -1,37 +1,19 @@
 package goyek
 
-import (
-	"flag"
-	"os"
-)
-
-// Parse parses command line arguments according to the syntax:
-// [tasks] [flags] [--] [args]
-//
+// SplitTasks splits command line arguments into tasks and the rest.
 // Tasks are identified as non-flag arguments at the beginning.
-// Flags are parsed using the provided FlagSet.
-// Everything after "--" becomes positional args available via flagSet.Args().
+// The rest includes flags and any arguments after "--".
 //
-// If flagSet is nil, flag.CommandLine is used.
-// If args is nil, os.Args[1:] is used.
+// This function does not parse flags - it only separates tasks from flags/args.
+// To parse flags, use flag.Parse() or similar with the returned rest slice.
 //
 // Examples:
-//   - "task1 task2" -> tasks: [task1, task2], flagSet.Args(): []
-//   - "task1 -v" -> tasks: [task1], flag -v is parsed, flagSet.Args(): []
-//   - "task1 -- arg1 arg2" -> tasks: [task1], flagSet.Args(): [arg1, arg2]
-//   - "task1 -v -- arg1" -> tasks: [task1], flag -v is parsed, flagSet.Args(): [arg1]
-func Parse(args []string, flagSet *flag.FlagSet) ([]string, error) {
-	if flagSet == nil {
-		flagSet = flag.CommandLine
-	}
-	if args == nil {
-		args = os.Args[1:]
-	}
-
-	// Extract tasks (non-flag arguments at the beginning).
-	var tasks []string
+//   - [task1, task2] -> tasks: [task1, task2], rest: []
+//   - [task1, -v] -> tasks: [task1], rest: [-v]
+//   - [task1, --, arg1, arg2] -> tasks: [task1], rest: [--, arg1, arg2]
+//   - [task1, -v, --, arg1] -> tasks: [task1], rest: [-v, --, arg1]
+func SplitTasks(args []string) (tasks, rest []string) {
 	flagsStart := -1
-
 	for i, arg := range args {
 		// Check if this looks like a flag (starts with -) or separator (--).
 		if len(arg) > 0 && arg[0] == '-' {
@@ -41,18 +23,8 @@ func Parse(args []string, flagSet *flag.FlagSet) ([]string, error) {
 		// This is a task.
 		tasks = append(tasks, arg)
 	}
-
-	// Build args for flag.Parse().
-	var flagArgs []string
 	if flagsStart >= 0 {
-		flagArgs = args[flagsStart:]
+		rest = args[flagsStart:]
 	}
-	// If no flags, use empty slice so that flag.Parse() works correctly.
-	if flagArgs == nil {
-		flagArgs = []string{}
-	}
-	if err := flagSet.Parse(flagArgs); err != nil {
-		return nil, err
-	}
-	return tasks, nil
+	return tasks, rest
 }

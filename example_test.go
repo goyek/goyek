@@ -60,8 +60,8 @@ func Example() {
 
 	// Parse the args.
 	flag.Usage = usage
-	tasks, err := goyek.Parse(nil, nil)
-	if err != nil {
+	tasks, args := goyek.SplitTasks(os.Args[1:])
+	if err := flag.CommandLine.Parse(args); err != nil {
 		fmt.Fprintln(goyek.Output(), err)
 		os.Exit(2)
 	}

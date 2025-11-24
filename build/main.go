@@ -42,8 +42,8 @@ func main() {
 
 	flag.CommandLine.SetOutput(out)
 	flag.Usage = usage
-	tasks, err := goyek.Parse(nil, nil)
-	if err != nil {
+	tasks, args := goyek.SplitTasks(os.Args[1:])
+	if err := flag.CommandLine.Parse(args); err != nil {
 		fmt.Fprintln(out, err)
 		os.Exit(exitCodeInvalid)
 	}
