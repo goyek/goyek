@@ -74,6 +74,12 @@ func TestSplitTasks(t *testing.T) {
 			wantTasks: []string{"build"},
 			wantRest:  []string{"-v", "--flag=value"},
 		},
+		{
+			name:      "single dash is non-flag",
+			args:      []string{"task1", "-", "task2", "-v"},
+			wantTasks: []string{"task1", "-", "task2"},
+			wantRest:  []string{"-v"},
+		},
 	}
 
 	for _, tt := range tests {

@@ -16,7 +16,8 @@ func SplitTasks(args []string) (tasks, rest []string) {
 	flagsStart := -1
 	for i, arg := range args {
 		// Check if this looks like a flag (starts with -) or separator (--).
-		if len(arg) > 0 && arg[0] == '-' {
+		// Single "-" is treated as a non-flag argument.
+		if len(arg) > 1 && arg[0] == '-' {
 			flagsStart = i
 			break
 		}
