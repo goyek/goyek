@@ -6,7 +6,7 @@ import (
 
 	"github.com/mattn/go-shellwords"
 
-	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v3"
 )
 
 // Exec runs the command in given directory.

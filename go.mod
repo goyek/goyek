@@ -1,3 +1,3 @@
-module github.com/goyek/goyek/v2
+module github.com/goyek/goyek/v3
 
 go 1.16

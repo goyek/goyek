@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v3"
 )
 
 func TestA_Context_cancels_before_cleanup(t *testing.T) {

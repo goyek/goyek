@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v3"
 )
 
 // ReportFlow is a middleware which reports the flow execution status.

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v3"
 )
 
 // ReportLongRun is a middleware which reports the task when it is long running.

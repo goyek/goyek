@@ -1,9 +1,9 @@
 # goyek
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/goyek/goyek.svg)](https://pkg.go.dev/github.com/goyek/goyek/v2)
+[![Go Reference](https://pkg.go.dev/badge/github.com/goyek/goyek.svg)](https://pkg.go.dev/github.com/goyek/goyek/v3)
 [![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
 [![go.mod](https://img.shields.io/github/go-mod/go-version/goyek/goyek)](go.mod)
-[![Go Report Card](https://goreportcard.com/badge/github.com/goyek/goyek/v2)](https://goreportcard.com/report/github.com/goyek/goyek/v2)
+[![Go Report Card](https://goreportcard.com/badge/github.com/goyek/goyek/v3)](https://goreportcard.com/report/github.com/goyek/goyek/v3)
 [![codecov](https://codecov.io/gh/goyek/goyek/branch/main/graph/badge.svg)](https://codecov.io/gh/goyek/goyek)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
@@ -26,7 +26,7 @@ The primary properties of goyek are:
 - Tasks are defined similarly to
   [`cobra`](https://github.com/spf13/cobra) commands.
 - The task action looks like a Go test.
-  [`goyek.A`](https://pkg.go.dev/github.com/goyek/goyek/v2#A)
+  [`goyek.A`](https://pkg.go.dev/github.com/goyek/goyek/v3#A)
   has similar methods to [`testing.T`](https://pkg.go.dev/testing#T).
 - Reuse any Go code and library e.g. [`viper`](https://github.com/spf13/viper).
 - Highly customizable.
@@ -53,7 +53,7 @@ package main
 import (
 	"flag"
 
-	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v3"
 	"github.com/goyek/x/cmd"
 )
 
@@ -77,7 +77,7 @@ package main
 import (
 	"os"
 
-	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v3"
 	"github.com/goyek/x/boot"
 )
 
@@ -148,7 +148,7 @@ Instead of running `go run .` inside `build`, you can use wrapper scripts:
 Use [`goyek/template`](https://github.com/goyek/template) when creating
 a new repository. For existing repositories, simply copy the relevant files.
 
-See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v2) for more information.
+See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v3) for more information.
 
 ## Contributing
 

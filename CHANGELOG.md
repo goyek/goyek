@@ -6,12 +6,76 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 as well as to [Module version numbering](https://go.dev/doc/modules/version-numbers).
 
-## [Unreleased](https://github.com/goyek/goyek/compare/v2.3.0...HEAD)
+## [Unreleased](https://github.com/goyek/goyek/compare/v3.0.0...HEAD)
+
+## [3.0.0](https://github.com/goyek/goyek/releases/tag/v3.0.0) - 2025-11-25
+
+This major release improves the command-line interface and fixes the `A.Context`
+behavior to match `testing.T.Context`.
+
+### Migration Guide from v2 to v3
+
+#### Module Path Change
+
+Update your import statements and `go.mod`.
+
+```go
+// Before (v2)
+import "github.com/goyek/goyek/v2"
+
+// After (v3)
+import "github.com/goyek/goyek/v3"
+```
+
+#### Command Line Syntax Change
 
 The recommended command line syntax changed from `[flags] [--] [tasks]` to
-`[tasks] [flags] [--] [args]`. Users should use `goyek.SplitTasks(os.Args[1:])`
-to split tasks from flags/args, then call `flag.CommandLine.Parse` with
-the returned rest slice.
+`[tasks] [flags] [--] [args]`.
+
+```go
+// Before (v2)
+func main() {
+    flag.Parse()
+    goyek.Main(flag.Args())
+}
+
+// After (v3)
+func main() {
+    tasks, rest := goyek.SplitTasks(os.Args[1:])
+    flag.CommandLine.Parse(rest)
+    goyek.Main(tasks)
+}
+```
+
+#### Context Behavior Change
+
+`A.Context` is now canceled just before cleanup functions are called. If your
+cleanup functions depend on the context being active, they will continue to work.
+If your code depended on the context remaining active after cleanup, it will need
+adjustment.
+
+```go
+// Before (v2): Context stayed active during cleanup.
+goyek.Define(goyek.Task{
+    Name: "example",
+    Action: func(a *goyek.A) {
+        a.Cleanup(func() {
+            // Context was still active here.
+        })
+    },
+})
+
+// After (v3): Context cancels before cleanup (matches testing.T behavior).
+goyek.Define(goyek.Task{
+    Name: "example",
+    Action: func(a *goyek.A) {
+        a.Cleanup(func() {
+            // Context is canceled here, allowing proper shutdown
+            // of resources that listen to context.Done().
+        })
+    },
+})
+```
 
 ### Added
 
@@ -20,6 +84,7 @@ the returned rest slice.
 
 ### Changed
 
+- **BREAKING**: Change module path to `github.com/goyek/goyek/v3`.
 - **BREAKING**: Change `A.Context` behavior to be canceled just before cleanup
   functions are called, matching `testing.T.Context` behavior. The context
   still cancels when the original context is canceled (e.g. flow interruption).

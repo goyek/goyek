@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v3"
 )
 
 var onceDefaultFlow sync.Once

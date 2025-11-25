@@ -4,7 +4,7 @@ import (
 	"io/fs"
 	"path/filepath"
 
-	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v3"
 )
 
 func find(a *goyek.A, ext string) []string {
