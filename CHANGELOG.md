@@ -10,7 +10,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [3.0.0](https://github.com/goyek/goyek/releases/tag/v3.0.0) - 2025-11-25
 
-This major release improves the command-line interface and fixes the `A.Context`
+This major release improves the command-line interface and changes the `A.Context`
 behavior to match `testing.T.Context`.
 
 ### Migration Guide from v2 to v3
