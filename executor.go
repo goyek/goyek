@@ -91,7 +91,7 @@ func (r *executor) Execute(in ExecuteInput) error {
 
 		tasksToRun := []*taskSnapshot{task}
 
-		// Find all parallel tasks that have not beed run
+		// Find all parallel tasks that have not been run
 		// and have no dependencies.
 		for _, next := range tasks {
 			nextTask := r.defined[next]
