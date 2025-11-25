@@ -10,7 +10,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 The recommended command line syntax changed from `[flags] [--] [tasks]` to
 `[tasks] [flags] [--] [args]`. Users should use `goyek.SplitTasks(os.Args[1:])`
-to split tasks from flags/args, then call `flag.Parse()` with the returned rest slice.
+to split tasks from flags/args, then call `flag.CommandLine.Parse` with
+the returned rest slice.
 
 ### Added
 
