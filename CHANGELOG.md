@@ -8,6 +8,16 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [Unreleased](https://github.com/goyek/goyek/compare/v2.3.0...HEAD)
 
+The recommended command line syntax changed from `[flags] [--] [tasks]` to
+`[tasks] [flags] [--] [args]`. Users should use `goyek.SplitTasks(os.Args[1:])`
+to split tasks from flags/args, then call `flag.CommandLine.Parse` with
+the returned rest slice.
+
+### Added
+
+- Add `SplitTasks` function to split command line arguments into tasks and rest.
+  This allows tasks to come before flags and usage of positional arguments.
+
 ### Changed
 
 - **BREAKING**: Change `A.Context` behavior to be canceled just before cleanup

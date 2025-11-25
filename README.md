@@ -104,7 +104,7 @@ go run . -h
 Expected output:
 
 ```out
-Usage of build: [flags] [--] [tasks]
+Usage of build: [tasks] [flags] [--] [args]
 Tasks:
   hello  demonstration
 Flags:
