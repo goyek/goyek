@@ -4,8 +4,8 @@ package goyek
 // Tasks are identified as non-flag arguments at the beginning.
 // The rest includes flags and any arguments after "--".
 //
-// This function does not parse flags - it only separates tasks from flags/args.
-// To parse flags, use flag.Parse() or similar with the returned rest slice.
+// This function does not parse flags, it only separates tasks from flags/args.
+// To parse flags, you can use [flag.FlagSet.Parse] with the returned rest slice.
 //
 // Examples:
 //   - [task1, task2] -> tasks: [task1, task2], rest: nil
