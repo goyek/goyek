@@ -15,4 +15,4 @@ jobs:
         # make sure that new the tag is available for pkg.go.dev
         run: sleep 60
       - name: Update pkg.go.dev
-        run: curl https://proxy.golang.org/github.com/${{ github.repository }}/v2/@v/${{ github.ref_name }}.info
+        run: curl https://proxy.golang.org/github.com/${{ github.repository }}/v3/@v/${{ github.ref_name }}.info
