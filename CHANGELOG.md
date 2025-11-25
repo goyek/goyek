@@ -17,7 +17,7 @@ behavior to match `testing.T.Context`.
 
 #### Module Path Change
 
-Update your import statements and `go.mod`:
+Update your import statements and `go.mod`.
 
 ```go
 // Before (v2)
