@@ -5,11 +5,11 @@ go 1.24.1
 require (
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint/v2 v2.6.2
-	github.com/goyek/goyek/v2 v2.0.0-00010101000000-000000000000
+	github.com/goyek/goyek/v3 v3.0.0-00010101000000-000000000000
 	github.com/mattn/go-shellwords v1.0.12
 )
 
-replace github.com/goyek/goyek/v2 => ../
+replace github.com/goyek/goyek/v3 => ../
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.3.0 // indirect

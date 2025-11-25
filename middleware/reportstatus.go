@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v3"
 )
 
 // ReportStatus is a middleware which reports the task run status.

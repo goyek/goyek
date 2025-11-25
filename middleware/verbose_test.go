@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/goyek/goyek/v2"
-	"github.com/goyek/goyek/v2/middleware"
+	"github.com/goyek/goyek/v3"
+	"github.com/goyek/goyek/v3/middleware"
 )
 
 func TestSilentNonFailed_failed(t *testing.T) {

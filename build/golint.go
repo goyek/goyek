@@ -1,6 +1,6 @@
 package main
 
-import "github.com/goyek/goyek/v2"
+import "github.com/goyek/goyek/v3"
 
 var golint = goyek.Define(goyek.Task{
 	Name:  "golint",

@@ -138,7 +138,7 @@ func (l *CodeLineLogger) frameSkip(skip int) runtime.Frame {
 		if firstFrame.PC == 0 {
 			firstFrame = frame
 		}
-		if frame.Function == "github.com/goyek/goyek/v2.(*A).run.func1" {
+		if frame.Function == "github.com/goyek/goyek/v3.(*A).run.func1" {
 			// We've gone up all the way to the runner calling
 			// the action (so the user must have
 			// called a.Helper from inside that action).

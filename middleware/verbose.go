@@ -4,7 +4,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/goyek/goyek/v2"
+	"github.com/goyek/goyek/v3"
 )
 
 // SilentNonFailed is a middleware which makes sure that only output from failed tasks is printed.

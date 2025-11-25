@@ -29,7 +29,7 @@ Middlewares can be integrated using [Use] and [UseExecutor]
 for additional functionality, such as generating task execution reports,
 adding retry logic, exporting execution telemetry.
 
-Basic middlewares are available in [github.com/goyek/goyek/v2/middleware].
+Basic middlewares are available in [github.com/goyek/goyek/v3/middleware].
 
 For a convenient setup, [github.com/goyek/x/boot.Main] applies commonly
 used middlewares and defines configurable flags.

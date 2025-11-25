@@ -64,4 +64,4 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/goyek/goyek/v2
+        - github.com/goyek/goyek/v3
