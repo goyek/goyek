@@ -165,6 +165,34 @@ The following repositories demonstrate real-world usage of goyek:
   an example of extracting reusable build tasks into a shared module consumed by
   multiple repositories.
 
+## Best practices and patterns
+
+- **Keep build code in `build/`**: place your automation in a dedicated
+  `build` directory or module so it stays separate from application code.
+- **Define tasks at startup**: register tasks with
+  `goyek.Define` during package init, before calling `Main` or `Execute`, and
+  avoid mutating task definitions afterwards.
+- **Use `*goyek.A` for control flow**: prefer `a.Log`, `a.Error`, `a.Fatal`,
+  `a.Skip`, `a.Cleanup`, and `a.Context` over manual `log` or `os.Exit` calls.
+- **Prefer helpers for external commands**: use
+  `github.com/goyek/x/cmd.Exec` or a small helper (like this repo's
+  `build/exec.go`) instead of calling `os/exec` directly in actions.
+- **Structure pipelines with dependencies**: keep actions small and compose
+  them with `Deps` rather than writing one large, monolithic task.
+- **Use middlewares for cross-cutting concerns**: plug in middlewares such as
+  `middleware.ReportStatus`, `middleware.ReportLongRun`, `middleware.DryRun`,
+  `middleware.BufferParallel`, or custom ones via `goyek.Use` and
+  `goyek.UseExecutor`.
+- **Be deliberate with parallelism**: set `Task.Parallel` only when actions are
+  safe to run concurrently and rely on `middleware.BufferParallel` to keep
+  output readable.
+- **Treat context and cleanup carefully**: start long-running resources using
+  `a.Context()` and release them in `a.Cleanup` callbacks, keeping in mind that
+  the task context is canceled before cleanups run.
+- **Reuse tasks across repositories**: extract common tasks into a shared
+  module (as in `curioswitch/go-build`) and import them from other projects to
+  keep build logic consistent.
+
 ## Rationale
 
 **goyek** was originally built as a small library for expressing Go build
