@@ -1,7 +1,6 @@
 package goyek_test
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -89,7 +88,5 @@ func Example() {
 	// Run the tasks.
 	goyek.SetDefault(all)
 	goyek.SetUsage(usage)
-	if err := goyek.Execute(context.Background(), tasks, opts...); err != nil {
-		fmt.Println(err)
-	}
+	goyek.Main(tasks, opts...)
 }
