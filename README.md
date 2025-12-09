@@ -162,7 +162,7 @@ The following repositories demonstrate real-world usage of goyek:
   multi-module repository using goyek.
 - [curioswitch/go-build](https://github.com/curioswitch/go-build) and projects
   such as [curioswitch/tasuke](https://github.com/curioswitch/tasuke/blob/main/build/main.go):
-  example of extracting reusable build tasks into a shared module consumed by
+  an example of extracting reusable build tasks into a shared module consumed by
   multiple repositories.
 
 ## Rationale
