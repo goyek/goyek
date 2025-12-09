@@ -10,7 +10,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ## [3.0.1](https://github.com/goyek/goyek/releases/tag/v3.0.1) - 2025-12-09
 
-This patch release refines documentation.
+This patch release improves documentation.
 
 ## [3.0.0](https://github.com/goyek/goyek/releases/tag/v3.0.0) - 2025-11-25
 
