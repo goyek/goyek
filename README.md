@@ -155,9 +155,9 @@ See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v3) for more i
 The following repositories demonstrate real-world usage of goyek:
 
 - [goyek/template](https://github.com/goyek/template): Go application
-      repository template using goyek for build automation.
+  repository template using goyek for build automation.
 - [build/](build/): this repository dogfoods goyek for its own build
-      pipeline.
+  pipeline.
 - [splunk-otel-go](https://github.com/signalfx/splunk-otel-go/tree/main/build):
   multi-module repository using goyek.
 - [curioswitch/go-build](https://github.com/curioswitch/go-build) and projects
