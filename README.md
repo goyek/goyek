@@ -150,6 +150,32 @@ a new repository. For existing repositories, simply copy the relevant files.
 
 See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v3) for more information.
 
+## Rationale
+
+**goyek** was originally built as a small library for expressing Go build
+pipelines in Go itself instead of relying on an external DSL or tool.
+Keeping build logic as regular Go code makes it easy to reuse existing
+packages, refactor with IDE support, and debug tasks with the standard Go
+toolchain.
+
+Although build automation remains the primary use case, goyek is designed as
+a general task runner. Tasks are ordinary Go functions wired together through
+dependencies, which makes it suitable for other domains as well. It is known
+to be used, for example, by SRE and platform teams to automate deployment
+pipelines and other operational workflows.
+
+Compared to [Make](https://www.gnu.org/software/make/) and similar tools,
+goyek does not require learning a separate DSL or shell tricks and makes it
+easier to keep pipelines portable across platforms. Unlike
+[Mage](https://github.com/magefile/mage), it avoids build tags, code
+generation, and magic discovery of targets – you just write and compose
+ordinary Go functions. In contrast to [Task](https://taskfile.dev/), there is
+no YAML to learn or additional binary to install, and debugging tasks is
+like debugging any other Go program. Finally, while systems such as
+[Bazel](https://bazel.build/) focus on large, hermetic build graphs, goyek
+deliberately stays small and library‑like, so you can start with a simple
+build script and grow into more advanced pipelines only when needed.
+
 ## Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
