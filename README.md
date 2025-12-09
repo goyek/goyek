@@ -152,7 +152,7 @@ See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v3) for more i
 
 ## Examples
 
-The following repositories demonstrate real-world usage of goyek.
+The following repositories demonstrate real-world usage of goyek:
 
 - [goyek/template](https://github.com/goyek/template): Go application
       repository template using goyek for build automation.
