@@ -44,7 +44,7 @@ Create a pull request named `Release <version>` to update the [`CHANGELOG.md`](C
    TAG='v<version>'
    COMMIT='<commit-sha>'
    git tag -s -m $TAG $TAG $COMMIT
-   git push upstream $TAG
+   git push origin $TAG
    ```
 
 1. Create a GitHib Release named `<version>` with `v<version>` tag.
