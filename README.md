@@ -164,9 +164,17 @@ dependencies, which makes it suitable for other domains as well. It is known
 to be used, for example, by SRE and platform teams to automate deployment
 pipelines and other operational workflows.
 
-For more background and a comparison with alternative tools such as Make,
-Mage, and Task, see the [Alternatives](https://github.com/goyek/goyek/tree/v2.2.0?tab=readme-ov-file#alternatives)
-section in the v2.2.0 README.
+Compared to [Make](https://www.gnu.org/software/make/) and similar tools,
+goyek does not require learning a separate DSL or shell tricks and makes it
+easier to keep pipelines portable across platforms. Unlike
+[Mage](https://github.com/magefile/mage), it avoids build tags, code
+generation, and magic discovery of targets – you just write and compose
+ordinary Go functions. In contrast to [Task](https://taskfile.dev/), there is
+no YAML to learn or additional binary to install, and debugging tasks is
+like debugging any other Go program. Finally, while systems such as
+[Bazel](https://bazel.build/) focus on large, hermetic build graphs, goyek
+deliberately stays small and library‑like, so you can start with a simple
+build script and grow into more advanced pipelines only when needed.
 
 ## Contributing
 
