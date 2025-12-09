@@ -6,6 +6,17 @@ package goyek
 //
 // This function does not parse flags, it only separates tasks from flags/args.
 // To parse flags, you can use [flag.FlagSet.Parse] with the returned rest slice.
+// A common pattern is to support the recommended syntax
+// "[tasks] [flags] [--] [args]" in your main function:
+//
+//	func main() {
+//		tasks, args := goyek.SplitTasks(os.Args[1:])
+//		if err := flag.CommandLine.Parse(args); err != nil {
+//			fmt.Fprintln(goyek.Output(), err)
+//			os.Exit(2)
+//		}
+//		goyek.Main(tasks)
+//	}
 //
 // Examples:
 //   - [task1, task2] -> tasks: [task1, task2], rest: nil
