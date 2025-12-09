@@ -150,6 +150,21 @@ a new repository. For existing repositories, simply copy the relevant files.
 
 See the [documentation](https://pkg.go.dev/github.com/goyek/goyek/v3) for more information.
 
+## Examples
+
+The following repositories demonstrate real-world usage of goyek:
+
+- [goyek/template](https://github.com/goyek/template): a Go application
+  repository template using goyek for build automation.
+- [build/](build/): this repository dogfoods goyek for its own build
+  pipeline.
+- [splunk-otel-go](https://github.com/signalfx/splunk-otel-go/tree/main/build):
+  a multi-module repository using goyek.
+- [curioswitch/go-build](https://github.com/curioswitch/go-build) and projects
+  such as [curioswitch/tasuke](https://github.com/curioswitch/tasuke/blob/main/build/main.go):
+  an example of extracting reusable build tasks into a shared module consumed by
+  multiple repositories.
+
 ## Rationale
 
 **goyek** was originally built as a small library for expressing Go build
