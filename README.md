@@ -13,26 +13,6 @@ is a task automation library intended to be an alternative to
 [Mage](https://github.com/magefile/mage),
 [Task](https://taskfile.dev/).
 
-The primary properties of goyek are:
-
-- Library, not an application, with API inspired by
-  [`testing`](https://golang.org/pkg/testing),
-  [`cobra`](https://github.com/spf13/cobra),
-  [`flag`](https://golang.org/pkg/flag),
-  [`http`](https://golang.org/pkg/http).
-- Cross-platform and shell independent.
-- No binary installation needed.
-- Easy to debug, like regular Go code.
-- Tasks are defined similarly to
-  [`cobra`](https://github.com/spf13/cobra) commands.
-- The task action looks like a Go test.
-  [`goyek.A`](https://pkg.go.dev/github.com/goyek/goyek/v3#A)
-  has similar methods to [`testing.T`](https://pkg.go.dev/testing#T).
-- Reuse any Go code and library e.g. [`viper`](https://github.com/spf13/viper).
-- Highly customizable.
-- Zero third-party dependencies.
-- Additional features in [`goyek/x`](https://github.com/goyek/x).
-
 5-minute video: [Watch here](https://www.youtube.com/watch?v=e-xWEH-fqJ0)
 ([Slides](https://docs.google.com/presentation/d/1xFAPXeMiOD-92xeIHkUD-SHmJZwc8mSIIgpjuJXEW3U/edit?usp=sharing)).
 
@@ -200,6 +180,28 @@ pipelines in Go itself instead of relying on an external DSL or tool.
 Keeping build logic as regular Go code makes it easy to reuse existing
 packages, refactor with IDE support, and debug tasks with the standard Go
 toolchain.
+
+At a high level, goyek has the following properties:
+
+- Small, library-first design (not a standalone binary) with an API
+  inspired by [`testing`](https://golang.org/pkg/testing),
+  [`cobra`](https://github.com/spf13/cobra),
+  [`flag`](https://golang.org/pkg/flag), and
+  [`http`](https://golang.org/pkg/http).
+- Cross-platform and shell independent.
+- No binary installation required.
+- Easy to debug, like regular Go code.
+- Tasks are defined similarly to
+  [`cobra`](https://github.com/spf13/cobra) commands.
+- Task actions look like Go tests:
+  [`goyek.A`](https://pkg.go.dev/github.com/goyek/goyek/v3#A)
+  provides methods similar to [`testing.T`](https://pkg.go.dev/testing#T).
+- Can reuse any Go code and library, for example
+  [`viper`](https://github.com/spf13/viper).
+- Highly customizable via middlewares and composition.
+- Zero third-party dependencies in the core module.
+- Additional convenience packages are available in
+  [`goyek/x`](https://github.com/goyek/x).
 
 Although build automation remains the primary use case, goyek is designed as
 a general task runner. Tasks are ordinary Go functions wired together through
