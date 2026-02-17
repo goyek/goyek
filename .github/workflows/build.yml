@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
-          go-version: '1.24'
+          go-version: '1.26'
           cache-dependency-path: build/go.sum
       - run: go run . -v ci
         working-directory: build
@@ -46,6 +46,8 @@ jobs:
           - '1.22'
           - '1.23'
           - '1.24'
+          - '1.25'
+          - '1.26'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -70,7 +72,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
-          go-version: '1.24'
+          go-version: '1.26'
           cache-dependency-path: build/go.sum
       - run: ./goyek.sh -h
 
@@ -80,6 +82,6 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
-          go-version: '1.24'
+          go-version: '1.26'
           cache-dependency-path: build/go.sum
       - run: .\goyek.ps1 -h
