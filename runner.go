@@ -86,6 +86,7 @@ func (r taskRunner) run(in Input) Result {
 		name:     in.TaskName,
 		output:   out,
 		logger:   logger,
+		parallel: in.Parallel,
 	}
 	a = a.WithContext(ctx)
 
