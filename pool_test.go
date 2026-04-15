@@ -20,7 +20,7 @@ func TestPool(t *testing.T) {
 	var running int
 	var maxRunning int
 
-	action := func(a *goyek.A) {
+	action := func(_ *goyek.A) {
 		mu.Lock()
 		running++
 		if running > maxRunning {
@@ -55,7 +55,7 @@ func TestMultiPool(t *testing.T) {
 	var running int
 	var maxRunning int
 
-	action := func(a *goyek.A) {
+	action := func(_ *goyek.A) {
 		mu.Lock()
 		running++
 		if running > maxRunning {
@@ -96,14 +96,14 @@ func TestPoolDeadlockAvoidance(t *testing.T) {
 		Name:     "A",
 		Pools:    goyek.DefinedPools{p1, p2},
 		Parallel: true,
-		Action:   func(a *goyek.A) { time.Sleep(time.Millisecond) },
+		Action:   func(_ *goyek.A) { time.Sleep(time.Millisecond) },
 	})
 	// Task B uses p2 then p1 (sorted: p1, p2)
 	flow.Define(goyek.Task{
 		Name:     "B",
 		Pools:    goyek.DefinedPools{p2, p1},
 		Parallel: true,
-		Action:   func(a *goyek.A) { time.Sleep(time.Millisecond) },
+		Action:   func(_ *goyek.A) { time.Sleep(time.Millisecond) },
 	})
 
 	err := flow.Execute(context.Background(), []string{"A", "B"})
@@ -121,7 +121,7 @@ func TestPoolContextCancellation(t *testing.T) {
 	flow.Define(goyek.Task{
 		Name:  "blocker",
 		Pools: goyek.DefinedPools{p1},
-		Action: func(a *goyek.A) {
+		Action: func(_ *goyek.A) {
 			cancel()
 			time.Sleep(100 * time.Millisecond)
 		},
@@ -148,7 +148,7 @@ func TestPoolSlotLeak(t *testing.T) {
 	flow.Define(goyek.Task{
 		Name:  "blocker1",
 		Pools: goyek.DefinedPools{p1},
-		Action: func(a *goyek.A) {
+		Action: func(_ *goyek.A) {
 			time.Sleep(10 * time.Millisecond)
 		},
 	})
@@ -160,7 +160,7 @@ func TestPoolSlotLeak(t *testing.T) {
 	flow.Define(goyek.Task{
 		Name:  "blocker2",
 		Pools: goyek.DefinedPools{p2},
-		Action: func(a *goyek.A) {
+		Action: func(_ *goyek.A) {
 			time.Sleep(50 * time.Millisecond)
 		},
 	})
