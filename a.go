@@ -309,14 +309,13 @@ func (a *A) Chdir(dir string) {
 		a.Fatal(err)
 	}
 	a.Cleanup(func() {
-		err := oldwd.Chdir()
-		oldwd.Close()
-		if err != nil {
+		if e := oldwd.Chdir(); e != nil {
 			// It's not safe to continue with tests if we can't
 			// get back to the original working directory. Since
 			// we are holding a dirfd, this is highly unlikely.
-			panic("goyek.Chdir: " + err.Error())
+			panic("goyek.Chdir: " + e.Error())
 		}
+		oldwd.Close()
 	})
 
 	if err = os.Chdir(dir); err != nil {
