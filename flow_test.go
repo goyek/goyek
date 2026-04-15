@@ -50,6 +50,7 @@ func Test_DefaultFlow(t *testing.T) {
 
 		pool := goyek.DefinePool(goyek.Pool{Name: "pool", Limit: 1})
 		assertEqual(t, goyek.Pools()[0].Name(), "pool", "Pools")
+		assertEqual(t, goyek.Pools()[0].Limit(), 1, "Pool Limit")
 		goyek.Define(goyek.Task{Name: "with-pool", Pools: goyek.DefinedPools{pool}})
 	})
 }
@@ -605,6 +606,11 @@ func TestFlow_Logger(t *testing.T) {
 
 	assertContains(t, out, "first", "should call Log")
 	assertContains(t, out, "second", "should call Logf")
+}
+
+func Test_FailError_Error(t *testing.T) {
+	err := &goyek.FailError{Task: "task"}
+	assertEqual(t, err.Error(), "task failed: task", "Error()")
 }
 
 func TestFlow_Logger_default(t *testing.T) {

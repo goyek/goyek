@@ -195,3 +195,32 @@ func TestPoolSlotLeak(t *testing.T) {
 	err := flow.Execute(ctx2, []string{"blocker1", "blocker2"})
 	assertPass(t, err, "pools should not have leaked slots")
 }
+
+func TestPoolIntrospection(t *testing.T) {
+	flow := &goyek.Flow{}
+	p2 := flow.DefinePool(goyek.Pool{Name: "v2", Limit: 2})
+	p1 := flow.DefinePool(goyek.Pool{Name: "v1", Limit: 1})
+
+	pools := flow.Pools()
+	assertEqual(t, len(pools), 2, "should have 2 pools")
+	assertEqual(t, pools[0].Name(), "v1", "first pool name")
+	assertEqual(t, pools[0].Limit(), 1, "first pool limit")
+	assertEqual(t, pools[1].Name(), "v2", "second pool name")
+	assertEqual(t, pools[1].Limit(), 2, "second pool limit")
+
+	task := flow.Define(goyek.Task{
+		Name:  "task",
+		Pools: goyek.DefinedPools{p2, p1},
+	})
+	taskPools := task.Pools()
+	assertEqual(t, len(taskPools), 2, "task should have 2 pools")
+	// Task.Pools() returns them in the order they are in the snapshot, which is sorted by name
+	assertEqual(t, taskPools[0].Name(), "v1", "first task pool")
+	assertEqual(t, taskPools[1].Name(), "v2", "second task pool")
+}
+
+func TestFlow_Define_no_pools(t *testing.T) {
+	flow := &goyek.Flow{}
+	task := flow.Define(goyek.Task{Name: "no-pools"})
+	assertEqual(t, len(task.Pools()), 0, "should have no pools")
+}

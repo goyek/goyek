@@ -141,9 +141,6 @@ func (f *Flow) DefinePool(pool Pool) *DefinedPool {
 		limit: pool.Limit,
 		sem:   make(chan struct{}, pool.Limit),
 	}
-	if f.pools == nil {
-		f.pools = map[string]*poolSnapshot{}
-	}
 	f.pools[pool.Name] = poolCopy
 	return &DefinedPool{poolCopy, f}
 }
@@ -193,14 +190,21 @@ func (f *Flow) isDefined(name string, flow *Flow) bool {
 }
 
 func (f *Flow) isPoolDefined(name string, flow *Flow) bool {
-	if f.pools == nil {
-		f.pools = map[string]*poolSnapshot{}
-	}
+	f.init()
 	if f != flow {
 		return false // defined in other flow
 	}
 	_, ok := f.pools[name]
 	return ok
+}
+
+func (f *Flow) init() {
+	if f.tasks == nil {
+		f.tasks = map[string]*taskSnapshot{}
+	}
+	if f.pools == nil {
+		f.pools = map[string]*poolSnapshot{}
+	}
 }
 
 // Output returns the destination used for printing messages.
