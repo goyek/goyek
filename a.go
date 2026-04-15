@@ -203,7 +203,7 @@ func (a *A) WithContext(ctx context.Context) *A {
 	}
 
 	res := *a
-	res.ctx, res.ctxCancel = context.WithCancel(ctx) //nolint:gosec // the cancel function is called in runCleanups
+	res.ctx, res.ctxCancel = context.WithCancel(ctx) //nolint:gosec // The cancel function is called in runCleanups.
 	return &res
 }
 
