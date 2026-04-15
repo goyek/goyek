@@ -8,6 +8,8 @@ Each task consists of an Action function that executes when the task runs.
 
 Tasks can have dependencies, set via Deps. By default, dependencies run sequentially,
 but setting Parallel allows a task to run concurrently with other parallel tasks.
+Tasks can also be assigned to pools (set via Pools) to limit the number
+of concurrent task instances.
 
 A task executes at most once per [Flow.Main] or [Flow.Execute] call.
 It is valid to define a task with dependencies but no action.

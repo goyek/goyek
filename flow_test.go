@@ -47,6 +47,10 @@ func Test_DefaultFlow(t *testing.T) {
 		goyek.Use(func(r goyek.Runner) goyek.Runner { return r })
 		goyek.UseExecutor(func(e goyek.Executor) goyek.Executor { return e })
 		assertPass(t, goyek.Execute(context.Background(), nil), "Execute")
+
+		pool := goyek.DefinePool(goyek.Pool{Name: "pool", Limit: 1})
+		assertEqual(t, goyek.Pools()[0].Name(), "pool", "Pools")
+		goyek.Define(goyek.Task{Name: "with-pool", Pools: goyek.DefinedPools{pool}})
 	})
 }
 
@@ -321,6 +325,42 @@ func Test_invalid_args(t *testing.T) {
 	}
 }
 
+func Test_Define_bad_pool(t *testing.T) {
+	flow := &goyek.Flow{}
+	otherFlow := &goyek.Flow{}
+	pool := otherFlow.DefinePool(goyek.Pool{Name: "different-flow", Limit: 1})
+
+	act := func() { flow.Define(goyek.Task{Name: "pool-from-different-flow", Pools: goyek.DefinedPools{pool}}) }
+
+	assertPanics(t, act, "should not be possible use pools from different flow")
+}
+
+func Test_DefinePool_empty_name(t *testing.T) {
+	flow := &goyek.Flow{}
+
+	act := func() { flow.DefinePool(goyek.Pool{Limit: 1}) }
+
+	assertPanics(t, act, "should panic on empty pool name")
+}
+
+func Test_DefinePool_bad_limit(t *testing.T) {
+	flow := &goyek.Flow{}
+
+	act := func() { flow.DefinePool(goyek.Pool{Name: "pool", Limit: 0}) }
+
+	assertPanics(t, act, "should panic on non-positive pool limit")
+}
+
+func Test_DefinePool_same_name(t *testing.T) {
+	flow := &goyek.Flow{}
+	pool := goyek.Pool{Name: "pool", Limit: 1}
+	flow.DefinePool(pool)
+
+	act := func() { flow.DefinePool(pool) }
+
+	assertPanics(t, act, "should not be possible to register pools with same name twice")
+}
+
 func Test_printing(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
@@ -532,6 +572,20 @@ func TestFlow_Print(t *testing.T) {
 	assertContains(t, out, "Default task: task", "should print the default task")
 	assertNotContains(t, out, "hidden", "should not print task with no usage")
 	assertContains(t, out, "(depends on: task)", "should print the task dependencies")
+}
+
+func TestFlow_Print_pools(t *testing.T) {
+	out := &strings.Builder{}
+	flow := &goyek.Flow{}
+	flow.SetOutput(out)
+	p1 := flow.DefinePool(goyek.Pool{Name: "p1", Limit: 1})
+	flow.Define(goyek.Task{Name: "task", Usage: "use it", Pools: goyek.DefinedPools{p1}})
+
+	flow.Print()
+
+	assertContains(t, out, "Pools:", "should print Pools section")
+	assertContains(t, out, "p1\t(limit: 1)", "should print the pool")
+	assertContains(t, out, "(pools: p1)", "should print the task pools")
 }
 
 func TestFlow_Logger(t *testing.T) {

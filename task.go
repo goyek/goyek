@@ -20,6 +20,46 @@ type Task struct {
 	// Parallel marks that this task can be run in parallel
 	// with (and only with) other parallel tasks.
 	Parallel bool
+
+	// Pools is a collection of defined pools
+	// that limit the number of concurrent task instances.
+	Pools DefinedPools
+}
+
+// Pool represents a named pool that can limit the number of concurrent task instances.
+type Pool struct {
+	// Name uniquely identifies the pool.
+	// It cannot be empty and should be easily representable on the CLI.
+	Name string
+
+	// Limit is the number of concurrent task instances assigned to the pool.
+	// It must be greater than 0.
+	Limit int
+}
+
+// DefinedPool represents a pool that has been defined.
+type DefinedPool struct {
+	*poolSnapshot
+	flow *Flow
+}
+
+// DefinedPools represents a collection of pools.
+type DefinedPools []*DefinedPool
+
+type poolSnapshot struct {
+	name  string
+	limit int
+	sem   chan struct{}
+}
+
+// Name returns the name of the pool.
+func (p *DefinedPool) Name() string {
+	return p.name
+}
+
+// Limit returns the limit of the pool.
+func (p *DefinedPool) Limit() int {
+	return p.limit
 }
 
 // DefinedTask represents a task that has been defined.
@@ -80,6 +120,19 @@ func (r *DefinedTask) Deps() Deps {
 		deps = append(deps, &DefinedTask{r.flow.tasks[dep.name], r.flow})
 	}
 	return deps
+}
+
+// Pools returns all task's pools.
+func (r *DefinedTask) Pools() DefinedPools {
+	count := len(r.pools)
+	if count == 0 {
+		return nil
+	}
+	pools := make(DefinedPools, 0, count)
+	for _, pool := range r.pools {
+		pools = append(pools, &DefinedPool{pool, r.flow})
+	}
+	return pools
 }
 
 // SetDeps sets all task's dependencies.

@@ -21,6 +21,7 @@ type Flow struct {
 	logger Logger
 
 	tasks               map[string]*taskSnapshot // snapshot of defined tasks
+	pools               map[string]*poolSnapshot // snapshot of defined pools
 	defaultTask         *taskSnapshot            // task to run when none is explicitly provided
 	middlewares         []Middleware
 	executorMiddlewares []ExecutorMiddleware
@@ -35,6 +36,7 @@ type taskSnapshot struct {
 	name     string
 	usage    string
 	deps     []*taskSnapshot
+	pools    []*poolSnapshot
 	action   func(a *A)
 	parallel bool
 }
@@ -52,6 +54,21 @@ func (f *Flow) Tasks() []*DefinedTask {
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
 	return tasks
+}
+
+// Pools returns all pools sorted in lexicographical order.
+func Pools() []*DefinedPool {
+	return DefaultFlow.Pools()
+}
+
+// Pools returns all pools sorted in lexicographical order.
+func (f *Flow) Pools() []*DefinedPool {
+	var pools []*DefinedPool
+	for _, pool := range f.pools {
+		pools = append(pools, &DefinedPool{pool, f})
+	}
+	sort.Slice(pools, func(i, j int) bool { return pools[i].Name() < pools[j].Name() })
+	return pools
 }
 
 // Define registers the task. It panics in case of any error.
@@ -73,20 +90,62 @@ func (f *Flow) Define(task Task) *DefinedTask {
 			panic("dependency was not defined: " + dep.Name())
 		}
 	}
+	for _, pool := range task.Pools {
+		if !f.isPoolDefined(pool.Name(), pool.flow) {
+			panic("pool was not defined: " + pool.Name())
+		}
+	}
 
 	var deps []*taskSnapshot
 	for _, dep := range task.Deps {
 		deps = append(deps, dep.taskSnapshot)
 	}
+	var pools []*poolSnapshot
+	for _, pool := range task.Pools {
+		pools = append(pools, pool.poolSnapshot)
+	}
+	sort.Slice(pools, func(i, j int) bool { return pools[i].name < pools[j].name })
+
 	taskCopy := &taskSnapshot{
 		name:     task.Name,
 		usage:    task.Usage,
 		deps:     deps,
+		pools:    pools,
 		action:   task.Action,
 		parallel: task.Parallel,
 	}
 	f.tasks[task.Name] = taskCopy
 	return &DefinedTask{taskCopy, f}
+}
+
+// DefinePool registers the pool. It panics in case of any error.
+func DefinePool(pool Pool) *DefinedPool {
+	return DefaultFlow.DefinePool(pool)
+}
+
+// DefinePool registers the pool. It panics in case of any error.
+func (f *Flow) DefinePool(pool Pool) *DefinedPool {
+	// validate
+	if pool.Name == "" {
+		panic("pool name cannot be empty")
+	}
+	if pool.Limit <= 0 {
+		panic("pool limit must be greater than 0")
+	}
+	if f.isPoolDefined(pool.Name, f) {
+		panic("pool with the same name is already defined")
+	}
+
+	poolCopy := &poolSnapshot{
+		name:  pool.Name,
+		limit: pool.Limit,
+		sem:   make(chan struct{}, pool.Limit),
+	}
+	if f.pools == nil {
+		f.pools = map[string]*poolSnapshot{}
+	}
+	f.pools[pool.Name] = poolCopy
+	return &DefinedPool{poolCopy, f}
 }
 
 // Undefine unregisters the task. It panics in case of any error.
@@ -130,6 +189,17 @@ func (f *Flow) isDefined(name string, flow *Flow) bool {
 		return false // defined in other flow
 	}
 	_, ok := f.tasks[name]
+	return ok
+}
+
+func (f *Flow) isPoolDefined(name string, flow *Flow) bool {
+	if f.pools == nil {
+		f.pools = map[string]*poolSnapshot{}
+	}
+	if f != flow {
+		return false // defined in other flow
+	}
+	_, ok := f.pools[name]
 	return ok
 }
 
@@ -462,6 +532,13 @@ func (f *Flow) Print() {
 		fmt.Fprintf(out, "Default task: %s\n", f.defaultTask.name)
 	}
 
+	if len(f.pools) > 0 {
+		fmt.Fprintln(out, "Pools:")
+		for _, pool := range f.Pools() {
+			fmt.Fprintf(out, "  %s\t(limit: %d)\n", pool.Name(), pool.Limit())
+		}
+	}
+
 	fmt.Fprintln(out, "Tasks:")
 	var (
 		minwidth      = 5
@@ -474,15 +551,22 @@ func (f *Flow) Print() {
 		if task.Usage() == "" {
 			continue
 		}
-		deps := ""
+		info := ""
 		if len(task.Deps()) > 0 {
 			depNames := make([]string, 0, len(task.Deps()))
 			for _, dep := range task.Deps() {
 				depNames = append(depNames, dep.Name())
 			}
-			deps = " (depends on: " + strings.Join(depNames, ", ") + ")"
+			info += " (depends on: " + strings.Join(depNames, ", ") + ")"
 		}
-		fmt.Fprintf(w, "  %s\t%s\n", task.Name(), task.Usage()+deps)
+		if len(task.Pools()) > 0 {
+			poolNames := make([]string, 0, len(task.Pools()))
+			for _, pool := range task.Pools() {
+				poolNames = append(poolNames, pool.Name())
+			}
+			info += " (pools: " + strings.Join(poolNames, ", ") + ")"
+		}
+		fmt.Fprintf(w, "  %s\t%s\n", task.Name(), task.Usage()+info)
 	}
 	w.Flush()
 }

@@ -179,6 +179,23 @@ func (r *executor) runParallelTasks(ctx context.Context, tasks []*taskSnapshot, 
 }
 
 func (r *executor) runTask(ctx context.Context, task *taskSnapshot, output io.Writer, logger Logger) error {
+	// acquire pool slots
+	var acquired int
+	defer func() {
+		// release pool slots in reverse order
+		for i := acquired - 1; i >= 0; i-- {
+			<-task.pools[i].sem
+		}
+	}()
+	for _, pool := range task.pools {
+		select {
+		case pool.sem <- struct{}{}:
+			acquired++
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+
 	// prepare runner
 	runner := NewRunner(task.action)
 
