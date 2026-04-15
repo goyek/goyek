@@ -202,10 +202,8 @@ func (a *A) WithContext(ctx context.Context) *A {
 		panic("nil context")
 	}
 
-	derivedCtx, cancel := context.WithCancel(ctx)
 	res := *a
-	res.ctx = derivedCtx
-	res.ctxCancel = cancel
+	res.ctx, res.ctxCancel = context.WithCancel(ctx) //nolint:gosec // the cancel function is called in runCleanups
 	return &res
 }
 
