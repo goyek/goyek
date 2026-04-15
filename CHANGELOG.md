@@ -10,12 +10,13 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
-- Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage in parallel tasks,
-  avoiding race conditions.
+- Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
+  in parallel tasks.
 
 ### Fixed
 
-- Fix a resource leak in `A.Chdir` where a file descriptor could remain open if the task failed.
+- Fix a resource leak in `A.Chdir` where a file descriptor could remain
+  open.
 
 ## [3.0.1](https://github.com/goyek/goyek/releases/tag/v3.0.1) - 2025-12-09
 
