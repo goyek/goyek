@@ -588,3 +588,19 @@ func TestA_Chdir_parallel_panic(t *testing.T) {
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 	assertContains(t, out, "Chdir called in a parallel task", "should log error message")
 }
+
+func TestA_Setenv_error(t *testing.T) {
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a.Setenv("", "")
+	})(goyek.Input{})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+}
+
+func TestA_Chdir_error(t *testing.T) {
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a.Chdir("non-existent-directory-@!#$")
+	})(goyek.Input{})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+}
