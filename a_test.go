@@ -568,3 +568,23 @@ func (l *helperLoggerSpy) Skipf(_ io.Writer, _ string, _ ...interface{}) {
 func (l *helperLoggerSpy) Helper() {
 	l.called = true
 }
+
+func TestA_Setenv_parallel_panic(t *testing.T) {
+	out := &strings.Builder{}
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a.Setenv("KEY", "VALUE")
+	})(goyek.Input{Parallel: true, Output: out, Logger: goyek.FmtLogger{}})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+	assertContains(t, out, "Setenv called in a parallel task", "should log error message")
+}
+
+func TestA_Chdir_parallel_panic(t *testing.T) {
+	out := &strings.Builder{}
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a.Chdir(".")
+	})(goyek.Input{Parallel: true, Output: out, Logger: goyek.FmtLogger{}})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+	assertContains(t, out, "Chdir called in a parallel task", "should log error message")
+}

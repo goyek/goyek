@@ -28,6 +28,7 @@ type A struct {
 	name      string
 	output    io.Writer
 	logger    Logger
+	parallel  bool
 
 	mu       *sync.Mutex
 	failed   *bool
@@ -234,6 +235,9 @@ func (a *A) Cleanup(fn func()) {
 // Because Setenv affects the whole process, it should not be used in parallel tasks.
 func (a *A) Setenv(key, value string) {
 	a.Helper()
+	if a.parallel {
+		a.Fatalf("Setenv called in a parallel task")
+	}
 	prevValue, ok := os.LookupEnv(key)
 
 	if err := os.Setenv(key, value); err != nil {
@@ -297,10 +301,24 @@ func (a *A) TempDir() string {
 // Because Chdir affects the whole process, it should not be used
 // in parallel tasks.
 func (a *A) Chdir(dir string) {
+	if a.parallel {
+		a.Fatalf("Chdir called in a parallel task")
+	}
 	oldwd, err := os.Open(".")
 	if err != nil {
 		a.Fatal(err)
 	}
+	a.Cleanup(func() {
+		err := oldwd.Chdir()
+		oldwd.Close()
+		if err != nil {
+			// It's not safe to continue with tests if we can't
+			// get back to the original working directory. Since
+			// we are holding a dirfd, this is highly unlikely.
+			panic("goyek.Chdir: " + err.Error())
+		}
+	})
+
 	if err = os.Chdir(dir); err != nil {
 		a.Fatal(err)
 	}
@@ -319,16 +337,6 @@ func (a *A) Chdir(dir string) {
 		}
 		a.Setenv("PWD", dir)
 	}
-	a.Cleanup(func() {
-		err := oldwd.Chdir()
-		oldwd.Close()
-		if err != nil {
-			// It's not safe to continue with tests if we can't
-			// get back to the original working directory. Since
-			// we are holding a dirfd, this is highly unlikely.
-			panic("goyek.Chdir: " + err.Error())
-		}
-	})
 }
 
 func (a *A) run(action func(a *A)) (finished bool, panicVal interface{}, panicStack []byte) {
