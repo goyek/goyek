@@ -155,6 +155,23 @@ func TestA_WithContext(t *testing.T) {
 	}
 }
 
+func TestA_WithContext_cancels_on_cleanup(t *testing.T) {
+	var ctx context.Context
+	res := goyek.NewRunner(func(a *goyek.A) {
+		ctx = a.WithContext(context.Background()).Context()
+	})(goyek.Input{})
+
+	if res.Status != goyek.StatusPassed {
+		t.Errorf("status was %s but want %s", res.Status, goyek.StatusPassed)
+	}
+
+	select {
+	case <-ctx.Done():
+	default:
+		t.Error("context should be cancelled after the task finishes")
+	}
+}
+
 func TestA_WithContext_nil(t *testing.T) {
 	out := &strings.Builder{}
 	got := goyek.NewRunner(func(a *goyek.A) {
