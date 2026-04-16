@@ -17,6 +17,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Fix a resource leak in `A.Chdir` where a file descriptor could remain
   open.
+- Fix a resource leak in `A.WithContext` where derived contexts were
+  not canceled when the task finished.
 
 ## [3.0.1](https://github.com/goyek/goyek/releases/tag/v3.0.1) - 2025-12-09
 
