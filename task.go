@@ -109,7 +109,7 @@ func (r *DefinedTask) noCycle(deps Deps, visited map[string]bool) bool {
 	for _, dep := range deps {
 		name := dep.name
 		if visited[name] {
-			continue
+			continue // already checked this branch
 		}
 		visited[name] = true
 		if name == r.name {
