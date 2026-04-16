@@ -12,8 +12,11 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
-- `A.Cleanup` now panics if a `nil` function is provided, matching
-  `testing.T.Cleanup` behavior.
+- `A.Cleanup` now panics if a `nil` function is provided.
+  This prevents accidental misconfigurations where a `nil` cleanup
+  function would cause the internal cleanup loop to terminate prematurely,
+  potentially skipping other registered cleanup functions and leading
+  to resource leaks.
 
 ### Fixed
 
