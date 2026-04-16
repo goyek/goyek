@@ -204,6 +204,7 @@ func (a *A) WithContext(ctx context.Context) *A {
 	}
 
 	derivedCtx, cancel := context.WithCancel(ctx)
+	a.Cleanup(cancel)
 	res := *a
 	res.ctx = derivedCtx
 	res.ctxCancel = cancel
