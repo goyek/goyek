@@ -168,7 +168,7 @@ func TestA_WithContext_cancels_on_cleanup(t *testing.T) {
 	select {
 	case <-ctx.Done():
 	default:
-		t.Error("context should be cancelled after the task finishes")
+		t.Error("context should be canceled after the task finishes")
 	}
 }
 
@@ -330,16 +330,14 @@ func TestA_Cleanup_Fail(t *testing.T) {
 func TestA_Cleanup_nil(t *testing.T) {
 	out := &strings.Builder{}
 	got := goyek.NewRunner(func(a *goyek.A) {
-		a.Cleanup(func() {
-			a.Log("3")
-		})
 		a.Log("1")
-		a.Cleanup(nil) // nil cleanup func is gracefully ignored
+		a.Cleanup(nil) // nil cleanup func should panic
 		a.Log("2")
 	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: out})
 
-	assertEqual(t, got.Status, goyek.StatusPassed, "should return proper status")
-	assertEqual(t, out.String(), "1\n2\n3\n", "should continue execution")
+	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+	assertEqual(t, got.PanicValue, "nil cleanup", "should return proper panic value")
+	assertEqual(t, out.String(), "1\n", "should interrupt execution")
 }
 
 func TestA_Setenv(t *testing.T) {
