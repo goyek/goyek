@@ -330,6 +330,9 @@ func TestA_Cleanup_Fail(t *testing.T) {
 func TestA_Cleanup_nil(t *testing.T) {
 	out := &strings.Builder{}
 	got := goyek.NewRunner(func(a *goyek.A) {
+		a.Cleanup(func() {
+			a.Log("3")
+		})
 		a.Log("1")
 		a.Cleanup(nil) // nil cleanup func should panic
 		a.Log("2")
@@ -337,7 +340,7 @@ func TestA_Cleanup_nil(t *testing.T) {
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 	assertEqual(t, got.PanicValue, "nil cleanup", "should return proper panic value")
-	assertEqual(t, out.String(), "1\n", "should interrupt execution")
+	assertEqual(t, out.String(), "1\n3\n", "should interrupt execution but run previously registered cleanups")
 }
 
 func TestA_Setenv(t *testing.T) {

@@ -224,6 +224,8 @@ func (a *A) Helper() {
 
 // Cleanup registers a function to be called when [Task.Action] function completes.
 // Cleanup functions will be called in the last-added first-called order.
+//
+// The provided function must be non-nil.
 func (a *A) Cleanup(fn func()) {
 	if fn == nil {
 		panic("nil cleanup")
