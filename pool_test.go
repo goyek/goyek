@@ -224,3 +224,84 @@ func TestFlow_Define_no_pools(t *testing.T) {
 	task := flow.Define(goyek.Task{Name: "no-pools"})
 	assertEqual(t, len(task.Pools()), 0, "should have no pools")
 }
+
+func TestPoolMultipleSlots(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(io.Discard)
+
+	p1 := flow.DefinePool(goyek.Pool{Name: "p1", Limit: 2})
+
+	var mu sync.Mutex
+	var running int
+	var maxRunning int
+
+	action := func(_ *goyek.A) {
+		mu.Lock()
+		running++
+		if running > maxRunning {
+			maxRunning = running
+		}
+		mu.Unlock()
+		time.Sleep(10 * time.Millisecond)
+		mu.Lock()
+		running--
+		mu.Unlock()
+	}
+
+	// task takes both slots
+	flow.Define(goyek.Task{
+		Name:   "t1",
+		Pools:  goyek.DefinedPools{p1, p1},
+		Action: action,
+	})
+	// t2 will have to wait
+	flow.Define(goyek.Task{
+		Name:     "t2",
+		Pools:    goyek.DefinedPools{p1},
+		Action:   action,
+		Parallel: true,
+	})
+
+	err := flow.Execute(context.Background(), []string{"t1", "t2"})
+	assertPass(t, err, "Execute should pass")
+	assertEqual(t, maxRunning, 1, "only 1 task should run at a time because t1 takes all slots")
+}
+
+func TestFlow_Define_too_many_slots(t *testing.T) {
+	flow := &goyek.Flow{}
+	p1 := flow.DefinePool(goyek.Pool{Name: "p1", Limit: 1})
+
+	act := func() {
+		flow.Define(goyek.Task{
+			Name:  "t1",
+			Pools: goyek.DefinedPools{p1, p1},
+		})
+	}
+
+	assertPanics(t, act, "should panic when task requests more slots than pool limit")
+}
+
+func TestPoolWaitLog(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(io.Discard)
+	flow.SetLogger(goyek.FmtLogger{})
+
+	p1 := flow.DefinePool(goyek.Pool{Name: "p1", Limit: 1})
+
+	flow.Define(goyek.Task{
+		Name:  "blocker",
+		Pools: goyek.DefinedPools{p1},
+		Action: func(_ *goyek.A) {
+			time.Sleep(100 * time.Millisecond)
+		},
+		Parallel: true,
+	})
+	flow.Define(goyek.Task{
+		Name:  "waiting",
+		Pools: goyek.DefinedPools{p1},
+		Parallel: true,
+	})
+
+	err := flow.Execute(context.Background(), []string{"blocker", "waiting"})
+	assertPass(t, err, "Execute should pass")
+}

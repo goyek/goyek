@@ -101,7 +101,12 @@ func (f *Flow) Define(task Task) *DefinedTask {
 		deps = append(deps, dep.taskSnapshot)
 	}
 	var pools []*poolSnapshot
+	poolCounts := make(map[string]int)
 	for _, pool := range task.Pools {
+		poolCounts[pool.Name()]++
+		if poolCounts[pool.Name()] > pool.Limit() {
+			panic(fmt.Sprintf("task requests %d slots from pool %s, which has a limit of %d", poolCounts[pool.Name()], pool.Name(), pool.Limit()))
+		}
 		pools = append(pools, pool.poolSnapshot)
 	}
 	sort.Slice(pools, func(i, j int) bool { return pools[i].name < pools[j].name })

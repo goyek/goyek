@@ -193,6 +193,14 @@ func (r *executor) runTask(ctx context.Context, task *taskSnapshot, output io.Wr
 			acquired++
 		case <-ctx.Done():
 			return ctx.Err()
+		default:
+			logger.Logf(output, "waiting for a slot in pool %s", pool.name)
+			select {
+			case pool.sem <- struct{}{}:
+				acquired++
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
 	}
 
