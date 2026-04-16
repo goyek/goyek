@@ -20,9 +20,9 @@ type Flow struct {
 	usage  func()
 	logger Logger
 
-	tasks               map[string]*taskSnapshot // snapshot of defined tasks
+	tasks               map[string]*DefinedTask // snapshot of defined tasks
 	pools               map[string]*poolSnapshot // snapshot of defined pools
-	defaultTask         *taskSnapshot            // task to run when none is explicitly provided
+	defaultTask         *DefinedTask            // task to run when none is explicitly provided
 	middlewares         []Middleware
 	executorMiddlewares []ExecutorMiddleware
 }
@@ -30,16 +30,6 @@ type Flow struct {
 // DefaultFlow is the default flow.
 // The top-level functions such as Define, Main, and so on are wrappers for the methods of Flow.
 var DefaultFlow = &Flow{}
-
-// taskSnapshot is a copy of the task to make the flow usage safer.
-type taskSnapshot struct {
-	name     string
-	usage    string
-	deps     []*taskSnapshot
-	pools    []*poolSnapshot
-	action   func(a *A)
-	parallel bool
-}
 
 // Tasks returns all tasks sorted in lexicographical order.
 func Tasks() []*DefinedTask {
@@ -50,7 +40,7 @@ func Tasks() []*DefinedTask {
 func (f *Flow) Tasks() []*DefinedTask {
 	var tasks []*DefinedTask
 	for _, task := range f.tasks {
-		tasks = append(tasks, &DefinedTask{task, f})
+		tasks = append(tasks, task)
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
 	return tasks
@@ -86,8 +76,8 @@ func (f *Flow) Define(task Task) *DefinedTask {
 		panic("task with the same name is already defined")
 	}
 	for _, dep := range task.Deps {
-		if !f.isDefined(dep.Name(), dep.flow) {
-			panic("dependency was not defined: " + dep.Name())
+		if !f.isDefined(dep.name, dep.flow) {
+			panic("dependency was not defined: " + dep.name)
 		}
 	}
 	for _, pool := range task.Pools {
@@ -96,10 +86,6 @@ func (f *Flow) Define(task Task) *DefinedTask {
 		}
 	}
 
-	var deps []*taskSnapshot
-	for _, dep := range task.Deps {
-		deps = append(deps, dep.taskSnapshot)
-	}
 	var pools []*poolSnapshot
 	poolCounts := make(map[string]int)
 	for _, pool := range task.Pools {
@@ -111,16 +97,17 @@ func (f *Flow) Define(task Task) *DefinedTask {
 	}
 	sort.Slice(pools, func(i, j int) bool { return pools[i].name < pools[j].name })
 
-	taskCopy := &taskSnapshot{
+	taskCopy := &DefinedTask{
 		name:     task.Name,
 		usage:    task.Usage,
-		deps:     deps,
+		deps:     task.Deps,
 		pools:    pools,
 		action:   task.Action,
 		parallel: task.Parallel,
+		flow:     f,
 	}
 	f.tasks[task.Name] = taskCopy
-	return &DefinedTask{taskCopy, f}
+	return taskCopy
 }
 
 // DefinePool registers the pool. It panics in case of any error.
@@ -146,6 +133,9 @@ func (f *Flow) DefinePool(pool Pool) *DefinedPool {
 		limit: pool.Limit,
 		sem:   make(chan struct{}, pool.Limit),
 	}
+	if f.pools == nil {
+		f.pools = map[string]*poolSnapshot{}
+	}
 	f.pools[pool.Name] = poolCopy
 	return &DefinedPool{poolCopy, f}
 }
@@ -157,36 +147,33 @@ func Undefine(task *DefinedTask) {
 
 // Undefine unregisters the task. It panics in case of any error.
 func (f *Flow) Undefine(task *DefinedTask) {
-	snapshot := task.taskSnapshot
-	if !f.isDefined(snapshot.name, task.flow) {
-		panic("task was not defined: " + snapshot.name)
+	if !f.isDefined(task.name, task.flow) {
+		panic("task was not defined: " + task.name)
 	}
 
-	delete(f.tasks, snapshot.name)
+	delete(f.tasks, task.name)
 
-	for _, task := range f.tasks {
-		if len(task.deps) == 0 {
+	for _, t := range f.tasks {
+		if len(t.deps) == 0 {
 			continue
 		}
-		var cleanDep []*taskSnapshot
-		for _, dep := range task.deps {
-			if dep == snapshot {
+		var cleanDep []*DefinedTask
+		for _, dep := range t.deps {
+			if dep == task {
 				continue
 			}
 			cleanDep = append(cleanDep, dep)
 		}
-		task.deps = cleanDep
+		t.deps = cleanDep
 	}
 
-	if f.defaultTask == snapshot {
+	if f.defaultTask == task {
 		f.defaultTask = nil
 	}
 }
 
 func (f *Flow) isDefined(name string, flow *Flow) bool {
-	if f.tasks == nil {
-		f.tasks = map[string]*taskSnapshot{}
-	}
+	f.init()
 	if f != flow {
 		return false // defined in other flow
 	}
@@ -205,7 +192,7 @@ func (f *Flow) isPoolDefined(name string, flow *Flow) bool {
 
 func (f *Flow) init() {
 	if f.tasks == nil {
-		f.tasks = map[string]*taskSnapshot{}
+		f.tasks = map[string]*DefinedTask{}
 	}
 	if f.pools == nil {
 		f.pools = map[string]*poolSnapshot{}
@@ -318,10 +305,7 @@ func Default() *DefinedTask {
 // Default returns the default task.
 // nil is returned if default was not set.
 func (f *Flow) Default() *DefinedTask {
-	if f.defaultTask == nil {
-		return nil
-	}
-	return &DefinedTask{f.defaultTask, f}
+	return f.defaultTask
 }
 
 // SetDefault sets a task to run when none is explicitly provided.
@@ -339,10 +323,10 @@ func (f *Flow) SetDefault(task *DefinedTask) {
 		return
 	}
 
-	if !f.isDefined(task.Name(), task.flow) {
-		panic("task was not defined: " + task.Name())
+	if !f.isDefined(task.name, task.flow) {
+		panic("task was not defined: " + task.name)
 	}
-	f.defaultTask = task.taskSnapshot
+	f.defaultTask = task
 }
 
 // Use adds task runner middlewares (interceptors).

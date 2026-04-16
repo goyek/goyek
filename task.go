@@ -66,8 +66,13 @@ func (p *DefinedPool) Limit() int {
 // DefinedTask represents a task that has been defined.
 // It can be used as a dependency for another task.
 type DefinedTask struct {
-	*taskSnapshot
-	flow *Flow
+	name     string
+	usage    string
+	deps     []*DefinedTask
+	pools    []*poolSnapshot
+	action   func(a *A)
+	parallel bool
+	flow     *Flow
 }
 
 // Deps represents a collection of dependencies.
@@ -84,10 +89,9 @@ func (r *DefinedTask) SetName(s string) {
 		panic("task with the same name is already defined")
 	}
 	oldName := r.name
-	snap := r.flow.tasks[oldName]
-	snap.name = s
-	r.flow.tasks[s] = snap
+	r.flow.tasks[s] = r
 	delete(r.flow.tasks, oldName)
+	r.name = s
 }
 
 // Usage returns the description of the task.
@@ -112,14 +116,11 @@ func (r *DefinedTask) SetAction(fn func(a *A)) {
 
 // Deps returns all task's dependencies.
 func (r *DefinedTask) Deps() Deps {
-	count := len(r.deps)
-	if count == 0 {
+	if len(r.deps) == 0 {
 		return nil
 	}
-	deps := make(Deps, 0, count)
-	for _, dep := range r.deps {
-		deps = append(deps, &DefinedTask{r.flow.tasks[dep.name], r.flow})
-	}
+	deps := make(Deps, len(r.deps))
+	copy(deps, r.deps)
 	return deps
 }
 
@@ -138,8 +139,7 @@ func (r *DefinedTask) Pools() DefinedPools {
 
 // SetDeps sets all task's dependencies.
 func (r *DefinedTask) SetDeps(deps Deps) {
-	count := len(deps)
-	if count == 0 {
+	if len(deps) == 0 {
 		r.deps = nil
 		return
 	}
@@ -154,12 +154,7 @@ func (r *DefinedTask) SetDeps(deps Deps) {
 	if ok := r.noCycle(deps, visited); !ok {
 		panic("circular dependency")
 	}
-	depNames := make([]*taskSnapshot, 0, count)
-	for _, dep := range deps {
-		depNames = append(depNames, dep.taskSnapshot)
-	}
-
-	r.deps = depNames
+	r.deps = deps
 }
 
 func (r *DefinedTask) noCycle(deps Deps, visited map[string]bool) bool {
@@ -167,15 +162,15 @@ func (r *DefinedTask) noCycle(deps Deps, visited map[string]bool) bool {
 		return true
 	}
 	for _, dep := range deps {
-		name := dep.Name()
+		name := dep.name
 		if visited[name] {
-			return true
+			continue // already checked this branch
 		}
 		visited[name] = true
 		if name == r.name {
 			return false
 		}
-		if !r.noCycle(dep.Deps(), visited) {
+		if !r.noCycle(dep.deps, visited) {
 			return false
 		}
 	}

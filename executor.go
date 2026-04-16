@@ -24,9 +24,9 @@ type (
 	ExecutorMiddleware func(Executor) Executor
 
 	executor struct {
-		defined     map[string]*taskSnapshot
+		defined     map[string]*DefinedTask
 		middlewares []Middleware
-		defaultTask *taskSnapshot
+		defaultTask *DefinedTask
 	}
 )
 
@@ -89,7 +89,7 @@ func (r *executor) Execute(in ExecuteInput) error {
 			continue
 		}
 
-		tasksToRun := []*taskSnapshot{task}
+		tasksToRun := []*DefinedTask{task}
 
 		// Find all parallel tasks that have not been run
 		// and have no dependencies.
@@ -137,7 +137,7 @@ func (r *executor) validate(in ExecuteInput) error {
 	return nil
 }
 
-func (r *executor) canRunTask(task *taskSnapshot, visited map[string]bool, noDeps bool) bool {
+func (r *executor) canRunTask(task *DefinedTask, visited map[string]bool, noDeps bool) bool {
 	if visited[task.name] {
 		return false
 	}
@@ -161,7 +161,7 @@ func (r *executor) canRunTask(task *taskSnapshot, visited map[string]bool, noDep
 	return true
 }
 
-func (r *executor) runParallelTasks(ctx context.Context, tasks []*taskSnapshot, output io.Writer, logger Logger) error {
+func (r *executor) runParallelTasks(ctx context.Context, tasks []*DefinedTask, output io.Writer, logger Logger) error {
 	var err error
 	errCh := make(chan error, len(tasks))
 	for _, parallelTask := range tasks {
@@ -178,7 +178,7 @@ func (r *executor) runParallelTasks(ctx context.Context, tasks []*taskSnapshot, 
 	return err
 }
 
-func (r *executor) runTask(ctx context.Context, task *taskSnapshot, output io.Writer, logger Logger) error {
+func (r *executor) runTask(ctx context.Context, task *DefinedTask, output io.Writer, logger Logger) error {
 	// acquire pool slots
 	var acquired int
 	defer func() {
