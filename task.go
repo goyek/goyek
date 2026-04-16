@@ -23,6 +23,7 @@ type Task struct {
 
 	// Pools is a collection of defined pools
 	// that limit the number of concurrent task instances.
+	// A task can consume multiple slots from a pool by including it multiple times.
 	Pools DefinedPools
 }
 
