@@ -287,6 +287,9 @@ func (a *A) TempDir() string {
 		return -1
 	}
 	name := strings.Map(mapper, a.Name())
+	if len(name) > 64 {
+		name = name[:64]
+	}
 
 	dir, err := os.MkdirTemp("", "goyek-"+name+"-*")
 	if err != nil {
