@@ -392,6 +392,20 @@ func TestA_TempDir(t *testing.T) {
 	assertTrue(t, os.IsNotExist(err), "should remove the dir after the action")
 }
 
+func TestA_TempDir_long_name(t *testing.T) {
+	var dir string
+	res := goyek.NewRunner(func(a *goyek.A) {
+		dir = a.TempDir()
+
+		_, err := os.Lstat(dir)
+		assertEqual(t, err, nil, "the dir should exist")
+	})(goyek.Input{TaskName: strings.Repeat("a", 300)})
+
+	assertEqual(t, res.Status, goyek.StatusPassed, "should return proper status")
+	_, err := os.Lstat(dir)
+	assertTrue(t, os.IsNotExist(err), "should remove the dir after the action")
+}
+
 func TestA_Chdir(t *testing.T) {
 	oldDir, err := os.Getwd()
 	if err != nil {
