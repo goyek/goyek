@@ -13,6 +13,8 @@ import (
 	"unicode/utf8"
 )
 
+const maxTempDirTaskNameLen = 64
+
 // A is a type passed to [Task.Action] functions to manage task state
 // and support formatted task logs.
 //
@@ -287,8 +289,8 @@ func (a *A) TempDir() string {
 		return -1
 	}
 	name := strings.Map(mapper, a.Name())
-	if len(name) > 64 {
-		name = name[:64]
+	if len(name) > maxTempDirTaskNameLen {
+		name = name[:maxTempDirTaskNameLen]
 	}
 
 	dir, err := os.MkdirTemp("", "goyek-"+name+"-*")
