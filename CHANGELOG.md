@@ -24,6 +24,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   open.
 - Fix a resource leak in `A.WithContext` where derived contexts were
   not canceled when the task finished.
+- `A.TempDir` now truncates the sanitized task name to 64 characters to
+  prevent "file name too long" errors.
 
 ## [3.0.1](https://github.com/goyek/goyek/releases/tag/v3.0.1) - 2025-12-09
 
