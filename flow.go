@@ -133,9 +133,6 @@ func (f *Flow) DefinePool(pool Pool) *DefinedPool {
 		limit: pool.Limit,
 		sem:   make(chan struct{}, pool.Limit),
 	}
-	if f.pools == nil {
-		f.pools = map[string]*poolSnapshot{}
-	}
 	f.pools[pool.Name] = poolCopy
 	return &DefinedPool{poolCopy, f}
 }
