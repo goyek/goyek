@@ -51,7 +51,7 @@ func (r *executor) Execute(in ExecuteInput) error {
 
 	ctx := in.Context
 	tasks := in.Tasks
-	out := &syncWriter{Writer: in.Output}
+	out := &SyncWriter{Writer: in.Output}
 	for len(tasks) > 0 {
 		name := tasks[0]
 		tasks = tasks[1:]
