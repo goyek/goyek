@@ -59,15 +59,6 @@ func Test_Define_empty_name(t *testing.T) {
 	assertPanics(t, act, "should panic")
 }
 
-func Test_Define_newline_name(t *testing.T) {
-	flow := &goyek.Flow{}
-	flow.SetOutput(io.Discard)
-
-	act := func() { flow.Define(goyek.Task{Name: "task\nname"}) }
-
-	assertPanics(t, act, "should panic")
-}
-
 func Test_Define_same_name(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(io.Discard)

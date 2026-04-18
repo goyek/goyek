@@ -43,7 +43,6 @@ func (r *DefinedTask) Name() string {
 
 // SetName changes the name of the task.
 func (r *DefinedTask) SetName(s string) {
-	validateTaskName(s)
 	if _, ok := r.flow.tasks[s]; ok {
 		panic("task with the same name is already defined")
 	}
@@ -121,15 +120,4 @@ func (r *DefinedTask) noCycle(deps Deps, visited map[string]bool) bool {
 		}
 	}
 	return true
-}
-
-func validateTaskName(name string) {
-	if name == "" {
-		panic("task name cannot be empty")
-	}
-	for _, r := range name {
-		if r == '\n' || r == '\r' {
-			panic("task name cannot contain newline characters")
-		}
-	}
 }
