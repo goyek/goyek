@@ -53,9 +53,7 @@ func Define(task Task) *DefinedTask {
 // Define registers the task. It panics in case of any error.
 func (f *Flow) Define(task Task) *DefinedTask {
 	// validate
-	if task.Name == "" {
-		panic("task name cannot be empty")
-	}
+	validateTaskName(task.Name)
 	if f.isDefined(task.Name, f) {
 		panic("task with the same name is already defined")
 	}
