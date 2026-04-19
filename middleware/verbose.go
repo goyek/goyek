@@ -14,7 +14,7 @@ func SilentNonFailed(next goyek.Runner) goyek.Runner {
 	return func(in goyek.Input) goyek.Result {
 		orginalOut := in.Output
 		streamWriter := &strings.Builder{}
-		in.Output = streamWriter
+		in.Output = &goyek.SyncWriter{Writer: streamWriter}
 
 		result := next(in)
 
