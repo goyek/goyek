@@ -12,6 +12,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
+- Export `SyncWriter` to enable thread-safe output buffering.
 
 ### Fixed
 
@@ -26,6 +27,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   not canceled when the task finished.
 - `A.TempDir` now truncates the sanitized task name to prevent
   "file name too long" errors.
+- Fix a data race in `middleware.SilentNonFailed` and `middleware.BufferParallel`
+  when a task logs concurrently from multiple goroutines.
 
 ## [3.0.1](https://github.com/goyek/goyek/releases/tag/v3.0.1) - 2025-12-09
 
