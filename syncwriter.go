@@ -5,22 +5,23 @@ import (
 	"sync"
 )
 
-// SyncWriter is a thread-safe [io.Writer] and [io.StringWriter] wrapper.
-type SyncWriter struct {
+type syncWriter struct {
 	io.Writer
 	mtx sync.Mutex
 }
 
-// Write implements [io.Writer].
-func (w *SyncWriter) Write(p []byte) (int, error) {
+func (w *syncWriter) Write(p []byte) (int, error) {
+	defer func() { w.mtx.Unlock() }()
 	w.mtx.Lock()
-	defer w.mtx.Unlock()
 	return w.Writer.Write(p)
 }
 
-// WriteString implements [io.StringWriter].
-func (w *SyncWriter) WriteString(s string) (int, error) {
-	w.mtx.Lock()
-	defer w.mtx.Unlock()
-	return io.WriteString(w.Writer, s)
+func synchronizeWriter(w io.Writer) io.Writer {
+	if w == nil {
+		return io.Discard
+	}
+	if syncW, ok := w.(*syncWriter); ok {
+		return syncW
+	}
+	return &syncWriter{Writer: w}
 }

@@ -13,13 +13,13 @@ import (
 func SilentNonFailed(next goyek.Runner) goyek.Runner {
 	return func(in goyek.Input) goyek.Result {
 		orginalOut := in.Output
-		streamWriter := &goyek.SyncWriter{Writer: &strings.Builder{}}
+		streamWriter := &strings.Builder{}
 		in.Output = streamWriter
 
 		result := next(in)
 
 		if result.Status == goyek.StatusFailed {
-			io.Copy(orginalOut, strings.NewReader(streamWriter.Writer.(*strings.Builder).String())) //nolint:errcheck // not checking errors when writing to output
+			io.Copy(orginalOut, strings.NewReader(streamWriter.String())) //nolint:errcheck // not checking errors when writing to output
 		}
 
 		return result

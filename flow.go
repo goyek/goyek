@@ -355,12 +355,14 @@ func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) erro
 		runner = middleware(runner)
 	}
 
+	out := synchronizeWriter(f.Output())
+
 	in := ExecuteInput{
 		Context:   ctx,
 		Tasks:     tasks,
 		SkipTasks: cfg.skipTasks,
 		NoDeps:    cfg.noDeps,
-		Output:    f.Output(),
+		Output:    out,
 		Logger:    f.Logger(),
 	}
 	return runner(in)
