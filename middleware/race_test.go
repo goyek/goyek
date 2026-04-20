@@ -10,7 +10,7 @@ import (
 	"github.com/goyek/goyek/v3/middleware"
 )
 
-func TestBufferParallel_Race(t *testing.T) {
+func TestBufferParallel_Race(_ *testing.T) {
 	out := io.Discard
 	flow := &goyek.Flow{}
 	flow.SetOutput(out)
@@ -37,7 +37,7 @@ func TestBufferParallel_Race(t *testing.T) {
 	_ = flow.Execute(context.Background(), []string{"race"})
 }
 
-func TestSilentNonFailed_Race(t *testing.T) {
+func TestSilentNonFailed_Race(_ *testing.T) {
 	out := io.Discard
 	flow := &goyek.Flow{}
 	flow.SetOutput(out)
