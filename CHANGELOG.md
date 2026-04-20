@@ -20,6 +20,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   function would cause the internal cleanup loop to terminate prematurely,
   potentially skipping other registered cleanup functions and leading
   to resource leaks.
+- Fix races in concurrent logging when middlewares such as
+  `middleware.BufferParallel` or `middleware.SilentNonFailed`
+  replace the task output writer.
 - Fix a resource leak in `A.Chdir` where a file descriptor could remain
   open.
 - Fix a resource leak in `A.WithContext` where derived contexts were
