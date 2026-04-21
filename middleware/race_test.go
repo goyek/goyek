@@ -9,7 +9,7 @@ import (
 	"github.com/goyek/goyek/v3/middleware"
 )
 
-func TestBufferParallel_Race(t *testing.T) {
+func TestBufferParallel_Race(_ *testing.T) {
 	runner := middleware.BufferParallel(func(in goyek.Input) goyek.Result {
 		var wg sync.WaitGroup
 		for i := 0; i < 10; i++ {
@@ -17,7 +17,7 @@ func TestBufferParallel_Race(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				for j := 0; j < 100; j++ {
-					io.WriteString(in.Output, "a")
+					io.WriteString(in.Output, "a") //nolint:errcheck // not checking errors when writing to output
 				}
 			}()
 		}
@@ -32,7 +32,7 @@ func TestBufferParallel_Race(t *testing.T) {
 	runner(in)
 }
 
-func TestSilentNonFailed_Race(t *testing.T) {
+func TestSilentNonFailed_Race(_ *testing.T) {
 	runner := middleware.SilentNonFailed(func(in goyek.Input) goyek.Result {
 		var wg sync.WaitGroup
 		for i := 0; i < 10; i++ {
@@ -40,7 +40,7 @@ func TestSilentNonFailed_Race(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				for j := 0; j < 100; j++ {
-					io.WriteString(in.Output, "a")
+					io.WriteString(in.Output, "a") //nolint:errcheck // not checking errors when writing to output
 				}
 			}()
 		}
