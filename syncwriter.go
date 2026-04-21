@@ -5,23 +5,38 @@ import (
 	"sync"
 )
 
-type syncWriter struct {
-	io.Writer
-	mtx sync.Mutex
+// SyncWriter is a thread-safe [io.Writer] and [io.StringWriter] wrapper.
+type SyncWriter struct {
+	Writer io.Writer
+	mu     sync.Mutex
 }
 
-func (w *syncWriter) Write(p []byte) (int, error) {
-	defer func() { w.mtx.Unlock() }()
-	w.mtx.Lock()
+// Write implements [io.Writer].
+func (w *SyncWriter) Write(p []byte) (int, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
 	return w.Writer.Write(p)
 }
 
-func synchronizeWriter(w io.Writer) io.Writer {
-	if w == nil {
-		return io.Discard
+// WriteString implements [io.StringWriter].
+func (w *SyncWriter) WriteString(s string) (int, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if sw, ok := w.Writer.(io.StringWriter); ok {
+		return sw.WriteString(s)
 	}
-	if syncW, ok := w.(*syncWriter); ok {
+	return io.WriteString(w.Writer, s)
+}
+
+// Sync returns a [SyncWriter] that wraps w.
+// It returns w if it is already a [*SyncWriter].
+// If w is nil, it returns a [*SyncWriter] wrapping [io.Discard].
+func Sync(w io.Writer) *SyncWriter {
+	if w == nil {
+		return &SyncWriter{Writer: io.Discard}
+	}
+	if syncW, ok := w.(*SyncWriter); ok {
 		return syncW
 	}
-	return &syncWriter{Writer: w}
+	return &SyncWriter{Writer: w}
 }
