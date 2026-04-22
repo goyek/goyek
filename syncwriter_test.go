@@ -1,6 +1,7 @@
 package goyek_test
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -42,7 +43,7 @@ func TestSyncWriter_WriteString_race(t *testing.T) {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			sw.WriteString(fmt.Sprintf("log from goroutine %d\n", i)) //nolint:errcheck // not checking errors when writing to output
+			fmt.Fprintf(sw, "log from goroutine %d\n", i) //nolint:errcheck // not checking errors when writing to output
 		}(i)
 	}
 	wg.Wait()
@@ -86,7 +87,7 @@ func (m *mockWriter) Write(p []byte) (int, error) {
 }
 
 func TestSyncWriter_Write_Error(t *testing.T) {
-	mw := &mockWriter{err: fmt.Errorf("error")}
+	mw := &mockWriter{err: errors.New("error")}
 	sw := goyek.Sync(mw)
 
 	_, err := sw.Write([]byte("hello"))
@@ -96,7 +97,7 @@ func TestSyncWriter_Write_Error(t *testing.T) {
 }
 
 func TestSyncWriter_WriteString_Error(t *testing.T) {
-	mw := &mockWriter{err: fmt.Errorf("error")}
+	mw := &mockWriter{err: errors.New("error")}
 	sw := goyek.Sync(mw)
 
 	_, err := sw.WriteString("hello")
@@ -106,7 +107,7 @@ func TestSyncWriter_WriteString_Error(t *testing.T) {
 }
 
 func TestSyncWriter_WriteString_StringWriter_Error(t *testing.T) {
-	mw := &mockStringWriter{err: fmt.Errorf("error")}
+	mw := &mockStringWriter{err: errors.New("error")}
 	sw := goyek.Sync(mw)
 
 	_, err := sw.WriteString("hello")
@@ -119,11 +120,11 @@ type mockStringWriter struct {
 	err error
 }
 
-func (m *mockStringWriter) Write(p []byte) (int, error) {
+func (m *mockStringWriter) Write(_ []byte) (int, error) {
 	return 0, nil
 }
 
-func (m *mockStringWriter) WriteString(s string) (int, error) {
+func (m *mockStringWriter) WriteString(_ string) (int, error) {
 	return 0, m.err
 }
 
