@@ -74,11 +74,57 @@ func TestSyncWriter_WriteString_fallback(t *testing.T) {
 }
 
 type mockWriter struct {
-	sb strings.Builder
+	sb  strings.Builder
+	err error
 }
 
 func (m *mockWriter) Write(p []byte) (int, error) {
+	if m.err != nil {
+		return 0, m.err
+	}
 	return m.sb.Write(p)
+}
+
+func TestSyncWriter_Write_Error(t *testing.T) {
+	mw := &mockWriter{err: fmt.Errorf("error")}
+	sw := goyek.Sync(mw)
+
+	_, err := sw.Write([]byte("hello"))
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestSyncWriter_WriteString_Error(t *testing.T) {
+	mw := &mockWriter{err: fmt.Errorf("error")}
+	sw := goyek.Sync(mw)
+
+	_, err := sw.WriteString("hello")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestSyncWriter_WriteString_StringWriter_Error(t *testing.T) {
+	mw := &mockStringWriter{err: fmt.Errorf("error")}
+	sw := goyek.Sync(mw)
+
+	_, err := sw.WriteString("hello")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+type mockStringWriter struct {
+	err error
+}
+
+func (m *mockStringWriter) Write(p []byte) (int, error) {
+	return 0, nil
+}
+
+func (m *mockStringWriter) WriteString(s string) (int, error) {
+	return 0, m.err
 }
 
 func TestSync_Reuse(t *testing.T) {

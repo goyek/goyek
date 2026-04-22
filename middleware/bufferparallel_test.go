@@ -47,6 +47,27 @@ func TestBufferParallel(t *testing.T) {
 	}
 }
 
+func TestBufferParallel_NonParallel(t *testing.T) {
+	out := &strings.Builder{}
+	flow := &goyek.Flow{}
+	flow.SetOutput(out)
+	flow.Use(middleware.BufferParallel)
+
+	flow.Define(goyek.Task{
+		Name:     "task",
+		Parallel: false,
+		Action: func(a *goyek.A) {
+			a.Log("Hello")
+		},
+	})
+
+	_ = flow.Execute(context.Background(), []string{"task"})
+
+	if !strings.Contains(out.String(), "Hello") {
+		t.Errorf("expected \"Hello\", got %q", out.String())
+	}
+}
+
 func TestBufferParallel_concurrent_printing(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
