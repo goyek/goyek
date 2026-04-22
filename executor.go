@@ -51,7 +51,7 @@ func (r *executor) Execute(in ExecuteInput) error {
 
 	ctx := in.Context
 	tasks := in.Tasks
-	out := in.Output
+	out := &syncWriter{Writer: in.Output}
 	for len(tasks) > 0 {
 		name := tasks[0]
 		tasks = tasks[1:]
@@ -184,7 +184,7 @@ func (r *executor) runTask(ctx context.Context, task *DefinedTask, output io.Wri
 
 	// apply defined middlewares
 	for _, middleware := range r.middlewares {
-		runner = synchronizeRunner(middleware(runner))
+		runner = middleware(runner)
 	}
 
 	// run action

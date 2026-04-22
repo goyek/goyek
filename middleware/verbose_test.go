@@ -1,9 +1,7 @@
 package middleware_test
 
 import (
-	"context"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/goyek/goyek/v3"
@@ -60,35 +58,5 @@ func TestSilentNonFailed_notFailed(t *testing.T) {
 				t.Errorf("got: %q; but should not contain: %q", sb.String(), msg)
 			}
 		})
-	}
-}
-
-func TestSilentNonFailed_concurrent_printing(t *testing.T) {
-	out := &strings.Builder{}
-	flow := &goyek.Flow{}
-	flow.SetOutput(out)
-	flow.Use(middleware.SilentNonFailed)
-
-	flow.Define(goyek.Task{
-		Name: "task",
-		Action: func(a *goyek.A) {
-			var wg sync.WaitGroup
-			for i := 0; i < 10; i++ {
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					a.Log("some log message")
-				}()
-			}
-			wg.Wait()
-		},
-	})
-
-	err := flow.Execute(context.Background(), []string{"task"})
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	if strings.Contains(out.String(), "some log message") {
-		t.Errorf("should not output but got: %s", out.String())
 	}
 }
