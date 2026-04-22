@@ -68,7 +68,7 @@ func (r taskRunner) run(in Input) Result {
 	}
 
 	out := in.Output
-	out = synchronizeWriter(out)
+	out = Sync(out)
 
 	logger := in.Logger
 	if logger == nil {
@@ -108,7 +108,7 @@ func (r taskRunner) run(in Input) Result {
 
 func synchronizeRunner(next Runner) Runner {
 	return func(in Input) Result {
-		in.Output = synchronizeWriter(in.Output)
+		in.Output = Sync(in.Output)
 		return next(in)
 	}
 }

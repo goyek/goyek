@@ -355,7 +355,7 @@ func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) erro
 		runner = middleware(runner)
 	}
 
-	out := synchronizeWriter(f.Output())
+	out := Sync(f.Output())
 
 	in := ExecuteInput{
 		Context:   ctx,

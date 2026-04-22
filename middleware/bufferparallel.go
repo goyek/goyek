@@ -17,7 +17,7 @@ func BufferParallel(next goyek.Runner) goyek.Runner {
 
 		orginalOut := in.Output
 		streamWriter := &strings.Builder{}
-		in.Output = streamWriter
+		in.Output = goyek.Sync(streamWriter)
 
 		result := next(in)
 		io.Copy(orginalOut, strings.NewReader(streamWriter.String())) //nolint:errcheck // not checking errors when writing to output
