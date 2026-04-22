@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/goyek/goyek/v3"
+	"github.com/goyek/goyek/v3/internal"
 )
 
 // SilentNonFailed is a middleware which makes sure that only output from failed tasks is printed.
@@ -14,7 +15,7 @@ func SilentNonFailed(next goyek.Runner) goyek.Runner {
 	return func(in goyek.Input) goyek.Result {
 		orginalOut := in.Output
 		streamWriter := &strings.Builder{}
-		in.Output = streamWriter
+		in.Output = internal.SyncWriter(streamWriter)
 
 		result := next(in)
 

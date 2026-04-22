@@ -1,7 +1,9 @@
 package middleware_test
 
 import (
+	"io"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/goyek/goyek/v3"
@@ -58,5 +60,31 @@ func TestSilentNonFailed_notFailed(t *testing.T) {
 				t.Errorf("got: %q; but should not contain: %q", sb.String(), msg)
 			}
 		})
+	}
+}
+
+func TestSilentNonFailed_concurrent_printing(t *testing.T) {
+	const goroutines = 5
+	const message = "msg "
+
+	r := func(in goyek.Input) goyek.Result {
+		var wg sync.WaitGroup
+		for i := 0; i < goroutines; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				io.WriteString(in.Output, message) //nolint:errcheck // not checking errors when writing to output
+			}()
+		}
+		wg.Wait()
+		return goyek.Result{Status: goyek.StatusFailed}
+	}
+	r = middleware.SilentNonFailed(r)
+
+	sb := &strings.Builder{}
+	r(goyek.Input{Output: sb})
+
+	if got, want := strings.Count(sb.String(), strings.TrimSpace(message)), goroutines; got != want {
+		t.Fatalf("got %d occurrences, want %d", got, want)
 	}
 }
