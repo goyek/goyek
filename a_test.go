@@ -2,6 +2,7 @@ package goyek_test
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -635,4 +636,82 @@ func TestA_Chdir_error(t *testing.T) {
 	})(goyek.Input{})
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+}
+
+func TestA_TempDir_error(t *testing.T) {
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a.Setenv("TMPDIR", "/not-exists")
+		a.TempDir()
+	})(goyek.Input{})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+}
+
+func TestFailError_Error(t *testing.T) {
+	err := &goyek.FailError{Task: "my-task"}
+	assertEqual(t, err.Error(), "task failed: my-task", "Error()")
+}
+
+func TestA_Logger_fallbacks(t *testing.T) {
+	out := &strings.Builder{}
+	logger := &minimalLogger{}
+	res := goyek.NewRunner(func(a *goyek.A) {
+		a.Error("err")
+		a.Errorf("errf")
+		a.Log("fatal")
+		a.FailNow()
+	})(goyek.Input{Output: out, Logger: logger})
+
+	assertEqual(t, res.Status, goyek.StatusFailed, "should fail")
+	assertContains(t, out, "err", "Error fallback")
+	assertContains(t, out, "errf", "Errorf fallback")
+	assertContains(t, out, "fatal", "Fatal fallback")
+
+	out.Reset()
+	res = goyek.NewRunner(func(a *goyek.A) {
+		a.Fatal("fatal")
+	})(goyek.Input{Output: out, Logger: logger})
+	assertEqual(t, res.Status, goyek.StatusFailed, "should fail")
+	assertContains(t, out, "fatal", "Fatal fallback")
+
+	out.Reset()
+	res = goyek.NewRunner(func(a *goyek.A) {
+		a.Fatalf("fatalf")
+	})(goyek.Input{Output: out, Logger: logger})
+	assertEqual(t, res.Status, goyek.StatusFailed, "should fail")
+	assertContains(t, out, "fatalf", "Fatalf fallback")
+}
+
+type minimalLogger struct{}
+
+func (l *minimalLogger) Log(w io.Writer, args ...interface{}) {
+	fmt.Fprintln(w, args...)
+}
+
+func (l *minimalLogger) Logf(w io.Writer, format string, args ...interface{}) {
+	fmt.Fprintf(w, format+"\n", args...)
+}
+
+func TestA_TempDir_non_ascii_number(t *testing.T) {
+	res := goyek.NewRunner(func(a *goyek.A) {
+		a.TempDir()
+	})(goyek.Input{TaskName: "１"}) // Fullwidth digit one
+	assertEqual(t, res.Status, goyek.StatusPassed, "should pass")
+}
+
+func TestA_Skip_fallbacks(t *testing.T) {
+	out := &strings.Builder{}
+	logger := &minimalLogger{}
+	res := goyek.NewRunner(func(a *goyek.A) {
+		a.Skip("skip")
+	})(goyek.Input{Output: out, Logger: logger})
+	assertEqual(t, res.Status, goyek.StatusSkipped, "should skip")
+	assertContains(t, out, "skip", "Skip fallback")
+
+	out.Reset()
+	res = goyek.NewRunner(func(a *goyek.A) {
+		a.Skipf("skipf")
+	})(goyek.Input{Output: out, Logger: logger})
+	assertEqual(t, res.Status, goyek.StatusSkipped, "should skip")
+	assertContains(t, out, "skipf", "Skipf fallback")
 }
