@@ -48,7 +48,7 @@ type (
 // provided by Flow (like concurrent dependencies execution).
 func NewRunner(action func(a *A)) Runner {
 	r := taskRunner{action: action}
-	return synchronizeRunner(r.run)
+	return r.run
 }
 
 type taskRunner struct {
@@ -68,7 +68,9 @@ func (r taskRunner) run(in Input) Result {
 	}
 
 	out := in.Output
-	out = synchronizeWriter(out)
+	if out == nil {
+		out = io.Discard
+	}
 
 	logger := in.Logger
 	if logger == nil {
@@ -104,11 +106,4 @@ func (r taskRunner) run(in Input) Result {
 		res.PanicStack = panicStack
 	}
 	return res
-}
-
-func synchronizeRunner(next Runner) Runner {
-	return func(in Input) Result {
-		in.Output = synchronizeWriter(in.Output)
-		return next(in)
-	}
 }
