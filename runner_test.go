@@ -1,6 +1,9 @@
 package goyek_test
 
 import (
+	"io"
+	"strings"
+	"sync"
 	"testing"
 
 	"github.com/goyek/goyek/v3"
@@ -56,4 +59,50 @@ func TestRunner_panic(t *testing.T) {
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 	assertEqual(t, got.PanicValue, payload, "should return proper panic value")
+}
+
+func TestNewRunner_concurrent_printing(t *testing.T) {
+	const goroutines = 10
+	const message = "message"
+	runner := goyek.NewRunner(func(a *goyek.A) {
+		var wg sync.WaitGroup
+		for i := 0; i < goroutines; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				a.Log(message)
+			}()
+		}
+		wg.Wait()
+	})
+
+	out := &strings.Builder{}
+	runner(goyek.Input{Output: out})
+
+	if got, want := strings.Count(out.String(), message), goroutines; got != want {
+		t.Fatalf("got %d occurrences, want %d", got, want)
+	}
+}
+
+func TestNewRunner_concurrent_WriteString(t *testing.T) {
+	const goroutines = 10
+	const message = "message"
+	runner := goyek.NewRunner(func(a *goyek.A) {
+		var wg sync.WaitGroup
+		for i := 0; i < goroutines; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				io.WriteString(a.Output(), message) //nolint:errcheck // not checking errors when writing to output
+			}()
+		}
+		wg.Wait()
+	})
+
+	out := &strings.Builder{}
+	runner(goyek.Input{Output: out})
+
+	if got, want := strings.Count(out.String(), message), goroutines; got != want {
+		t.Fatalf("got %d occurrences, want %d", got, want)
+	}
 }

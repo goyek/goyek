@@ -21,7 +21,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   potentially skipping other registered cleanup functions and leading
   to resource leaks.
 - Fix races in `middleware.BufferParallel` and `middleware.SilentNonFailed`
-  when task output is written from multiple goroutines.
+  and general task output when written from multiple goroutines by
+  automatically wrapping the output in a synchronized writer.
 - Fix a resource leak in `A.Chdir` where a file descriptor could remain
   open.
 - Fix a resource leak in `A.WithContext` where derived contexts were
