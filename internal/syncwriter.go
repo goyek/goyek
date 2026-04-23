@@ -19,7 +19,9 @@ func (w *syncWriter) Write(p []byte) (int, error) {
 func (w *syncWriter) WriteString(s string) (int, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	if sw, ok := w.writer.(io.StringWriter); ok {
+	if sw, ok := w.writer.(interface {
+		WriteString(string) (int, error)
+	}); ok {
 		return sw.WriteString(s)
 	}
 	return io.WriteString(w.writer, s)
