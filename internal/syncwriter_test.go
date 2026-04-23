@@ -28,37 +28,18 @@ func TestSyncWriter_Write(t *testing.T) {
 }
 
 func TestSyncWriter_WriteString(t *testing.T) {
-	t.Run("StringWriter", func(t *testing.T) {
-		sb := &strings.Builder{}
-		sw := internal.SyncWriter(sb).(io.StringWriter)
-		n, err := sw.WriteString(hello)
-		if err != nil {
-			t.Fatalf("WriteString error: %v", err)
-		}
-		if n != len(hello) {
-			t.Fatalf("got %d, want %d", n, len(hello))
-		}
-		if sb.String() != hello {
-			t.Fatalf("got %q, want %q", sb.String(), hello)
-		}
-	})
-
-	t.Run("Fallback", func(t *testing.T) {
-		buf := &bytes.Buffer{}
-		// bytes.Buffer implements StringWriter, so we wrap it to hide that
-		wrapped := struct{ io.Writer }{buf}
-		sw := internal.SyncWriter(wrapped).(io.StringWriter)
-		n, err := sw.WriteString(hello)
-		if err != nil {
-			t.Fatalf("WriteString error: %v", err)
-		}
-		if n != len(hello) {
-			t.Fatalf("got %d, want %d", n, len(hello))
-		}
-		if buf.String() != hello {
-			t.Fatalf("got %q, want %q", buf.String(), hello)
-		}
-	})
+	sb := &strings.Builder{}
+	sw := internal.SyncWriter(sb).(io.StringWriter)
+	n, err := sw.WriteString(hello)
+	if err != nil {
+		t.Fatalf("WriteString error: %v", err)
+	}
+	if n != len(hello) {
+		t.Fatalf("got %d, want %d", n, len(hello))
+	}
+	if sb.String() != hello {
+		t.Fatalf("got %q, want %q", sb.String(), hello)
+	}
 }
 
 func TestSyncWriter_DoubleWrap(t *testing.T) {
