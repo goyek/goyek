@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/goyek/goyek/v3"
+	"github.com/goyek/goyek/v3/internal"
 )
 
 // BufferParallel is a middleware which buffers the output from parallel tasks
@@ -17,7 +18,7 @@ func BufferParallel(next goyek.Runner) goyek.Runner {
 
 		orginalOut := in.Output
 		streamWriter := &strings.Builder{}
-		in.Output = goyek.Sync(streamWriter)
+		in.Output = internal.SyncWriter(streamWriter)
 
 		result := next(in)
 		io.Copy(orginalOut, strings.NewReader(streamWriter.String())) //nolint:errcheck // not checking errors when writing to output
