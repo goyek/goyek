@@ -4,8 +4,6 @@ import (
 	"context"
 	"io"
 	"sync"
-
-	"github.com/goyek/goyek/v3/internal"
 )
 
 // Task runner types.
@@ -86,7 +84,7 @@ func (r taskRunner) run(in Input) Result {
 		skipped:  &skipped,
 		cleanups: &[]func(){},
 		name:     in.TaskName,
-		output:   internal.SyncWriter(out),
+		output:   out,
 		logger:   logger,
 		parallel: in.Parallel,
 	}

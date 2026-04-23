@@ -59,7 +59,7 @@ func TestRunner_panic(t *testing.T) {
 	assertEqual(t, got.PanicValue, payload, "should return proper panic value")
 }
 
-func TestNewRunner_RaceLogging(t *testing.T) {
+func TestNewRunner_RaceLogging(_ *testing.T) {
 	runner := goyek.NewRunner(func(a *goyek.A) {
 		var wg sync.WaitGroup
 		for i := 0; i < 100; i++ {

@@ -28,8 +28,6 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   not canceled when the task finished.
 - `A.TempDir` now truncates the sanitized task name to prevent
   "file name too long" errors.
-- Fix races when task output is written from multiple goroutines
-  by automatically wrapping the output in a synchronized writer.
 
 ## [3.0.1](https://github.com/goyek/goyek/releases/tag/v3.0.1) - 2025-12-09
 

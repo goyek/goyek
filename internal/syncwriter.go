@@ -22,6 +22,8 @@ func (w *syncWriter) WriteString(s string) (int, error) {
 	return io.WriteString(w.writer, s)
 }
 
+var _ io.StringWriter = (*syncWriter)(nil)
+
 // SyncWriter synchronizes writes to the underlying writer.
 func SyncWriter(w io.Writer) io.Writer {
 	if sw, ok := w.(*syncWriter); ok {
