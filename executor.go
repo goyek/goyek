@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-
-	"github.com/goyek/goyek/v3/internal"
 )
 
 type (
@@ -53,7 +51,7 @@ func (r *executor) Execute(in ExecuteInput) error {
 
 	ctx := in.Context
 	tasks := in.Tasks
-	out := internal.SyncWriter(in.Output)
+	out := Sync(in.Output)
 	for len(tasks) > 0 {
 		name := tasks[0]
 		tasks = tasks[1:]

@@ -84,7 +84,7 @@ func (r taskRunner) run(in Input) Result {
 		skipped:  &skipped,
 		cleanups: &[]func(){},
 		name:     in.TaskName,
-		output:   out,
+		output:   Sync(out),
 		logger:   logger,
 		parallel: in.Parallel,
 	}
