@@ -1,6 +1,7 @@
 package goyek_test
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/goyek/goyek/v3"
@@ -56,4 +57,20 @@ func TestRunner_panic(t *testing.T) {
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 	assertEqual(t, got.PanicValue, payload, "should return proper panic value")
+}
+
+func TestNewRunner_RaceLogging(t *testing.T) {
+	runner := goyek.NewRunner(func(a *goyek.A) {
+		var wg sync.WaitGroup
+		for i := 0; i < 100; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				a.Log("message")
+			}()
+		}
+		wg.Wait()
+	})
+
+	runner(goyek.Input{})
 }
