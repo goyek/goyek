@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/goyek/goyek/v3"
 )
@@ -390,6 +391,40 @@ func TestA_TempDir(t *testing.T) {
 	assertEqual(t, res.Status, goyek.StatusPassed, "should return proper status")
 	_, err := os.Lstat(dir)
 	assertTrue(t, os.IsNotExist(err), "should remove the dir after the action")
+}
+
+func TestA_TempDir_UTF8SafeTruncation(t *testing.T) {
+	testCases := []struct {
+		name     string
+		taskName string
+	}{
+		{
+			name:     "2-byte truncation",
+			taskName: strings.Repeat("a", 63) + "ą",
+		},
+		{
+			name:     "4-byte truncation",
+			taskName: strings.Repeat("a", 63) + "💩",
+		},
+		{
+			name:     "4-byte truncation middle",
+			taskName: strings.Repeat("a", 61) + "💩",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var dir string
+			res := goyek.NewRunner(func(a *goyek.A) {
+				dir = a.TempDir()
+			})(goyek.Input{TaskName: tc.taskName})
+
+			assertEqual(t, res.Status, goyek.StatusPassed, "should return proper status")
+			base := filepath.Base(dir)
+			if !utf8.ValidString(base) {
+				t.Errorf("TempDir name is not valid UTF-8: %q", base)
+			}
+		})
+	}
 }
 
 func TestA_TempDir_long_name(t *testing.T) {
