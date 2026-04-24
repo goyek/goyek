@@ -269,6 +269,9 @@ func (a *A) Setenv(key, value string) {
 // if the directory creation fails, TempDir terminates the action by calling Fatal.
 func (a *A) TempDir() string {
 	a.Helper()
+	// Drop unusual characters (such as path separators or
+	// characters interacting with globs) from the directory name to
+	// avoid surprising os.MkdirTemp behavior.
 	name := strings.Map(tempDirMapper, a.Name())
 	if len(name) > maxTempDirTaskNameLen {
 		name = truncateUTF8(name[:maxTempDirTaskNameLen])
@@ -349,9 +352,6 @@ func (a *A) run(action func(a *A)) (finished bool, panicVal interface{}, panicSt
 	return finished, panicVal, panicStack
 }
 
-// Drop unusual characters (such as path separators or
-// characters interacting with globs) from the directory name to
-// avoid surprising os.MkdirTemp behavior.
 func tempDirMapper(r rune) rune {
 	if r < utf8.RuneSelf {
 		const allowed = "!#$%&()+,-.=@^_{}~ "
