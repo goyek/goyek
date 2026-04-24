@@ -419,8 +419,9 @@ func TestA_TempDir_UTF8SafeTruncation(t *testing.T) {
 			})(goyek.Input{TaskName: tc.taskName})
 
 			assertEqual(t, res.Status, goyek.StatusPassed, "should return proper status")
-			if !utf8.ValidString(dir) {
-				t.Errorf("TempDir path is not valid UTF-8: %s", dir)
+			base := filepath.Base(dir)
+			if !utf8.ValidString(base) {
+				t.Errorf("TempDir name is not valid UTF-8: %q", base)
 			}
 		})
 	}
