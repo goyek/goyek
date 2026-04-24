@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"unicode/utf8"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/goyek/goyek/v3"
 )
