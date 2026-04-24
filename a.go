@@ -291,6 +291,9 @@ func (a *A) TempDir() string {
 	name := strings.Map(mapper, a.Name())
 	if len(name) > maxTempDirTaskNameLen {
 		name = name[:maxTempDirTaskNameLen]
+		for len(name) > 0 && !utf8.ValidString(name) {
+			name = name[:len(name)-1]
+		}
 	}
 
 	dir, err := os.MkdirTemp("", "goyek-"+name+"-*")
