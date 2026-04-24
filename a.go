@@ -269,31 +269,9 @@ func (a *A) Setenv(key, value string) {
 // if the directory creation fails, TempDir terminates the action by calling Fatal.
 func (a *A) TempDir() string {
 	a.Helper()
-	// Drop unusual characters (such as path separators or
-	// characters interacting with globs) from the directory name to
-	// avoid surprising os.MkdirTemp behavior.
-	mapper := func(r rune) rune {
-		if r < utf8.RuneSelf {
-			const allowed = "!#$%&()+,-.=@^_{}~ "
-			if '0' <= r && r <= '9' ||
-				'a' <= r && r <= 'z' ||
-				'A' <= r && r <= 'Z' {
-				return r
-			}
-			if strings.ContainsRune(allowed, r) {
-				return r
-			}
-		} else if unicode.IsLetter(r) || unicode.IsNumber(r) {
-			return r
-		}
-		return -1
-	}
-	name := strings.Map(mapper, a.Name())
+	name := strings.Map(tempDirMapper, a.Name())
 	if len(name) > maxTempDirTaskNameLen {
-		name = name[:maxTempDirTaskNameLen]
-		for len(name) > 0 && !utf8.ValidString(name) {
-			name = name[:len(name)-1]
-		}
+		name = truncateUTF8(name[:maxTempDirTaskNameLen])
 	}
 
 	dir, err := os.MkdirTemp("", "goyek-"+name+"-*")
@@ -369,6 +347,33 @@ func (a *A) run(action func(a *A)) (finished bool, panicVal interface{}, panicSt
 	}()
 	<-ch
 	return finished, panicVal, panicStack
+}
+
+// Drop unusual characters (such as path separators or
+// characters interacting with globs) from the directory name to
+// avoid surprising os.MkdirTemp behavior.
+func tempDirMapper(r rune) rune {
+	if r < utf8.RuneSelf {
+		const allowed = "!#$%&()+,-.=@^_{}~ "
+		if '0' <= r && r <= '9' ||
+			'a' <= r && r <= 'z' ||
+			'A' <= r && r <= 'Z' {
+			return r
+		}
+		if strings.ContainsRune(allowed, r) {
+			return r
+		}
+	} else if unicode.IsLetter(r) || unicode.IsNumber(r) {
+		return r
+	}
+	return -1
+}
+
+func truncateUTF8(s string) string {
+	for len(s) > 0 && !utf8.ValidString(s) {
+		s = s[:len(s)-1]
+	}
+	return s
 }
 
 func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byte) {
