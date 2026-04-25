@@ -38,11 +38,15 @@ type Deps []*DefinedTask
 
 // Name returns the name of the task.
 func (r *DefinedTask) Name() string {
+	r.flow.mu.RLock()
+	defer r.flow.mu.RUnlock()
 	return r.name
 }
 
 // SetName changes the name of the task.
 func (r *DefinedTask) SetName(s string) {
+	r.flow.mu.Lock()
+	defer r.flow.mu.Unlock()
 	if _, ok := r.flow.tasks[s]; ok {
 		panic("task with the same name is already defined")
 	}
@@ -54,26 +58,36 @@ func (r *DefinedTask) SetName(s string) {
 
 // Usage returns the description of the task.
 func (r *DefinedTask) Usage() string {
+	r.flow.mu.RLock()
+	defer r.flow.mu.RUnlock()
 	return r.usage
 }
 
 // SetUsage sets the description of the task.
 func (r *DefinedTask) SetUsage(s string) {
+	r.flow.mu.Lock()
+	defer r.flow.mu.Unlock()
 	r.usage = s
 }
 
 // Action returns the action of the task.
 func (r *DefinedTask) Action() func(a *A) {
+	r.flow.mu.RLock()
+	defer r.flow.mu.RUnlock()
 	return r.action
 }
 
 // SetAction changes the action of the task.
 func (r *DefinedTask) SetAction(fn func(a *A)) {
+	r.flow.mu.Lock()
+	defer r.flow.mu.Unlock()
 	r.action = fn
 }
 
 // Deps returns all task's dependencies.
 func (r *DefinedTask) Deps() Deps {
+	r.flow.mu.RLock()
+	defer r.flow.mu.RUnlock()
 	if len(r.deps) == 0 {
 		return nil
 	}
@@ -84,14 +98,16 @@ func (r *DefinedTask) Deps() Deps {
 
 // SetDeps sets all task's dependencies.
 func (r *DefinedTask) SetDeps(deps Deps) {
+	r.flow.mu.Lock()
+	defer r.flow.mu.Unlock()
 	if len(deps) == 0 {
 		r.deps = nil
 		return
 	}
 
 	for _, dep := range deps {
-		if !r.flow.isDefined(dep.Name(), dep.flow) {
-			panic("dependency was not defined: " + dep.Name())
+		if !r.flow.isDefined(dep.name, dep.flow) {
+			panic("dependency was not defined: " + dep.name)
 		}
 	}
 
