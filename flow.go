@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"sort"
 	"strings"
+	"sync"
 	"text/tabwriter"
 )
 
@@ -16,6 +17,7 @@ import (
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
 type Flow struct {
+	mu     sync.RWMutex
 	output io.Writer
 	usage  func()
 	logger Logger
@@ -37,11 +39,13 @@ func Tasks() []*DefinedTask {
 
 // Tasks returns all tasks sorted in lexicographical order.
 func (f *Flow) Tasks() []*DefinedTask {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	var tasks []*DefinedTask
 	for _, task := range f.tasks {
 		tasks = append(tasks, task)
 	}
-	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
+	sort.Slice(tasks, func(i, j int) bool { return tasks[i].name < tasks[j].name })
 	return tasks
 }
 
@@ -52,15 +56,17 @@ func Define(task Task) *DefinedTask {
 
 // Define registers the task. It panics in case of any error.
 func (f *Flow) Define(task Task) *DefinedTask {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	// validate
 	if task.Name == "" {
 		panic("task name cannot be empty")
 	}
-	if f.isDefined(task.Name, f) {
+	if f.isDefinedLocked(task.Name, f) {
 		panic("task with the same name is already defined")
 	}
 	for _, dep := range task.Deps {
-		if !f.isDefined(dep.name, dep.flow) {
+		if !f.isDefinedLocked(dep.name, dep.flow) {
 			panic("dependency was not defined: " + dep.name)
 		}
 	}
@@ -84,7 +90,9 @@ func Undefine(task *DefinedTask) {
 
 // Undefine unregisters the task. It panics in case of any error.
 func (f *Flow) Undefine(task *DefinedTask) {
-	if !f.isDefined(task.name, task.flow) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if !f.isDefinedLocked(task.name, task.flow) {
 		panic("task was not defined: " + task.name)
 	}
 
@@ -110,6 +118,12 @@ func (f *Flow) Undefine(task *DefinedTask) {
 }
 
 func (f *Flow) isDefined(name string, flow *Flow) bool {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.isDefinedLocked(name, flow)
+}
+
+func (f *Flow) isDefinedLocked(name string, flow *Flow) bool {
 	if f.tasks == nil {
 		f.tasks = map[string]*DefinedTask{}
 	}
@@ -129,6 +143,8 @@ func Output() io.Writer {
 // Output returns the destination used for printing messages.
 // [os.Stdout] is returned if output was not set or was set to nil.
 func (f *Flow) Output() io.Writer {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	if f.output == nil {
 		return os.Stdout
 	}
@@ -142,6 +158,8 @@ func SetOutput(out io.Writer) {
 
 // SetOutput sets the output destination.
 func (f *Flow) SetOutput(out io.Writer) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.output = out
 }
 
@@ -154,6 +172,8 @@ func GetLogger() Logger {
 // Logger returns the logger used by A's logging functions
 // [CodeLineLogger] is returned if logger was not set or was set to nil.
 func (f *Flow) Logger() Logger {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	if f.logger == nil {
 		return &CodeLineLogger{}
 	}
@@ -187,6 +207,8 @@ func SetLogger(logger Logger) {
 //	Skipf(w io.Writer, format string, args ...interface{})
 //	Helper()
 func (f *Flow) SetLogger(logger Logger) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.logger = logger
 }
 
@@ -201,6 +223,8 @@ func Usage() func() {
 // It is called when an error occurs while parsing the flow.
 // [Flow.Print] is returned if a function was not set or was set to nil.
 func (f *Flow) Usage() func() {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	if f.usage == nil {
 		return f.Print
 	}
@@ -214,6 +238,8 @@ func SetUsage(fn func()) {
 
 // SetUsage sets the function called when an error occurs while parsing tasks.
 func (f *Flow) SetUsage(fn func()) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.usage = fn
 }
 
@@ -226,6 +252,8 @@ func Default() *DefinedTask {
 // Default returns the default task.
 // nil is returned if default was not set.
 func (f *Flow) Default() *DefinedTask {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	return f.defaultTask
 }
 
@@ -239,12 +267,14 @@ func SetDefault(task *DefinedTask) {
 // Passing nil clears the default task.
 // It panics in case of any error.
 func (f *Flow) SetDefault(task *DefinedTask) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	if task == nil {
 		f.defaultTask = nil
 		return
 	}
 
-	if !f.isDefined(task.name, task.flow) {
+	if !f.isDefinedLocked(task.name, task.flow) {
 		panic("task was not defined: " + task.name)
 	}
 	f.defaultTask = task
@@ -257,6 +287,8 @@ func Use(middlewares ...Middleware) {
 
 // Use adds task runner middlewares (interceptors).
 func (f *Flow) Use(middlewares ...Middleware) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	for _, m := range middlewares {
 		if m == nil {
 			panic("middleware cannot be nil")
@@ -272,6 +304,8 @@ func UseExecutor(middlewares ...ExecutorMiddleware) {
 
 // UseExecutor adds flow executor middlewares (interceptors).
 func (f *Flow) UseExecutor(middlewares ...ExecutorMiddleware) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	for _, m := range middlewares {
 		if m == nil {
 			panic("middleware cannot be nil")
@@ -334,8 +368,20 @@ func Execute(ctx context.Context, tasks []string, opts ...Option) error {
 // [*FailError] if a task failed,
 // other errors in case of invalid input or context error.
 func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) error {
-	var middlewares []Middleware
-	middlewares = append(middlewares, f.middlewares...)
+	f.mu.RLock()
+	// snapshot
+	defined := make(map[string]*DefinedTask, len(f.tasks))
+	for k, v := range f.tasks {
+		defined[k] = v
+	}
+	middlewares := make([]Middleware, len(f.middlewares))
+	copy(middlewares, f.middlewares)
+	executorMiddlewares := make([]ExecutorMiddleware, len(f.executorMiddlewares))
+	copy(executorMiddlewares, f.executorMiddlewares)
+	defaultTask := f.defaultTask
+	output := f.output
+	logger := f.logger
+	f.mu.RUnlock()
 
 	cfg := &config{}
 	for _, opt := range opts {
@@ -344,15 +390,22 @@ func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) erro
 
 	// prepare runner
 	r := &executor{
-		defined:     f.tasks,
+		defined:     defined,
 		middlewares: middlewares,
-		defaultTask: f.defaultTask,
+		defaultTask: defaultTask,
 	}
 	runner := r.Execute
 
 	// apply defined executor middlewares
-	for _, middleware := range f.executorMiddlewares {
+	for _, middleware := range executorMiddlewares {
 		runner = middleware(runner)
+	}
+
+	if output == nil {
+		output = os.Stdout
+	}
+	if logger == nil {
+		logger = &CodeLineLogger{}
 	}
 
 	in := ExecuteInput{
@@ -360,8 +413,8 @@ func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) erro
 		Tasks:     tasks,
 		SkipTasks: cfg.skipTasks,
 		NoDeps:    cfg.noDeps,
-		Output:    f.Output(),
-		Logger:    f.Logger(),
+		Output:    output,
+		Logger:    logger,
 	}
 	return runner(in)
 }
@@ -440,10 +493,22 @@ func Print() {
 // Print prints the information about the registered tasks.
 // Tasks with empty [Task.Usage] are not printed.
 func (f *Flow) Print() {
-	out := f.Output()
+	f.mu.RLock()
+	out := f.output
+	if out == nil {
+		out = os.Stdout
+	}
+	defaultTask := f.defaultTask
+	tasks := make([]*DefinedTask, 0, len(f.tasks))
+	for _, task := range f.tasks {
+		tasks = append(tasks, task)
+	}
+	f.mu.RUnlock()
 
-	if f.defaultTask != nil {
-		fmt.Fprintf(out, "Default task: %s\n", f.defaultTask.name)
+	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
+
+	if defaultTask != nil {
+		fmt.Fprintf(out, "Default task: %s\n", defaultTask.name)
 	}
 
 	fmt.Fprintln(out, "Tasks:")
@@ -454,19 +519,21 @@ func (f *Flow) Print() {
 		padchar  byte = ' '
 	)
 	w := tabwriter.NewWriter(out, minwidth, tabwidth, padding, padchar, 0)
-	for _, task := range f.Tasks() {
-		if task.Usage() == "" {
+	for _, task := range tasks {
+		usage := task.Usage()
+		if usage == "" {
 			continue
 		}
 		deps := ""
-		if len(task.Deps()) > 0 {
-			depNames := make([]string, 0, len(task.Deps()))
-			for _, dep := range task.Deps() {
+		taskDeps := task.Deps()
+		if len(taskDeps) > 0 {
+			depNames := make([]string, 0, len(taskDeps))
+			for _, dep := range taskDeps {
 				depNames = append(depNames, dep.Name())
 			}
 			deps = " (depends on: " + strings.Join(depNames, ", ") + ")"
 		}
-		fmt.Fprintf(w, "  %s\t%s\n", task.Name(), task.Usage()+deps)
+		fmt.Fprintf(w, "  %s\t%s\n", task.Name(), usage+deps)
 	}
 	w.Flush()
 }
