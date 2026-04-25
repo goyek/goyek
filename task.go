@@ -106,7 +106,7 @@ func (r *DefinedTask) SetDeps(deps Deps) {
 	}
 
 	for _, dep := range deps {
-		if !r.flow.isDefinedLocked(dep.name, dep.flow) {
+		if !r.flow.isDefined(dep.name, dep.flow) {
 			panic("dependency was not defined: " + dep.name)
 		}
 	}

@@ -62,11 +62,11 @@ func (f *Flow) Define(task Task) *DefinedTask {
 	if task.Name == "" {
 		panic("task name cannot be empty")
 	}
-	if f.isDefinedLocked(task.Name, f) {
+	if f.isDefined(task.Name, f) {
 		panic("task with the same name is already defined")
 	}
 	for _, dep := range task.Deps {
-		if !f.isDefinedLocked(dep.name, dep.flow) {
+		if !f.isDefined(dep.name, dep.flow) {
 			panic("dependency was not defined: " + dep.name)
 		}
 	}
@@ -92,7 +92,7 @@ func Undefine(task *DefinedTask) {
 func (f *Flow) Undefine(task *DefinedTask) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if !f.isDefinedLocked(task.name, task.flow) {
+	if !f.isDefined(task.name, task.flow) {
 		panic("task was not defined: " + task.name)
 	}
 
@@ -118,12 +118,6 @@ func (f *Flow) Undefine(task *DefinedTask) {
 }
 
 func (f *Flow) isDefined(name string, flow *Flow) bool {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	return f.isDefinedLocked(name, flow)
-}
-
-func (f *Flow) isDefinedLocked(name string, flow *Flow) bool {
 	if f.tasks == nil {
 		f.tasks = map[string]*DefinedTask{}
 	}
@@ -274,7 +268,7 @@ func (f *Flow) SetDefault(task *DefinedTask) {
 		return
 	}
 
-	if !f.isDefinedLocked(task.name, task.flow) {
+	if !f.isDefined(task.name, task.flow) {
 		panic("task was not defined: " + task.name)
 	}
 	f.defaultTask = task
