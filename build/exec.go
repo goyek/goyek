@@ -19,6 +19,10 @@ func Exec(a *goyek.A, workDir, cmdLine string) bool {
 		a.Errorf("parse command line: %v", err)
 		return false
 	}
+	if len(args) == 0 {
+		a.Error("empty command line")
+		return false
+	}
 	cmd := exec.CommandContext(a.Context(), args[0], args[1:]...) //nolint:gosec // it is a convenient function to run programs
 	cmd.Dir = workDir
 	cmd.Stdin = os.Stdin
