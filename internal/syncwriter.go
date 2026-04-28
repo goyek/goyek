@@ -2,8 +2,36 @@ package internal
 
 import (
 	"io"
+	"strings"
 	"sync"
 )
+
+// SyncBuilder is a thread-safe strings.Builder.
+type SyncBuilder struct {
+	mu sync.Mutex
+	sb strings.Builder
+}
+
+// Write appends the contents of p to b's buffer.
+func (b *SyncBuilder) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.sb.Write(p)
+}
+
+// WriteString appends the contents of s to b's buffer.
+func (b *SyncBuilder) WriteString(s string) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.sb.WriteString(s)
+}
+
+// String returns the accumulated string.
+func (b *SyncBuilder) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.sb.String()
+}
 
 type syncWriter struct {
 	writer io.Writer
