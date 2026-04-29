@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"sort"
 	"strings"
+	"sync"
 	"text/tabwriter"
 )
 
@@ -16,6 +17,7 @@ import (
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
 type Flow struct {
+	mu     sync.RWMutex
 	output io.Writer
 	usage  func()
 	logger Logger
@@ -24,6 +26,12 @@ type Flow struct {
 	defaultTask         *DefinedTask            // task to run when none is explicitly provided
 	middlewares         []Middleware
 	executorMiddlewares []ExecutorMiddleware
+}
+
+func (f *Flow) init() {
+	if f.tasks == nil {
+		f.tasks = map[string]*DefinedTask{}
+	}
 }
 
 // DefaultFlow is the default flow.
@@ -37,11 +45,13 @@ func Tasks() []*DefinedTask {
 
 // Tasks returns all tasks sorted in lexicographical order.
 func (f *Flow) Tasks() []*DefinedTask {
-	var tasks []*DefinedTask
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	tasks := make([]*DefinedTask, 0, len(f.tasks))
 	for _, task := range f.tasks {
 		tasks = append(tasks, task)
 	}
-	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
+	sort.Slice(tasks, func(i, j int) bool { return tasks[i].name < tasks[j].name })
 	return tasks
 }
 
@@ -52,6 +62,8 @@ func Define(task Task) *DefinedTask {
 
 // Define registers the task. It panics in case of any error.
 func (f *Flow) Define(task Task) *DefinedTask {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	// validate
 	if task.Name == "" {
 		panic("task name cannot be empty")
@@ -73,6 +85,7 @@ func (f *Flow) Define(task Task) *DefinedTask {
 		parallel: task.Parallel,
 		flow:     f,
 	}
+	f.init()
 	f.tasks[task.Name] = taskCopy
 	return taskCopy
 }
@@ -84,6 +97,8 @@ func Undefine(task *DefinedTask) {
 
 // Undefine unregisters the task. It panics in case of any error.
 func (f *Flow) Undefine(task *DefinedTask) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	if !f.isDefined(task.name, task.flow) {
 		panic("task was not defined: " + task.name)
 	}
@@ -110,9 +125,6 @@ func (f *Flow) Undefine(task *DefinedTask) {
 }
 
 func (f *Flow) isDefined(name string, flow *Flow) bool {
-	if f.tasks == nil {
-		f.tasks = map[string]*DefinedTask{}
-	}
 	if f != flow {
 		return false // defined in other flow
 	}
@@ -129,6 +141,8 @@ func Output() io.Writer {
 // Output returns the destination used for printing messages.
 // [os.Stdout] is returned if output was not set or was set to nil.
 func (f *Flow) Output() io.Writer {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	if f.output == nil {
 		return os.Stdout
 	}
@@ -142,6 +156,8 @@ func SetOutput(out io.Writer) {
 
 // SetOutput sets the output destination.
 func (f *Flow) SetOutput(out io.Writer) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.output = out
 }
 
@@ -154,6 +170,8 @@ func GetLogger() Logger {
 // Logger returns the logger used by A's logging functions
 // [CodeLineLogger] is returned if logger was not set or was set to nil.
 func (f *Flow) Logger() Logger {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	if f.logger == nil {
 		return &CodeLineLogger{}
 	}
@@ -187,6 +205,8 @@ func SetLogger(logger Logger) {
 //	Skipf(w io.Writer, format string, args ...interface{})
 //	Helper()
 func (f *Flow) SetLogger(logger Logger) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.logger = logger
 }
 
@@ -201,6 +221,8 @@ func Usage() func() {
 // It is called when an error occurs while parsing the flow.
 // [Flow.Print] is returned if a function was not set or was set to nil.
 func (f *Flow) Usage() func() {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	if f.usage == nil {
 		return f.Print
 	}
@@ -214,6 +236,8 @@ func SetUsage(fn func()) {
 
 // SetUsage sets the function called when an error occurs while parsing tasks.
 func (f *Flow) SetUsage(fn func()) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.usage = fn
 }
 
@@ -226,6 +250,8 @@ func Default() *DefinedTask {
 // Default returns the default task.
 // nil is returned if default was not set.
 func (f *Flow) Default() *DefinedTask {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	return f.defaultTask
 }
 
@@ -239,6 +265,8 @@ func SetDefault(task *DefinedTask) {
 // Passing nil clears the default task.
 // It panics in case of any error.
 func (f *Flow) SetDefault(task *DefinedTask) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	if task == nil {
 		f.defaultTask = nil
 		return
@@ -257,6 +285,8 @@ func Use(middlewares ...Middleware) {
 
 // Use adds task runner middlewares (interceptors).
 func (f *Flow) Use(middlewares ...Middleware) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	for _, m := range middlewares {
 		if m == nil {
 			panic("middleware cannot be nil")
@@ -272,6 +302,8 @@ func UseExecutor(middlewares ...ExecutorMiddleware) {
 
 // UseExecutor adds flow executor middlewares (interceptors).
 func (f *Flow) UseExecutor(middlewares ...ExecutorMiddleware) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	for _, m := range middlewares {
 		if m == nil {
 			panic("middleware cannot be nil")
@@ -334,8 +366,17 @@ func Execute(ctx context.Context, tasks []string, opts ...Option) error {
 // [*FailError] if a task failed,
 // other errors in case of invalid input or context error.
 func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) error {
-	var middlewares []Middleware
-	middlewares = append(middlewares, f.middlewares...)
+	f.mu.RLock()
+	defined := make(map[string]*DefinedTask, len(f.tasks))
+	for k, v := range f.tasks {
+		defined[k] = v
+	}
+	middlewares := make([]Middleware, len(f.middlewares))
+	copy(middlewares, f.middlewares)
+	executorMiddlewares := make([]ExecutorMiddleware, len(f.executorMiddlewares))
+	copy(executorMiddlewares, f.executorMiddlewares)
+	defaultTask := f.defaultTask
+	f.mu.RUnlock()
 
 	cfg := &config{}
 	for _, opt := range opts {
@@ -344,14 +385,14 @@ func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) erro
 
 	// prepare runner
 	r := &executor{
-		defined:     f.tasks,
+		defined:     defined,
 		middlewares: middlewares,
-		defaultTask: f.defaultTask,
+		defaultTask: defaultTask,
 	}
 	runner := r.Execute
 
 	// apply defined executor middlewares
-	for _, middleware := range f.executorMiddlewares {
+	for _, middleware := range executorMiddlewares {
 		runner = middleware(runner)
 	}
 

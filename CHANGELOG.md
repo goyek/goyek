@@ -30,6 +30,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   "file name too long" errors.
 - Fix races when task output is written from multiple goroutines
   by automatically wrapping the output in a synchronized writer.
+- Implement thread-safety for `Flow` and `DefinedTask` to prevent data races
+  during concurrent task registration and execution.
 
 ## [3.0.1](https://github.com/goyek/goyek/releases/tag/v3.0.1) - 2025-12-09
 
