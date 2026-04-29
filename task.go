@@ -24,6 +24,8 @@ type Task struct {
 
 // DefinedTask represents a task that has been defined.
 // It can be used as a dependency for another task.
+//
+// A DefinedTask is not safe for concurrent use.
 type DefinedTask struct {
 	name     string
 	usage    string
