@@ -9,7 +9,7 @@ import (
 	"github.com/goyek/goyek/v3"
 )
 
-func TestFlow_Concurrent(t *testing.T) {
+func TestFlow_Concurrent(_ *testing.T) {
 	f := &goyek.Flow{}
 	ctx := context.Background()
 
@@ -38,7 +38,7 @@ func TestFlow_Concurrent(t *testing.T) {
 			taskName := fmt.Sprintf("mod-task-%d", i)
 			task := f.Define(goyek.Task{Name: taskName})
 			task.SetUsage("some usage")
-			task.SetAction(func(a *goyek.A) {})
+			task.SetAction(func(_ *goyek.A) {})
 			task.SetName(taskName + "-renamed")
 		}
 	}()
