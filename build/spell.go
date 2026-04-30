@@ -1,8 +1,6 @@
 package main
 
 import (
-	"strings"
-
 	"github.com/goyek/goyek/v3"
 )
 
@@ -17,6 +15,8 @@ var spell = goyek.Define(goyek.Task{
 		if len(mdFiles) == 0 {
 			a.Skip("no .md files")
 		}
-		Exec(a, dirRoot, "misspell -error -locale=US -w "+strings.Join(mdFiles, " "))
+		args := []string{"-error", "-locale=US", "-w"}
+		args = append(args, mdFiles...)
+		ExecArgs(a, dirRoot, "misspell", args...)
 	},
 })
