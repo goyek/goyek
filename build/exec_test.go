@@ -6,22 +6,10 @@ import (
 	"github.com/goyek/goyek/v3"
 )
 
-func TestExec_EmptyCommand(t *testing.T) {
+func TestExec_InvalidCommand(t *testing.T) {
 	runner := goyek.NewRunner(func(a *goyek.A) {
-		if Exec(a, ".", "") {
-			a.Error("Exec should return false for empty command")
-		}
-	})
-	result := runner(goyek.Input{TaskName: "test"})
-	if result.Status != goyek.StatusFailed {
-		t.Errorf("Expected status Failed, got %v", result.Status)
-	}
-}
-
-func TestExec_WhitespaceCommand(t *testing.T) {
-	runner := goyek.NewRunner(func(a *goyek.A) {
-		if Exec(a, ".", "   ") {
-			a.Error("Exec should return false for whitespace-only command")
+		if Exec(a, ".", "non-existing-command") {
+			a.Error("Exec should return false for non-existing command")
 		}
 	})
 	result := runner(goyek.Input{TaskName: "test"})
@@ -32,7 +20,7 @@ func TestExec_WhitespaceCommand(t *testing.T) {
 
 func TestExec_ValidCommand(t *testing.T) {
 	runner := goyek.NewRunner(func(a *goyek.A) {
-		if !Exec(a, ".", "go version") {
+		if !Exec(a, ".", "go", "version") {
 			a.Error("Exec should return true for valid command")
 		}
 	})
