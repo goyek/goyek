@@ -25,6 +25,6 @@ var mdlint = goyek.Define(goyek.Task{
 		dockerImage := "ghcr.io/igorshubovych/markdownlint-cli:v0.41.0"
 		args := []string{"run", "--rm", "-v", curDir + ":/workdir", dockerImage}
 		args = append(args, mdFiles...)
-		ExecArgs(a, dirRoot, "docker", args...)
+		Exec(a, dirRoot, "docker", args...)
 	},
 })

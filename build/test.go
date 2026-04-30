@@ -11,9 +11,9 @@ var test = goyek.Define(goyek.Task{
 			args = append(args, "-v")
 		}
 		args = append(args, "-race", "-covermode=atomic", "-coverprofile=coverage.out", "-coverpkg=./...", "./...")
-		if !ExecArgs(a, dirRoot, "go", args...) {
+		if !Exec(a, dirRoot, "go", args...) {
 			return
 		}
-		ExecArgs(a, dirRoot, "go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html")
+		Exec(a, dirRoot, "go", "tool", "cover", "-html=coverage.out", "-o", "coverage.html")
 	},
 })

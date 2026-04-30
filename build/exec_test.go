@@ -6,10 +6,10 @@ import (
 	"github.com/goyek/goyek/v3"
 )
 
-func TestExecArgs_InvalidCommand(t *testing.T) {
+func TestExec_InvalidCommand(t *testing.T) {
 	runner := goyek.NewRunner(func(a *goyek.A) {
-		if ExecArgs(a, ".", "non-existing-command") {
-			a.Error("ExecArgs should return false for non-existing command")
+		if Exec(a, ".", "non-existing-command") {
+			a.Error("Exec should return false for non-existing command")
 		}
 	})
 	result := runner(goyek.Input{TaskName: "test"})
@@ -18,10 +18,10 @@ func TestExecArgs_InvalidCommand(t *testing.T) {
 	}
 }
 
-func TestExecArgs_ValidCommand(t *testing.T) {
+func TestExec_ValidCommand(t *testing.T) {
 	runner := goyek.NewRunner(func(a *goyek.A) {
-		if !ExecArgs(a, ".", "go", "version") {
-			a.Error("ExecArgs should return true for valid command")
+		if !Exec(a, ".", "go", "version") {
+			a.Error("Exec should return true for valid command")
 		}
 	})
 	result := runner(goyek.Input{TaskName: "test"})

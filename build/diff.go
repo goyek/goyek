@@ -12,7 +12,7 @@ var diff = goyek.Define(goyek.Task{
 	Name:  "diff",
 	Usage: "git diff",
 	Action: func(a *goyek.A) {
-		ExecArgs(a, dirRoot, "git", "diff", "--exit-code")
+		Exec(a, dirRoot, "git", "diff", "--exit-code")
 
 		a.Log("Cmd: git status --porcelain")
 

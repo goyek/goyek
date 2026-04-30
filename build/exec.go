@@ -7,9 +7,9 @@ import (
 	"github.com/goyek/goyek/v3"
 )
 
-// ExecArgs runs the command in given directory.
+// Exec runs the command in given directory.
 // It calls a.Error[f] and returns false in case of any problems.
-func ExecArgs(a *goyek.A, workDir, name string, args ...string) bool {
+func Exec(a *goyek.A, workDir, name string, args ...string) bool {
 	a.Helper()
 	a.Logf("Run %v in %s", append([]string{name}, args...), workDir)
 	cmd := exec.CommandContext(a.Context(), name, args...) //nolint:gosec // it is a convenient function to run programs

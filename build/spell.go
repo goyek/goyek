@@ -8,7 +8,7 @@ var spell = goyek.Define(goyek.Task{
 	Name:  "spell",
 	Usage: "misspell",
 	Action: func(a *goyek.A) {
-		if !ExecArgs(a, dirBuild, "go", "install", "github.com/client9/misspell/cmd/misspell") {
+		if !Exec(a, dirBuild, "go", "install", "github.com/client9/misspell/cmd/misspell") {
 			return
 		}
 		mdFiles := find(a, ".md")
@@ -17,6 +17,6 @@ var spell = goyek.Define(goyek.Task{
 		}
 		args := []string{"-error", "-locale=US", "-w"}
 		args = append(args, mdFiles...)
-		ExecArgs(a, dirRoot, "misspell", args...)
+		Exec(a, dirRoot, "misspell", args...)
 	},
 })
