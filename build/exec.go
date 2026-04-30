@@ -4,26 +4,8 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/mattn/go-shellwords"
-
 	"github.com/goyek/goyek/v3"
 )
-
-// Exec runs the command in given directory.
-// It calls a.Error[f] and returns false in case of any problems.
-func Exec(a *goyek.A, workDir, cmdLine string) bool {
-	a.Helper()
-	args, err := shellwords.Parse(cmdLine)
-	if err != nil {
-		a.Errorf("parse command line: %v", err)
-		return false
-	}
-	if len(args) == 0 {
-		a.Error("empty command line")
-		return false
-	}
-	return ExecArgs(a, workDir, args[0], args[1:]...)
-}
 
 // ExecArgs runs the command in given directory.
 // It calls a.Error[f] and returns false in case of any problems.

@@ -6,7 +6,6 @@ require (
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint/v2 v2.11.4
 	github.com/goyek/goyek/v3 v3.0.0-00010101000000-000000000000
-	github.com/mattn/go-shellwords v1.0.13
 )
 
 replace github.com/goyek/goyek/v3 => ../
