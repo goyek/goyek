@@ -405,18 +405,20 @@ func (f *Flow) Main(args []string, opts ...Option) {
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, internal.TerminationSignals()...)
-	go func() {
-		<-c // first signal, cancel context
-		fmt.Fprintln(out, "first interrupt, graceful stop")
-		cancel()
-
-		<-c // second signal, hard exit
-		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(exitCodeFail)
-	}()
+	go f.handleSignals(c, out, cancel, os.Exit)
 
 	exitCode := f.main(ctx, args, opts...)
 	os.Exit(exitCode)
+}
+
+func (f *Flow) handleSignals(c <-chan os.Signal, out io.Writer, cancel context.CancelFunc, exit func(int)) {
+	<-c // first signal, cancel context
+	fmt.Fprintln(out, "first interrupt, graceful stop")
+	cancel()
+
+	<-c // second signal, hard exit
+	fmt.Fprintln(out, "second interrupt, exit")
+	exit(exitCodeFail)
 }
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {

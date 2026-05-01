@@ -7,68 +7,47 @@ import (
 	"context"
 	"io"
 	"os"
-	"os/signal"
 	"syscall"
 	"testing"
 	"time"
-
-	"github.com/goyek/goyek/v3/internal"
 )
 
-func TestFlow_Main_SIGTERM(t *testing.T) {
+func TestFlow_handleSignals(t *testing.T) {
 	flow := &Flow{}
 	out := &stringsBuilder{}
-	flow.SetOutput(out)
-
-	taskStarted := make(chan struct{})
-	taskFinished := make(chan struct{})
-
-	flow.Define(Task{
-		Name: "test",
-		Action: func(a *A) {
-			close(taskStarted)
-			select {
-			case <-a.Context().Done():
-			case <-time.After(5 * time.Second):
-				// This should not happen if SIGTERM is handled correctly
-			}
-			close(taskFinished)
-		},
-	})
-
-	// We can't call flow.Main because it calls os.Exit.
-	// But we can simulate the signal handling logic.
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, internal.TerminationSignals()...)
-	defer signal.Stop(c)
+	c := make(chan os.Signal, 2)
 
-	go func() {
-		// Wait for task to start
-		<-taskStarted
-		// Send SIGTERM to ourselves
-		process, _ := os.FindProcess(os.Getpid())
-		_ = process.Signal(syscall.SIGTERM)
-	}()
+	exitCalled := make(chan int, 1)
+	exitFunc := func(code int) {
+		exitCalled <- code
+	}
 
-	go func() {
-		select {
-		case <-c:
-			cancel()
-		case <-taskFinished:
-		}
-	}()
+	go flow.handleSignals(c, out, cancel, exitFunc)
 
-	flow.main(ctx, []string{"test"})
+	// First signal
+	c <- syscall.SIGTERM
 
 	select {
-	case <-taskFinished:
-		// Success
+	case <-ctx.Done():
+		// Success: context canceled
 	case <-time.After(time.Second):
-		t.Error("task was not canceled by SIGTERM")
+		t.Fatal("context not canceled after first signal")
+	}
+
+	// Second signal
+	c <- syscall.SIGTERM
+
+	select {
+	case code := <-exitCalled:
+		if code != 1 {
+			t.Errorf("expected exit code 1, got %d", code)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("exit not called after second signal")
 	}
 }
 
