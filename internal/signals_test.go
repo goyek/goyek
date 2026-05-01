@@ -9,7 +9,7 @@ import (
 )
 
 func TestTerminationSignals(t *testing.T) {
-	signals := internal.TerminationSignals
+	signals := internal.TerminationSignals()
 	if len(signals) == 0 {
 		t.Fatal("TerminationSignals should not be empty")
 	}

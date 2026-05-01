@@ -404,7 +404,7 @@ func (f *Flow) Main(args []string, opts ...Option) {
 	// trap termination signals and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, internal.TerminationSignals...)
+	signal.Notify(c, internal.TerminationSignals()...)
 	go func() {
 		<-c // first signal, cancel context
 		fmt.Fprintln(out, "first interrupt, graceful stop")

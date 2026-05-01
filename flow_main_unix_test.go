@@ -17,7 +17,7 @@ import (
 
 func TestFlow_Main_SIGTERM(t *testing.T) {
 	flow := &Flow{}
-	out := &strings_builder{}
+	out := &stringsBuilder{}
 	flow.SetOutput(out)
 
 	taskStarted := make(chan struct{})
@@ -43,7 +43,7 @@ func TestFlow_Main_SIGTERM(t *testing.T) {
 	defer cancel()
 
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, internal.TerminationSignals...)
+	signal.Notify(c, internal.TerminationSignals()...)
 	defer signal.Stop(c)
 
 	go func() {
@@ -51,7 +51,7 @@ func TestFlow_Main_SIGTERM(t *testing.T) {
 		<-taskStarted
 		// Send SIGTERM to ourselves
 		process, _ := os.FindProcess(os.Getpid())
-		process.Signal(syscall.SIGTERM)
+		_ = process.Signal(syscall.SIGTERM)
 	}()
 
 	go func() {
@@ -72,10 +72,10 @@ func TestFlow_Main_SIGTERM(t *testing.T) {
 	}
 }
 
-type strings_builder struct {
+type stringsBuilder struct {
 	io.Writer
 }
 
-func (b *strings_builder) Write(p []byte) (n int, err error) {
+func (b *stringsBuilder) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }

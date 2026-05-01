@@ -7,5 +7,7 @@ import (
 	"os"
 )
 
-// TerminationSignals are signals that cause the program to terminate.
-var TerminationSignals = []os.Signal{os.Interrupt}
+// TerminationSignals returns the signals that cause the program to terminate.
+func TerminationSignals() []os.Signal {
+	return []os.Signal{os.Interrupt}
+}
