@@ -105,7 +105,7 @@ func TestFlow_Main(t *testing.T) {
 	})
 
 	t.Run("interrupt", func(t *testing.T) {
-		if runtime.GOOS == "windows" || runtime.GOOS == "plan9" {
+		if runtime.GOOS == goosWindows || runtime.GOOS == goosPlan9 {
 			t.Skip("skipping on " + runtime.GOOS)
 		}
 
@@ -125,10 +125,10 @@ func TestFlow_Main(t *testing.T) {
 	})
 }
 
-func TestMain_wrapper(t *testing.T) {
+func TestMain_wrapper(_ *testing.T) {
 	mainExiterMu.Lock()
 	origExiter := mainExiter
-	mainExiter = func(code int) {}
+	mainExiter = func(_ int) {}
 	mainExiterMu.Unlock()
 	defer func() {
 		mainExiterMu.Lock()
@@ -165,7 +165,7 @@ func TestFailError_Error(t *testing.T) {
 }
 
 func TestFlow_Main_second_interrupt(t *testing.T) {
-	if runtime.GOOS == "windows" || runtime.GOOS == "plan9" {
+	if runtime.GOOS == goosWindows || runtime.GOOS == goosPlan9 {
 		t.Skip("skipping on " + runtime.GOOS)
 	}
 
