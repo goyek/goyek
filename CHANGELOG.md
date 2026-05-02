@@ -10,6 +10,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
+- `Flow.Main` now handles graceful shutdown on `SIGTERM` (on Unix systems)
+  in addition to `os.Interrupt`, ensuring task cleanups are executed.
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
 

@@ -3,8 +3,14 @@ package goyek
 import (
 	"context"
 	"io"
+	"runtime"
 	"strings"
+	"sync"
+	"syscall"
 	"testing"
+	"time"
+
+	"github.com/goyek/goyek/v3/internal"
 )
 
 func TestFlow_main(t *testing.T) {
@@ -62,5 +68,149 @@ func Test_main_usage(t *testing.T) {
 
 	if !called {
 		t.Error("usage should be called for invalid input")
+	}
+}
+
+func TestFlow_Main(t *testing.T) {
+	flow := &Flow{}
+	sb := &safeBuffer{}
+	flow.SetOutput(sb)
+	flow.Define(Task{Name: "task"})
+	flow.Define(Task{Name: "wait", Action: func(a *A) {
+		<-a.Context().Done()
+	}})
+
+	exitCh := make(chan int, 1)
+	mainExiterMu.Lock()
+	origExiter := mainExiter
+	mainExiter = func(code int) {
+		select {
+		case exitCh <- code:
+		default:
+		}
+	}
+	mainExiterMu.Unlock()
+	defer func() {
+		mainExiterMu.Lock()
+		mainExiter = origExiter
+		mainExiterMu.Unlock()
+	}()
+
+	t.Run("pass", func(t *testing.T) {
+		flow.Main([]string{"task"})
+		gotExitCode := <-exitCh
+		if gotExitCode != 0 {
+			t.Errorf("got exit code %d, want 0", gotExitCode)
+		}
+	})
+
+	t.Run("interrupt", func(t *testing.T) {
+		if runtime.GOOS == goosWindows || runtime.GOOS == goosPlan9 {
+			t.Skip("skipping on " + runtime.GOOS)
+		}
+
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			_ = syscall.Kill(syscall.Getpid(), internal.TerminationSignals[0].(syscall.Signal))
+		}()
+
+		flow.Main([]string{"wait"})
+		gotExitCode := <-exitCh
+		if gotExitCode != 1 {
+			t.Errorf("got exit code %d, want 1", gotExitCode)
+		}
+		if !strings.Contains(sb.String(), "first interrupt") {
+			t.Error("missing first interrupt message")
+		}
+	})
+}
+
+func TestMain_wrapper(_ *testing.T) {
+	mainExiterMu.Lock()
+	origExiter := mainExiter
+	mainExiter = func(_ int) {}
+	mainExiterMu.Unlock()
+	defer func() {
+		mainExiterMu.Lock()
+		mainExiter = origExiter
+		mainExiterMu.Unlock()
+	}()
+
+	Main(nil)
+}
+
+type safeBuffer struct {
+	mu sync.Mutex
+	sb strings.Builder
+}
+
+func (b *safeBuffer) Write(p []byte) (n int, err error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.sb.Write(p)
+}
+
+func (b *safeBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.sb.String()
+}
+
+func TestFailError_Error(t *testing.T) {
+	err := &FailError{Task: "test"}
+	want := "task failed: test"
+	if got := err.Error(); got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestFlow_Main_second_interrupt(t *testing.T) {
+	if runtime.GOOS == goosWindows || runtime.GOOS == goosPlan9 {
+		t.Skip("skipping on " + runtime.GOOS)
+	}
+
+	flow := &Flow{}
+	sb := &safeBuffer{}
+	flow.SetOutput(sb)
+	flow.Define(Task{Name: "wait", Action: func(a *A) {
+		<-a.Context().Done()
+		time.Sleep(1 * time.Second)
+	}})
+
+	exitCh := make(chan int, 1)
+	mainExiterMu.Lock()
+	origExiter := mainExiter
+	mainExiter = func(code int) {
+		select {
+		case exitCh <- code:
+		default:
+		}
+	}
+	mainExiterMu.Unlock()
+	defer func() {
+		mainExiterMu.Lock()
+		mainExiter = origExiter
+		mainExiterMu.Unlock()
+	}()
+
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+
+		for i := 0; i < 20; i++ {
+			if strings.Contains(sb.String(), "first interrupt") {
+				break
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+
+		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+	}()
+
+	flow.Main([]string{"wait"})
+
+	gotExitCode := <-exitCh
+	if gotExitCode != 1 {
+		t.Errorf("got exit code %d, want 1", gotExitCode)
 	}
 }

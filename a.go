@@ -13,7 +13,12 @@ import (
 	"unicode/utf8"
 )
 
-const maxTempDirTaskNameLen = 64
+const (
+	maxTempDirTaskNameLen = 64
+
+	goosWindows = "windows"
+	goosPlan9   = "plan9"
+)
 
 // A is a type passed to [Task.Action] functions to manage task state
 // and support formatted task logs.
@@ -320,7 +325,7 @@ func (a *A) Chdir(dir string) {
 	// current working directory.” Since we are changing the working
 	// directory, we should also set or update PWD to reflect that.
 	switch runtime.GOOS {
-	case "windows", "plan9":
+	case goosWindows, goosPlan9:
 		// Windows and Plan 9 do not use the PWD variable.
 	default:
 		if !filepath.IsAbs(dir) {
