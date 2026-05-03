@@ -10,7 +10,11 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/goyek/goyek/v3/internal"
 )
+
+var osExit = os.Exit
 
 // Flow is the root type of the package.
 // Use Register methods to register all tasks
@@ -390,19 +394,24 @@ func Main(args []string, opts ...Option) {
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
-// or SIGINT interrupted the execution.
+// or SIGINT or SIGTERM (on Unix) interrupted the execution.
 //   - 0 exit code means that non of the tasks failed.
 //   - 1 exit code means that a task has failed or the execution was interrupted.
 //   - 2 exit code means that the input was invalid.
 //
 // Calls [Usage] when invalid args are provided.
 func (f *Flow) Main(args []string, opts ...Option) {
-	out := f.Output()
-
-	// trap Ctrl+C and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
+	f.trapSignals(cancel)
+
+	exitCode := f.main(ctx, args, opts...)
+	osExit(exitCode)
+}
+
+func (f *Flow) trapSignals(cancel context.CancelFunc) {
+	out := f.Output()
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, internal.TerminationSignals()...)
 	go func() {
 		<-c // first signal, cancel context
 		fmt.Fprintln(out, "first interrupt, graceful stop")
@@ -410,11 +419,8 @@ func (f *Flow) Main(args []string, opts ...Option) {
 
 		<-c // second signal, hard exit
 		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(exitCodeFail)
+		osExit(exitCodeFail)
 	}()
-
-	exitCode := f.main(ctx, args, opts...)
-	os.Exit(exitCode)
 }
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
