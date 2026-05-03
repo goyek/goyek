@@ -14,6 +14,8 @@ import (
 	"github.com/goyek/goyek/v3/internal"
 )
 
+var osExit = os.Exit
+
 // Flow is the root type of the package.
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
@@ -403,7 +405,7 @@ func (f *Flow) Main(args []string, opts ...Option) {
 	f.trapSignals(cancel)
 
 	exitCode := f.main(ctx, args, opts...)
-	os.Exit(exitCode)
+	osExit(exitCode)
 }
 
 func (f *Flow) trapSignals(cancel context.CancelFunc) {
@@ -417,7 +419,7 @@ func (f *Flow) trapSignals(cancel context.CancelFunc) {
 
 		<-c // second signal, hard exit
 		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(exitCodeFail)
+		osExit(exitCodeFail)
 	}()
 }
 
