@@ -21,7 +21,7 @@ func TestFlow_trapSignals(t *testing.T) {
 	var exitCode int32 = -1
 	origOsExit := osExit
 	osExit = func(code int) {
-		atomic.StoreInt32(&exitCode, int32(code))
+		atomic.StoreInt32(&exitCode, int32(code)) //nolint:gosec // G115: exit code is a small integer
 	}
 	defer func() { osExit = origOsExit }()
 
@@ -71,7 +71,7 @@ func TestFlow_Main(t *testing.T) {
 	var exitCode int32 = -1
 	origOsExit := osExit
 	osExit = func(code int) {
-		atomic.StoreInt32(&exitCode, int32(code))
+		atomic.StoreInt32(&exitCode, int32(code)) //nolint:gosec // G115: exit code is a small integer
 	}
 	defer func() { osExit = origOsExit }()
 
@@ -88,7 +88,7 @@ func TestMain_topLevel(t *testing.T) {
 	var exitCode int32 = -1
 	origOsExit := osExit
 	osExit = func(code int) {
-		atomic.StoreInt32(&exitCode, int32(code))
+		atomic.StoreInt32(&exitCode, int32(code)) //nolint:gosec // G115: exit code is a small integer
 	}
 	defer func() { osExit = origOsExit }()
 
