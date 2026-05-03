@@ -6,5 +6,7 @@ import (
 	"os"
 )
 
-// TerminationSignals are the signals that should cause a graceful shutdown.
-var TerminationSignals = []os.Signal{os.Interrupt}
+// TerminationSignals returns the signals that should cause a graceful shutdown.
+func TerminationSignals() []os.Signal {
+	return []os.Signal{os.Interrupt}
+}

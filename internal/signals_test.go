@@ -12,7 +12,7 @@ import (
 func TestTerminationSignals(t *testing.T) {
 	hasInterrupt := false
 	hasSIGTERM := false
-	for _, s := range internal.TerminationSignals {
+	for _, s := range internal.TerminationSignals() {
 		if s == os.Interrupt {
 			hasInterrupt = true
 		}
