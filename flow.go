@@ -381,7 +381,7 @@ const (
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
-// or termination signals interrupted the execution.
+// or SIGINT interrupted the execution.
 //   - 0 exit code means that non of the tasks failed.
 //   - 1 exit code means that a task has failed or the execution was interrupted.
 //   - 2 exit code means that the input was invalid.
@@ -420,8 +420,6 @@ func (f *Flow) trapSignals(ctx context.Context, cancel context.CancelFunc, out i
 		defer signal.Stop(c)
 		select {
 		case <-done:
-			return
-		case <-ctx.Done():
 			return
 		case <-c: // first signal, cancel context
 			fmt.Fprintln(out, "first interrupt, graceful stop")

@@ -10,9 +10,11 @@ import (
 	"time"
 )
 
+const windows = "windows"
+
 func TestFlow_trapSignals(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on windows")
+	if runtime.GOOS == windows {
+		t.Skip("skipping on " + windows)
 	}
 
 	origOsExit := osExit
@@ -111,7 +113,7 @@ func TestFailError_Error(t *testing.T) {
 	}
 }
 
-func TestFlow_trapSignals_done(t *testing.T) {
+func TestFlow_trapSignals_done(_ *testing.T) {
 	f := &Flow{}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -120,7 +122,7 @@ func TestFlow_trapSignals_done(t *testing.T) {
 	f.trapSignals(ctx, cancel, io.Discard, done)
 }
 
-func TestFlow_trapSignals_ctxDone(t *testing.T) {
+func TestFlow_trapSignals_ctxDone(_ *testing.T) {
 	f := &Flow{}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -130,8 +132,8 @@ func TestFlow_trapSignals_ctxDone(t *testing.T) {
 }
 
 func TestFlow_trapSignals_done_second(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on windows")
+	if runtime.GOOS == windows {
+		t.Skip("skipping on " + windows)
 	}
 	f := &Flow{}
 	ctx, cancel := context.WithCancel(context.Background())
