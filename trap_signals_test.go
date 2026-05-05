@@ -85,3 +85,71 @@ func TestFlow_Main(t *testing.T) {
 		t.Errorf("expected exitCodeInvalid, got %d", exitCode)
 	}
 }
+
+func TestMain_topLevel(t *testing.T) {
+	origOsExit := osExit
+	defer func() { osExit = origOsExit }()
+
+	var exitCode int
+	osExit = func(code int) {
+		exitCode = code
+	}
+
+	Main(nil)
+
+	if exitCode != exitCodeInvalid {
+		t.Errorf("expected exitCodeInvalid, got %d", exitCode)
+	}
+}
+
+func TestFailError_Error(t *testing.T) {
+	err := &FailError{Task: "task1"}
+	got := err.Error()
+	want := "task failed: task1"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestFlow_trapSignals_done(t *testing.T) {
+	f := &Flow{}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan struct{})
+	close(done)
+	f.trapSignals(ctx, cancel, io.Discard, done)
+}
+
+func TestFlow_trapSignals_ctxDone(t *testing.T) {
+	f := &Flow{}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	done := make(chan struct{})
+	defer close(done)
+	f.trapSignals(ctx, cancel, io.Discard, done)
+}
+
+func TestFlow_trapSignals_done_second(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping on windows")
+	}
+	f := &Flow{}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan struct{})
+	f.trapSignals(ctx, cancel, io.Discard, done)
+
+	p, _ := os.FindProcess(os.Getpid())
+	if err := p.Signal(os.Interrupt); err != nil {
+		t.Fatal(err)
+	}
+
+	select {
+	case <-ctx.Done():
+		// ok
+	case <-time.After(time.Second):
+		t.Fatal("context should be canceled")
+	}
+
+	close(done)
+}
