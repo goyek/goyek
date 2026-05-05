@@ -36,7 +36,9 @@ func TestFlow_trapSignals(t *testing.T) {
 	p, _ := os.FindProcess(os.Getpid())
 
 	// first signal
-	p.Signal(os.Interrupt)
+	if err := p.Signal(os.Interrupt); err != nil {
+		t.Fatal(err)
+	}
 
 	// wait for context cancellation
 	select {
@@ -47,7 +49,9 @@ func TestFlow_trapSignals(t *testing.T) {
 	}
 
 	// second signal
-	p.Signal(os.Interrupt)
+	if err := p.Signal(os.Interrupt); err != nil {
+		t.Fatal(err)
+	}
 
 	// wait for osExit call
 	start := time.Now()
