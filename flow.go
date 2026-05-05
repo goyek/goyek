@@ -413,7 +413,7 @@ func (f *Flow) Main(args []string, opts ...Option) {
 	osExit(exitCode)
 }
 
-func (f *Flow) trapSignals(ctx context.Context, cancel context.CancelFunc, out io.Writer, done <-chan struct{}) {
+func (f *Flow) trapSignals(_ context.Context, cancel context.CancelFunc, out io.Writer, done <-chan struct{}) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, internal.TerminationSignals()...)
 	go func() {
