@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/goyek/goyek/v3/internal"
 )
 
 // Flow is the root type of the package.
@@ -31,6 +33,8 @@ type Flow struct {
 // DefaultFlow is the default flow.
 // The top-level functions such as Define, Main, and so on are wrappers for the methods of Flow.
 var DefaultFlow = &Flow{}
+
+var osExit = os.Exit
 
 // Tasks returns all tasks sorted in lexicographical order.
 func Tasks() []*DefinedTask {
@@ -397,24 +401,38 @@ func Main(args []string, opts ...Option) {
 //
 // Calls [Usage] when invalid args are provided.
 func (f *Flow) Main(args []string, opts ...Option) {
+	f.mainWithExit(args, osExit, opts...)
+}
+
+func (f *Flow) mainWithExit(args []string, exit func(int), opts ...Option) {
 	out := f.Output()
 
-	// trap Ctrl+C and call cancel on the context
+	// trap termination signals and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		<-c // first signal, cancel context
-		fmt.Fprintln(out, "first interrupt, graceful stop")
-		cancel()
-
-		<-c // second signal, hard exit
-		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(exitCodeFail)
-	}()
+	signal.Notify(c, internal.TerminationSignals()...)
+	go f.handleSignals(c, out, cancel, exit)
 
 	exitCode := f.main(ctx, args, opts...)
-	os.Exit(exitCode)
+	exit(exitCode)
+}
+
+func (f *Flow) handleSignals(c <-chan os.Signal, out io.Writer, cancel context.CancelFunc, exit func(int)) {
+	sig := <-c // first signal, cancel context
+	msg := "first interrupt"
+	if sig != os.Interrupt {
+		msg = fmt.Sprintf("signal received: %v", sig)
+	}
+	fmt.Fprintf(out, "%s, graceful stop\n", msg)
+	cancel()
+
+	sig = <-c // second signal, hard exit
+	msg = "second interrupt"
+	if sig != os.Interrupt {
+		msg = fmt.Sprintf("signal received: %v", sig)
+	}
+	fmt.Fprintf(out, "%s, exit\n", msg)
+	exit(exitCodeFail)
 }
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
