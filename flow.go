@@ -7,10 +7,14 @@ import (
 	"io"
 	"os"
 	"os/signal"
+
+	"github.com/goyek/goyek/v3/internal"
 	"sort"
 	"strings"
 	"text/tabwriter"
 )
+
+var osExit = os.Exit
 
 // Flow is the root type of the package.
 // Use Register methods to register all tasks
@@ -377,7 +381,7 @@ const (
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
-// or SIGINT interrupted the execution.
+// or a termination signal interrupted the execution.
 //   - 0 exit code means that non of the tasks failed.
 //   - 1 exit code means that a task has failed or the execution was interrupted.
 //   - 2 exit code means that the input was invalid.
@@ -397,33 +401,52 @@ func Main(args []string, opts ...Option) {
 //
 // Calls [Usage] when invalid args are provided.
 func (f *Flow) Main(args []string, opts ...Option) {
-	out := f.Output()
+	out := internal.SyncWriter(f.Output())
+	f.SetOutput(out)
 
-	// trap Ctrl+C and call cancel on the context
+	// trap signals and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		<-c // first signal, cancel context
-		fmt.Fprintln(out, "first interrupt, graceful stop")
-		cancel()
-
-		<-c // second signal, hard exit
-		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(exitCodeFail)
-	}()
+	defer cancel()
+	done := make(chan struct{})
+	go f.trapSignals(ctx, cancel, out, done)
 
 	exitCode := f.main(ctx, args, opts...)
-	os.Exit(exitCode)
+	close(done)
+	osExit(exitCode)
+}
+
+func (f *Flow) trapSignals(ctx context.Context, cancel context.CancelFunc, out io.Writer, done chan struct{}) {
+	c := make(chan os.Signal, 1)
+	sigs := internal.TerminationSignals()
+	signal.Notify(c, sigs...)
+	defer signal.Stop(c)
+
+	select {
+	case <-c: // first signal, cancel context
+		fmt.Fprintln(out, "first interrupt, graceful stop")
+		cancel()
+	case <-done:
+		return
+	}
+
+	select {
+	case <-c: // second signal, hard exit
+		fmt.Fprintln(out, "second interrupt, exit")
+		osExit(exitCodeFail)
+	case <-done:
+	}
 }
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	err := f.Execute(ctx, args, opts...)
-	var ferr *FailError
-	if errors.As(err, &ferr) {
+	if ctx.Err() != nil {
 		return exitCodeFail
 	}
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return exitCodeFail
+	}
+	var ferr *FailError
+	if errors.As(err, &ferr) {
 		return exitCodeFail
 	}
 	if err != nil {
