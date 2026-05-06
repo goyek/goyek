@@ -10,8 +10,10 @@ import (
 	"time"
 )
 
+const windows = "windows"
+
 func TestFlow_Main(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
 
@@ -20,8 +22,14 @@ func TestFlow_Main(t *testing.T) {
 
 	var exitCode int32 = -1
 	osExit = func(code int) {
-		atomic.StoreInt32(&exitCode, int32(code))
+		atomic.StoreInt32(&exitCode, int32(code)) //nolint:gosec // G115: exit code is a small integer
 	}
+
+	ready := make(chan struct{})
+	trapSignalsHook = func() {
+		close(ready)
+	}
+	defer func() { trapSignalsHook = nil }()
 
 	f := &Flow{}
 	f.Define(Task{
@@ -37,8 +45,7 @@ func TestFlow_Main(t *testing.T) {
 	})
 
 	go func() {
-		// wait for Main to start and register signal handler
-		time.Sleep(100 * time.Millisecond)
+		<-ready
 		p, _ := os.FindProcess(os.Getpid())
 		if err := p.Signal(os.Interrupt); err != nil {
 			t.Errorf("failed to send signal: %v", err)
@@ -53,7 +60,7 @@ func TestFlow_Main(t *testing.T) {
 }
 
 func TestFlow_trapSignals(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
 
@@ -62,7 +69,7 @@ func TestFlow_trapSignals(t *testing.T) {
 
 	var exitCode int32 = -1
 	osExit = func(code int) {
-		atomic.StoreInt32(&exitCode, int32(code))
+		atomic.StoreInt32(&exitCode, int32(code)) //nolint:gosec // G115: exit code is a small integer
 	}
 
 	f := &Flow{}
@@ -70,8 +77,15 @@ func TestFlow_trapSignals(t *testing.T) {
 	defer cancel()
 	done := make(chan struct{})
 
+	ready := make(chan struct{})
+	trapSignalsHook = func() {
+		close(ready)
+	}
+	defer func() { trapSignalsHook = nil }()
+
 	go f.trapSignals(ctx, cancel, io.Discard, done)
 
+	<-ready
 	p, _ := os.FindProcess(os.Getpid())
 
 	// first signal
@@ -106,18 +120,18 @@ func TestFlow_trapSignals(t *testing.T) {
 	close(done)
 }
 
-func TestMain_topLevel(t *testing.T) {
+func TestMain_topLevel(_ *testing.T) {
 	// Just to cover the top-level Main function
 	origOsExit := osExit
 	defer func() { osExit = origOsExit }()
-	osExit = func(code int) {}
+	osExit = func(_ int) {}
 
 	// Define a task in DefaultFlow
 	f := DefaultFlow
 	if f.tasks == nil {
 		f.tasks = make(map[string]*DefinedTask)
 	}
-	f.Define(Task{Name: "top", Action: func(a *A) {}})
+	f.Define(Task{Name: "top", Action: func(_ *A) {}})
 	Main([]string{"top"})
 }
 

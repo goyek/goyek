@@ -15,6 +15,7 @@ import (
 )
 
 var osExit = os.Exit
+var trapSignalsHook func()
 
 // Flow is the root type of the package.
 // Use Register methods to register all tasks
@@ -415,10 +416,13 @@ func (f *Flow) Main(args []string, opts ...Option) {
 	osExit(exitCode)
 }
 
-func (f *Flow) trapSignals(ctx context.Context, cancel context.CancelFunc, out io.Writer, done chan struct{}) {
+func (f *Flow) trapSignals(_ context.Context, cancel context.CancelFunc, out io.Writer, done chan struct{}) {
 	c := make(chan os.Signal, 1)
 	sigs := internal.TerminationSignals()
 	signal.Notify(c, sigs...)
+	if trapSignalsHook != nil {
+		trapSignalsHook()
+	}
 	defer signal.Stop(c)
 
 	select {
