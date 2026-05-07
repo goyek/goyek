@@ -8,11 +8,13 @@ import (
 	"os"
 	"os/signal"
 	"sort"
-
-	"github.com/goyek/goyek/v3/internal"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/goyek/goyek/v3/internal"
 )
+
+var osExit = os.Exit
 
 // Flow is the root type of the package.
 // Use Register methods to register all tasks
@@ -420,14 +422,14 @@ func (f *Flow) Main(args []string, opts ...Option) {
 		select {
 		case <-c: // second signal, hard exit
 			fmt.Fprintln(out, "second interrupt, exit")
-			os.Exit(exitCodeFail)
+			osExit(exitCodeFail)
 		case <-done:
 		}
 	}()
 
 	exitCode := f.main(ctx, args, opts...)
 	close(done)
-	os.Exit(exitCode)
+	osExit(exitCode)
 }
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
@@ -435,6 +437,9 @@ func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	var ferr *FailError
 	if errors.As(err, &ferr) {
 		return exitCodeFail
+	}
+	if err == nil {
+		err = ctx.Err()
 	}
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return exitCodeFail
