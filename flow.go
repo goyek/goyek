@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/signal"
 	"sort"
+
+	"github.com/goyek/goyek/v3/internal"
 	"strings"
 	"text/tabwriter"
 )
@@ -377,7 +379,7 @@ const (
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
-// or SIGINT interrupted the execution.
+// or termination signal interrupted the execution.
 //   - 0 exit code means that non of the tasks failed.
 //   - 1 exit code means that a task has failed or the execution was interrupted.
 //   - 2 exit code means that the input was invalid.
@@ -390,30 +392,41 @@ func Main(args []string, opts ...Option) {
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
-// or SIGINT interrupted the execution.
+// or termination signal interrupted the execution.
 //   - 0 exit code means that non of the tasks failed.
 //   - 1 exit code means that a task has failed or the execution was interrupted.
 //   - 2 exit code means that the input was invalid.
 //
 // Calls [Usage] when invalid args are provided.
 func (f *Flow) Main(args []string, opts ...Option) {
-	out := f.Output()
+	out := internal.SyncWriter(f.Output())
+	f.SetOutput(out)
 
 	// trap Ctrl+C and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, internal.TerminationSignals()...)
 	go func() {
-		<-c // first signal, cancel context
-		fmt.Fprintln(out, "first interrupt, graceful stop")
-		cancel()
+		defer signal.Stop(c)
+		select {
+		case <-c: // first signal, cancel context
+			fmt.Fprintln(out, "first interrupt, graceful stop")
+			cancel()
+		case <-done:
+			return
+		}
 
-		<-c // second signal, hard exit
-		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(exitCodeFail)
+		select {
+		case <-c: // second signal, hard exit
+			fmt.Fprintln(out, "second interrupt, exit")
+			os.Exit(exitCodeFail)
+		case <-done:
+		}
 	}()
 
 	exitCode := f.main(ctx, args, opts...)
+	close(done)
 	os.Exit(exitCode)
 }
 
