@@ -16,6 +16,8 @@ import (
 
 var osExit = os.Exit
 
+var trapSignalsHook = func(ready <-chan struct{}) {}
+
 // Flow is the root type of the package.
 // Use Register methods to register all tasks
 // and Run or Main method to execute provided tasks.
@@ -407,10 +409,14 @@ func (f *Flow) Main(args []string, opts ...Option) {
 	// trap Ctrl+C and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
+	handlerDone := make(chan struct{})
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, internal.TerminationSignals()...)
+	ready := make(chan struct{})
 	go func() {
+		defer close(handlerDone)
 		defer signal.Stop(c)
+		close(ready)
 		select {
 		case <-c: // first signal, cancel context
 			fmt.Fprintln(out, "first interrupt, graceful stop")
@@ -426,9 +432,11 @@ func (f *Flow) Main(args []string, opts ...Option) {
 		case <-done:
 		}
 	}()
+	trapSignalsHook(ready)
 
 	exitCode := f.main(ctx, args, opts...)
 	close(done)
+	<-handlerDone
 	osExit(exitCode)
 }
 

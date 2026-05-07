@@ -19,9 +19,15 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	oldOsExit := osExit
 	var exitCode int32 = -1
 	osExit = func(code int) {
-		atomic.StoreInt32(&exitCode, int32(code))
+		atomic.StoreInt32(&exitCode, int32(code)) //nolint:gosec // G115: exit code is a small integer
 	}
 	defer func() { osExit = oldOsExit }()
+
+	oldTrapSignalsHook := trapSignalsHook
+	trapSignalsHook = func(ready <-chan struct{}) {
+		<-ready
+	}
+	defer func() { trapSignalsHook = oldTrapSignalsHook }()
 
 	f := &Flow{}
 	f.SetOutput(io.Discard)
@@ -57,9 +63,15 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	oldOsExit := osExit
 	var exitCode int32 = -1
 	osExit = func(code int) {
-		atomic.StoreInt32(&exitCode, int32(code))
+		atomic.StoreInt32(&exitCode, int32(code)) //nolint:gosec // G115: exit code is a small integer
 	}
 	defer func() { osExit = oldOsExit }()
+
+	oldTrapSignalsHook := trapSignalsHook
+	trapSignalsHook = func(ready <-chan struct{}) {
+		<-ready
+	}
+	defer func() { trapSignalsHook = oldTrapSignalsHook }()
 
 	f := &Flow{}
 	f.SetOutput(io.Discard)
@@ -91,10 +103,10 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	}
 }
 
-func TestMain_topLevel(t *testing.T) {
+func TestMain_topLevel(_ *testing.T) {
 	// Just to cover the top-level Main wrapper
 	oldOsExit := osExit
-	osExit = func(code int) {}
+	osExit = func(_ int) {}
 	defer func() { osExit = oldOsExit }()
 
 	Main(nil)
