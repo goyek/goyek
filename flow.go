@@ -16,7 +16,7 @@ import (
 
 var osExit = os.Exit
 
-var trapSignalsHook = func(ready <-chan struct{}) {}
+var trapSignalsHook = func(_ <-chan struct{}) {}
 
 // Flow is the root type of the package.
 // Use Register methods to register all tasks
