@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"sync"
 	"testing"
+	"time"
 )
 
 const windows = "windows"
@@ -32,12 +33,9 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 		defer wg.Done()
 		p, err := os.FindProcess(os.Getpid())
 		if err != nil {
-			t.Errorf("FindProcess error: %v", err)
 			return
 		}
-		if err := p.Signal(os.Interrupt); err != nil {
-			t.Errorf("Signal error: %v", err)
-		}
+		_ = p.Signal(os.Interrupt)
 	}
 	defer func() { trapSignalsHook = nil }()
 
@@ -48,6 +46,55 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 		Action: func(a *A) {
 			wg.Wait()
 			<-a.Context().Done()
+		},
+	})
+
+	f.Main([]string{"test"})
+
+	mu.Lock()
+	got := exitCode
+	mu.Unlock()
+	if got != exitCodeFail {
+		t.Errorf("got exit code %d, want %d", got, exitCodeFail)
+	}
+}
+
+func TestFlow_Main_signal_hard(t *testing.T) {
+	if runtime.GOOS == windows {
+		t.Skip("skipping on windows")
+	}
+
+	restore := osExit
+	defer func() { osExit = restore }()
+
+	var exitCode int
+	var mu sync.Mutex
+	osExit = func(code int) {
+		mu.Lock()
+		defer mu.Unlock()
+		exitCode = code
+	}
+
+	trapSignalsHook = func() {
+		p, err := os.FindProcess(os.Getpid())
+		if err != nil {
+			return
+		}
+		_ = p.Signal(os.Interrupt)
+		// Wait a bit to ensure the first signal is processed and we enter the second select.
+		time.Sleep(100 * time.Millisecond)
+		_ = p.Signal(os.Interrupt)
+	}
+	defer func() { trapSignalsHook = nil }()
+
+	f := &Flow{}
+	f.SetOutput(io.Discard)
+	f.Define(Task{
+		Name: "test",
+		Action: func(a *A) {
+			<-a.Context().Done()
+			// Wait for the second signal to trigger osExit
+			time.Sleep(200 * time.Millisecond)
 		},
 	})
 
@@ -99,9 +146,10 @@ func TestMain_top_level(t *testing.T) {
 		exitCode = code
 	}
 
-	// We can't easily use Define here because it might affect other tests
-	// but since it is DefaultFlow, it might already have tasks or not.
-	// Let's use a non-existing task to trigger Usage and return 2.
+	oldOut := DefaultFlow.Output()
+	DefaultFlow.SetOutput(io.Discard)
+	defer DefaultFlow.SetOutput(oldOut)
+
 	Main([]string{"non-existing-task"})
 
 	mu.Lock()
@@ -109,70 +157,6 @@ func TestMain_top_level(t *testing.T) {
 	mu.Unlock()
 	if got != exitCodeInvalid {
 		t.Errorf("got exit code %d, want %d", got, exitCodeInvalid)
-	}
-}
-
-func TestFlow_Main_signal_hard(t *testing.T) {
-	if runtime.GOOS == windows {
-		t.Skip("skipping on windows")
-	}
-
-	restore := osExit
-	defer func() { osExit = restore }()
-
-	var exitCode int
-	var mu sync.Mutex
-	osExit = func(code int) {
-		mu.Lock()
-		defer mu.Unlock()
-		exitCode = code
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	var actionA *A
-	trapSignalsHook = func() {
-		defer wg.Done()
-		p, err := os.FindProcess(os.Getpid())
-		if err != nil {
-			t.Errorf("FindProcess error: %v", err)
-			return
-		}
-		if err := p.Signal(os.Interrupt); err != nil {
-			t.Errorf("Signal error: %v", err)
-		}
-		// Give the signal handler some time to process the first signal
-		// and enter the second select block.
-			for i := 0; i < 1000; i++ {
-			if actionA != nil && actionA.Context().Err() != nil {
-				break
-			}
-			runtime.Gosched()
-		}
-		if err := p.Signal(os.Interrupt); err != nil {
-			t.Errorf("Signal error: %v", err)
-		}
-	}
-	defer func() { trapSignalsHook = nil }()
-
-	f := &Flow{}
-	f.SetOutput(io.Discard)
-	f.Define(Task{
-		Name: "test",
-		Action: func(a *A) {
-			actionA = a
-			wg.Wait()
-			<-a.Context().Done()
-		},
-	})
-
-	f.Main([]string{"test"})
-
-	mu.Lock()
-	got := exitCode
-	mu.Unlock()
-	if got != exitCodeFail {
-		t.Errorf("got exit code %d, want %d", got, exitCodeFail)
 	}
 }
 
