@@ -61,6 +61,57 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	}
 }
 
+func TestFlow_Main_signal_none(t *testing.T) {
+	restore := osExit
+	defer func() { osExit = restore }()
+
+	var exitCode int
+	var mu sync.Mutex
+	osExit = func(code int) {
+		mu.Lock()
+		defer mu.Unlock()
+		exitCode = code
+	}
+
+	f := &Flow{}
+	f.SetOutput(io.Discard)
+	f.Define(Task{Name: "test"})
+
+	f.Main([]string{"test"})
+
+	mu.Lock()
+	got := exitCode
+	mu.Unlock()
+	if got != exitCodePass {
+		t.Errorf("got exit code %d, want %d", got, exitCodePass)
+	}
+}
+
+func TestMain_top_level(t *testing.T) {
+	restore := osExit
+	defer func() { osExit = restore }()
+
+	var exitCode int
+	var mu sync.Mutex
+	osExit = func(code int) {
+		mu.Lock()
+		defer mu.Unlock()
+		exitCode = code
+	}
+
+	// We can't easily use Define here because it might affect other tests
+	// but since it is DefaultFlow, it might already have tasks or not.
+	// Let's use a non-existing task to trigger Usage and return 2.
+	Main([]string{"non-existing-task"})
+
+	mu.Lock()
+	got := exitCode
+	mu.Unlock()
+	if got != exitCodeInvalid {
+		t.Errorf("got exit code %d, want %d", got, exitCodeInvalid)
+	}
+}
+
 func TestFlow_Main_signal_hard(t *testing.T) {
 	if runtime.GOOS == windows {
 		t.Skip("skipping on windows")
