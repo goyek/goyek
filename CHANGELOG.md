@@ -12,6 +12,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
+- Add support for portable termination signals (including `SIGTERM` on Unix)
+  in `Flow.Main` to ensure graceful shutdown in containerized environments.
 
 ### Fixed
 
@@ -31,6 +33,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Fix races when task output is written from multiple goroutines
   by automatically wrapping the output in a synchronized writer.
 - Document that `Flow` and `DefinedTask` are not safe for concurrent use.
+- Fix a potential data race in `Flow.Main` by using a synchronized writer
+  for termination log messages.
 
 ## [3.0.1](https://github.com/goyek/goyek/releases/tag/v3.0.1) - 2025-12-09
 
