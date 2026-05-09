@@ -130,6 +130,7 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
+	var actionA *A
 	trapSignalsHook = func() {
 		defer wg.Done()
 		p, err := os.FindProcess(os.Getpid())
@@ -139,6 +140,14 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		}
 		if err := p.Signal(os.Interrupt); err != nil {
 			t.Errorf("Signal error: %v", err)
+		}
+		// Give the signal handler some time to process the first signal
+		// and enter the second select block.
+			for i := 0; i < 1000; i++ {
+			if actionA != nil && actionA.Context().Err() != nil {
+				break
+			}
+			runtime.Gosched()
 		}
 		if err := p.Signal(os.Interrupt); err != nil {
 			t.Errorf("Signal error: %v", err)
@@ -151,6 +160,7 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	f.Define(Task{
 		Name: "test",
 		Action: func(a *A) {
+			actionA = a
 			wg.Wait()
 			<-a.Context().Done()
 		},
