@@ -163,10 +163,15 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 			// Send second signal for hard exit
 			// Use a loop to increase the chance of it being caught by the second select
 			for i := 0; i < 10; i++ {
+				mu.Lock()
+				done := exitCode != 0
+				mu.Unlock()
+				if done {
+					break
+				}
 				_ = p.Signal(os.Interrupt)
 				runtime.Gosched()
 			}
-			// The second signal should trigger osExit(1) in the goroutine
 		},
 	})
 
