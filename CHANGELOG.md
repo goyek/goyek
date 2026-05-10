@@ -9,6 +9,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 ## [Unreleased](https://github.com/goyek/goyek/compare/v3.0.1...HEAD)
 
 ### Added
+- Enhance signal handling in `Flow.Main` by adding `SIGTERM` support (CWE-730) and implementing a two-signal termination pattern for graceful shutdown.
 
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.

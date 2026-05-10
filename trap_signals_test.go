@@ -63,6 +63,66 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	}
 }
 
+func TestMain_signal_graceful(t *testing.T) {
+	if runtime.GOOS == windows {
+		t.Skip("skipping on windows")
+	}
+
+	origOsExit := osExit
+	origTrapSignalsHook := trapSignalsHook
+	hookCalled := make(chan struct{})
+	trapSignalsHook = func() {
+		close(hookCalled)
+	}
+	defer func() {
+		osExit = origOsExit
+		trapSignalsHook = origTrapSignalsHook
+	}()
+
+	var mu sync.Mutex
+	var exitCode int
+	osExit = func(code int) {
+		mu.Lock()
+		defer mu.Unlock()
+		exitCode = code
+	}
+
+	f := &Flow{}
+	f.SetOutput(io.Discard)
+	task := f.Define(Task{
+		Name: "task",
+		Action: func(a *A) {
+			p, _ := os.FindProcess(os.Getpid())
+			if err := p.Signal(os.Interrupt); err != nil {
+				t.Error(err)
+			}
+			<-a.Context().Done()
+		},
+	})
+	f.SetDefault(task)
+
+	origDefaultFlow := DefaultFlow
+	DefaultFlow = f
+	defer func() {
+		DefaultFlow = origDefaultFlow
+	}()
+
+	doneCh := make(chan struct{})
+	go func() {
+		defer close(doneCh)
+		Main(nil)
+	}()
+	<-hookCalled
+
+	<-doneCh
+
+	mu.Lock()
+	defer mu.Unlock()
+	if exitCode != exitCodeFail {
+		t.Errorf("got exit code %d, want %d", exitCode, exitCodeFail)
+	}
+}
+
 func TestFlow_Main_signal_hard(t *testing.T) {
 	if runtime.GOOS == windows {
 		t.Skip("skipping on windows")
@@ -93,6 +153,7 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		Name: "task",
 		Action: func(a *A) {
 			p, _ := os.FindProcess(os.Getpid())
+			// Send first signal
 			if err := p.Signal(os.Interrupt); err != nil {
 				t.Error(err)
 			}
@@ -100,8 +161,10 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 			<-a.Context().Done()
 
 			// Send second signal for hard exit
-			if err := p.Signal(os.Interrupt); err != nil {
-				t.Error(err)
+			// Use a loop to increase the chance of it being caught by the second select
+			for i := 0; i < 10; i++ {
+				_ = p.Signal(os.Interrupt)
+				runtime.Gosched()
 			}
 			// The second signal should trigger osExit(1) in the goroutine
 		},
@@ -120,6 +183,48 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	defer mu.Unlock()
 	if exitCode != exitCodeFail {
 		t.Errorf("got exit code %d, want %d", exitCode, exitCodeFail)
+	}
+}
+
+func TestFlow_Main_pass(t *testing.T) {
+	origOsExit := osExit
+	origTrapSignalsHook := trapSignalsHook
+	hookCalled := make(chan struct{})
+	trapSignalsHook = func() {
+		close(hookCalled)
+	}
+	defer func() {
+		osExit = origOsExit
+		trapSignalsHook = origTrapSignalsHook
+	}()
+
+	var mu sync.Mutex
+	var exitCode int
+	osExit = func(code int) {
+		mu.Lock()
+		defer mu.Unlock()
+		exitCode = code
+	}
+
+	f := &Flow{}
+	f.SetOutput(io.Discard)
+	f.Define(Task{
+		Name: "task",
+	})
+
+	doneCh := make(chan struct{})
+	go func() {
+		defer close(doneCh)
+		f.Main([]string{"task"})
+	}()
+	<-hookCalled
+
+	<-doneCh
+
+	mu.Lock()
+	defer mu.Unlock()
+	if exitCode != exitCodePass {
+		t.Errorf("got exit code %d, want %d", exitCode, exitCodePass)
 	}
 }
 
