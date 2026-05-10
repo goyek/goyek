@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"sync"
 	"testing"
+	"time"
 )
 
 const windows = "windows"
@@ -162,15 +163,15 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 
 			// Send second signal for hard exit
 			// Use a loop to increase the chance of it being caught by the second select
-			for i := 0; i < 10; i++ {
+			for i := 0; i < 100; i++ {
+				_ = p.Signal(os.Interrupt)
+				time.Sleep(10 * time.Millisecond)
 				mu.Lock()
 				done := exitCode != 0
 				mu.Unlock()
 				if done {
-					break
+					return
 				}
-				_ = p.Signal(os.Interrupt)
-				runtime.Gosched()
 			}
 		},
 	})
