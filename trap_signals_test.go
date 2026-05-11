@@ -87,7 +87,7 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	f.SetOutput(io.Discard)
 	f.Define(Task{
 		Name: "test",
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			select {} // block forever
 		},
 	})
