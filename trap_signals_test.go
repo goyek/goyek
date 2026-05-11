@@ -18,8 +18,11 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	origOsExit := osExit
 	defer func() { osExit = origOsExit }()
 
+	var mu sync.Mutex
 	exitCode := -1
 	osExit = func(code int) {
+		mu.Lock()
+		defer mu.Unlock()
 		exitCode = code
 	}
 
@@ -54,8 +57,11 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 
 	<-done
 
-	if exitCode != exitCodeFail {
-		t.Errorf("got exit code %d, want %d", exitCode, exitCodeFail)
+	mu.Lock()
+	gotExitCode := exitCode
+	mu.Unlock()
+	if gotExitCode != exitCodeFail {
+		t.Errorf("got exit code %d, want %d", gotExitCode, exitCodeFail)
 	}
 }
 
@@ -127,8 +133,11 @@ func TestMain_signal_graceful(t *testing.T) {
 	origOsExit := osExit
 	defer func() { osExit = origOsExit }()
 
+	var mu sync.Mutex
 	exitCode := -1
 	osExit = func(code int) {
+		mu.Lock()
+		defer mu.Unlock()
 		exitCode = code
 	}
 
@@ -163,8 +172,11 @@ func TestMain_signal_graceful(t *testing.T) {
 
 	<-done
 
-	if exitCode != exitCodeFail {
-		t.Errorf("got exit code %d, want %d", exitCode, exitCodeFail)
+	mu.Lock()
+	gotExitCode := exitCode
+	mu.Unlock()
+	if gotExitCode != exitCodeFail {
+		t.Errorf("got exit code %d, want %d", gotExitCode, exitCodeFail)
 	}
 }
 
@@ -172,8 +184,11 @@ func TestFlow_Main_pass(t *testing.T) {
 	origOsExit := osExit
 	defer func() { osExit = origOsExit }()
 
+	var mu sync.Mutex
 	exitCode := -1
 	osExit = func(code int) {
+		mu.Lock()
+		defer mu.Unlock()
 		exitCode = code
 	}
 
@@ -183,7 +198,10 @@ func TestFlow_Main_pass(t *testing.T) {
 
 	f.Main([]string{"test"})
 
-	if exitCode != exitCodePass {
-		t.Errorf("got exit code %d, want %d", exitCode, exitCodePass)
+	mu.Lock()
+	gotExitCode := exitCode
+	mu.Unlock()
+	if gotExitCode != exitCodePass {
+		t.Errorf("got exit code %d, want %d", gotExitCode, exitCodePass)
 	}
 }
