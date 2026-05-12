@@ -9,8 +9,10 @@ import (
 	"time"
 )
 
+const windows = "windows"
+
 func TestFlow_Main_signal_graceful(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
 
@@ -72,7 +74,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 }
 
 func TestFlow_Main_signal_hard(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
 
@@ -97,7 +99,7 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	f.SetOutput(io.Discard)
 	f.Define(Task{
 		Name: "task",
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			select {} // block forever
 		},
 	})
@@ -134,7 +136,7 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 }
 
 func TestMain_signal_graceful(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
 
