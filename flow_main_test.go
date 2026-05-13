@@ -102,7 +102,7 @@ func TestExecute_package(t *testing.T) {
 	}
 }
 
-func TestMain_package(t *testing.T) {
+func TestMain_package(_ *testing.T) {
 	orig := DefaultFlow
 	defer func() { DefaultFlow = orig }()
 	DefaultFlow = &Flow{}
@@ -110,12 +110,12 @@ func TestMain_package(t *testing.T) {
 
 	restoreOsExit := osExit
 	defer func() { osExit = restoreOsExit }()
-	osExit = func(code int) {}
+	osExit = func(_ int) {}
 
 	Main([]string{"task"})
 }
 
-func TestPrint_package(t *testing.T) {
+func TestPrint_package(_ *testing.T) {
 	orig := DefaultFlow
 	defer func() { DefaultFlow = orig }()
 	DefaultFlow = &Flow{}
@@ -178,7 +178,7 @@ func TestDefault_package(t *testing.T) {
 	}
 }
 
-func TestUse_package(t *testing.T) {
+func TestUse_package(_ *testing.T) {
 	orig := DefaultFlow
 	defer func() { DefaultFlow = orig }()
 	DefaultFlow = &Flow{}

@@ -94,7 +94,11 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		},
 	})
 
-	go f.Main([]string{"task"})
+	doneCh := make(chan struct{})
+	go func() {
+		f.Main([]string{"task"})
+		close(doneCh)
+	}()
 
 	<-hookCalled
 	p, _ := os.FindProcess(os.Getpid())
@@ -127,13 +131,19 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 
 	// Ensure the task finished and Main can return
 	<-taskFinished
+	<-doneCh
 }
 
 func TestFlow_Main_pass(t *testing.T) {
 	restoreOsExit := osExit
 	defer func() { osExit = restoreOsExit }()
+	var mu sync.Mutex
 	var exitCode int
-	osExit = func(code int) { exitCode = code }
+	osExit = func(code int) {
+		mu.Lock()
+		defer mu.Unlock()
+		exitCode = code
+	}
 
 	f := &Flow{}
 	f.SetOutput(io.Discard)
@@ -141,8 +151,11 @@ func TestFlow_Main_pass(t *testing.T) {
 
 	f.Main([]string{"task"})
 
-	if exitCode != 0 {
-		t.Errorf("expected exit code 0, got %d", exitCode)
+	mu.Lock()
+	got := exitCode
+	mu.Unlock()
+	if got != 0 {
+		t.Errorf("expected exit code 0, got %d", got)
 	}
 }
 
