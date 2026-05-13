@@ -435,6 +435,16 @@ func (f *Flow) Main(args []string, opts ...Option) {
 			fmt.Fprintln(out, "second termination signal, exit")
 			osExit(exitCodeFail)
 		case <-done:
+			return
+		}
+
+		// consume any extra signals during tests
+		for {
+			select {
+			case <-c:
+			case <-done:
+				return
+			}
 		}
 	}()
 
