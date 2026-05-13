@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/goyek/goyek/v3/internal"
 )
 
 // Flow is the root type of the package.
@@ -374,10 +376,15 @@ const (
 	exitCodeInvalid = 2
 )
 
+var (
+	osExit          = os.Exit
+	trapSignalsHook func() // used for testing
+)
+
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
-// or SIGINT interrupted the execution.
+// or termination signals interrupted the execution.
 //   - 0 exit code means that non of the tasks failed.
 //   - 1 exit code means that a task has failed or the execution was interrupted.
 //   - 2 exit code means that the input was invalid.
@@ -390,31 +397,51 @@ func Main(args []string, opts ...Option) {
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
-// or SIGINT interrupted the execution.
+// or termination signals interrupted the execution.
 //   - 0 exit code means that non of the tasks failed.
 //   - 1 exit code means that a task has failed or the execution was interrupted.
 //   - 2 exit code means that the input was invalid.
 //
 // Calls [Usage] when invalid args are provided.
 func (f *Flow) Main(args []string, opts ...Option) {
-	out := f.Output()
+	out := internal.SyncWriter(f.Output())
 
-	// trap Ctrl+C and call cancel on the context
+	// trap termination signals and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, internal.TerminationSignals()...)
+	done := make(chan struct{})
+	handlerDone := make(chan struct{})
 	go func() {
-		<-c // first signal, cancel context
-		fmt.Fprintln(out, "first interrupt, graceful stop")
-		cancel()
+		defer close(handlerDone)
+		defer signal.Stop(c)
 
-		<-c // second signal, hard exit
-		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(exitCodeFail)
+		if trapSignalsHook != nil {
+			trapSignalsHook()
+		}
+
+		select {
+		case <-c:
+			// first signal, cancel context
+			fmt.Fprintln(out, "first termination signal, graceful stop")
+			cancel()
+		case <-done:
+			return
+		}
+
+		select {
+		case <-c:
+			// second signal, hard exit
+			fmt.Fprintln(out, "second termination signal, exit")
+			osExit(exitCodeFail)
+		case <-done:
+		}
 	}()
 
 	exitCode := f.main(ctx, args, opts...)
-	os.Exit(exitCode)
+	close(done)
+	<-handlerDone
+	osExit(exitCode)
 }
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
@@ -423,7 +450,7 @@ func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	if errors.As(err, &ferr) {
 		return exitCodeFail
 	}
-	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || ctx.Err() != nil {
 		return exitCodeFail
 	}
 	if err != nil {
