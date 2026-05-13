@@ -10,6 +10,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
+- Add support for SIGTERM as a termination signal in `Flow.Main`.
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
 
