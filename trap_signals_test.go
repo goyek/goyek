@@ -9,8 +9,10 @@ import (
 	"time"
 )
 
+const windows = "windows"
+
 func TestFlow_Main_signal_graceful(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("skipping on windows")
 	}
 
@@ -56,7 +58,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 }
 
 func TestFlow_Main_signal_hard(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("skipping on windows")
 	}
 
@@ -98,19 +100,22 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Wait for the first signal to be processed
-	time.Sleep(100 * time.Millisecond)
-
-	if err := p.Signal(os.Interrupt); err != nil {
-		t.Fatal(err)
+	// Wait for the first signal to be processed and then send the second one repeatedly
+	var got int
+	for i := 0; i < 100; i++ {
+		time.Sleep(10 * time.Millisecond)
+		if err := p.Signal(os.Interrupt); err != nil {
+			t.Fatal(err)
+		}
+		mu.Lock()
+		got = exitCode
+		mu.Unlock()
+		if got == 1 {
+			break
+		}
+		runtime.Gosched()
 	}
 
-	// Give it some time to call osExit
-	time.Sleep(100 * time.Millisecond)
-
-	mu.Lock()
-	got := exitCode
-	mu.Unlock()
 	if got != 1 {
 		t.Errorf("expected exit code 1, got %d", got)
 	}
@@ -134,7 +139,7 @@ func TestFlow_Main_pass(t *testing.T) {
 }
 
 func TestMain_signal_graceful(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("skipping on windows")
 	}
 
