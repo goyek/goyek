@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/goyek/goyek/v3/internal"
 )
 
 // Flow is the root type of the package.
@@ -374,6 +376,10 @@ const (
 	exitCodeInvalid = 2
 )
 
+var osExit = os.Exit
+
+var trapSignalsHook = func() {}
+
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
@@ -397,28 +403,46 @@ func Main(args []string, opts ...Option) {
 //
 // Calls [Usage] when invalid args are provided.
 func (f *Flow) Main(args []string, opts ...Option) {
-	out := f.Output()
+	out := internal.SyncWriter(f.Output())
 
-	// trap Ctrl+C and call cancel on the context
+	// trap signals and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, internal.TerminationSignals()...)
+	handlerDone := make(chan struct{})
+	done := make(chan struct{})
 	go func() {
-		<-c // first signal, cancel context
-		fmt.Fprintln(out, "first interrupt, graceful stop")
-		cancel()
+		defer close(handlerDone)
+		defer signal.Stop(c)
+		trapSignalsHook()
 
-		<-c // second signal, hard exit
-		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(exitCodeFail)
+		select {
+		case <-c:
+			fmt.Fprintln(out, "first interrupt, graceful stop")
+			cancel()
+		case <-done:
+			return
+		}
+
+		select {
+		case <-c:
+			fmt.Fprintln(out, "second interrupt, exit")
+			osExit(exitCodeFail)
+		case <-done:
+		}
 	}()
 
 	exitCode := f.main(ctx, args, opts...)
-	os.Exit(exitCode)
+	close(done)
+	<-handlerDone
+	osExit(exitCode)
 }
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	err := f.Execute(ctx, args, opts...)
+	if ctx.Err() != nil {
+		return exitCodeFail
+	}
 	var ferr *FailError
 	if errors.As(err, &ferr) {
 		return exitCodeFail
