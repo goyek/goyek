@@ -380,6 +380,8 @@ var osExit = os.Exit
 
 var trapSignalsHook = func() {}
 
+var trapSignalsSecondHook = func() {}
+
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
@@ -424,11 +426,19 @@ func (f *Flow) Main(args []string, opts ...Option) {
 			return
 		}
 
+		trapSignalsSecondHook()
 		select {
 		case <-c:
 			fmt.Fprintln(out, "second interrupt, exit")
 			osExit(exitCodeFail)
 		case <-done:
+		}
+		for {
+			select {
+			case <-c:
+			case <-done:
+				return
+			}
 		}
 	}()
 
