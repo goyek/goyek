@@ -181,11 +181,12 @@ func TestFlow_Main_signal_hard_timeout(t *testing.T) {
 
 	f := &Flow{}
 	f.SetOutput(io.Discard)
+	taskCanFinish := make(chan struct{})
 	f.Define(Task{
 		Name: "test",
 		Action: func(a *A) {
 			<-a.Context().Done()
-			time.Sleep(time.Hour)
+			<-taskCanFinish
 		},
 	})
 
@@ -200,6 +201,8 @@ func TestFlow_Main_signal_hard_timeout(t *testing.T) {
 			_ = p.Signal(os.Interrupt)
 			time.Sleep(100 * time.Millisecond)
 			_ = p.Signal(os.Interrupt) // third signal to cover the consumer loop
+			time.Sleep(100 * time.Millisecond)
+			close(taskCanFinish)
 		}()
 	}
 	defer func() {
@@ -227,6 +230,10 @@ func TestFlow_Main_signal_hard_timeout(t *testing.T) {
 }
 
 func TestFlow_Main_default_hooks(t *testing.T) {
+	// Call default hooks to ensure coverage.
+	trapSignalsHook()
+	trapSignalsSecondHook()
+
 	restore := mockOsExit()
 	defer restore()
 

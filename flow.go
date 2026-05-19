@@ -464,7 +464,13 @@ func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	if errors.As(err, &ferr) {
 		return exitCodeFail
 	}
-	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || ctx.Err() != nil {
+	if errors.Is(err, context.Canceled) {
+		return exitCodeFail
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return exitCodeFail
+	}
+	if ctx.Err() != nil {
 		return exitCodeFail
 	}
 	if err != nil {
