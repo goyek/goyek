@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestFlow_main(t *testing.T) {
@@ -42,6 +43,15 @@ func TestFlow_main(t *testing.T) {
 				return flow.main(ctx, []string{"task"})
 			},
 		},
+		{
+			desc: "deadline exceeded",
+			want: 1,
+			act: func() int {
+				ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Hour))
+				defer cancel()
+				return flow.main(ctx, []string{"task"})
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -62,5 +72,23 @@ func Test_main_usage(t *testing.T) {
 
 	if !called {
 		t.Error("usage should be called for invalid input")
+	}
+}
+
+func TestFailError_Error(t *testing.T) {
+	err := &FailError{Task: "test"}
+	got := err.Error()
+	want := "task failed: test"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestExecute_context_canceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	err := Execute(ctx, []string{"task"})
+	if err == nil {
+		t.Error("expected error, got nil")
 	}
 }

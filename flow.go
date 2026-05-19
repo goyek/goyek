@@ -433,8 +433,6 @@ func (f *Flow) Main(args []string, opts ...Option) {
 			// second signal, hard exit
 			fmt.Fprintln(out, "second interrupt, exit")
 			osExit(exitCodeFail)
-			close(done)
-			return
 		case <-done:
 			return
 		}
@@ -462,15 +460,11 @@ func (f *Flow) Main(args []string, opts ...Option) {
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	err := f.Execute(ctx, args, opts...)
 
-	if ctx.Err() != nil {
-		return exitCodeFail
-	}
-
 	var ferr *FailError
 	if errors.As(err, &ferr) {
 		return exitCodeFail
 	}
-	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || ctx.Err() != nil {
 		return exitCodeFail
 	}
 	if err != nil {

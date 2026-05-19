@@ -198,6 +198,8 @@ func TestFlow_Main_signal_hard_timeout(t *testing.T) {
 			time.Sleep(100 * time.Millisecond)
 			p, _ := os.FindProcess(os.Getpid())
 			_ = p.Signal(os.Interrupt)
+			time.Sleep(100 * time.Millisecond)
+			_ = p.Signal(os.Interrupt) // third signal to cover the consumer loop
 		}()
 	}
 	defer func() {
@@ -221,6 +223,31 @@ func TestFlow_Main_signal_hard_timeout(t *testing.T) {
 	defer mu.Unlock()
 	if exitCode != exitCodeFail {
 		t.Errorf("got exit code %d, want %d", exitCode, exitCodeFail)
+	}
+}
+
+func TestFlow_Main_default_hooks(t *testing.T) {
+	restore := mockOsExit()
+	defer restore()
+
+	osExit = func(_ int) {}
+
+	f := &Flow{}
+	f.SetOutput(io.Discard)
+	f.Define(Task{
+		Name: "test",
+	})
+
+	doneCh := make(chan struct{})
+	go func() {
+		f.Main([]string{"test"})
+		close(doneCh)
+	}()
+
+	select {
+	case <-doneCh:
+	case <-time.After(time.Second):
+		t.Fatal("timeout")
 	}
 }
 
