@@ -12,6 +12,10 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
+- Add `SIGTERM` support to `Flow.Main` (and the top-level `Main` function)
+  for better graceful shutdown on Unix-like systems.
+- Enhance `Flow.Main` signal handling with proper synchronization
+  and thread-safe output writing.
 
 ### Fixed
 
