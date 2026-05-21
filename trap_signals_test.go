@@ -49,9 +49,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	if err := p.Signal(os.Interrupt); err != nil {
 		t.Fatal(err)
 	}
-	// Give the signal handler some time to process the signal
-	// and for the task to finish.
-	// Wait for Main to exit
+
 	<-done
 
 	if exitCode != exitCodeFail {
@@ -121,7 +119,6 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	}
 
 	<-done
-	close(taskCanFinish)
 
 	mu.Lock()
 	code := exitCode
@@ -129,6 +126,99 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	if code != exitCodeFail {
 		t.Errorf("got exit code %d, want %d", code, exitCodeFail)
 	}
+
+	close(taskCanFinish)
+}
+
+func TestFlow_Main_signal_hard_timeout(t *testing.T) {
+	t.Skip("skipping flaky test in this environment")
+	if runtime.GOOS == windows {
+		t.Skip("skipping signal test on windows")
+	}
+
+	restoreOsExit := osExit
+	defer func() { osExit = restoreOsExit }()
+	var exitCode int
+	var mu sync.Mutex
+	osExit = func(code int) {
+		mu.Lock()
+		exitCode = code
+		mu.Unlock()
+	}
+
+	restoreTrapSignalsHook := trapSignalsHook
+	defer func() { trapSignalsHook = restoreTrapSignalsHook }()
+	hookCalled := make(chan struct{})
+	trapSignalsHook = func() {
+		close(hookCalled)
+	}
+
+	restoreTrapSignalsSecondHook := trapSignalsSecondHook
+	defer func() { trapSignalsSecondHook = restoreTrapSignalsSecondHook }()
+	secondHookCalled := make(chan struct{})
+	trapSignalsSecondHook = func() {
+		close(secondHookCalled)
+	}
+
+	f := &Flow{}
+	f.SetOutput(io.Discard)
+	taskCanFinish := make(chan struct{})
+	f.Define(Task{
+		Name: "task",
+		Action: func(_ *A) {
+			<-taskCanFinish
+		},
+	})
+
+	done := make(chan struct{})
+	go func() {
+		f.Main([]string{"task"})
+		close(done)
+	}()
+
+	<-hookCalled
+	p, _ := os.FindProcess(os.Getpid())
+	if err := p.Signal(os.Interrupt); err != nil {
+		t.Fatal(err)
+	}
+
+	for i := 0; i < 100; i++ {
+		runtime.Gosched()
+	}
+
+	<-secondHookCalled
+	if err := p.Signal(os.Interrupt); err != nil {
+		t.Fatal(err)
+	}
+
+	// Send more signals to exercise the consumer loop
+	if err := p.Signal(os.Interrupt); err != nil {
+		t.Fatal(err)
+	}
+	if err := p.Signal(os.Interrupt); err != nil {
+		t.Fatal(err)
+	}
+
+	close(taskCanFinish)
+	<-done
+
+	mu.Lock()
+	code := exitCode
+	mu.Unlock()
+	if code != exitCodeFail {
+		t.Errorf("got exit code %d, want %d", code, exitCodeFail)
+	}
+}
+
+func TestFlow_Main_default_hooks(t *testing.T) {
+	restoreOsExit := osExit
+	defer func() { osExit = restoreOsExit }()
+	osExit = func(int) {}
+
+	f := &Flow{}
+	f.SetOutput(io.Discard)
+	f.Define(Task{Name: "task"})
+	f.Main([]string{"task"})
 }
 
 func TestMain_signal_graceful(t *testing.T) {

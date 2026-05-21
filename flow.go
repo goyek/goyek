@@ -8,10 +8,10 @@ import (
 	"os"
 	"os/signal"
 	"sort"
-	"strings"
-	"text/tabwriter"
 
 	"github.com/goyek/goyek/v3/internal"
+	"strings"
+	"text/tabwriter"
 )
 
 // Flow is the root type of the package.
@@ -428,9 +428,14 @@ func (f *Flow) Main(args []string, opts ...Option) {
 
 		// consume potential remaining first signals
 		// this is needed if os.Interrupt and syscall.SIGTERM were both sent
-		for len(c) > 0 {
-			<-c
+		for {
+			select {
+			case <-c:
+			default:
+				goto next
+			}
 		}
+	next:
 
 		trapSignalsSecondHook()
 		select {
@@ -443,8 +448,13 @@ func (f *Flow) Main(args []string, opts ...Option) {
 		}
 
 		// Consume all other signals if osExit was mocked and did not exit.
-		for range c {
-			fmt.Fprintln(out, "extra interrupt ignored")
+		for {
+			select {
+			case <-c:
+				fmt.Fprintln(out, "extra interrupt ignored")
+			case <-handlerDone:
+				return
+			}
 		}
 	}()
 

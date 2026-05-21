@@ -2,9 +2,11 @@ package goyek
 
 import (
 	"context"
+	"errors"
 	"io"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestFlow_main(t *testing.T) {
@@ -42,6 +44,15 @@ func TestFlow_main(t *testing.T) {
 				return flow.main(ctx, []string{"task"})
 			},
 		},
+		{
+			desc: "deadline exceeded",
+			want: 1,
+			act: func() int {
+				ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Second))
+				defer cancel()
+				return flow.main(ctx, []string{"task"})
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -62,5 +73,23 @@ func Test_main_usage(t *testing.T) {
 
 	if !called {
 		t.Error("usage should be called for invalid input")
+	}
+}
+
+func TestFailError_Error(t *testing.T) {
+	err := &FailError{Task: "test"}
+	want := "task failed: test"
+	if got := err.Error(); got != want {
+		t.Errorf("got: %q; want: %q", got, want)
+	}
+}
+
+func TestExecute_error(t *testing.T) {
+	Define(Task{Name: "task"})
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	err := Execute(ctx, []string{"task"})
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("got: %v; want: %v", err, context.Canceled)
 	}
 }
