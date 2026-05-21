@@ -10,6 +10,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
+- Add `SIGTERM` support to `Main` for graceful shutdown in containerized environments.
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
 
