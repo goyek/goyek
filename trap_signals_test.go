@@ -57,11 +57,9 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 }
 
 func TestFlow_Main_signal_hard(t *testing.T) {
-	t.Skip("skipping flaky test in this environment")
 	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
-
 	restoreOsExit := osExit
 	defer func() { osExit = restoreOsExit }()
 	var exitCode int
@@ -90,12 +88,17 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	}()
 	<-hookCalled
 	p, _ := os.FindProcess(os.Getpid())
-	_ = p.Signal(os.Interrupt)
+	if err := p.Signal(os.Interrupt); err != nil {
+		t.Fatal(err)
+	}
 	for i := 0; i < 100; i++ {
 		runtime.Gosched()
 	}
 	<-secondHookCalled
-	_ = p.Signal(os.Interrupt)
+	if err := p.Signal(os.Interrupt); err != nil {
+		t.Fatal(err)
+	}
+	close(taskCanFinish)
 	<-done
 	mu.Lock()
 	code := exitCode
@@ -103,11 +106,9 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	if code != exitCodeFail {
 		t.Errorf("got exit code %d, want %d", code, exitCodeFail)
 	}
-	close(taskCanFinish)
 }
 
 func TestFlow_Main_signal_hard_timeout(t *testing.T) {
-	t.Skip("skipping flaky test in this environment")
 	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
@@ -139,7 +140,9 @@ func TestFlow_Main_signal_hard_timeout(t *testing.T) {
 	}()
 	<-hookCalled
 	p, _ := os.FindProcess(os.Getpid())
-	_ = p.Signal(os.Interrupt)
+	if err := p.Signal(os.Interrupt); err != nil {
+		t.Fatal(err)
+	}
 	for i := 0; i < 100; i++ {
 		runtime.Gosched()
 	}
