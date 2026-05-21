@@ -8,10 +8,10 @@ import (
 	"os"
 	"os/signal"
 	"sort"
-
-	"github.com/goyek/goyek/v3/internal"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/goyek/goyek/v3/internal"
 )
 
 // Flow is the root type of the package.

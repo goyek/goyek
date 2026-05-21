@@ -14,7 +14,6 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
-
 	restoreOsExit := osExit
 	defer func() { osExit = restoreOsExit }()
 	var exitCode int
@@ -72,61 +71,38 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		exitCode = code
 		mu.Unlock()
 	}
-
 	restoreTrapSignalsHook := trapSignalsHook
 	defer func() { trapSignalsHook = restoreTrapSignalsHook }()
 	hookCalled := make(chan struct{})
-	trapSignalsHook = func() {
-		close(hookCalled)
-	}
-
+	trapSignalsHook = func() { close(hookCalled) }
 	restoreTrapSignalsSecondHook := trapSignalsSecondHook
 	defer func() { trapSignalsSecondHook = restoreTrapSignalsSecondHook }()
 	secondHookCalled := make(chan struct{})
-	trapSignalsSecondHook = func() {
-		close(secondHookCalled)
-	}
-
+	trapSignalsSecondHook = func() { close(secondHookCalled) }
 	f := &Flow{}
 	f.SetOutput(io.Discard)
 	taskCanFinish := make(chan struct{})
-	f.Define(Task{
-		Name: "task",
-		Action: func(_ *A) {
-			<-taskCanFinish
-		},
-	})
-
+	f.Define(Task{Name: "task", Action: func(_ *A) { <-taskCanFinish }})
 	done := make(chan struct{})
 	go func() {
 		f.Main([]string{"task"})
 		close(done)
 	}()
-
 	<-hookCalled
 	p, _ := os.FindProcess(os.Getpid())
-	if err := p.Signal(os.Interrupt); err != nil {
-		t.Fatal(err)
-	}
-
+	_ = p.Signal(os.Interrupt)
 	for i := 0; i < 100; i++ {
 		runtime.Gosched()
 	}
-
 	<-secondHookCalled
-	if err := p.Signal(os.Interrupt); err != nil {
-		t.Fatal(err)
-	}
-
+	_ = p.Signal(os.Interrupt)
 	<-done
-
 	mu.Lock()
 	code := exitCode
 	mu.Unlock()
 	if code != exitCodeFail {
 		t.Errorf("got exit code %d, want %d", code, exitCodeFail)
 	}
-
 	close(taskCanFinish)
 }
 
@@ -135,7 +111,6 @@ func TestFlow_Main_signal_hard_timeout(t *testing.T) {
 	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
-
 	restoreOsExit := osExit
 	defer func() { osExit = restoreOsExit }()
 	var exitCode int
@@ -145,63 +120,35 @@ func TestFlow_Main_signal_hard_timeout(t *testing.T) {
 		exitCode = code
 		mu.Unlock()
 	}
-
 	restoreTrapSignalsHook := trapSignalsHook
 	defer func() { trapSignalsHook = restoreTrapSignalsHook }()
 	hookCalled := make(chan struct{})
-	trapSignalsHook = func() {
-		close(hookCalled)
-	}
-
+	trapSignalsHook = func() { close(hookCalled) }
 	restoreTrapSignalsSecondHook := trapSignalsSecondHook
 	defer func() { trapSignalsSecondHook = restoreTrapSignalsSecondHook }()
 	secondHookCalled := make(chan struct{})
-	trapSignalsSecondHook = func() {
-		close(secondHookCalled)
-	}
-
+	trapSignalsSecondHook = func() { close(secondHookCalled) }
 	f := &Flow{}
 	f.SetOutput(io.Discard)
 	taskCanFinish := make(chan struct{})
-	f.Define(Task{
-		Name: "task",
-		Action: func(_ *A) {
-			<-taskCanFinish
-		},
-	})
-
+	f.Define(Task{Name: "task", Action: func(_ *A) { <-taskCanFinish }})
 	done := make(chan struct{})
 	go func() {
 		f.Main([]string{"task"})
 		close(done)
 	}()
-
 	<-hookCalled
 	p, _ := os.FindProcess(os.Getpid())
-	if err := p.Signal(os.Interrupt); err != nil {
-		t.Fatal(err)
-	}
-
+	_ = p.Signal(os.Interrupt)
 	for i := 0; i < 100; i++ {
 		runtime.Gosched()
 	}
-
 	<-secondHookCalled
-	if err := p.Signal(os.Interrupt); err != nil {
-		t.Fatal(err)
-	}
-
-	// Send more signals to exercise the consumer loop
-	if err := p.Signal(os.Interrupt); err != nil {
-		t.Fatal(err)
-	}
-	if err := p.Signal(os.Interrupt); err != nil {
-		t.Fatal(err)
-	}
-
+	_ = p.Signal(os.Interrupt)
+	_ = p.Signal(os.Interrupt)
+	_ = p.Signal(os.Interrupt)
 	close(taskCanFinish)
 	<-done
-
 	mu.Lock()
 	code := exitCode
 	mu.Unlock()
@@ -210,7 +157,7 @@ func TestFlow_Main_signal_hard_timeout(t *testing.T) {
 	}
 }
 
-func TestFlow_Main_default_hooks(t *testing.T) {
+func TestFlow_Main_default_hooks(_ *testing.T) {
 	restoreOsExit := osExit
 	defer func() { osExit = restoreOsExit }()
 	osExit = func(int) {}
@@ -225,7 +172,6 @@ func TestMain_signal_graceful(t *testing.T) {
 	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
-
 	restoreOsExit := osExit
 	defer func() { osExit = restoreOsExit }()
 	var exitCode int
