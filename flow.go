@@ -8,10 +8,10 @@ import (
 	"os"
 	"os/signal"
 	"sort"
-
-	"github.com/goyek/goyek/v3/internal"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/goyek/goyek/v3/internal"
 )
 
 // Flow is the root type of the package.
@@ -444,6 +444,7 @@ func (f *Flow) Main(args []string, opts ...Option) {
 
 		// Consume all other signals if osExit was mocked and did not exit.
 		for range c {
+			fmt.Fprintln(out, "extra interrupt ignored")
 		}
 	}()
 

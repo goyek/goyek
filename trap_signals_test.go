@@ -8,8 +8,10 @@ import (
 	"testing"
 )
 
+const windows = "windows"
+
 func TestFlow_Main_signal_graceful(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
 
@@ -59,7 +61,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 
 func TestFlow_Main_signal_hard(t *testing.T) {
 	t.Skip("skipping flaky test in this environment")
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
 
@@ -92,7 +94,7 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	taskCanFinish := make(chan struct{})
 	f.Define(Task{
 		Name: "task",
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			<-taskCanFinish
 		},
 	})
@@ -130,7 +132,7 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 }
 
 func TestMain_signal_graceful(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("skipping signal test on windows")
 	}
 
