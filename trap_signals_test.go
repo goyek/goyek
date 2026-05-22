@@ -8,8 +8,13 @@ import (
 	"testing"
 )
 
+const (
+	windows = "windows"
+	task    = "task"
+)
+
 func TestFlow_Main_signal_graceful(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("sending signals is not supported on Windows")
 	}
 
@@ -33,7 +38,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	f := &Flow{}
 	taskCanFinish := make(chan struct{})
 	f.Define(Task{
-		Name: "task",
+		Name: task,
 		Action: func(a *A) {
 			<-a.Context().Done()
 			<-taskCanFinish
@@ -42,7 +47,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 
 	doneCh := make(chan struct{})
 	go func() {
-		f.Main([]string{"task"})
+		f.Main([]string{task})
 		close(doneCh)
 	}()
 
@@ -63,7 +68,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 }
 
 func TestFlow_Main_signal_hard(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("sending signals is not supported on Windows")
 	}
 
@@ -91,14 +96,14 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 
 	f := &Flow{}
 	f.Define(Task{
-		Name: "task",
+		Name: task,
 		Action: func(a *A) {
 			<-a.Context().Done()
 			select {} // block forever
 		},
 	})
 
-	go f.Main([]string{"task"})
+	go f.Main([]string{task})
 
 	<-trapSignalsHookCh
 	p, _ := os.FindProcess(os.Getpid())
@@ -128,7 +133,7 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 }
 
 func TestMain_signal_graceful(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("sending signals is not supported on Windows")
 	}
 
@@ -155,7 +160,7 @@ func TestMain_signal_graceful(t *testing.T) {
 
 	taskCanFinish := make(chan struct{})
 	Define(Task{
-		Name: "task",
+		Name: task,
 		Action: func(a *A) {
 			<-a.Context().Done()
 			<-taskCanFinish
@@ -164,7 +169,7 @@ func TestMain_signal_graceful(t *testing.T) {
 
 	doneCh := make(chan struct{})
 	go func() {
-		Main([]string{"task"})
+		Main([]string{task})
 		close(doneCh)
 	}()
 
@@ -201,11 +206,11 @@ func TestFlow_Main_pass(t *testing.T) {
 	f := &Flow{}
 	f.SetOutput(io.Discard)
 	f.Define(Task{
-		Name:   "task",
-		Action: func(a *A) {},
+		Name:   task,
+		Action: func(_ *A) {},
 	})
 
-	f.Main([]string{"task"})
+	f.Main([]string{task})
 
 	mu.Lock()
 	defer mu.Unlock()

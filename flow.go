@@ -407,6 +407,11 @@ func Main(args []string, opts ...Option) {
 func (f *Flow) Main(args []string, opts ...Option) {
 	out := internal.SyncWriter(f.Output())
 
+	// ensure that the same synced writer is used for the whole run
+	origOut := f.output
+	f.output = out
+	defer func() { f.output = origOut }()
+
 	// trap Ctrl+C and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	handlerDone := make(chan struct{})
