@@ -28,6 +28,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   not canceled when the task finished.
 - `A.TempDir` now truncates the sanitized task name to prevent
   "file name too long" errors.
+- Enhance signal handling to support `SIGTERM` and provide more robust,
+  cross-platform termination. `Main` now drains redundant signals
+  and is better synchronized to avoid race conditions.
 - Fix races when task output is written from multiple goroutines
   by automatically wrapping the output in a synchronized writer.
 - Document that `Flow` and `DefinedTask` are not safe for concurrent use.
