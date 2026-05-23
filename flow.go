@@ -430,14 +430,12 @@ func (f *Flow) Main(args []string, opts ...Option) {
 		for {
 			select {
 			case <-c:
-				goto drain
+				continue
 			default:
-				goto second
 			}
-		drain:
+			break
 		}
 
-	second:
 		trapSignalsSecondHook()
 		select {
 		case <-c:

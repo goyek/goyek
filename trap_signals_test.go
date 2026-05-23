@@ -35,7 +35,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	f := &Flow{}
 	f.Define(Task{
 		Name: task,
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			<-taskCanFinish
 		},
 	})
@@ -84,25 +84,18 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		mu.Unlock()
 	}
 
-	taskStarted := make(chan struct{})
+	taskCanFinish := make(chan struct{})
 	f := &Flow{}
 	f.Define(Task{
 		Name: task,
-		Action: func(a *A) {
-			close(taskStarted)
-			select {
-			case <-a.Context().Done():
-			case <-time.After(10 * time.Second):
-			}
+		Action: func(_ *A) {
+			<-taskCanFinish
 		},
 	})
 
 	trapSignalsHook = func() {
-		go func() {
-			<-taskStarted
-			p, _ := os.FindProcess(os.Getpid())
-			_ = p.Signal(os.Interrupt)
-		}()
+		p, _ := os.FindProcess(os.Getpid())
+		_ = p.Signal(os.Interrupt)
 	}
 	defer func() { trapSignalsHook = func() {} }()
 
@@ -118,6 +111,10 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		close(done)
 	}()
 
+	runtime.Gosched()
+	time.Sleep(10 * time.Millisecond)
+
+	close(taskCanFinish)
 	<-done
 
 	mu.Lock()
@@ -153,7 +150,7 @@ func TestMain_signal_graceful(t *testing.T) {
 
 	Define(Task{
 		Name: task,
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			<-taskCanFinish
 		},
 	})
@@ -201,7 +198,7 @@ func TestFlow_Main_pass(t *testing.T) {
 	f := &Flow{}
 	f.Define(Task{
 		Name: task,
-		Action: func(a *A) {
+		Action: func(_ *A) {
 		},
 	})
 
@@ -232,7 +229,7 @@ func TestFlow_Main_default_hooks(t *testing.T) {
 	f := &Flow{}
 	f.Define(Task{
 		Name: task,
-		Action: func(a *A) {
+		Action: func(_ *A) {
 		},
 	})
 
