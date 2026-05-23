@@ -244,6 +244,67 @@ func TestFlow_Main_default_hooks(t *testing.T) {
 	}
 }
 
+func TestFlow_Main_signal_hard_timeout(t *testing.T) {
+	if runtime.GOOS == windows {
+		t.Skip("sending signals is not supported on Windows")
+	}
+
+	restore := mockOsExit()
+	defer restore()
+
+	var (
+		mu       sync.Mutex
+		exitCode int
+	)
+	osExit = func(code int) {
+		mu.Lock()
+		exitCode = code
+		mu.Unlock()
+	}
+
+	taskCanFinish := make(chan struct{})
+	f := &Flow{}
+	f.Define(Task{
+		Name: task,
+		Action: func(_ *A) {
+			<-taskCanFinish
+		},
+	})
+
+	trapSignalsHook = func() {
+		p, _ := os.FindProcess(os.Getpid())
+		_ = p.Signal(os.Interrupt)
+		_ = p.Signal(os.Interrupt) // trigger drain loop
+	}
+	defer func() { trapSignalsHook = func() {} }()
+
+	trapSignalsSecondHook = func() {
+		p, _ := os.FindProcess(os.Getpid())
+		_ = p.Signal(os.Interrupt)
+		_ = p.Signal(os.Interrupt) // trigger final loop
+	}
+	defer func() { trapSignalsSecondHook = func() {} }()
+
+	done := make(chan struct{})
+	go func() {
+		f.Main([]string{task})
+		close(done)
+	}()
+
+	runtime.Gosched()
+	time.Sleep(10 * time.Millisecond)
+
+	close(taskCanFinish)
+	<-done
+
+	mu.Lock()
+	got := exitCode
+	mu.Unlock()
+	if got != exitCodeFail {
+		t.Errorf("exit code: got %d, want %d", got, exitCodeFail)
+	}
+}
+
 func mockOsExit() func() {
 	orig := osExit
 	return func() {
