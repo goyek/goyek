@@ -39,6 +39,7 @@ func TestFlow_Main_signal(t *testing.T) {
 	}
 
 	f := &Flow{}
+	f.SetOutput(io.Discard)
 	taskCanFinish := make(chan struct{})
 	f.Define(Task{
 		Name: task,
@@ -58,7 +59,10 @@ func TestFlow_Main_signal(t *testing.T) {
 	_ = p.Signal(syscall.SIGTERM)
 
 	// Wait a bit to ensure the signal is processed and context is canceled
-	time.Sleep(100 * time.Millisecond)
+	for i := 0; i < 10; i++ {
+		time.Sleep(10 * time.Millisecond)
+		runtime.Gosched()
+	}
 
 	close(taskCanFinish)
 	<-done
@@ -85,7 +89,11 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		mu.Lock()
 		defer mu.Unlock()
 		exitCode = code
-		close(exitCalled)
+		select {
+		case <-exitCalled:
+		default:
+			close(exitCalled)
+		}
 	}
 
 	origTrapSignalsHook := trapSignalsHook
@@ -95,7 +103,15 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		close(hookCalled)
 	}
 
+	origTrapSignalsSecondHook := trapSignalsSecondHook
+	defer func() { trapSignalsSecondHook = origTrapSignalsSecondHook }()
+	secondHookCalled := make(chan struct{})
+	trapSignalsSecondHook = func() {
+		close(secondHookCalled)
+	}
+
 	f := &Flow{}
+	f.SetOutput(io.Discard)
 	taskCanFinish := make(chan struct{})
 	f.Define(Task{
 		Name: task,
@@ -104,24 +120,107 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		},
 	})
 
-	go f.Main([]string{task})
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		f.Main([]string{task})
+	}()
 
 	<-hookCalled
 	p, _ := os.FindProcess(os.Getpid())
 	_ = p.Signal(os.Interrupt)
+	_ = p.Signal(os.Interrupt) // redundant signal to exercise drain loop
 
-	// Wait a bit to ensure the first signal is processed
-	time.Sleep(100 * time.Millisecond)
-
+	<-secondHookCalled
 	_ = p.Signal(os.Interrupt)
 
 	<-exitCalled
+
+	close(taskCanFinish)
+	<-done
 
 	mu.Lock()
 	defer mu.Unlock()
 	if exitCode != 1 {
 		t.Errorf("expected exit code 1, got %d", exitCode)
 	}
+}
+
+func TestFlow_Main_signal_hard_timeout(t *testing.T) {
+	if runtime.GOOS == windows {
+		t.Skip("skipping on " + windows)
+	}
+
+	origOsExit := osExit
+	defer func() { osExit = origOsExit }()
+
+	var mu sync.Mutex
+	var exitCode int
+	osExit = func(code int) {
+		mu.Lock()
+		defer mu.Unlock()
+		exitCode = code
+	}
+
+	origTrapSignalsHook := trapSignalsHook
+	defer func() { trapSignalsHook = origTrapSignalsHook }()
+	hookCalled := make(chan struct{})
+	trapSignalsHook = func() {
+		close(hookCalled)
+	}
+
+	origTrapSignalsSecondHook := trapSignalsSecondHook
+	defer func() { trapSignalsSecondHook = origTrapSignalsSecondHook }()
+	secondHookCalled := make(chan struct{})
+	trapSignalsSecondHook = func() {
+		close(secondHookCalled)
+	}
+
+	f := &Flow{}
+	f.SetOutput(io.Discard)
+	taskCanFinish := make(chan struct{})
+	f.Define(Task{
+		Name: task,
+		Action: func(_ *A) {
+			<-taskCanFinish
+		},
+	})
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		f.Main([]string{task})
+	}()
+
+	<-hookCalled
+	p, _ := os.FindProcess(os.Getpid())
+	_ = p.Signal(os.Interrupt)
+
+	<-secondHookCalled
+	// Send extra signals to exercise the consumer loop
+	_ = p.Signal(os.Interrupt)
+	_ = p.Signal(os.Interrupt)
+
+	close(taskCanFinish)
+	<-done
+
+	mu.Lock()
+	defer mu.Unlock()
+	if exitCode != 1 {
+		t.Errorf("expected exit code 1, got %d", exitCode)
+	}
+}
+
+func TestFlow_Main_default_hooks(_ *testing.T) {
+	origOsExit := osExit
+	defer func() { osExit = origOsExit }()
+	osExit = func(int) {}
+
+	f := &Flow{}
+	f.SetOutput(io.Discard)
+	f.Define(Task{Name: task})
+
+	f.Main([]string{task})
 }
 
 func TestFlow_Main_pass(t *testing.T) {

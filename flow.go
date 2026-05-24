@@ -465,17 +465,17 @@ func (f *Flow) Main(args []string, opts ...Option) {
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	err := f.Execute(ctx, args, opts...)
+	if errors.Is(err, context.Canceled) {
+		return exitCodeFail
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return exitCodeFail
+	}
 	if ctx.Err() != nil {
 		return exitCodeFail
 	}
 	var ferr *FailError
 	if errors.As(err, &ferr) {
-		return exitCodeFail
-	}
-	if errors.Is(err, context.Canceled) {
-		return exitCodeFail
-	}
-	if errors.Is(err, context.DeadlineExceeded) {
 		return exitCodeFail
 	}
 	if err != nil {
