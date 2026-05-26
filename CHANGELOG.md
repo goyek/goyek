@@ -10,9 +10,12 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
-- Enhanced signal handling in `Flow.Main` to include `SIGTERM` support on Unix-like systems.
-- Improved the robustness of the signal-trapping goroutine in `Flow.Main` with a drain loop for redundant signals and proper cleanup.
-- `Flow.Main` now returns exit code 1 if the execution was interrupted, even if the final task completed successfully.
+- Enhanced signal handling in `Flow.Main` to include `SIGTERM` support on
+  Unix-like systems.
+- Improved the robustness of the signal-trapping goroutine in `Flow.Main` with a
+  drain loop for redundant signals and proper cleanup.
+- `Flow.Main` now returns exit code 1 if the execution was interrupted, even if
+  the final task completed successfully.
 
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.

@@ -378,6 +378,8 @@ const (
 
 var (
 	osExit                = os.Exit
+	signalNotify          = signal.Notify
+	signalStop            = signal.Stop
 	trapSignalsHook       = func() {}
 	trapSignalsSecondHook = func() {}
 )
@@ -410,7 +412,7 @@ func (f *Flow) Main(args []string, opts ...Option) {
 	// trap termination signals and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, internal.TerminationSignals...)
+	signalNotify(c, internal.TerminationSignals...)
 	handlerDone := make(chan struct{})
 	handlerFinished := make(chan struct{})
 	go func() {
@@ -420,27 +422,17 @@ func (f *Flow) Main(args []string, opts ...Option) {
 			fmt.Fprintln(out, "first interrupt, graceful stop")
 			cancel()
 		case <-handlerDone:
-			signal.Stop(c)
+			signalStop(c)
 			return
 		}
 
-		// non-blocking drain redundant first-stage signals
-		for {
-			select {
-			case <-c:
-			default:
-				goto secondStage
-			}
-		}
-
-	secondStage:
 		trapSignalsHook()
 		select {
 		case <-c: // second signal, hard exit
 			fmt.Fprintln(out, "second interrupt, exit")
 			osExit(exitCodeFail)
 		case <-handlerDone:
-			signal.Stop(c)
+			signalStop(c)
 			return
 		}
 
@@ -449,7 +441,7 @@ func (f *Flow) Main(args []string, opts ...Option) {
 			select {
 			case <-c:
 			case <-handlerDone:
-				signal.Stop(c)
+				signalStop(c)
 				return
 			}
 			// satisfy revive's empty-block

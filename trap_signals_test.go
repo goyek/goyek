@@ -14,14 +14,14 @@ const (
 )
 
 func TestFlow_Main_signal_graceful(t *testing.T) {
-	if runtime.GOOS == windows {
-		t.Skip("sending signals is not supported on Windows")
-	}
-
 	origOsExit := osExit
+	origSignalNotify := signalNotify
+	origSignalStop := signalStop
 	origTrapSignalsHook := trapSignalsHook
 	defer func() {
 		osExit = origOsExit
+		signalNotify = origSignalNotify
+		signalStop = origSignalStop
 		trapSignalsHook = origTrapSignalsHook
 	}()
 
@@ -32,6 +32,15 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 		defer mu.Unlock()
 		exitCode = code
 	}
+
+	var muSig sync.Mutex
+	var sigChan chan<- os.Signal
+	signalNotify = func(c chan<- os.Signal, sigs ...os.Signal) {
+		muSig.Lock()
+		defer muSig.Unlock()
+		sigChan = c
+	}
+	signalStop = func(c chan<- os.Signal) {}
 
 	hookCalled := make(chan struct{})
 	trapSignalsHook = func() {
@@ -54,17 +63,21 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 		close(done)
 	}()
 
-	p, _ := os.FindProcess(os.Getpid())
+	// Wait for the signal handler to be initialized
+	var sc chan<- os.Signal
 	for {
-		_ = p.Signal(os.Interrupt)
-		runtime.Gosched()
-		select {
-		case <-hookCalled:
-			goto graceful
-		default:
+		muSig.Lock()
+		sc = sigChan
+		muSig.Unlock()
+		if sc != nil {
+			break
 		}
+		runtime.Gosched()
 	}
-graceful:
+
+	sc <- os.Interrupt
+	<-hookCalled
+
 	close(taskCanFinish)
 	<-done
 
@@ -76,17 +89,15 @@ graceful:
 }
 
 func TestFlow_Main_signal_hard(t *testing.T) {
-	if runtime.GOOS == windows {
-		t.Skip("sending signals is not supported on Windows")
-	}
-
 	origOsExit := osExit
+	origSignalNotify := signalNotify
+	origSignalStop := signalStop
 	origTrapSignalsHook := trapSignalsHook
-	origTrapSignalsSecondHook := trapSignalsSecondHook
 	defer func() {
 		osExit = origOsExit
+		signalNotify = origSignalNotify
+		signalStop = origSignalStop
 		trapSignalsHook = origTrapSignalsHook
-		trapSignalsSecondHook = origTrapSignalsSecondHook
 	}()
 
 	var mu sync.Mutex
@@ -97,13 +108,18 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		exitCode = code
 	}
 
+	var muSig sync.Mutex
+	var sigChan chan<- os.Signal
+	signalNotify = func(c chan<- os.Signal, sigs ...os.Signal) {
+		muSig.Lock()
+		defer muSig.Unlock()
+		sigChan = c
+	}
+	signalStop = func(c chan<- os.Signal) {}
+
 	hookCalled := make(chan struct{})
 	trapSignalsHook = func() {
 		close(hookCalled)
-	}
-	secondHookCalled := make(chan struct{})
-	trapSignalsSecondHook = func() {
-		close(secondHookCalled)
 	}
 
 	flow := &Flow{}
@@ -117,47 +133,49 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 
 	go flow.Main([]string{task})
 
-	p, _ := os.FindProcess(os.Getpid())
-
+	// Wait for the signal handler to be initialized
+	var sc chan<- os.Signal
 	for {
-		_ = p.Signal(os.Interrupt)
-		runtime.Gosched()
-		select {
-		case <-hookCalled:
-			goto secondSignal
-		default:
+		muSig.Lock()
+		sc = sigChan
+		muSig.Unlock()
+		if sc != nil {
+			break
 		}
+		runtime.Gosched()
 	}
 
-secondSignal:
+	sc <- os.Interrupt
+	<-hookCalled
+	sc <- os.Interrupt
+
+	// We can't wait on Main's done channel here because Main will call osExit,
+	// and in our mock it just sets a variable and returns, so Main will continue
+	// and then potentially wait on handlerFinished, but the signal handler
+	// goroutine might still be running.
+	// However, osExit(exitCodeFail) is called before wait on handlerFinished.
+	// Actually, osExit is the LAST thing Main does.
+	// Wait for exitCode to be set
 	for {
-		_ = p.Signal(os.Interrupt)
-		runtime.Gosched()
-		select {
-		case <-secondHookCalled:
-			goto finished
-		default:
+		mu.Lock()
+		code := exitCode
+		mu.Unlock()
+		if code == 1 {
+			break
 		}
-	}
-
-finished:
-
-	mu.Lock()
-	defer mu.Unlock()
-	if exitCode != 1 {
-		t.Errorf("expected exit code 1, got %d", exitCode)
+		runtime.Gosched()
 	}
 }
 
 func TestMain_signal_graceful(t *testing.T) {
-	if runtime.GOOS == windows {
-		t.Skip("sending signals is not supported on Windows")
-	}
-
 	origOsExit := osExit
+	origSignalNotify := signalNotify
+	origSignalStop := signalStop
 	origTrapSignalsHook := trapSignalsHook
 	defer func() {
 		osExit = origOsExit
+		signalNotify = origSignalNotify
+		signalStop = origSignalStop
 		trapSignalsHook = origTrapSignalsHook
 	}()
 
@@ -168,6 +186,15 @@ func TestMain_signal_graceful(t *testing.T) {
 		defer mu.Unlock()
 		exitCode = code
 	}
+
+	var muSig sync.Mutex
+	var sigChan chan<- os.Signal
+	signalNotify = func(c chan<- os.Signal, sigs ...os.Signal) {
+		muSig.Lock()
+		defer muSig.Unlock()
+		sigChan = c
+	}
+	signalStop = func(c chan<- os.Signal) {}
 
 	hookCalled := make(chan struct{})
 	trapSignalsHook = func() {
@@ -192,17 +219,21 @@ func TestMain_signal_graceful(t *testing.T) {
 		close(done)
 	}()
 
-	p, _ := os.FindProcess(os.Getpid())
+	// Wait for the signal handler to be initialized
+	var sc chan<- os.Signal
 	for {
-		_ = p.Signal(os.Interrupt)
-		runtime.Gosched()
-		select {
-		case <-hookCalled:
-			goto gracefulMain
-		default:
+		muSig.Lock()
+		sc = sigChan
+		muSig.Unlock()
+		if sc != nil {
+			break
 		}
+		runtime.Gosched()
 	}
-gracefulMain:
+
+	sc <- os.Interrupt
+	<-hookCalled
+
 	close(taskCanFinish)
 	<-done
 
