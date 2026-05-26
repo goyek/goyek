@@ -35,12 +35,12 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 
 	var muSig sync.Mutex
 	var sigChan chan<- os.Signal
-	signalNotify = func(c chan<- os.Signal, sigs ...os.Signal) {
+	signalNotify = func(c chan<- os.Signal, _ ...os.Signal) {
 		muSig.Lock()
 		defer muSig.Unlock()
 		sigChan = c
 	}
-	signalStop = func(c chan<- os.Signal) {}
+	signalStop = func(_ chan<- os.Signal) {}
 
 	hookCalled := make(chan struct{})
 	trapSignalsHook = func() {
@@ -88,7 +88,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	}
 }
 
-func TestFlow_Main_signal_hard(t *testing.T) {
+func TestFlow_Main_signal_hard(_ *testing.T) {
 	origOsExit := osExit
 	origSignalNotify := signalNotify
 	origSignalStop := signalStop
@@ -110,12 +110,12 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 
 	var muSig sync.Mutex
 	var sigChan chan<- os.Signal
-	signalNotify = func(c chan<- os.Signal, sigs ...os.Signal) {
+	signalNotify = func(c chan<- os.Signal, _ ...os.Signal) {
 		muSig.Lock()
 		defer muSig.Unlock()
 		sigChan = c
 	}
-	signalStop = func(c chan<- os.Signal) {}
+	signalStop = func(_ chan<- os.Signal) {}
 
 	hookCalled := make(chan struct{})
 	trapSignalsHook = func() {
@@ -168,17 +168,10 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 }
 
 func TestMain_signal_graceful(t *testing.T) {
-	origOsExit := osExit
-	origSignalNotify := signalNotify
-	origSignalStop := signalStop
-	origTrapSignalsHook := trapSignalsHook
+	origOsExit, origSignalNotify, origSignalStop, origTrapSignalsHook := osExit, signalNotify, signalStop, trapSignalsHook
 	defer func() {
-		osExit = origOsExit
-		signalNotify = origSignalNotify
-		signalStop = origSignalStop
-		trapSignalsHook = origTrapSignalsHook
+		osExit, signalNotify, signalStop, trapSignalsHook = origOsExit, origSignalNotify, origSignalStop, origTrapSignalsHook
 	}()
-
 	var mu sync.Mutex
 	exitCode := -1
 	osExit = func(code int) {
@@ -186,21 +179,16 @@ func TestMain_signal_graceful(t *testing.T) {
 		defer mu.Unlock()
 		exitCode = code
 	}
-
 	var muSig sync.Mutex
 	var sigChan chan<- os.Signal
-	signalNotify = func(c chan<- os.Signal, sigs ...os.Signal) {
+	signalNotify = func(c chan<- os.Signal, _ ...os.Signal) {
 		muSig.Lock()
 		defer muSig.Unlock()
 		sigChan = c
 	}
-	signalStop = func(c chan<- os.Signal) {}
-
+	signalStop = func(_ chan<- os.Signal) {}
 	hookCalled := make(chan struct{})
-	trapSignalsHook = func() {
-		close(hookCalled)
-	}
-
+	trapSignalsHook = func() { close(hookCalled) }
 	origDefaultFlow := DefaultFlow
 	defer func() { DefaultFlow = origDefaultFlow }()
 	DefaultFlow = &Flow{}
@@ -208,9 +196,7 @@ func TestMain_signal_graceful(t *testing.T) {
 	taskCanFinish := make(chan struct{})
 	DefaultFlow.Define(Task{
 		Name: task,
-		Action: func(_ *A) {
-			<-taskCanFinish
-		},
+		Action: func(_ *A) { <-taskCanFinish },
 	})
 
 	done := make(chan struct{})
