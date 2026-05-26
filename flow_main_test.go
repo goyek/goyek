@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 	"io"
-	"strings"
 	"testing"
 )
 
 func TestFlow_main(t *testing.T) {
 	flow := &Flow{}
-	flow.SetOutput(&strings.Builder{})
+	flow.SetOutput(io.Discard)
 	flow.Define(Task{Name: "task"})
 	flow.Define(Task{Name: "failing", Action: func(a *A) { a.Fail() }})
 
@@ -92,10 +91,10 @@ func TestExecute(t *testing.T) {
 	}
 }
 
-func TestMain(t *testing.T) {
+func TestMain(_ *testing.T) {
 	origOsExit := osExit
 	defer func() { osExit = origOsExit }()
-	osExit = func(code int) {}
+	osExit = func(_ int) {}
 
 	task := Define(Task{Name: "task-main"})
 	defer Undefine(task)
@@ -103,7 +102,7 @@ func TestMain(t *testing.T) {
 	Main([]string{"task-main"})
 }
 
-func TestPrint(t *testing.T) {
+func TestPrint(_ *testing.T) {
 	flow := &Flow{}
 	flow.SetOutput(io.Discard)
 	flow.Define(Task{Name: "task", Usage: "usage"})
