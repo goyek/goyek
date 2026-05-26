@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"testing"
+	"time"
 )
 
 func TestFlow_main(t *testing.T) {
@@ -161,6 +162,66 @@ func TestFlow_main_deadline(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // pre-cancel the context
+
+	if got := flow.main(ctx, []string{"task"}); got != 1 {
+		t.Errorf("got: %d; want: 1", got)
+	}
+}
+
+func TestFlow_main_ctx_canceled(t *testing.T) {
+	flow := &Flow{}
+	flow.SetOutput(io.Discard)
+	flow.Define(Task{Name: "task"})
+
+	// Simulate context cancellation error returned from Execute
+	// We need to use a middleware to return the specific error
+	flow.UseExecutor(func(next Executor) Executor {
+		return func(in ExecuteInput) error {
+			return context.Canceled
+		}
+	})
+
+	if got := flow.main(context.Background(), []string{"task"}); got != 1 {
+		t.Errorf("got: %d; want: 1", got)
+	}
+}
+
+func TestFlow_main_ctx_deadline(t *testing.T) {
+	flow := &Flow{}
+	flow.SetOutput(io.Discard)
+	flow.Define(Task{Name: "task"})
+
+	flow.UseExecutor(func(next Executor) Executor {
+		return func(in ExecuteInput) error {
+			return context.DeadlineExceeded
+		}
+	})
+
+	if got := flow.main(context.Background(), []string{"task"}); got != 1 {
+		t.Errorf("got: %d; want: 1", got)
+	}
+}
+
+func TestFlow_main_deadline_exceeded(t *testing.T) {
+	flow := &Flow{}
+	flow.SetOutput(io.Discard)
+	flow.Define(Task{Name: "task"})
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Hour))
+	defer cancel()
+
+	if got := flow.main(ctx, []string{"task"}); got != 1 {
+		t.Errorf("got: %d; want: 1", got)
+	}
+}
+
+func TestFlow_main_ctx_err(t *testing.T) {
+	flow := &Flow{}
+	flow.SetOutput(io.Discard)
+	ctx, cancel := context.WithCancel(context.Background())
+	flow.Define(Task{Name: "task", Action: func(_ *A) {
+		cancel()
+	}})
 
 	if got := flow.main(ctx, []string{"task"}); got != 1 {
 		t.Errorf("got: %d; want: 1", got)

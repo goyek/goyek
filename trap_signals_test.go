@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	windows = "windows"
-	task    = "task"
+	task = "task"
 )
 
 func setupTest(flow *Flow, run func([]string, ...Option)) (chan<- os.Signal, <-chan struct{}, chan struct{}, <-chan struct{}) {
@@ -71,6 +70,10 @@ func TestFlow_Main_signal_hard(_ *testing.T) {
 	trapSignalsSecondHook = func() { close(secondHookCalled) }
 	sc <- os.Interrupt
 	<-secondHookCalled
+
+	// third signal to cover the consumer loop
+	sc <- os.Interrupt
+
 	close(taskCanFinish)
 	<-done
 }
