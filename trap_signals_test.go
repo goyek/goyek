@@ -8,9 +8,7 @@ import (
 	"testing"
 )
 
-const (
-	task = "task"
-)
+const task = "task"
 
 func setupTest(flow *Flow, run func([]string, ...Option)) (chan<- os.Signal, <-chan struct{}, chan struct{}, <-chan struct{}) {
 	var muSig sync.Mutex
@@ -58,9 +56,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 
 func TestFlow_Main_signal_hard(_ *testing.T) {
 	origOsExit, origSignalNotify, origSignalStop, origTrapSignalsHook, origTrapSignalsSecondHook := osExit, signalNotify, signalStop, trapSignalsHook, trapSignalsSecondHook
-	defer func() {
-		osExit, signalNotify, signalStop, trapSignalsHook, trapSignalsSecondHook = origOsExit, origSignalNotify, origSignalStop, origTrapSignalsHook, origTrapSignalsSecondHook
-	}()
+	defer func() { osExit, signalNotify, signalStop, trapSignalsHook, trapSignalsSecondHook = origOsExit, origSignalNotify, origSignalStop, origTrapSignalsHook, origTrapSignalsSecondHook }()
 	osExit = func(_ int) {}
 	flow := &Flow{}
 	sc, hookCalled, taskCanFinish, done := setupTest(flow, flow.Main)
@@ -70,10 +66,7 @@ func TestFlow_Main_signal_hard(_ *testing.T) {
 	trapSignalsSecondHook = func() { close(secondHookCalled) }
 	sc <- os.Interrupt
 	<-secondHookCalled
-
-	// third signal to cover the consumer loop
 	sc <- os.Interrupt
-
 	close(taskCanFinish)
 	<-done
 }

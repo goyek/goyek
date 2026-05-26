@@ -175,8 +175,8 @@ func TestFlow_main_ctx_canceled(t *testing.T) {
 
 	// Simulate context cancellation error returned from Execute
 	// We need to use a middleware to return the specific error
-	flow.UseExecutor(func(next Executor) Executor {
-		return func(in ExecuteInput) error {
+	flow.UseExecutor(func(_ Executor) Executor {
+		return func(_ ExecuteInput) error {
 			return context.Canceled
 		}
 	})
@@ -191,8 +191,8 @@ func TestFlow_main_ctx_deadline(t *testing.T) {
 	flow.SetOutput(io.Discard)
 	flow.Define(Task{Name: "task"})
 
-	flow.UseExecutor(func(next Executor) Executor {
-		return func(in ExecuteInput) error {
+	flow.UseExecutor(func(_ Executor) Executor {
+		return func(_ ExecuteInput) error {
 			return context.DeadlineExceeded
 		}
 	})
