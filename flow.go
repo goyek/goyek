@@ -445,7 +445,13 @@ func (f *Flow) Main(args []string, opts ...Option) {
 		}
 
 		trapSignalsSecondHook()
-		for range c {
+		for {
+			select {
+			case <-c:
+			case <-handlerDone:
+				signal.Stop(c)
+				return
+			}
 			// satisfy revive's empty-block
 			fmt.Fprint(io.Discard)
 		}

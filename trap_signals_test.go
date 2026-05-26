@@ -8,8 +8,13 @@ import (
 	"testing"
 )
 
+const (
+	windows = "windows"
+	task    = "task"
+)
+
 func TestFlow_Main_signal_graceful(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("sending signals is not supported on Windows")
 	}
 
@@ -37,15 +42,15 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	flow.SetOutput(io.Discard)
 	taskCanFinish := make(chan struct{})
 	flow.Define(Task{
-		Name: "task",
-		Action: func(a *A) {
+		Name: task,
+		Action: func(_ *A) {
 			<-taskCanFinish
 		},
 	})
 
 	done := make(chan struct{})
 	go func() {
-		flow.Main([]string{"task"})
+		flow.Main([]string{task})
 		close(done)
 	}()
 
@@ -71,7 +76,7 @@ graceful:
 }
 
 func TestFlow_Main_signal_hard(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("sending signals is not supported on Windows")
 	}
 
@@ -104,13 +109,13 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	flow := &Flow{}
 	flow.SetOutput(io.Discard)
 	flow.Define(Task{
-		Name: "task",
-		Action: func(a *A) {
+		Name: task,
+		Action: func(_ *A) {
 			select {} // block forever
 		},
 	})
 
-	go flow.Main([]string{"task"})
+	go flow.Main([]string{task})
 
 	p, _ := os.FindProcess(os.Getpid())
 
@@ -145,7 +150,7 @@ finished:
 }
 
 func TestMain_signal_graceful(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		t.Skip("sending signals is not supported on Windows")
 	}
 
@@ -175,15 +180,15 @@ func TestMain_signal_graceful(t *testing.T) {
 	DefaultFlow.SetOutput(io.Discard)
 	taskCanFinish := make(chan struct{})
 	DefaultFlow.Define(Task{
-		Name: "task",
-		Action: func(a *A) {
+		Name: task,
+		Action: func(_ *A) {
 			<-taskCanFinish
 		},
 	})
 
 	done := make(chan struct{})
 	go func() {
-		Main([]string{"task"})
+		Main([]string{task})
 		close(done)
 	}()
 
@@ -222,11 +227,11 @@ func TestFlow_Main_pass(t *testing.T) {
 
 	flow := &Flow{}
 	flow.SetOutput(io.Discard)
-	flow.Define(Task{Name: "task"})
+	flow.Define(Task{Name: task})
 
 	done := make(chan struct{})
 	go func() {
-		flow.Main([]string{"task"})
+		flow.Main([]string{task})
 		close(done)
 	}()
 	<-done
