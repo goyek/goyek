@@ -28,6 +28,10 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   not canceled when the task finished.
 - `A.TempDir` now truncates the sanitized task name to prevent
   "file name too long" errors.
+- Support `SIGTERM` in `Flow.Main` for graceful shutdowns in environments
+  like Kubernetes.
+- Prevent goroutine and resource leaks in `Flow.Main` by properly
+  stopping the signal handler when the run finishes.
 - Fix races when task output is written from multiple goroutines
   by automatically wrapping the output in a synchronized writer.
 - Document that `Flow` and `DefinedTask` are not safe for concurrent use.

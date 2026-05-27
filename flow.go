@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/goyek/goyek/v3/internal"
 )
 
 // Flow is the root type of the package.
@@ -397,33 +399,53 @@ func Main(args []string, opts ...Option) {
 //
 // Calls [Usage] when invalid args are provided.
 func (f *Flow) Main(args []string, opts ...Option) {
-	out := f.Output()
+	os.Exit(f.runMain(args, opts...))
+}
 
-	// trap Ctrl+C and call cancel on the context
+func (f *Flow) runMain(args []string, opts ...Option) int {
+	out := internal.SyncWriter(f.Output())
+
+	// trap signals and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		<-c // first signal, cancel context
-		fmt.Fprintln(out, "first interrupt, graceful stop")
-		cancel()
+	defer cancel()
 
-		<-c // second signal, hard exit
-		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(exitCodeFail)
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, append(internal.TerminationSignals, os.Interrupt)...)
+	defer signal.Stop(sigChan)
+
+	handlerDone := make(chan struct{})
+	handlerFinished := make(chan struct{})
+	go func() {
+		defer close(handlerFinished)
+		select {
+		case <-sigChan: // first signal, cancel context
+			fmt.Fprintln(out, "first interrupt, graceful stop")
+			cancel()
+		case <-handlerDone:
+			return
+		}
+
+		select {
+		case <-sigChan: // second signal, hard exit
+			fmt.Fprintln(out, "second interrupt, exit")
+			os.Exit(exitCodeFail)
+		case <-handlerDone:
+		}
 	}()
 
 	exitCode := f.main(ctx, args, opts...)
-	os.Exit(exitCode)
+	close(handlerDone)
+	<-handlerFinished
+	return exitCode
 }
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	err := f.Execute(ctx, args, opts...)
-	var ferr *FailError
-	if errors.As(err, &ferr) {
+	if ctx.Err() != nil {
 		return exitCodeFail
 	}
-	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+	var ferr *FailError
+	if errors.As(err, &ferr) {
 		return exitCodeFail
 	}
 	if err != nil {
