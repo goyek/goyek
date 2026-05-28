@@ -64,3 +64,11 @@ func Test_main_usage(t *testing.T) {
 		t.Error("usage should be called for invalid input")
 	}
 }
+
+func TestFailError_Error(t *testing.T) {
+	err := &FailError{Task: "test-task"}
+	want := "task failed: test-task"
+	if got := err.Error(); got != want {
+		t.Errorf("got: %q; want: %q", got, want)
+	}
+}
