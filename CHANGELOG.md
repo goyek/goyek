@@ -10,6 +10,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
+- Add support for `SIGTERM` signal to `Flow.Main` for graceful shutdown
+  in container environments.
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
 
@@ -28,6 +30,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   not canceled when the task finished.
 - `A.TempDir` now truncates the sanitized task name to prevent
   "file name too long" errors.
+- Fix races in `Flow.Main` when signal handler and task output
+  are written simultaneously by ensuring the same synchronized
+  writer is used.
 - Fix races when task output is written from multiple goroutines
   by automatically wrapping the output in a synchronized writer.
 - Document that `Flow` and `DefinedTask` are not safe for concurrent use.
