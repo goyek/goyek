@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"testing"
+	"time"
 )
 
 type safeBuffer struct {
@@ -26,13 +26,15 @@ func (s *safeBuffer) String() string {
 	return s.sb.String()
 }
 
-func setupTest() (restore func(), sigChan chan chan<- os.Signal, exitCode *int32, mu *sync.Mutex) {
+func setupTest() (restore func(), sigChan chan chan<- os.Signal, exitCodeCalled chan int) {
 	origSignalNotify := signalNotify
 	origSignalStop := signalStop
 	origOsExit := osExit
 	origTrapSignalsHook := trapSignalsHook
 	origTrapSignalsSecondHook := trapSignalsSecondHook
 	origDefaultFlow := DefaultFlow
+
+	exitCodeCalled = make(chan int, 10)
 
 	restore = func() {
 		signalNotify = origSignalNotify
@@ -44,27 +46,20 @@ func setupTest() (restore func(), sigChan chan chan<- os.Signal, exitCode *int32
 	}
 
 	sigChan = make(chan chan<- os.Signal, 1)
-	mu = &sync.Mutex{}
 	signalNotify = func(c chan<- os.Signal, _ ...os.Signal) {
 		sigChan <- c
 	}
 	signalStop = func(_ chan<- os.Signal) {}
 
-	var code int32 = -1
-	exitCode = &code
 	osExit = func(c int) {
-		mu.Lock()
-		if atomic.LoadInt32(exitCode) == -1 {
-			atomic.StoreInt32(exitCode, int32(c)) //nolint:gosec // G115: exit code is a small integer
-		}
-		mu.Unlock()
+		exitCodeCalled <- c
 	}
 
-	return restore, sigChan, exitCode, mu
+	return restore, sigChan, exitCodeCalled
 }
 
 func TestFlow_Main_signal_graceful(t *testing.T) {
-	restore, sigChan, exitCode, _ := setupTest()
+	restore, sigChan, exitCodeCalled := setupTest()
 	defer restore()
 
 	flow := &Flow{}
@@ -93,21 +88,37 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	}()
 
 	<-taskStarted
+	// Wait for the graceful stop message to appear
+	start := time.Now()
 	for {
 		if strings.Contains(out.String(), "first interrupt, graceful stop") {
 			break
 		}
+		if time.Since(start) > 5*time.Second {
+			t.Fatal("timed out waiting for graceful stop message")
+		}
+		time.Sleep(10 * time.Millisecond)
 	}
 	close(taskCanFinish)
-	<-done
 
-	if atomic.LoadInt32(exitCode) != 1 {
-		t.Errorf("exit code should be 1, got: %d", atomic.LoadInt32(exitCode))
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Main did not return")
+	}
+
+	select {
+	case code := <-exitCodeCalled:
+		if code != 1 {
+			t.Errorf("exit code should be 1, got: %d", code)
+		}
+	default:
+		t.Error("os.Exit was not called")
 	}
 }
 
 func TestFlow_Main_signal_hard(t *testing.T) {
-	restore, sigChan, exitCode, mu := setupTest()
+	restore, sigChan, exitCodeCalled := setupTest()
 	defer restore()
 
 	flow := &Flow{}
@@ -128,28 +139,27 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		c <- os.Interrupt
 	}
 	trapSignalsSecondHook = func() {
-		c <- os.Interrupt
+		if c != nil {
+			c <- os.Interrupt
+		}
 	}
 
 	go flow.Main([]string{"task"})
 
 	<-taskStarted
-	for {
-		mu.Lock()
-		code := atomic.LoadInt32(exitCode)
-		mu.Unlock()
-		if code != -1 {
-			break
-		}
-	}
 
-	if atomic.LoadInt32(exitCode) != 1 {
-		t.Errorf("exit code should be 1, got: %d", atomic.LoadInt32(exitCode))
+	select {
+	case code := <-exitCodeCalled:
+		if code != 1 {
+			t.Errorf("exit code should be 1, got: %d", code)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out waiting for os.Exit")
 	}
 }
 
 func TestMain_signal_graceful(t *testing.T) {
-	restore, sigChan, exitCode, _ := setupTest()
+	restore, sigChan, exitCodeCalled := setupTest()
 	defer restore()
 
 	DefaultFlow = &Flow{}
@@ -178,16 +188,31 @@ func TestMain_signal_graceful(t *testing.T) {
 	}()
 
 	<-taskStarted
+	start := time.Now()
 	for {
 		if strings.Contains(out.String(), "first interrupt, graceful stop") {
 			break
 		}
+		if time.Since(start) > 5*time.Second {
+			t.Fatal("timed out waiting for graceful stop message")
+		}
+		time.Sleep(10 * time.Millisecond)
 	}
 	close(taskCanFinish)
-	<-done
 
-	if atomic.LoadInt32(exitCode) != 1 {
-		t.Errorf("exit code should be 1, got: %d", atomic.LoadInt32(exitCode))
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Main did not return")
+	}
+
+	select {
+	case code := <-exitCodeCalled:
+		if code != 1 {
+			t.Errorf("exit code should be 1, got: %d", code)
+		}
+	default:
+		t.Error("os.Exit was not called")
 	}
 }
 
@@ -195,9 +220,9 @@ func TestFlow_Main_pass(t *testing.T) {
 	origOsExit := osExit
 	defer func() { osExit = origOsExit }()
 
-	var exitCode int32 = -1
+	exitCode := make(chan int, 1)
 	osExit = func(code int) {
-		atomic.StoreInt32(&exitCode, int32(code)) //nolint:gosec // G115: exit code is a small integer
+		exitCode <- code
 	}
 
 	flow := &Flow{}
@@ -206,7 +231,12 @@ func TestFlow_Main_pass(t *testing.T) {
 
 	flow.Main([]string{"task"})
 
-	if atomic.LoadInt32(&exitCode) != 0 {
-		t.Errorf("exit code should be 0, got: %d", atomic.LoadInt32(&exitCode))
+	select {
+	case code := <-exitCode:
+		if code != 0 {
+			t.Errorf("exit code should be 0, got: %d", code)
+		}
+	default:
+		t.Error("os.Exit was not called")
 	}
 }
