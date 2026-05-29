@@ -9,56 +9,81 @@ import (
 	"testing"
 )
 
-func TestFlow_Main_signal_graceful(t *testing.T) {
+type safeBuffer struct {
+	mu sync.Mutex
+	sb strings.Builder
+}
+
+func (s *safeBuffer) Write(p []byte) (n int, err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.sb.Write(p)
+}
+
+func (s *safeBuffer) String() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.sb.String()
+}
+
+func setupTest() (restore func(), sigChan chan chan<- os.Signal, exitCode *int32, mu *sync.Mutex) {
 	origSignalNotify := signalNotify
 	origSignalStop := signalStop
 	origOsExit := osExit
 	origTrapSignalsHook := trapSignalsHook
-	defer func() {
+	origTrapSignalsSecondHook := trapSignalsSecondHook
+	origDefaultFlow := DefaultFlow
+
+	restore = func() {
 		signalNotify = origSignalNotify
 		signalStop = origSignalStop
 		osExit = origOsExit
 		trapSignalsHook = origTrapSignalsHook
-	}()
+		trapSignalsSecondHook = origTrapSignalsSecondHook
+		DefaultFlow = origDefaultFlow
+	}
 
-	var sigChan chan<- os.Signal
-	var mu sync.Mutex
-	signalNotify = func(c chan<- os.Signal, sigs ...os.Signal) {
+	sigChan = make(chan chan<- os.Signal, 1)
+	mu = &sync.Mutex{}
+	signalNotify = func(c chan<- os.Signal, _ ...os.Signal) {
+		sigChan <- c
+	}
+	signalStop = func(_ chan<- os.Signal) {}
+
+	var code int32 = -1
+	exitCode = &code
+	osExit = func(c int) {
 		mu.Lock()
-		sigChan = c
+		if atomic.LoadInt32(exitCode) == -1 {
+			atomic.StoreInt32(exitCode, int32(c)) //nolint:gosec // G115: exit code is a small integer
+		}
 		mu.Unlock()
 	}
-	signalStop = func(c chan<- os.Signal) {}
 
-	var exitCode int32 = -1
-	osExit = func(code int) {
-		atomic.StoreInt32(&exitCode, int32(code))
-	}
+	return restore, sigChan, exitCode, mu
+}
+
+func TestFlow_Main_signal_graceful(t *testing.T) {
+	restore, sigChan, exitCode, _ := setupTest()
+	defer restore()
 
 	flow := &Flow{}
-	out := &strings.Builder{}
+	out := &safeBuffer{}
 	flow.SetOutput(out)
 
 	taskStarted := make(chan struct{})
 	taskCanFinish := make(chan struct{})
 	flow.Define(Task{
 		Name: "task",
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			close(taskStarted)
 			<-taskCanFinish
 		},
 	})
 
 	trapSignalsHook = func() {
-		for {
-			mu.Lock()
-			c := sigChan
-			mu.Unlock()
-			if c != nil {
-				c <- os.Interrupt
-				return
-			}
-		}
+		c := <-sigChan
+		c <- os.Interrupt
 	}
 
 	done := make(chan struct{})
@@ -68,11 +93,6 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	}()
 
 	<-taskStarted
-	// sigChan should be set by signalNotify called within Main's goroutine
-	// trapSignalsHook is called from within Main's goroutine
-
-	// Ensure that f.main finished after cancellation
-	// Wait a bit to ensure the signal is processed
 	for {
 		if strings.Contains(out.String(), "first interrupt, graceful stop") {
 			break
@@ -81,42 +101,14 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	close(taskCanFinish)
 	<-done
 
-	if atomic.LoadInt32(&exitCode) != 1 {
-		t.Errorf("exit code should be 1, got: %d", atomic.LoadInt32(&exitCode))
+	if atomic.LoadInt32(exitCode) != 1 {
+		t.Errorf("exit code should be 1, got: %d", atomic.LoadInt32(exitCode))
 	}
 }
 
 func TestFlow_Main_signal_hard(t *testing.T) {
-	origSignalNotify := signalNotify
-	origSignalStop := signalStop
-	origOsExit := osExit
-	origTrapSignalsHook := trapSignalsHook
-	origTrapSignalsSecondHook := trapSignalsSecondHook
-	defer func() {
-		signalNotify = origSignalNotify
-		signalStop = origSignalStop
-		osExit = origOsExit
-		trapSignalsHook = origTrapSignalsHook
-		trapSignalsSecondHook = origTrapSignalsSecondHook
-	}()
-
-	var sigChan chan<- os.Signal
-	var mu sync.Mutex
-	signalNotify = func(c chan<- os.Signal, sigs ...os.Signal) {
-		mu.Lock()
-		sigChan = c
-		mu.Unlock()
-	}
-	signalStop = func(c chan<- os.Signal) {}
-
-	var exitCode int32 = -1
-	osExit = func(code int) {
-		mu.Lock()
-		if exitCode == -1 {
-			atomic.StoreInt32(&exitCode, int32(code))
-		}
-		mu.Unlock()
-	}
+	restore, sigChan, exitCode, mu := setupTest()
+	defer restore()
 
 	flow := &Flow{}
 	flow.SetOutput(io.Discard)
@@ -124,103 +116,59 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	taskStarted := make(chan struct{})
 	flow.Define(Task{
 		Name: "task",
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			close(taskStarted)
 			select {} // block forever
 		},
 	})
 
+	var c chan<- os.Signal
 	trapSignalsHook = func() {
-		for {
-			mu.Lock()
-			c := sigChan
-			mu.Unlock()
-			if c != nil {
-				c <- os.Interrupt
-				return
-			}
-		}
+		c = <-sigChan
+		c <- os.Interrupt
 	}
 	trapSignalsSecondHook = func() {
-		for {
-			mu.Lock()
-			c := sigChan
-			mu.Unlock()
-			if c != nil {
-				c <- os.Interrupt
-				return
-			}
-		}
+		c <- os.Interrupt
 	}
 
 	go flow.Main([]string{"task"})
 
 	<-taskStarted
-	// Wait for osExit to be called
 	for {
 		mu.Lock()
-		code := atomic.LoadInt32(&exitCode)
+		code := atomic.LoadInt32(exitCode)
 		mu.Unlock()
 		if code != -1 {
 			break
 		}
 	}
 
-	if atomic.LoadInt32(&exitCode) != 1 {
-		t.Errorf("exit code should be 1, got: %d", atomic.LoadInt32(&exitCode))
+	if atomic.LoadInt32(exitCode) != 1 {
+		t.Errorf("exit code should be 1, got: %d", atomic.LoadInt32(exitCode))
 	}
 }
 
 func TestMain_signal_graceful(t *testing.T) {
-	origSignalNotify := signalNotify
-	origSignalStop := signalStop
-	origOsExit := osExit
-	origTrapSignalsHook := trapSignalsHook
-	defer func() {
-		signalNotify = origSignalNotify
-		signalStop = origSignalStop
-		osExit = origOsExit
-		trapSignalsHook = origTrapSignalsHook
-	}()
+	restore, sigChan, exitCode, _ := setupTest()
+	defer restore()
 
-	var sigChan chan<- os.Signal
-	var mu sync.Mutex
-	signalNotify = func(c chan<- os.Signal, sigs ...os.Signal) {
-		mu.Lock()
-		sigChan = c
-		mu.Unlock()
-	}
-	signalStop = func(c chan<- os.Signal) {}
-
-	var exitCode int32 = -1
-	osExit = func(code int) {
-		atomic.StoreInt32(&exitCode, int32(code))
-	}
-
-	DefaultFlow = &Flow{} // reset DefaultFlow
-	out := &strings.Builder{}
+	DefaultFlow = &Flow{}
+	out := &safeBuffer{}
 	SetOutput(out)
 
 	taskStarted := make(chan struct{})
 	taskCanFinish := make(chan struct{})
 	Define(Task{
 		Name: "task",
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			close(taskStarted)
 			<-taskCanFinish
 		},
 	})
 
 	trapSignalsHook = func() {
-		for {
-			mu.Lock()
-			c := sigChan
-			mu.Unlock()
-			if c != nil {
-				c <- os.Interrupt
-				return
-			}
-		}
+		c := <-sigChan
+		c <- os.Interrupt
 	}
 
 	done := make(chan struct{})
@@ -230,21 +178,16 @@ func TestMain_signal_graceful(t *testing.T) {
 	}()
 
 	<-taskStarted
-	// sigChan should be set by signalNotify called within Main's goroutine
-	// trapSignalsHook is called from within Main's goroutine
-
-	// Wait a bit to ensure the signal is processed
 	for {
 		if strings.Contains(out.String(), "first interrupt, graceful stop") {
 			break
 		}
 	}
-
 	close(taskCanFinish)
 	<-done
 
-	if atomic.LoadInt32(&exitCode) != 1 {
-		t.Errorf("exit code should be 1, got: %d", atomic.LoadInt32(&exitCode))
+	if atomic.LoadInt32(exitCode) != 1 {
+		t.Errorf("exit code should be 1, got: %d", atomic.LoadInt32(exitCode))
 	}
 }
 
@@ -254,7 +197,7 @@ func TestFlow_Main_pass(t *testing.T) {
 
 	var exitCode int32 = -1
 	osExit = func(code int) {
-		atomic.StoreInt32(&exitCode, int32(code))
+		atomic.StoreInt32(&exitCode, int32(code)) //nolint:gosec // G115: exit code is a small integer
 	}
 
 	flow := &Flow{}
