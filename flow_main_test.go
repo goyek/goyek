@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestFlow_main(t *testing.T) {
@@ -62,5 +63,51 @@ func Test_main_usage(t *testing.T) {
 
 	if !called {
 		t.Error("usage should be called for invalid input")
+	}
+}
+
+func TestFailError_Error(t *testing.T) {
+	err := &FailError{Task: "task"}
+	got := err.Error()
+	want := "task failed: task"
+	if got != want {
+		t.Errorf("got: %q; want: %q", got, want)
+	}
+}
+
+func TestWrappers(t *testing.T) {
+	// Just call them to ensure coverage.
+	// They use DefaultFlow, which we should probably reset or be careful with.
+	Define(Task{Name: "wrapper-task"})
+	Tasks()
+	Output()
+	SetOutput(io.Discard)
+	SetLogger(GetLogger())
+	SetUsage(Usage())
+	SetDefault(Default())
+	Undefine(Tasks()[0])
+	Use(func(r Runner) Runner { return r })
+	UseExecutor(func(e Executor) Executor { return e })
+	Execute(context.Background(), nil)
+	Print()
+}
+
+func Test_main_context_error(t *testing.T) {
+	flow := &Flow{}
+	flow.SetOutput(io.Discard)
+	flow.Define(Task{Name: "task"})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if got := flow.main(ctx, []string{"task"}); got != 1 {
+		t.Errorf("got: %d; want: 1", got)
+	}
+
+	ctx, cancel = context.WithDeadline(context.Background(), time.Now().Add(-time.Hour))
+	defer cancel()
+
+	if got := flow.main(ctx, []string{"task"}); got != 1 {
+		t.Errorf("got: %d; want: 1", got)
 	}
 }

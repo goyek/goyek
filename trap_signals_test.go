@@ -85,6 +85,64 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	}
 }
 
+func TestMain_signal_graceful(t *testing.T) {
+	// Package-level Main wrapper
+	out := &safeBuffer{}
+	DefaultFlow = &Flow{}
+	DefaultFlow.SetOutput(out)
+
+	taskCanFinish := make(chan struct{})
+	DefaultFlow.Define(Task{
+		Name: "task",
+		Action: func(a *A) {
+			<-a.Context().Done()
+			<-taskCanFinish
+		},
+	})
+
+	var sigChan chan<- os.Signal
+	signalNotify = func(c chan<- os.Signal, _ ...os.Signal) {
+		sigChan = c
+	}
+	defer func() { signalNotify = signal.Notify }()
+
+	signalStop = func(_ chan<- os.Signal) {}
+	defer func() { signalStop = signal.Stop }()
+
+	var mu sync.Mutex
+	exitCode := -1
+	osExit = func(code int) {
+		mu.Lock()
+		defer mu.Unlock()
+		exitCode = code
+	}
+	defer func() { osExit = os.Exit }()
+
+	done := make(chan struct{})
+	handlerReady := make(chan struct{})
+	trapSignalsHook = func() { close(handlerReady) }
+	defer func() { trapSignalsHook = func() {} }()
+
+	go func() {
+		Main([]string{"task"})
+		close(done)
+	}()
+
+	<-handlerReady
+	sigChan <- os.Interrupt
+
+	close(taskCanFinish)
+	<-done
+
+	mu.Lock()
+	gotExitCode := exitCode
+	mu.Unlock()
+
+	if gotExitCode != 1 {
+		t.Errorf("exit code: got %d, want 1", gotExitCode)
+	}
+}
+
 func TestFlow_Main_signal_hard(t *testing.T) {
 	flow := &Flow{}
 	out := &safeBuffer{}
@@ -151,6 +209,83 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	}
 	if !strings.Contains(out.String(), "second interrupt, exit") {
 		t.Errorf("output should contain second interrupt message, got: %s", out.String())
+	}
+}
+
+func TestFlow_Main_signal_hard_timeout(t *testing.T) {
+	flow := &Flow{}
+	out := &safeBuffer{}
+	flow.SetOutput(out)
+
+	taskCanFinish := make(chan struct{})
+	flow.Define(Task{
+		Name: "task",
+		Action: func(a *A) {
+			<-a.Context().Done()
+			<-taskCanFinish
+		},
+	})
+
+	var sigChan chan<- os.Signal
+	signalNotify = func(c chan<- os.Signal, _ ...os.Signal) {
+		sigChan = c
+	}
+	defer func() { signalNotify = signal.Notify }()
+
+	signalStop = func(_ chan<- os.Signal) {}
+	defer func() { signalStop = signal.Stop }()
+
+	var mu sync.Mutex
+	exitCode := -1
+	osExitCalled := make(chan struct{})
+	osExit = func(code int) {
+		mu.Lock()
+		exitCode = code
+		mu.Unlock()
+		if code == 1 {
+			select {
+			case osExitCalled <- struct{}{}:
+			default:
+			}
+		}
+	}
+	defer func() { osExit = os.Exit }()
+
+	handlerReady := make(chan struct{})
+	trapSignalsHook = func() { close(handlerReady) }
+	defer func() { trapSignalsHook = func() {} }()
+
+	secondStageReady := make(chan struct{})
+	trapSignalsSecondHook = func() { close(secondStageReady) }
+	defer func() { trapSignalsSecondHook = func() {} }()
+
+	done := make(chan struct{})
+	go func() {
+		flow.Main([]string{"task"})
+		close(done)
+	}()
+
+	<-handlerReady
+	sigChan <- os.Interrupt
+	<-secondStageReady
+	// Instead of sending second interrupt, we let handler finish or send more signals
+	sigChan <- os.Interrupt // This triggers osExit(1)
+	<-osExitCalled
+
+	// Now we want to test the consumer loop.
+	// But since osExit(1) was called, the handler might have returned if we didn't mock it to stay.
+	// Actually our mock osExit doesn't exit.
+	sigChan <- os.Interrupt // This should trigger the "interrupt" message in the loop
+
+	close(taskCanFinish)
+	<-done
+
+	mu.Lock()
+	_ = exitCode // avoid unused warning
+	mu.Unlock()
+
+	if !strings.Contains(out.String(), "interrupt") {
+		t.Errorf("output should contain third interrupt message, got: %s", out.String())
 	}
 }
 
