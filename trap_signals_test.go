@@ -180,7 +180,7 @@ func TestFlow_Main_pass(t *testing.T) {
 	}
 }
 
-func TestFlow_Main_default_hooks(t *testing.T) {
+func TestFlow_Main_default_hooks(_ *testing.T) {
 	flow := &Flow{}
 	flow.SetOutput(os.Stdout) // Just to make sure it doesn't crash
 	flow.Define(Task{Name: "task"})

@@ -422,7 +422,8 @@ func (f *Flow) runMain(args []string, opts ...Option) int {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	sigChan := make(chan os.Signal, 2)
+	const sigChanBuf = 2
+	sigChan := make(chan os.Signal, sigChanBuf)
 	signalNotify(sigChan, internal.TerminationSignals...)
 	defer signalStop(sigChan)
 
