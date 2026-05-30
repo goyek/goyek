@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/goyek/goyek/v3/internal"
 )
 
 // Flow is the root type of the package.
@@ -374,6 +376,15 @@ const (
 	exitCodeInvalid = 2
 )
 
+var (
+	osExit       = os.Exit
+	signalNotify = signal.Notify
+	signalStop   = signal.Stop
+
+	trapSignalsHook       = func() {}
+	trapSignalsSecondHook = func() {}
+)
+
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
@@ -397,24 +408,60 @@ func Main(args []string, opts ...Option) {
 //
 // Calls [Usage] when invalid args are provided.
 func (f *Flow) Main(args []string, opts ...Option) {
-	out := f.Output()
+	osExit(f.runMain(args, opts...))
+}
 
-	// trap Ctrl+C and call cancel on the context
+func (f *Flow) runMain(args []string, opts ...Option) int {
+	out := internal.SyncWriter(f.Output())
+	// temporarily use synchronized writer
+	origOut := f.output
+	f.output = out
+	defer func() { f.output = origOut }()
+
+	// trap termination signals and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		<-c // first signal, cancel context
-		fmt.Fprintln(out, "first interrupt, graceful stop")
-		cancel()
+	defer cancel()
 
-		<-c // second signal, hard exit
-		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(exitCodeFail)
+	sigChan := make(chan os.Signal, 2)
+	signalNotify(sigChan, internal.TerminationSignals...)
+	defer signalStop(sigChan)
+
+	handlerDone := make(chan struct{})
+	handlerFinished := make(chan struct{})
+	go func() {
+		defer close(handlerFinished)
+		trapSignalsHook()
+		select {
+		case <-sigChan:
+			fmt.Fprintln(out, "first interrupt, graceful stop")
+			cancel()
+		case <-handlerDone:
+			return
+		}
+
+		trapSignalsSecondHook()
+		select {
+		case <-sigChan:
+			fmt.Fprintln(out, "second interrupt, exit")
+			osExit(exitCodeFail)
+		case <-handlerDone:
+			return
+		}
+
+		for {
+			select {
+			case <-sigChan:
+				fmt.Fprintln(out, "interrupt")
+			case <-handlerDone:
+				return
+			}
+		}
 	}()
 
 	exitCode := f.main(ctx, args, opts...)
-	os.Exit(exitCode)
+	close(handlerDone)
+	<-handlerFinished
+	return exitCode
 }
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
@@ -429,6 +476,9 @@ func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	if err != nil {
 		f.Usage()()
 		return exitCodeInvalid
+	}
+	if ctx.Err() != nil {
+		return exitCodeFail
 	}
 	return exitCodePass
 }

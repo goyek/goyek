@@ -10,6 +10,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
+- Enhanced signal handling in `Flow.Main` by adding `SIGTERM` support
+  on Unix-like systems and implementing a more robust, two-stage
+  graceful shutdown mechanism.
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
 
