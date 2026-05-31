@@ -31,6 +31,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Fix races when task output is written from multiple goroutines
   by automatically wrapping the output in a synchronized writer.
 - Document that `Flow` and `DefinedTask` are not safe for concurrent use.
+- Add `SIGTERM` support for graceful shutdown on Unix-like systems.
+- Ensure `Flow.Main` returns failure exit code (1) when interrupted,
+  even if the current task finishes successfully.
 
 ## [3.0.1](https://github.com/goyek/goyek/releases/tag/v3.0.1) - 2025-12-09
 

@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/goyek/goyek/v3/internal"
 )
 
 // Flow is the root type of the package.
@@ -399,10 +401,10 @@ func Main(args []string, opts ...Option) {
 func (f *Flow) Main(args []string, opts ...Option) {
 	out := f.Output()
 
-	// trap Ctrl+C and call cancel on the context
+	// trap signals and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, internal.TerminationSignals...)
 	go func() {
 		<-c // first signal, cancel context
 		fmt.Fprintln(out, "first interrupt, graceful stop")
@@ -424,6 +426,9 @@ func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 		return exitCodeFail
 	}
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return exitCodeFail
+	}
+	if ctx.Err() != nil {
 		return exitCodeFail
 	}
 	if err != nil {

@@ -42,6 +42,20 @@ func TestFlow_main(t *testing.T) {
 				return flow.main(ctx, []string{"task"})
 			},
 		},
+		{
+			desc: "interrupted after successful execution",
+			want: 1,
+			act: func() int {
+				ctx, cancel := context.WithCancel(context.Background())
+				flow.Define(Task{
+					Name: "interrupted",
+					Action: func(a *A) {
+						cancel() // simulate interrupt during execution
+					},
+				})
+				return flow.main(ctx, []string{"interrupted"})
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
