@@ -49,7 +49,7 @@ func TestFlow_main(t *testing.T) {
 				ctx, cancel := context.WithCancel(context.Background())
 				flow.Define(Task{
 					Name: "interrupted",
-					Action: func(a *A) {
+					Action: func(_ *A) {
 						cancel() // simulate interrupt during execution
 					},
 				})
