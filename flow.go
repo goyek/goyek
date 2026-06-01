@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/goyek/goyek/v3/internal"
 )
 
 // Flow is the root type of the package.
@@ -31,6 +33,10 @@ type Flow struct {
 // DefaultFlow is the default flow.
 // The top-level functions such as Define, Main, and so on are wrappers for the methods of Flow.
 var DefaultFlow = &Flow{}
+
+var osExit = os.Exit
+
+var trapSignalsHook func(chan<- os.Signal)
 
 // Tasks returns all tasks sorted in lexicographical order.
 func Tasks() []*DefinedTask {
@@ -397,12 +403,16 @@ func Main(args []string, opts ...Option) {
 //
 // Calls [Usage] when invalid args are provided.
 func (f *Flow) Main(args []string, opts ...Option) {
-	out := f.Output()
+	out := internal.SyncWriter(f.Output())
 
-	// trap Ctrl+C and call cancel on the context
+	// trap signals and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, internal.TerminationSignals...)
+	defer signal.Stop(c)
+	if trapSignalsHook != nil {
+		trapSignalsHook(c)
+	}
 	go func() {
 		<-c // first signal, cancel context
 		fmt.Fprintln(out, "first interrupt, graceful stop")
@@ -410,11 +420,11 @@ func (f *Flow) Main(args []string, opts ...Option) {
 
 		<-c // second signal, hard exit
 		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(exitCodeFail)
+		osExit(exitCodeFail)
 	}()
 
 	exitCode := f.main(ctx, args, opts...)
-	os.Exit(exitCode)
+	osExit(exitCode)
 }
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {

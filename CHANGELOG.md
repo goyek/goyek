@@ -10,6 +10,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
+- Add `SIGTERM` support for graceful shutdown in `Flow.Main`. This ensures that
+  when the application is terminated by the system (e.g., in a containerized
+  environment like Kubernetes), it has a chance to execute cleanup functions.
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
 
