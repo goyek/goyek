@@ -12,6 +12,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
+- Improved signal handling in `Flow.Main` to support graceful termination
+  via `SIGTERM` (common in containerized environments) in addition to `SIGINT`.
 
 ### Fixed
 
