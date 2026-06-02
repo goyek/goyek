@@ -10,6 +10,52 @@ import (
 	"time"
 )
 
+type signalTestSetup struct {
+	mu                      sync.Mutex
+	exitCode                int
+	exitCalled              bool
+	sigChan                 chan os.Signal
+	sb                      *strings.Builder
+	originalOsExit          func(int)
+	originalTrapSignalsHook func(chan<- os.Signal)
+}
+
+func setupSignalTest(t *testing.T, flow *Flow) *signalTestSetup {
+	t.Helper()
+	s := &signalTestSetup{
+		sigChan:                 make(chan os.Signal, 1),
+		sb:                      &strings.Builder{},
+		originalOsExit:          osExit,
+		originalTrapSignalsHook: trapSignalsHook,
+	}
+	flow.SetOutput(s.sb)
+
+	osExit = func(code int) {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		s.exitCode = code
+		s.exitCalled = true
+	}
+
+	trapSignalsHook = func(c chan<- os.Signal) {
+		go func() {
+			for sig := range s.sigChan {
+				c <- sig
+			}
+		}()
+	}
+
+	return s
+}
+
+func (s *signalTestSetup) teardown() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	osExit = s.originalOsExit
+	trapSignalsHook = s.originalTrapSignalsHook
+	close(s.sigChan)
+}
+
 func TestFlow_Main_signal_graceful(t *testing.T) {
 	flow := &Flow{}
 	flow.Define(Task{
@@ -21,38 +67,9 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 			}
 		},
 	})
-	sb := &strings.Builder{}
-	flow.SetOutput(sb)
 
-	// Mock osExit
-	originalOsExit := osExit
-	var mu sync.Mutex
-	var exitCode int
-	osExit = func(code int) {
-		mu.Lock()
-		exitCode = code
-		mu.Unlock()
-	}
-	defer func() {
-		mu.Lock()
-		osExit = originalOsExit
-		mu.Unlock()
-	}()
-
-	// Mock trapSignalsHook
-	originalTrapSignalsHook := trapSignalsHook
-	sigChan := make(chan os.Signal, 1)
-	trapSignalsHook = func(c chan<- os.Signal) {
-		go func() {
-			s := <-sigChan
-			c <- s
-		}()
-	}
-	defer func() {
-		mu.Lock()
-		trapSignalsHook = originalTrapSignalsHook
-		mu.Unlock()
-	}()
+	s := setupSignalTest(t, flow)
+	defer s.teardown()
 
 	done := make(chan struct{})
 	go func() {
@@ -61,7 +78,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	}()
 
 	// Send signal
-	sigChan <- os.Interrupt
+	s.sigChan <- os.Interrupt
 
 	select {
 	case <-done:
@@ -70,57 +87,20 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 		t.Fatal("timed out waiting for Main to return")
 	}
 
-	mu.Lock()
-	gotCode := exitCode
-	mu.Unlock()
+	s.mu.Lock()
+	gotCode := s.exitCode
+	s.mu.Unlock()
 	if gotCode != 1 {
 		t.Errorf("expected exit code 1, got %d", gotCode)
 	}
 
-	if !strings.Contains(sb.String(), "first interrupt, graceful stop") {
-		t.Errorf("expected output to contain 'first interrupt, graceful stop', got %q", sb.String())
+	if !strings.Contains(s.sb.String(), "first interrupt, graceful stop") {
+		t.Errorf("expected output to contain 'first interrupt, graceful stop', got %q", s.sb.String())
 	}
 }
 
 func TestFlow_Main_signal_hard(t *testing.T) {
 	flow := &Flow{}
-	sb := &strings.Builder{}
-	flow.SetOutput(sb)
-
-	// Mock osExit
-	originalOsExit := osExit
-	var mu sync.Mutex
-	var exitCode int
-	var exitCalled bool
-	osExit = func(code int) {
-		mu.Lock()
-		exitCode = code
-		exitCalled = true
-		mu.Unlock()
-	}
-	defer func() {
-		mu.Lock()
-		osExit = originalOsExit
-		mu.Unlock()
-	}()
-
-	// Mock trapSignalsHook
-	originalTrapSignalsHook := trapSignalsHook
-	sigChan := make(chan os.Signal, 1)
-	trapSignalsHook = func(c chan<- os.Signal) {
-		go func() {
-			for s := range sigChan {
-				c <- s
-			}
-		}()
-	}
-	defer func() {
-		mu.Lock()
-		trapSignalsHook = originalTrapSignalsHook
-		mu.Unlock()
-	}()
-
-	// Start Main in a way it doesn't return immediately
 	flow.Define(Task{
 		Name: "long",
 		Action: func(a *A) {
@@ -133,6 +113,9 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		},
 	})
 
+	s := setupSignalTest(t, flow)
+	defer s.teardown()
+
 	mainDone := make(chan struct{})
 	go func() {
 		flow.Main([]string{"long"})
@@ -140,20 +123,20 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 	}()
 
 	// Send first signal
-	sigChan <- os.Interrupt
+	s.sigChan <- os.Interrupt
 
 	// Wait for first message
 	time.Sleep(50 * time.Millisecond)
 
 	// Send second signal
-	sigChan <- os.Interrupt
+	s.sigChan <- os.Interrupt
 
 	// Wait for osExit to be called
 	var called bool
 	for i := 0; i < 20; i++ {
-		mu.Lock()
-		called = exitCalled
-		mu.Unlock()
+		s.mu.Lock()
+		called = s.exitCalled
+		s.mu.Unlock()
 		if called {
 			break
 		}
@@ -164,19 +147,17 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 		t.Fatal("osExit was not called")
 	}
 
-	mu.Lock()
-	gotCode := exitCode
-	mu.Unlock()
+	s.mu.Lock()
+	gotCode := s.exitCode
+	s.mu.Unlock()
 	if gotCode != 1 {
 		t.Errorf("expected exit code 1, got %d", gotCode)
 	}
 
-	if !strings.Contains(sb.String(), "second interrupt, exit") {
-		t.Errorf("expected output to contain 'second interrupt, exit', got %q", sb.String())
+	if !strings.Contains(s.sb.String(), "second interrupt, exit") {
+		t.Errorf("expected output to contain 'second interrupt, exit', got %q", s.sb.String())
 	}
 
-	// Clean up goroutine
-	close(sigChan)
 	<-mainDone
 }
 
@@ -185,7 +166,7 @@ func TestFlow_main_ctx_err(t *testing.T) {
 	flow.SetOutput(io.Discard)
 	flow.Define(Task{
 		Name: "test",
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			// do nothing
 		},
 	})
