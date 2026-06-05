@@ -60,14 +60,14 @@ func TestFlow_main(t *testing.T) {
 				flow.SetOutput(io.Discard)
 				flow.Define(Task{
 					Name: "task",
-					Action: func(a *A) {
-						a.WithContext(context.Background()) // just to use some context
+					Action: func(_ *A) {
+						_ = context.Background()
 					},
 				})
 				ctx, cancel := context.WithCancel(context.Background())
 				flow.Define(Task{
 					Name: "interrupter",
-					Action: func(a *A) {
+					Action: func(_ *A) {
 						cancel()
 					},
 				})
