@@ -405,6 +405,7 @@ func (f *Flow) Main(args []string, opts ...Option) {
 
 	// trap Ctrl+C and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, internal.TerminationSignals...)
 	defer signal.Stop(c)
