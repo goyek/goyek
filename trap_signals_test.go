@@ -66,6 +66,10 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	// Wait for the signal handler to process it
 	time.Sleep(100 * time.Millisecond)
 
+	// Send second interrupt to test hard exit logic path
+	_ = process.Signal(os.Interrupt)
+	time.Sleep(100 * time.Millisecond)
+
 	// Allow the task to finish
 	close(taskCanFinish)
 
@@ -194,6 +198,64 @@ func TestMain_signal_graceful(t *testing.T) {
 	}
 }
 
+func TestFlow_Main_signal_hard_timeout(t *testing.T) {
+	origOsExit := osExit
+	defer func() { osExit = origOsExit }()
+
+	var exitCode int
+	var exitMu sync.Mutex
+	osExit = func(code int) {
+		exitMu.Lock()
+		defer exitMu.Unlock()
+		exitCode = code
+	}
+
+	out := &safeBuffer{}
+	flow := &Flow{}
+	flow.SetOutput(out)
+
+	taskCanFinish := make(chan struct{})
+	flow.Define(Task{
+		Name: "task",
+		Action: func(_ *A) {
+			<-taskCanFinish
+		},
+	})
+
+	done := make(chan struct{})
+	go func() {
+		flow.Main([]string{"task"})
+		close(done)
+	}()
+
+	// Wait for the task to start and be blocked
+	time.Sleep(100 * time.Millisecond)
+
+	// Send signals
+	process, _ := os.FindProcess(os.Getpid())
+
+	// First signal
+	_ = process.Signal(os.Interrupt)
+	time.Sleep(100 * time.Millisecond)
+
+	// Second signal - this should not exit yet because we are mocking osExit
+	_ = process.Signal(os.Interrupt)
+	time.Sleep(100 * time.Millisecond)
+
+	// Close the task so Main can return
+	close(taskCanFinish)
+
+	<-done
+
+	exitMu.Lock()
+	gotCode := exitCode
+	exitMu.Unlock()
+
+	if gotCode != exitCodeFail {
+		t.Errorf("got exit code %d, want %d", gotCode, exitCodeFail)
+	}
+}
+
 func TestFlow_Main_pass(t *testing.T) {
 	origOsExit := osExit
 	defer func() { osExit = origOsExit }()
@@ -219,4 +281,7 @@ func TestFlow_Main_pass(t *testing.T) {
 	if gotCode != exitCodePass {
 		t.Errorf("got exit code %d, want %d", gotCode, exitCodePass)
 	}
+
+	// Give some time for the signal handler goroutine to finish via ctx.Done()
+	time.Sleep(10 * time.Millisecond)
 }

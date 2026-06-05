@@ -401,35 +401,36 @@ func Main(args []string, opts ...Option) {
 //
 // Calls [Usage] when invalid args are provided.
 func (f *Flow) Main(args []string, opts ...Option) {
-	out := internal.SyncWriter(f.Output())
+	syncedOut := internal.SyncWriter(f.Output())
+	origOut := f.Output()
+	f.SetOutput(syncedOut)
+	defer f.SetOutput(origOut)
 
-	// trap Ctrl+C and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, internal.TerminationSignals...)
 	defer signal.Stop(c)
 
+	exitCodeChan := make(chan int, 1)
 	go func() {
-		select {
-		case _, ok := <-c:
-			if !ok {
-				return
-			}
-		case <-ctx.Done():
-			return
-		}
-		fmt.Fprintln(out, "first interrupt, graceful stop")
-		cancel()
-
-		if _, ok := <-c; !ok {
-			return
-		}
-		fmt.Fprintln(out, "second interrupt, exit")
-		osExit(exitCodeFail)
+		exitCodeChan <- f.main(ctx, args, opts...)
 	}()
 
-	exitCode := f.main(ctx, args, opts...)
+	var exitCode int
+	select {
+	case <-c:
+		fmt.Fprintln(syncedOut, "first interrupt, graceful stop")
+		cancel()
+		select {
+		case <-c:
+			fmt.Fprintln(syncedOut, "second interrupt, exit")
+			osExit(exitCodeFail)
+			return
+		case exitCode = <-exitCodeChan:
+		}
+	case exitCode = <-exitCodeChan:
+	}
 	osExit(exitCode)
 }
 

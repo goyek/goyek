@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestFlow_main(t *testing.T) {
@@ -42,6 +43,37 @@ func TestFlow_main(t *testing.T) {
 				return flow.main(ctx, []string{"task"})
 			},
 		},
+		{
+			desc: "deadline exceeded",
+			want: 1,
+			act: func() int {
+				ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Hour))
+				defer cancel()
+				return flow.main(ctx, []string{"task"})
+			},
+		},
+		{
+			desc: "interrupted",
+			want: 1,
+			act: func() int {
+				flow := &Flow{}
+				flow.SetOutput(io.Discard)
+				flow.Define(Task{
+					Name: "task",
+					Action: func(a *A) {
+						a.WithContext(context.Background()) // just to use some context
+					},
+				})
+				ctx, cancel := context.WithCancel(context.Background())
+				flow.Define(Task{
+					Name: "interrupter",
+					Action: func(a *A) {
+						cancel()
+					},
+				})
+				return flow.main(ctx, []string{"interrupter"})
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -62,5 +94,13 @@ func Test_main_usage(t *testing.T) {
 
 	if !called {
 		t.Error("usage should be called for invalid input")
+	}
+}
+
+func TestFailError_Error(t *testing.T) {
+	err := &FailError{Task: "task"}
+	want := "task failed: task"
+	if got := err.Error(); got != want {
+		t.Errorf("got: %q; want: %q", got, want)
 	}
 }
