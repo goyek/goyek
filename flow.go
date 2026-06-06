@@ -9,7 +9,10 @@ import (
 	"os/signal"
 	"sort"
 	"strings"
+	"sync"
 	"text/tabwriter"
+
+	"github.com/goyek/goyek/v3/internal"
 )
 
 // Flow is the root type of the package.
@@ -31,6 +34,12 @@ type Flow struct {
 // DefaultFlow is the default flow.
 // The top-level functions such as Define, Main, and so on are wrappers for the methods of Flow.
 var DefaultFlow = &Flow{}
+
+var (
+	flowMu          sync.Mutex // protects mocked globals
+	osExit          = os.Exit
+	trapSignalsHook func(chan<- os.Signal)
+)
 
 // Tasks returns all tasks sorted in lexicographical order.
 func Tasks() []*DefinedTask {
@@ -390,35 +399,67 @@ func Main(args []string, opts ...Option) {
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
 // It exits the current program when after the run is finished
-// or SIGINT interrupted the execution.
+// or it was interrupted by a termination signal.
 //   - 0 exit code means that non of the tasks failed.
 //   - 1 exit code means that a task has failed or the execution was interrupted.
 //   - 2 exit code means that the input was invalid.
 //
 // Calls [Usage] when invalid args are provided.
 func (f *Flow) Main(args []string, opts ...Option) {
-	out := f.Output()
+	out := internal.SyncWriter(f.Output())
 
 	// trap Ctrl+C and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		<-c // first signal, cancel context
-		fmt.Fprintln(out, "first interrupt, graceful stop")
-		cancel()
+	defer cancel()
 
-		<-c // second signal, hard exit
-		fmt.Fprintln(out, "second interrupt, exit")
-		os.Exit(exitCodeFail)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, internal.TerminationSignals...)
+	flowMu.Lock()
+	hook := trapSignalsHook
+	flowMu.Unlock()
+	if hook != nil {
+		hook(c)
+	}
+	defer signal.Stop(c)
+
+	done := make(chan struct{})
+	go func() {
+		select {
+		case <-c:
+			// first signal, cancel context
+			fmt.Fprintln(out, "first interrupt, graceful stop")
+			cancel()
+		case <-done:
+			return
+		}
+
+		select {
+		case <-c:
+			// second signal, hard exit
+			fmt.Fprintln(out, "second interrupt, exit")
+			flowMu.Lock()
+			exit := osExit
+			flowMu.Unlock()
+			exit(exitCodeFail)
+		case <-done:
+			return
+		}
 	}()
 
 	exitCode := f.main(ctx, args, opts...)
-	os.Exit(exitCode)
+	close(done)
+
+	flowMu.Lock()
+	exit := osExit
+	flowMu.Unlock()
+	exit(exitCode)
 }
 
 func (f *Flow) main(ctx context.Context, args []string, opts ...Option) int {
 	err := f.Execute(ctx, args, opts...)
+	if ctx.Err() != nil {
+		return exitCodeFail
+	}
 	var ferr *FailError
 	if errors.As(err, &ferr) {
 		return exitCodeFail

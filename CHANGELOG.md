@@ -10,11 +10,15 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
+- Support `SIGTERM` (along with `SIGINT`) for graceful shutdown on Unix-like
+  systems.
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
 
 ### Fixed
 
+- Enhance `Flow.Main` signal handling to prevent goroutine leaks and ensure
+  proper resource cleanup.
 - `A.Cleanup` now panics if a `nil` function is provided.
   This prevents accidental misconfigurations where a `nil` cleanup
   function would cause the internal cleanup loop to terminate prematurely,
