@@ -56,7 +56,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	taskCanFinish := make(chan struct{})
 	f.Define(Task{
 		Name: "task",
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			<-taskCanFinish
 		},
 	})
@@ -126,7 +126,7 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 
 	f.Define(Task{
 		Name: "task",
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			select {} // block forever
 		},
 	})
