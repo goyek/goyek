@@ -56,7 +56,7 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 	taskCanFinish := make(chan struct{})
 	flow.Define(Task{
 		Name: "task",
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			<-taskCanFinish
 		},
 	})
@@ -120,7 +120,7 @@ func TestFlow_Main_signal_hard(t *testing.T) {
 
 	flow.Define(Task{
 		Name: "task",
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			select {} // block forever
 		},
 	})
@@ -177,7 +177,7 @@ func TestMain_signal_graceful(t *testing.T) {
 	taskCanFinish := make(chan struct{})
 	Define(Task{
 		Name: "task",
-		Action: func(a *A) {
+		Action: func(_ *A) {
 			<-taskCanFinish
 		},
 	})

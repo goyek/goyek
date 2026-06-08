@@ -419,8 +419,9 @@ func (f *Flow) Main(args []string, opts ...Option) {
 	}
 
 	done := make(chan struct{})
+	sigDone := make(chan struct{})
 	go func() {
-		defer close(done)
+		defer close(sigDone)
 		select {
 		case <-c: // first signal, cancel context
 			fmt.Fprintln(out, "first interrupt, graceful stop")
@@ -438,11 +439,8 @@ func (f *Flow) Main(args []string, opts ...Option) {
 	}()
 
 	exitCode := f.main(ctx, args, opts...)
-	select {
-	case done <- struct{}{}:
-		<-done
-	case <-done:
-	}
+	close(done)
+	<-sigDone
 	osExit(exitCode)
 }
 
