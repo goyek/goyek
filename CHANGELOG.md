@@ -10,6 +10,10 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
+- Add cross-platform termination signal handling (including `SIGTERM` support)
+  to `Flow.Main`.
+- `Flow.Main` now prevents goroutine leaks in its signal handler by ensuring
+  it terminates when the task execution finishes.
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
 
