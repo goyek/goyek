@@ -26,37 +26,67 @@ func (b *safeBuffer) String() string {
 	return b.s
 }
 
-func TestFlow_Main_signal_graceful(t *testing.T) {
+type signalTestSetup struct {
+	sigChan  chan os.Signal
+	exitCode *int
+	exitWg   *sync.WaitGroup
+	out      *safeBuffer
+}
+
+func setupSignalTest(t *testing.T) *signalTestSetup {
+	t.Helper()
 	flowMu.Lock()
-	defer flowMu.Unlock()
 
 	origOsExit := osExit
 	origTrapSignalsHook := trapSignalsHook
-	defer func() {
-		osExit = origOsExit
-		trapSignalsHook = origTrapSignalsHook
-	}()
+	origDefaultFlow := DefaultFlow
 
-	var exitCode int
-	osExit = func(code int) { exitCode = code }
+	s := &signalTestSetup{
+		sigChan:  make(chan os.Signal, 1),
+		exitCode: new(int),
+		exitWg:   &sync.WaitGroup{},
+		out:      &safeBuffer{},
+	}
+	s.exitWg.Add(1)
 
-	sigChan := make(chan os.Signal, 1)
+	var once sync.Once
+	osExit = func(code int) {
+		once.Do(func() {
+			*s.exitCode = code
+			s.exitWg.Done()
+		})
+	}
+
 	trapSignalsHook = func(c chan<- os.Signal) {
 		go func() {
-			for sig := range sigChan {
+			for sig := range s.sigChan {
 				c <- sig
 			}
 		}()
 	}
 
-	out := &safeBuffer{}
-	flow := &Flow{}
-	flow.SetOutput(out)
+	t.Cleanup(func() {
+		osExit = origOsExit
+		trapSignalsHook = origTrapSignalsHook
+		DefaultFlow = origDefaultFlow
+		close(s.sigChan)
+		flowMu.Unlock()
+	})
 
+	return s
+}
+
+func TestFlow_Main_signal_graceful(t *testing.T) {
+	s := setupSignalTest(t)
+	flow := &Flow{}
+	flow.SetOutput(s.out)
+
+	taskStarted := make(chan struct{})
 	taskCanFinish := make(chan struct{})
 	flow.Define(Task{
 		Name: "task",
 		Action: func(_ *A) {
+			close(taskStarted)
 			<-taskCanFinish
 		},
 	})
@@ -67,117 +97,59 @@ func TestFlow_Main_signal_graceful(t *testing.T) {
 		close(done)
 	}()
 
-	// wait for task to start
-	time.Sleep(100 * time.Millisecond)
+	waitForChan(t, taskStarted, "task to start")
+	s.sigChan <- os.Interrupt
+	waitForOutput(t, s.out, "first interrupt, graceful stop")
 
-	// first signal
-	sigChan <- os.Interrupt
-
-	// wait for graceful stop message
-	waitForOutput(t, out, "first interrupt, graceful stop")
-
-	// allow task to finish
 	close(taskCanFinish)
+	waitForChan(t, done, "Main to finish")
 
-	<-done
-
-	if exitCode != exitCodeFail {
-		t.Errorf("got exit code %d, want %d", exitCode, exitCodeFail)
+	if *s.exitCode != exitCodeFail {
+		t.Errorf("got exit code %d, want %d", *s.exitCode, exitCodeFail)
 	}
 }
 
 func TestFlow_Main_signal_hard(t *testing.T) {
-	flowMu.Lock()
-	defer flowMu.Unlock()
-
-	origOsExit := osExit
-	origTrapSignalsHook := trapSignalsHook
-	defer func() {
-		osExit = origOsExit
-		trapSignalsHook = origTrapSignalsHook
-	}()
-
-	var exitCode int
-	var exitWg sync.WaitGroup
-	exitWg.Add(1)
-	osExit = func(code int) {
-		exitCode = code
-		exitWg.Done()
-	}
-
-	sigChan := make(chan os.Signal, 1)
-	trapSignalsHook = func(c chan<- os.Signal) {
-		go func() {
-			for sig := range sigChan {
-				c <- sig
-			}
-		}()
-	}
-
-	out := &safeBuffer{}
+	s := setupSignalTest(t)
 	flow := &Flow{}
-	flow.SetOutput(out)
+	flow.SetOutput(s.out)
 
+	taskStarted := make(chan struct{})
 	flow.Define(Task{
 		Name: "task",
 		Action: func(_ *A) {
+			close(taskStarted)
 			select {} // block forever
 		},
 	})
 
 	go flow.Main([]string{"task"})
 
-	// wait for task to start
-	time.Sleep(100 * time.Millisecond)
+	waitForChan(t, taskStarted, "task to start")
+	s.sigChan <- os.Interrupt
+	waitForOutput(t, s.out, "first interrupt, graceful stop")
 
-	// first signal
-	sigChan <- os.Interrupt
-	waitForOutput(t, out, "first interrupt, graceful stop")
+	s.sigChan <- os.Interrupt
+	waitForOutput(t, s.out, "second interrupt, exit")
 
-	// second signal
-	sigChan <- os.Interrupt
-	waitForOutput(t, out, "second interrupt, exit")
+	s.exitWg.Wait()
 
-	exitWg.Wait()
-
-	if exitCode != exitCodeFail {
-		t.Errorf("got exit code %d, want %d", exitCode, exitCodeFail)
+	if *s.exitCode != exitCodeFail {
+		t.Errorf("got exit code %d, want %d", *s.exitCode, exitCodeFail)
 	}
 }
 
 func TestMain_signal_graceful(t *testing.T) {
-	flowMu.Lock()
-	defer flowMu.Unlock()
+	s := setupSignalTest(t)
+	DefaultFlow = &Flow{}
+	SetOutput(s.out)
 
-	origOsExit := osExit
-	origTrapSignalsHook := trapSignalsHook
-	defer func() {
-		osExit = origOsExit
-		trapSignalsHook = origTrapSignalsHook
-	}()
-
-	var exitCode int
-	osExit = func(code int) { exitCode = code }
-
-	sigChan := make(chan os.Signal, 1)
-	trapSignalsHook = func(c chan<- os.Signal) {
-		go func() {
-			for sig := range sigChan {
-				c <- sig
-			}
-		}()
-	}
-
-	out := &safeBuffer{}
-	oldDefaultFlow := DefaultFlow
-	defer func() { DefaultFlow = oldDefaultFlow }()
-	DefaultFlow = &Flow{} // Reset DefaultFlow
-	SetOutput(out)
-
+	taskStarted := make(chan struct{})
 	taskCanFinish := make(chan struct{})
 	Define(Task{
 		Name: "task",
 		Action: func(_ *A) {
+			close(taskStarted)
 			<-taskCanFinish
 		},
 	})
@@ -188,37 +160,37 @@ func TestMain_signal_graceful(t *testing.T) {
 		close(done)
 	}()
 
-	// wait for task to start
-	time.Sleep(100 * time.Millisecond)
+	waitForChan(t, taskStarted, "task to start")
+	s.sigChan <- os.Interrupt
+	waitForOutput(t, s.out, "first interrupt, graceful stop")
 
-	// first signal
-	sigChan <- os.Interrupt
-	waitForOutput(t, out, "first interrupt, graceful stop")
-
-	// allow task to finish
 	close(taskCanFinish)
+	waitForChan(t, done, "Main to finish")
 
-	<-done
-
-	if exitCode != exitCodeFail {
-		t.Errorf("got exit code %d, want %d", exitCode, exitCodeFail)
+	if *s.exitCode != exitCodeFail {
+		t.Errorf("got exit code %d, want %d", *s.exitCode, exitCodeFail)
 	}
 }
 
 func TestFlow_Main_pass(t *testing.T) {
 	flowMu.Lock()
 	defer flowMu.Unlock()
-
 	origOsExit := osExit
 	defer func() { osExit = origOsExit }()
 
 	var exitCode int
-	osExit = func(code int) { exitCode = code }
+	var wg sync.WaitGroup
+	wg.Add(1)
+	osExit = func(code int) {
+		exitCode = code
+		wg.Done()
+	}
 
 	flow := &Flow{}
 	flow.Define(Task{Name: "task"})
 
 	flow.Main([]string{"task"})
+	wg.Wait()
 
 	if exitCode != exitCodePass {
 		t.Errorf("got exit code %d, want %d", exitCode, exitCodePass)
@@ -235,4 +207,13 @@ func waitForOutput(t *testing.T, out *safeBuffer, substr string) {
 		time.Sleep(10 * time.Millisecond)
 	}
 	t.Errorf("timeout waiting for output: %q, got: %q", substr, out.String())
+}
+
+func waitForChan(t *testing.T, ch <-chan struct{}, desc string) {
+	t.Helper()
+	select {
+	case <-ch:
+	case <-time.After(2 * time.Second):
+		t.Fatalf("timeout waiting for %s", desc)
+	}
 }
