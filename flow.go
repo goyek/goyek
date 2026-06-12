@@ -414,7 +414,12 @@ func (f *Flow) runMain(args []string, exit func(int), opts ...Option) int {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	signals := make(chan os.Signal, 2)
+	// os/signal can drop signals when the channel buffer is full.
+	// With a buffer of 1, a quick second termination signal may be dropped
+	// before the handler reads the first one, preventing the intended
+	// hard-exit behavior on the second signal.
+	const terminationSignalBuffer = 2
+	signals := make(chan os.Signal, terminationSignalBuffer)
 	signal.Notify(signals, internal.TerminationSignals()...)
 
 	done := make(chan struct{})
