@@ -1,5 +1,5 @@
-//go:build aix || darwin || dragonfly || freebsd || linux || netbsd || openbsd || solaris
-// +build aix darwin dragonfly freebsd linux netbsd openbsd solaris
+//go:build aix || android || darwin || dragonfly || freebsd || hurd || illumos || ios || linux || netbsd || openbsd || solaris
+// +build aix android darwin dragonfly freebsd hurd illumos ios linux netbsd openbsd solaris
 
 package internal
 

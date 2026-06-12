@@ -447,12 +447,6 @@ func trapTerminationSignals(out io.Writer, signals <-chan os.Signal, done <-chan
 		}
 
 		select {
-		case <-done:
-			return
-		default:
-		}
-
-		select {
 		case <-signals: // second signal, hard exit
 			fmt.Fprintln(out, "second termination signal, exit")
 			exit(exitCodeFail)
