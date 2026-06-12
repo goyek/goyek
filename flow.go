@@ -414,13 +414,13 @@ func (f *Flow) runMain(args []string, exit func(int), opts ...Option) int {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	signals := make(chan os.Signal, 1)
+	signals := make(chan os.Signal, 2)
 	signal.Notify(signals, internal.TerminationSignals()...)
-	defer signal.Stop(signals)
 
 	done := make(chan struct{})
 	handlerDone := trapTerminationSignals(out, signals, done, cancel, exit)
 	defer func() {
+		signal.Stop(signals)
 		close(done)
 		<-handlerDone
 	}()
@@ -435,7 +435,7 @@ func trapTerminationSignals(out io.Writer, signals <-chan os.Signal, done <-chan
 
 		select {
 		case <-signals: // first signal, cancel context
-			fmt.Fprintln(out, "first interrupt, graceful stop")
+			fmt.Fprintln(out, "first termination signal, graceful stop")
 			cancel()
 		case <-done:
 			return
@@ -449,7 +449,7 @@ func trapTerminationSignals(out io.Writer, signals <-chan os.Signal, done <-chan
 
 		select {
 		case <-signals: // second signal, hard exit
-			fmt.Fprintln(out, "second interrupt, exit")
+			fmt.Fprintln(out, "second termination signal, exit")
 			exit(exitCodeFail)
 		case <-done:
 		}

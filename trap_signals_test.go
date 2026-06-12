@@ -50,7 +50,7 @@ func TestTrapTerminationSignalsGraceful(t *testing.T) {
 	waitForDone(t, handlerDone)
 	assertNoExit(t, exited)
 
-	if got, want := out.String(), "first interrupt, graceful stop\n"; got != want {
+	if got, want := out.String(), "first termination signal, graceful stop\n"; got != want {
 		t.Fatalf("got output %q, want %q", got, want)
 	}
 }
@@ -76,7 +76,7 @@ func TestTrapTerminationSignalsHardExit(t *testing.T) {
 	if exitCode != exitCodeFail {
 		t.Fatalf("got exit code %d, want %d", exitCode, exitCodeFail)
 	}
-	want := "first interrupt, graceful stop\nsecond interrupt, exit\n"
+	want := "first termination signal, graceful stop\nsecond termination signal, exit\n"
 	if got := out.String(); got != want {
 		t.Fatalf("got output %q, want %q", got, want)
 	}
