@@ -33,6 +33,8 @@ linters:
     funlen:
       lines: 100
       statements: 50
+    goconst:
+      ignore-tests: true
     gocyclo:
       min-complexity: 15
     gosec:
