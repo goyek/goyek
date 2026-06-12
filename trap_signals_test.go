@@ -82,6 +82,7 @@ func TestTrapTerminationSignalsHardExit(t *testing.T) {
 	}
 }
 
+//nolint:revive // testing.T should be the first parameter, not context.Context.
 func waitForContext(t *testing.T, ctx context.Context) {
 	t.Helper()
 	select {
