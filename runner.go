@@ -4,8 +4,6 @@ import (
 	"context"
 	"io"
 	"sync"
-
-	"github.com/goyek/goyek/v3/internal"
 )
 
 // Task runner types.
@@ -21,8 +19,10 @@ type (
 		Context  context.Context
 		TaskName string
 		Parallel bool
-		Output   io.Writer
-		Logger   Logger
+		// A non-nil Output must be safe for concurrent use. Use [SyncWriter] to
+		// adapt a writer that does not provide its own synchronization.
+		Output io.Writer
+		Logger Logger
 	}
 
 	// Result of a task run.
@@ -33,6 +33,11 @@ type (
 	}
 
 	// Middleware represents a task runner interceptor.
+	//
+	// If a Middleware replaces [Input.Output] with a non-nil writer, the
+	// replacement must be safe for concurrent use. A Middleware must not return
+	// while goroutines it started are still using [Input.Output] or
+	// [Input.Logger].
 	Middleware func(Runner) Runner
 )
 
@@ -52,15 +57,9 @@ type (
 // workflow runner if you are missing any functionalities
 // provided by Flow (like concurrent dependencies execution).
 //
-// Each invocation wraps Input.Output so writes made through [A.Output] and the
-// writer passed to Logger are synchronized with each other. The synchronization
-// is scoped to one invocation: if multiple runner invocations share the same
-// underlying writer concurrently, that writer must itself be safe for concurrent
-// use. Writes made directly to a reference retained before the invocation bypass
-// the wrapper.
-//
-// [A.Output] may return a wrapper around Input.Output. Callers must not rely on
-// the configured writer's concrete type or on optional interfaces it implements.
+// NewRunner passes a non-nil Input.Output unchanged to [A.Output] and to the
+// configured Logger. It does not add synchronization. Use [SyncWriter] before
+// invoking the runner if the output does not provide its own synchronization.
 func NewRunner(action func(a *A)) Runner {
 	r := taskRunner{action: action}
 	return r.run
@@ -99,7 +98,7 @@ func (r taskRunner) run(in Input) Result {
 		skipped:  &skipped,
 		cleanups: &[]func(){},
 		name:     in.TaskName,
-		output:   internal.SyncWriter(out),
+		output:   out,
 		logger:   logger,
 		parallel: in.Parallel,
 	}

@@ -14,7 +14,7 @@ import (
 func TestBufferParallel(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
-	flow.SetOutput(out)
+	flow.SetOutput(goyek.SyncWriter(out))
 	flow.SetLogger(goyek.FmtLogger{})
 	flow.Use(middleware.BufferParallel)
 
@@ -76,7 +76,7 @@ func TestBufferParallel_concurrent_printing_standalone(t *testing.T) {
 	out := &strings.Builder{}
 	runner(goyek.Input{
 		Parallel: true,
-		Output:   out,
+		Output:   goyek.SyncWriter(out),
 	})
 
 	if got, want := out.String(), strings.Repeat(message, goroutines*writesPerGoroutine); got != want {

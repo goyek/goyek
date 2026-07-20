@@ -11,7 +11,7 @@ import (
 func TestCodeLineLogger(t *testing.T) {
 	flow := &goyek.Flow{}
 	out := &strings.Builder{}
-	flow.SetOutput(out)
+	flow.SetOutput(goyek.SyncWriter(out))
 	loggerSpy := &goyek.CodeLineLogger{}
 	flow.SetLogger(loggerSpy)
 	flow.Define(goyek.Task{
@@ -35,7 +35,7 @@ func TestCodeLineLogger(t *testing.T) {
 func TestCodeLineLogger_helper_in_action(t *testing.T) {
 	flow := &goyek.Flow{}
 	out := &strings.Builder{}
-	flow.SetOutput(out)
+	flow.SetOutput(goyek.SyncWriter(out))
 	loggerSpy := &goyek.CodeLineLogger{}
 	flow.SetLogger(loggerSpy)
 	flow.Define(goyek.Task{

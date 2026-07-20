@@ -48,7 +48,7 @@ func TestReportFlow(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			b := &strings.Builder{}
-			flow.SetOutput(b)
+			flow.SetOutput(goyek.SyncWriter(b))
 			tc.act()
 			if got := b.String(); !strings.Contains(got, tc.want) {
 				t.Errorf("got: %s; should contain: %s", got, tc.want)

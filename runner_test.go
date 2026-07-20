@@ -2,6 +2,7 @@ package goyek_test
 
 import (
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 	"sync"
@@ -85,7 +86,7 @@ func TestNewRunner_concurrent_printing(t *testing.T) {
 	})
 
 	out := &strings.Builder{}
-	gotResult := runner(goyek.Input{Output: out})
+	gotResult := runner(goyek.Input{Output: goyek.SyncWriter(out)})
 	assertEqual(t, gotResult.Status, goyek.StatusPassed, "should return proper status")
 
 	got := strings.Split(strings.TrimSuffix(out.String(), "\n"), "\n")
@@ -99,5 +100,20 @@ func TestNewRunner_concurrent_printing(t *testing.T) {
 	sort.Strings(want)
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("concurrent output mismatch\ngot:  %q\nwant: %q", got, want)
+	}
+}
+
+func TestNewRunner_preservesOutput(t *testing.T) {
+	out := io.Discard
+	var got io.Writer
+	runner := goyek.NewRunner(func(a *goyek.A) {
+		got = a.Output()
+	})
+
+	result := runner(goyek.Input{Output: out})
+
+	assertEqual(t, result.Status, goyek.StatusPassed, "should return proper status")
+	if got != out {
+		t.Fatal("NewRunner replaced Input.Output")
 	}
 }

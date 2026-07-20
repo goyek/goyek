@@ -37,7 +37,7 @@ func TestA_Context_cancels_before_cleanup(t *testing.T) {
 		default:
 			a.Log("context is active during action")
 		}
-	})(goyek.Input{Context: context.Background(), Output: sb, Logger: goyek.FmtLogger{}})
+	})(goyek.Input{Context: context.Background(), Output: goyek.SyncWriter(sb), Logger: goyek.FmtLogger{}})
 
 	if res.Status != goyek.StatusPassed {
 		t.Errorf("status was %s but want %s", res.Status, goyek.StatusPassed)
@@ -124,7 +124,7 @@ func TestA_WithContext(t *testing.T) {
 					a2.Log("2")
 				})
 				tc.fn(a, a2)
-			})(goyek.Input{Context: ctx, Output: sb, Logger: goyek.FmtLogger{}})
+			})(goyek.Input{Context: ctx, Output: goyek.SyncWriter(sb), Logger: goyek.FmtLogger{}})
 
 			if res.Status != tc.wantStatus {
 				t.Errorf("status was %s but want %s", res.Status, tc.wantStatus)
@@ -179,7 +179,7 @@ func TestA_WithContext_nil(t *testing.T) {
 		a.Log("1")
 		a.WithContext(nil) //nolint:staticcheck // panic intentionally
 		a.Log("2")
-	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: out})
+	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: goyek.SyncWriter(out)})
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 	assertEqual(t, got.PanicValue, "nil context", "should return proper panic value")
@@ -258,7 +258,7 @@ func TestA_WithContext_concurrent_cleanup(t *testing.T) {
 			originalCalled = true
 		})
 		<-ch
-	})(goyek.Input{Output: out})
+	})(goyek.Input{Output: goyek.SyncWriter(out)})
 
 	assertEqual(t, got.Status, goyek.StatusPassed, "should return proper status")
 	assertTrue(t, originalCalled, "original cleanup called")
@@ -284,7 +284,7 @@ func TestA_Cleanup(t *testing.T) {
 		a.Cleanup(func() {
 			a.Log("2")
 		})
-	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: out})
+	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: goyek.SyncWriter(out)})
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 	assertEqual(t, got.PanicValue, "first panic", "should return proper panic value")
@@ -311,7 +311,7 @@ func TestA_Cleanup_when_action_panics(t *testing.T) {
 			a.Log("2")
 		})
 		panic("action panic")
-	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: out})
+	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: goyek.SyncWriter(out)})
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 	assertEqual(t, got.PanicValue, "action panic", "should return proper panic value")
@@ -337,7 +337,7 @@ func TestA_Cleanup_nil(t *testing.T) {
 		a.Log("1")
 		a.Cleanup(nil) // nil cleanup func should panic
 		a.Log("2")
-	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: out})
+	})(goyek.Input{Logger: &goyek.FmtLogger{}, Output: goyek.SyncWriter(out)})
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 	assertEqual(t, got.PanicValue, "nil cleanup", "should return proper panic value")
@@ -640,7 +640,7 @@ func TestA_Setenv_parallel_panic(t *testing.T) {
 	out := &strings.Builder{}
 	got := goyek.NewRunner(func(a *goyek.A) {
 		a.Setenv("KEY", "VALUE")
-	})(goyek.Input{Parallel: true, Output: out, Logger: goyek.FmtLogger{}})
+	})(goyek.Input{Parallel: true, Output: goyek.SyncWriter(out), Logger: goyek.FmtLogger{}})
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 	assertContains(t, out, "Setenv called in a parallel task", "should log error message")
@@ -650,7 +650,7 @@ func TestA_Chdir_parallel_panic(t *testing.T) {
 	out := &strings.Builder{}
 	got := goyek.NewRunner(func(a *goyek.A) {
 		a.Chdir(".")
-	})(goyek.Input{Parallel: true, Output: out, Logger: goyek.FmtLogger{}})
+	})(goyek.Input{Parallel: true, Output: goyek.SyncWriter(out), Logger: goyek.FmtLogger{}})
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 	assertContains(t, out, "Chdir called in a parallel task", "should log error message")

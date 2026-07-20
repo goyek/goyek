@@ -15,19 +15,21 @@ import (
 func TestReportLongRun(t *testing.T) {
 	taskName := "my-task"
 	sb := &strings.Builder{}
+	out := goyek.SyncWriter(sb)
 	r := goyek.NewRunner(func(*goyek.A) { time.Sleep(30 * time.Millisecond) })
 	r = middleware.ReportLongRun(time.Millisecond)(r)
 
-	r(goyek.Input{TaskName: taskName, Output: sb})
+	r(goyek.Input{TaskName: taskName, Output: out})
 
 	if !strings.Contains(sb.String(), "***** LONG: "+taskName+" (") {
 		t.Errorf("got: %q; but should long running report", sb.String())
 	}
 }
 
-func TestReportLongRun_serializesTaskOutput(t *testing.T) {
+func TestReportLongRun_withSyncWriter(t *testing.T) {
 	const taskOutput = "task output\n"
 	out := newOverlapWriter(taskOutput)
+	syncOut := goyek.SyncWriter(out)
 	r := goyek.NewRunner(func(a *goyek.A) {
 		io.WriteString(a.Output(), taskOutput) //nolint:errcheck // test writer does not return errors
 	})
@@ -35,7 +37,7 @@ func TestReportLongRun_serializesTaskOutput(t *testing.T) {
 
 	done := make(chan goyek.Result)
 	go func() {
-		done <- r(goyek.Input{TaskName: "task", Output: out})
+		done <- r(goyek.Input{TaskName: "task", Output: syncOut})
 	}()
 
 	select {
@@ -81,8 +83,8 @@ func TestReportLongRun_nilOutput(t *testing.T) {
 	if result.Status != goyek.StatusPassed {
 		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusPassed)
 	}
-	if gotOutput == nil {
-		t.Fatal("next runner received a nil output")
+	if gotOutput != io.Discard {
+		t.Fatalf("next runner received %T output, want io.Discard", gotOutput)
 	}
 }
 
@@ -116,8 +118,8 @@ func TestReportLongRun_stopsReporterWhenNextPanics(t *testing.T) {
 	}
 }
 
-func TestReportLongRun_wrapsOutputBeforeNext(t *testing.T) {
-	out := &strings.Builder{}
+func TestReportLongRun_preservesOutput(t *testing.T) {
+	out := io.Discard
 	var gotOutput io.Writer
 	r := middleware.ReportLongRun(time.Hour)(func(in goyek.Input) goyek.Result {
 		gotOutput = in.Output
@@ -126,8 +128,8 @@ func TestReportLongRun_wrapsOutputBeforeNext(t *testing.T) {
 
 	r(goyek.Input{Output: out})
 
-	if gotOutput == out {
-		t.Fatal("next runner received the unsynchronized output")
+	if gotOutput != out {
+		t.Fatal("ReportLongRun replaced Input.Output")
 	}
 }
 

@@ -56,9 +56,11 @@ func (a *A) Name() string {
 
 // Output returns the destination used for printing messages.
 //
-// The returned writer may wrap the output configured for the runner. Callers
-// must not rely on the configured writer's concrete type or optional interfaces,
-// and must use the returned writer for synchronized task output.
+// It returns the writer supplied to the innermost runner. [NewRunner] passes a
+// non-nil [Input.Output] through unchanged; if it is nil, Output returns
+// [io.Discard]. The writer must be safe for concurrent use if task goroutines
+// may write to it simultaneously. Use [SyncWriter] to adapt an unsafe writer
+// before invoking the runner.
 func (a *A) Output() io.Writer {
 	return a.output
 }

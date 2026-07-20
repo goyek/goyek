@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"io"
-
-	"github.com/goyek/goyek/v3/internal"
 )
 
 type (
 	// Executor represents a flow execution function.
+	//
+	// An Executor must not return while goroutines it started are still using
+	// ExecuteInput.Output or ExecuteInput.Logger.
 	Executor func(ExecuteInput) error
 
 	// ExecuteInput received by the flow executor.
@@ -18,11 +19,18 @@ type (
 		Tasks     []string
 		SkipTasks []string
 		NoDeps    bool
-		Output    io.Writer
-		Logger    Logger
+		// A non-nil Output must be safe for concurrent use. Use [SyncWriter] to
+		// adapt a writer that does not provide its own synchronization.
+		Output io.Writer
+		Logger Logger
 	}
 
 	// ExecutorMiddleware represents a flow execution interceptor.
+	//
+	// If an ExecutorMiddleware replaces [ExecuteInput.Output] with a non-nil
+	// writer, the replacement must be safe for concurrent use. An
+	// ExecutorMiddleware must not return while goroutines it started are still
+	// using [ExecuteInput.Output] or [ExecuteInput.Logger].
 	ExecutorMiddleware func(Executor) Executor
 
 	executor struct {
@@ -53,7 +61,7 @@ func (r *executor) Execute(in ExecuteInput) error {
 
 	ctx := in.Context
 	tasks := in.Tasks
-	out := internal.SyncWriter(in.Output)
+	out := in.Output
 	for len(tasks) > 0 {
 		name := tasks[0]
 		tasks = tasks[1:]

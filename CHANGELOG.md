@@ -12,11 +12,16 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
+- Add `SyncWriter` to adapt an output writer for concurrent use.
 
 ### Changed
 
-- Clarify the concurrency requirements for runners, output writers, and custom
-  logger implementations.
+- **BREAKING**: Require non-nil output writers supplied to flows, runners,
+  executors, and middleware to be safe for concurrent use. Goyek no longer
+  implicitly wraps caller-supplied writers; use `SyncWriter` when
+  synchronization is needed.
+- Clarify the concurrency requirements for runner and executor lifecycles and
+  custom logger implementations.
 
 ### Fixed
 
@@ -33,14 +38,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   not canceled when the task finished.
 - `A.TempDir` now truncates the sanitized task name to prevent
   "file name too long" errors.
-- Fix races when task output is written from multiple goroutines through
-  `A.Output` during one runner invocation.
-- Fix a race between `middleware.ReportLongRun` notifications and task output
-  when the middleware is composed directly with `NewRunner`.
 - Ensure `middleware.ReportLongRun` stops its reporting goroutine if the next
   runner panics.
-- Fix signal handling in `Flow.Main` to support `SIGTERM` on Unix and
-  synchronize output during shutdown.
+- Fix signal handling in `Flow.Main` to support `SIGTERM` on Unix.
 - Document that `Flow` and `DefinedTask` are not safe for concurrent use.
 
 ## [3.0.1](https://github.com/goyek/goyek/releases/tag/v3.0.1) - 2025-12-09

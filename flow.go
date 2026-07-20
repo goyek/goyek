@@ -124,13 +124,13 @@ func (f *Flow) isDefined(name string, flow *Flow) bool {
 	return ok
 }
 
-// Output returns the destination used for printing messages.
+// Output returns the destination configured by [SetOutput] unchanged.
 // [os.Stdout] is returned if output was not set or was set to nil.
 func Output() io.Writer {
 	return DefaultFlow.Output()
 }
 
-// Output returns the destination used for printing messages.
+// Output returns the destination configured by [Flow.SetOutput] unchanged.
 // [os.Stdout] is returned if output was not set or was set to nil.
 func (f *Flow) Output() io.Writer {
 	if f.output == nil {
@@ -140,11 +140,21 @@ func (f *Flow) Output() io.Writer {
 }
 
 // SetOutput sets the output destination.
+//
+// A non-nil out must be safe for concurrent use because parallel tasks,
+// task goroutines, middleware, and the signal handler used by [Main] may write
+// to it simultaneously. Use [SyncWriter] to adapt a writer that does not
+// provide its own synchronization. Passing nil restores [os.Stdout].
 func SetOutput(out io.Writer) {
 	DefaultFlow.SetOutput(out)
 }
 
 // SetOutput sets the output destination.
+//
+// A non-nil out must be safe for concurrent use because parallel tasks,
+// task goroutines, middleware, and the signal handler used by [Flow.Main] may
+// write to it simultaneously. Use [SyncWriter] to adapt a writer that does not
+// provide its own synchronization. Passing nil restores [os.Stdout].
 func (f *Flow) SetOutput(out io.Writer) {
 	f.output = out
 }
@@ -403,12 +413,7 @@ func (f *Flow) Main(args []string, opts ...Option) {
 }
 
 func (f *Flow) runMain(args []string, exit func(int), opts ...Option) int {
-	out := internal.SyncWriter(f.Output())
-	originalOutput := f.output
-	f.output = out
-	defer func() {
-		f.output = originalOutput
-	}()
+	out := f.Output()
 
 	// trap termination signals and call cancel on the context
 	ctx, cancel := context.WithCancel(context.Background())

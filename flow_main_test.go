@@ -10,7 +10,7 @@ import (
 
 func TestFlow_main(t *testing.T) {
 	flow := &Flow{}
-	flow.SetOutput(&strings.Builder{})
+	flow.SetOutput(SyncWriter(&strings.Builder{}))
 	flow.Define(Task{Name: "task"})
 	flow.Define(Task{Name: "failing", Action: func(a *A) { a.Fail() }})
 
@@ -50,7 +50,7 @@ func TestFlow_main(t *testing.T) {
 				ctx, cancel := context.WithCancel(context.Background())
 				defer cancel()
 				flow := &Flow{}
-				flow.SetOutput(&strings.Builder{})
+				flow.SetOutput(SyncWriter(&strings.Builder{}))
 				flow.Define(Task{
 					Name: "task",
 					Action: func(*A) {
@@ -109,5 +109,32 @@ func TestFlow_runMain(t *testing.T) {
 	case code := <-exited:
 		t.Fatalf("exit called with code %d", code)
 	default:
+	}
+}
+
+func TestFlow_runMain_preservesOutput(t *testing.T) {
+	flow := &Flow{}
+	out := io.Discard
+	flow.SetOutput(out)
+	flow.Define(Task{Name: "task"})
+
+	var gotOutput io.Writer
+	flow.UseExecutor(func(next Executor) Executor {
+		return func(in ExecuteInput) error {
+			gotOutput = in.Output
+			return next(in)
+		}
+	})
+
+	code := flow.runMain([]string{"task"}, func(int) {})
+
+	if code != exitCodePass {
+		t.Fatalf("got exit code %d, want %d", code, exitCodePass)
+	}
+	if gotOutput != out {
+		t.Fatal("Flow.runMain replaced output")
+	}
+	if flow.Output() != out {
+		t.Fatal("Flow.runMain changed the configured output")
 	}
 }

@@ -19,7 +19,7 @@ func TestSilentNonFailed_failed(t *testing.T) {
 	}
 	r = middleware.SilentNonFailed(r)
 
-	r(goyek.Input{Output: sb})
+	r(goyek.Input{Output: goyek.SyncWriter(sb)})
 
 	if !strings.Contains(sb.String(), msg) {
 		t.Errorf("got: %q; but should contain: %q", sb.String(), msg)
@@ -54,7 +54,7 @@ func TestSilentNonFailed_notFailed(t *testing.T) {
 			}
 			r = middleware.SilentNonFailed(r)
 
-			r(goyek.Input{Output: sb})
+			r(goyek.Input{Output: goyek.SyncWriter(sb)})
 
 			if strings.Contains(sb.String(), msg) {
 				t.Errorf("got: %q; but should not contain: %q", sb.String(), msg)
@@ -90,7 +90,7 @@ func TestSilentNonFailed_concurrent_printing(t *testing.T) {
 	r = middleware.SilentNonFailed(r)
 
 	sb := &strings.Builder{}
-	r(goyek.Input{Output: sb})
+	r(goyek.Input{Output: goyek.SyncWriter(sb)})
 
 	if got, want := sb.String(), strings.Repeat(message, goroutines*writesPerGoroutine); got != want {
 		t.Fatalf("got %q, want %q", got, want)

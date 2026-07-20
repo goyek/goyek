@@ -7,14 +7,13 @@ import (
 	"time"
 
 	"github.com/goyek/goyek/v3"
-	"github.com/goyek/goyek/v3/internal"
 )
 
 // ReportLongRun is a middleware which reports the task when it is long running.
-// It may pass a synchronized wrapper around [goyek.Input.Output] to the next
-// runner. The next runner must not rely on the writer's concrete type or
-// optional interfaces, and must use the writer it receives instead of a
-// previously retained reference.
+// It can write to [goyek.Input.Output] concurrently with the next runner, so a
+// non-nil output must be safe for concurrent use. Use [goyek.SyncWriter] to
+// adapt a writer that does not provide its own synchronization. A nil output
+// is replaced with [io.Discard].
 func ReportLongRun(d time.Duration) func(next goyek.Runner) goyek.Runner {
 	return func(next goyek.Runner) goyek.Runner {
 		return func(in goyek.Input) goyek.Result {
@@ -22,7 +21,7 @@ func ReportLongRun(d time.Duration) func(next goyek.Runner) goyek.Runner {
 			if out == nil {
 				out = io.Discard
 			}
-			in.Output = internal.SyncWriter(out)
+			in.Output = out
 
 			start := time.Now()
 			task := in.TaskName
@@ -38,7 +37,7 @@ func ReportLongRun(d time.Duration) func(next goyek.Runner) goyek.Runner {
 					case <-done:
 						return
 					case <-t.C:
-						fmt.Fprintf(in.Output, "***** LONG: %s (%.2fs)\n", task, time.Since(start).Seconds())
+						fmt.Fprintf(out, "***** LONG: %s (%.2fs)\n", task, time.Since(start).Seconds())
 					}
 				}
 			}()

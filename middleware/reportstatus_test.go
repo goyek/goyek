@@ -42,7 +42,7 @@ func TestReportStatus(t *testing.T) {
 			r := goyek.Runner(func(goyek.Input) goyek.Result { return goyek.Result{Status: tt.status} })
 			r = middleware.ReportStatus(r)
 
-			r(goyek.Input{TaskName: taskName, Output: sb})
+			r(goyek.Input{TaskName: taskName, Output: goyek.SyncWriter(sb)})
 
 			if !strings.Contains(sb.String(), tt.want) {
 				t.Errorf("got: %q; but should contain: %q", sb.String(), tt.want)
@@ -74,7 +74,7 @@ func TestReportStatus(t *testing.T) {
 			})
 			r = middleware.ReportStatus(r)
 
-			r(goyek.Input{TaskName: taskName, Output: sb})
+			r(goyek.Input{TaskName: taskName, Output: goyek.SyncWriter(sb)})
 
 			if !strings.Contains(sb.String(), tt.want) {
 				t.Errorf("got: %q; but should contain: %q", sb.String(), tt.want)

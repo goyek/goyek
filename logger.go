@@ -12,8 +12,10 @@ import (
 //
 // Logger methods may be called simultaneously from multiple goroutines.
 // Implementations must synchronize access to any shared mutable state.
-// This requirement also applies to optional Error, Errorf, Fatal, Fatalf,
-// Skip, Skipf, and Helper methods implemented by the logger.
+// This concurrency requirement also applies to optional Error, Errorf, Fatal,
+// Fatalf, Skip, Skipf, and Helper methods implemented by the logger. A method
+// that receives a writer must finish using it before returning and must not
+// retain it for asynchronous use.
 type Logger interface {
 	Log(w io.Writer, args ...interface{})
 	Logf(w io.Writer, format string, args ...interface{})
