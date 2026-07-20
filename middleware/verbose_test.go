@@ -64,18 +64,26 @@ func TestSilentNonFailed_notFailed(t *testing.T) {
 }
 
 func TestSilentNonFailed_concurrent_printing(t *testing.T) {
-	const goroutines = 5
-	const message = "msg "
+	const (
+		goroutines         = 16
+		writesPerGoroutine = 25
+		message            = "msg "
+	)
 
 	r := func(in goyek.Input) goyek.Result {
+		start := make(chan struct{})
 		var wg sync.WaitGroup
 		for i := 0; i < goroutines; i++ {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				io.WriteString(in.Output, message) //nolint:errcheck // not checking errors when writing to output
+				<-start
+				for j := 0; j < writesPerGoroutine; j++ {
+					io.WriteString(in.Output, message) //nolint:errcheck // not checking errors when writing to output
+				}
 			}()
 		}
+		close(start)
 		wg.Wait()
 		return goyek.Result{Status: goyek.StatusFailed}
 	}
@@ -84,7 +92,7 @@ func TestSilentNonFailed_concurrent_printing(t *testing.T) {
 	sb := &strings.Builder{}
 	r(goyek.Input{Output: sb})
 
-	if got, want := strings.Count(sb.String(), strings.TrimSpace(message)), goroutines; got != want {
-		t.Fatalf("got %d occurrences, want %d", got, want)
+	if got, want := sb.String(), strings.Repeat(message, goroutines*writesPerGoroutine); got != want {
+		t.Fatalf("got %q, want %q", got, want)
 	}
 }

@@ -13,6 +13,11 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
 
+### Changed
+
+- Clarify the concurrency requirements for runners, output writers, and custom
+  logger implementations.
+
 ### Fixed
 
 - `A.Cleanup` now panics if a `nil` function is provided.
@@ -28,8 +33,12 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   not canceled when the task finished.
 - `A.TempDir` now truncates the sanitized task name to prevent
   "file name too long" errors.
-- Fix races when task output is written from multiple goroutines
-  by automatically wrapping the output in a synchronized writer.
+- Fix races when task output is written from multiple goroutines through
+  `A.Output` during one runner invocation.
+- Fix a race between `middleware.ReportLongRun` notifications and task output
+  when the middleware is composed directly with `NewRunner`.
+- Ensure `middleware.ReportLongRun` stops its reporting goroutine if the next
+  runner panics.
 - Fix signal handling in `Flow.Main` to support `SIGTERM` on Unix and
   synchronize output during shutdown.
 - Document that `Flow` and `DefinedTask` are not safe for concurrent use.

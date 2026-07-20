@@ -9,6 +9,11 @@ import (
 )
 
 // Logger is used by A's logging functions.
+//
+// Logger methods may be called simultaneously from multiple goroutines.
+// Implementations must synchronize access to any shared mutable state.
+// This requirement also applies to optional Error, Errorf, Fatal, Fatalf,
+// Skip, Skipf, and Helper methods implemented by the logger.
 type Logger interface {
 	Log(w io.Writer, args ...interface{})
 	Logf(w io.Writer, format string, args ...interface{})

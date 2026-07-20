@@ -24,6 +24,8 @@ const maxTempDirTaskNameLen = 64
 //
 // The other reporting methods, such as the variations of Log and Error,
 // may be called simultaneously from multiple goroutines.
+// The task must wait for goroutines using A or [A.Output] to finish before
+// its runner returns.
 type A struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
@@ -53,6 +55,10 @@ func (a *A) Name() string {
 }
 
 // Output returns the destination used for printing messages.
+//
+// The returned writer may wrap the output configured for the runner. Callers
+// must not rely on the configured writer's concrete type or optional interfaces,
+// and must use the returned writer for synchronized task output.
 func (a *A) Output() io.Writer {
 	return a.output
 }

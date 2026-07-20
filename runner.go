@@ -11,6 +11,9 @@ import (
 // Task runner types.
 type (
 	// Runner represents a task runner function.
+	//
+	// A Runner must not return while goroutines it started are still using
+	// Input.Output or Input.Logger.
 	Runner func(Input) Result
 
 	// Input received by the task runner.
@@ -48,6 +51,16 @@ type (
 // It can be also used as a building block for a custom
 // workflow runner if you are missing any functionalities
 // provided by Flow (like concurrent dependencies execution).
+//
+// Each invocation wraps Input.Output so writes made through [A.Output] and the
+// writer passed to Logger are synchronized with each other. The synchronization
+// is scoped to one invocation: if multiple runner invocations share the same
+// underlying writer concurrently, that writer must itself be safe for concurrent
+// use. Writes made directly to a reference retained before the invocation bypass
+// the wrapper.
+//
+// [A.Output] may return a wrapper around Input.Output. Callers must not rely on
+// the configured writer's concrete type or on optional interfaces it implements.
 func NewRunner(action func(a *A)) Runner {
 	r := taskRunner{action: action}
 	return r.run
