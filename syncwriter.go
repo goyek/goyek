@@ -40,6 +40,11 @@ var _ io.StringWriter = (*syncWriter)(nil)
 // synchronized with calls made through the returned writer. Do not access w
 // directly until those calls have finished unless w is independently safe for
 // concurrent use.
+//
+// [Flow.Execute] and [Flow.Main] already serialize writes they route to their
+// configured output. SyncWriter is useful for standalone runner or executor
+// inputs, middleware replacements, and a destination shared across flows or
+// with code outside a flow execution.
 func SyncWriter(w io.Writer) io.Writer {
 	if w == nil {
 		return nil

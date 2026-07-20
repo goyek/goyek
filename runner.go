@@ -19,8 +19,9 @@ type (
 		Context  context.Context
 		TaskName string
 		Parallel bool
-		// A non-nil Output must be safe for concurrent use. Use [SyncWriter] to
-		// adapt a writer that does not provide its own synchronization.
+		// A nil Output means discard output. A non-nil Output must be safe for
+		// concurrent use. Use [SyncWriter] to adapt a writer that does not provide
+		// its own synchronization.
 		Output io.Writer
 		Logger Logger
 	}
@@ -37,7 +38,8 @@ type (
 	// If a Middleware replaces [Input.Output] with a non-nil writer, the
 	// replacement must be safe for concurrent use. A Middleware must not return
 	// while goroutines it started are still using [Input.Output] or
-	// [Input.Logger].
+	// [Input.Logger]. Middleware that writes before calling the next Runner must
+	// treat a nil Input.Output as [io.Discard].
 	Middleware func(Runner) Runner
 )
 

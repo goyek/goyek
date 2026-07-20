@@ -15,7 +15,9 @@ import (
 // This concurrency requirement also applies to optional Error, Errorf, Fatal,
 // Fatalf, Skip, Skipf, and Helper methods implemented by the logger. A method
 // that receives a writer must finish using it before returning and must not
-// retain it for asynchronous use.
+// retain it for asynchronous use. To keep a logical log record from being
+// interleaved with other output, format the complete record first and write it
+// with one call to [io.Writer.Write] or [io.StringWriter.WriteString].
 type Logger interface {
 	Log(w io.Writer, args ...interface{})
 	Logf(w io.Writer, format string, args ...interface{})

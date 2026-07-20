@@ -56,11 +56,13 @@ func (a *A) Name() string {
 
 // Output returns the destination used for printing messages.
 //
-// It returns the writer supplied to the innermost runner. [NewRunner] passes a
-// non-nil [Input.Output] through unchanged; if it is nil, Output returns
-// [io.Discard]. The writer must be safe for concurrent use if task goroutines
-// may write to it simultaneously. Use [SyncWriter] to adapt an unsafe writer
-// before invoking the runner.
+// It returns the writer supplied to the innermost runner. [Flow.Execute] starts
+// execution with a synchronized writer, which may wrap the output configured
+// for the Flow; middleware may replace it under the [Input.Output] contract.
+// [NewRunner] itself passes a non-nil Input.Output through unchanged; if it is
+// nil, Output returns [io.Discard]. Direct NewRunner callers must satisfy that
+// concurrency contract. Callers must not rely on the writer's concrete type or
+// optional interfaces.
 func (a *A) Output() io.Writer {
 	return a.output
 }

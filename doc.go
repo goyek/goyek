@@ -24,8 +24,9 @@ his feature is not built-in. In some cases, you may prefer [os/exec].
 
 You can customize output and behavior using [SetOutput], [SetLogger], [SetUsage],
 and [Execute] (as an alternative to [Main]).
-Output writers must be safe for concurrent use; [SyncWriter] can adapt writers
-that do not provide their own synchronization.
+[Execute] and [Main] serialize the writes they route to configured output.
+[SyncWriter] can adapt output shared outside a flow execution and writers used
+with low-level runners, executors, or middleware replacements.
 
 Middlewares can be integrated using [Use] and [UseExecutor]
 for additional functionality, such as generating task execution reports,

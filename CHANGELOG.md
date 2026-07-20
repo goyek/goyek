@@ -16,10 +16,13 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Changed
 
-- **BREAKING**: Require non-nil output writers supplied to flows, runners,
-  executors, and middleware to be safe for concurrent use. Goyek no longer
-  implicitly wraps caller-supplied writers; use `SyncWriter` when
-  synchronization is needed.
+- Define output ownership explicitly: flows synchronize the writes they route
+  during `Execute` and `Main`, while standalone runner and executor inputs and
+  middleware replacement writers must be safe for concurrent use. Use
+  `SyncWriter` when synchronization is needed outside a flow execution.
+- `NewRunner` no longer adds synchronization to a non-nil `Input.Output`. Direct
+  callers using writers such as `bytes.Buffer` or `strings.Builder` with
+  concurrent task output must pass `SyncWriter(out)`.
 - Clarify the concurrency requirements for runner and executor lifecycles and
   custom logger implementations.
 
@@ -32,6 +35,12 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   to resource leaks.
 - Fix races in `middleware.BufferParallel` and `middleware.SilentNonFailed`
   when task output is written from multiple goroutines.
+- Treat nil output as `io.Discard` in bundled output-writing middleware.
+- Emit each `middleware.ReportStatus` panic report with one write so concurrent
+  records cannot split its header from its stack.
+- Synchronize flow output before executor middleware so middleware, tasks,
+  loggers, and `Flow.Main` signal reporting share the Flow writer lock until a
+  middleware replaces the output.
 - Fix a resource leak in `A.Chdir` where a file descriptor could remain
   open.
 - Fix a resource leak in `A.WithContext` where derived contexts were
@@ -40,7 +49,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   "file name too long" errors.
 - Ensure `middleware.ReportLongRun` stops its reporting goroutine if the next
   runner panics.
-- Fix signal handling in `Flow.Main` to support `SIGTERM` on Unix.
+- Fix signal handling in `Flow.Main` to support `SIGTERM` on Unix and
+  synchronize output during shutdown.
 - Document that `Flow` and `DefinedTask` are not safe for concurrent use.
 
 ## [3.0.1](https://github.com/goyek/goyek/releases/tag/v3.0.1) - 2025-12-09

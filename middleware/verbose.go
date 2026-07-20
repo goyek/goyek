@@ -12,14 +12,14 @@ import (
 // The behavior is based on the Go test runner when it is executed without the -v flag.
 func SilentNonFailed(next goyek.Runner) goyek.Runner {
 	return func(in goyek.Input) goyek.Result {
-		orginalOut := in.Output
+		originalOut := outputOrDiscard(in.Output)
 		streamWriter := &strings.Builder{}
 		in.Output = goyek.SyncWriter(streamWriter)
 
 		result := next(in)
 
 		if result.Status == goyek.StatusFailed {
-			io.Copy(orginalOut, strings.NewReader(streamWriter.String())) //nolint:errcheck // not checking errors when writing to output
+			io.Copy(originalOut, strings.NewReader(streamWriter.String())) //nolint:errcheck // not checking errors when writing to output
 		}
 
 		return result

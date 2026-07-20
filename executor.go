@@ -19,8 +19,12 @@ type (
 		Tasks     []string
 		SkipTasks []string
 		NoDeps    bool
-		// A non-nil Output must be safe for concurrent use. Use [SyncWriter] to
-		// adapt a writer that does not provide its own synchronization.
+		// A nil Output means discard output. [Flow.Execute] supplies a non-nil,
+		// concurrency-safe writer that may wrap the configured output. Middleware
+		// must not rely on its identity, concrete type, or optional interfaces. A
+		// non-nil Output supplied by another caller must be safe for concurrent
+		// use; use [SyncWriter] to adapt a writer that does not provide its own
+		// synchronization.
 		Output io.Writer
 		Logger Logger
 	}
@@ -30,7 +34,9 @@ type (
 	// If an ExecutorMiddleware replaces [ExecuteInput.Output] with a non-nil
 	// writer, the replacement must be safe for concurrent use. An
 	// ExecutorMiddleware must not return while goroutines it started are still
-	// using [ExecuteInput.Output] or [ExecuteInput.Logger].
+	// using [ExecuteInput.Output] or [ExecuteInput.Logger]. Middleware that writes
+	// before calling the next Executor must treat a nil ExecuteInput.Output as
+	// [io.Discard].
 	ExecutorMiddleware func(Executor) Executor
 
 	executor struct {

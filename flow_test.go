@@ -324,7 +324,7 @@ func Test_invalid_args(t *testing.T) {
 func Test_printing(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
-	flow.SetOutput(goyek.SyncWriter(out))
+	flow.SetOutput(out)
 	skipped := flow.Define(goyek.Task{
 		Name: "skipped",
 		Action: func(a *goyek.A) {
@@ -352,7 +352,7 @@ func Test_printing(t *testing.T) {
 func Test_concurrent_printing(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
-	flow.SetOutput(goyek.SyncWriter(out))
+	flow.SetOutput(out)
 	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(a *goyek.A) {
@@ -379,7 +379,7 @@ func Test_concurrent_error(t *testing.T) {
 
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
-	flow.SetOutput(goyek.SyncWriter(out))
+	flow.SetOutput(out)
 	flow.Define(goyek.Task{
 		Name: "task",
 		Action: func(a *goyek.A) {
@@ -425,7 +425,7 @@ func Test_name(t *testing.T) {
 func Test_output(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
-	flow.SetOutput(goyek.SyncWriter(out))
+	flow.SetOutput(out)
 	msg := "hello there"
 	flow.Define(goyek.Task{
 		Name: "task",
@@ -520,7 +520,7 @@ func TestFlow_Default_nil(t *testing.T) {
 func TestFlow_Print(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
-	flow.SetOutput(goyek.SyncWriter(out))
+	flow.SetOutput(out)
 	task := flow.Define(goyek.Task{Name: "task", Usage: "use it"})
 	flow.Define(goyek.Task{Name: "hidden"})
 	flow.Define(goyek.Task{Name: "with-dependency", Usage: "print", Deps: goyek.Deps{task}})
@@ -537,7 +537,7 @@ func TestFlow_Print(t *testing.T) {
 func TestFlow_Logger(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
-	flow.SetOutput(goyek.SyncWriter(out))
+	flow.SetOutput(out)
 	flow.SetLogger(goyek.FmtLogger{})
 	flow.Define(goyek.Task{
 		Name: "task",
@@ -580,7 +580,7 @@ func TestFlow_Usage_default(t *testing.T) {
 func TestFlow_Use(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
-	flow.SetOutput(goyek.SyncWriter(out))
+	flow.SetOutput(out)
 	flow.Define(goyek.Task{
 		Name: "task",
 	})
@@ -609,7 +609,7 @@ func TestFlow_Use_nil_middleware(t *testing.T) {
 func TestFlow_UseExecutor(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
-	flow.SetOutput(goyek.SyncWriter(out))
+	flow.SetOutput(out)
 	flow.Define(goyek.Task{
 		Name: "task",
 	})
@@ -635,7 +635,7 @@ func TestFlow_UseExecutor_nil_middleware(t *testing.T) {
 	assertPanics(t, act, "should panic on nil middleware")
 }
 
-func TestFlow_Execute_preservesOutput(t *testing.T) {
+func TestFlow_Execute_synchronizesOutputOnce(t *testing.T) {
 	out := io.Discard
 	flow := &goyek.Flow{}
 	flow.SetOutput(out)
@@ -663,14 +663,96 @@ func TestFlow_Execute_preservesOutput(t *testing.T) {
 	err := flow.Execute(context.Background(), []string{"task"})
 
 	assertPass(t, err, "should pass")
+	if executorOutput == out {
+		t.Fatal("executor middleware received the unsynchronized output")
+	}
+	if runnerOutput != executorOutput {
+		t.Fatal("runner middleware received a different output wrapper")
+	}
+	if actionOutput != executorOutput {
+		t.Fatal("task action received a different output wrapper")
+	}
+	if goyek.SyncWriter(executorOutput) != executorOutput {
+		t.Fatal("Flow.Execute output was wrapped more than once")
+	}
+	if flow.Output() != out {
+		t.Fatal("Flow.Execute changed the configured output")
+	}
+}
+
+func TestFlow_Execute_reusesSyncWriter(t *testing.T) {
+	out := goyek.SyncWriter(io.Discard)
+	flow := &goyek.Flow{}
+	flow.SetOutput(out)
+
+	var executorOutput io.Writer
+	flow.UseExecutor(func(next goyek.Executor) goyek.Executor {
+		return func(in goyek.ExecuteInput) error {
+			executorOutput = in.Output
+			return next(in)
+		}
+	})
+	flow.Define(goyek.Task{Name: "task"})
+
+	err := flow.Execute(context.Background(), []string{"task"})
+
+	assertPass(t, err, "should pass")
 	if executorOutput != out {
-		t.Fatal("Flow.Execute replaced output before executor middleware")
+		t.Fatal("Flow.Execute wrapped a SyncWriter result again")
 	}
-	if runnerOutput != out {
-		t.Fatal("executor replaced output before runner middleware")
+}
+
+func TestFlow_Execute_sharesConfiguredSyncWriter(t *testing.T) {
+	var output strings.Builder
+	out := goyek.SyncWriter(&output)
+
+	ready := &sync.WaitGroup{}
+	ready.Add(3)
+	start := make(chan struct{})
+	newFlow := func(message string) *goyek.Flow {
+		flow := &goyek.Flow{}
+		flow.SetOutput(out)
+		flow.Define(goyek.Task{
+			Name: "task",
+			Action: func(a *goyek.A) {
+				ready.Done()
+				<-start
+				_, _ = io.WriteString(a.Output(), message+"\n")
+			},
+		})
+		return flow
 	}
-	if actionOutput != out {
-		t.Fatal("NewRunner replaced output before task action")
+	flows := []*goyek.Flow{newFlow("first"), newFlow("second")}
+
+	errs := make(chan error, len(flows))
+	var wg sync.WaitGroup
+	for _, flow := range flows {
+		wg.Add(1)
+		go func(flow *goyek.Flow) {
+			defer wg.Done()
+			errs <- flow.Execute(context.Background(), []string{"task"})
+		}(flow)
+	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ready.Done()
+		<-start
+		_, _ = io.WriteString(out, "external\n")
+	}()
+	ready.Wait()
+	close(start)
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		assertPass(t, err, "should pass")
+	}
+
+	got := output.String()
+	for _, message := range []string{"first\n", "second\n", "external\n"} {
+		if strings.Count(got, message) != 1 {
+			t.Errorf("output %q does not contain exactly one %q", got, message)
+		}
 	}
 }
 
@@ -911,7 +993,7 @@ func TestFlow_Parallel_NoDeps(t *testing.T) {
 func Test_Parallel_concurrent_printing(t *testing.T) {
 	out := &strings.Builder{}
 	flow := &goyek.Flow{}
-	flow.SetOutput(goyek.SyncWriter(out))
+	flow.SetOutput(out)
 	flow.Define(goyek.Task{
 		Name:     "task-1",
 		Parallel: true,

@@ -96,3 +96,16 @@ func TestSilentNonFailed_concurrent_printing(t *testing.T) {
 		t.Fatalf("got %q, want %q", got, want)
 	}
 }
+
+func TestSilentNonFailed_nilOutput(t *testing.T) {
+	runner := middleware.SilentNonFailed(func(in goyek.Input) goyek.Result {
+		_, _ = io.WriteString(in.Output, "discarded")
+		return goyek.Result{Status: goyek.StatusFailed}
+	})
+
+	result := runner(goyek.Input{})
+
+	if result.Status != goyek.StatusFailed {
+		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusFailed)
+	}
+}

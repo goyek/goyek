@@ -1,6 +1,7 @@
 package middleware_test
 
 import (
+	"io"
 	"strings"
 	"testing"
 
@@ -85,4 +86,47 @@ func TestReportStatus(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestReportStatus_writesPanicAsOneRecord(t *testing.T) {
+	out := &recordingWriter{}
+	runner := middleware.ReportStatus(func(goyek.Input) goyek.Result {
+		return goyek.Result{
+			Status:     goyek.StatusFailed,
+			PanicValue: "boom",
+			PanicStack: []byte("stack\n"),
+		}
+	})
+
+	runner(goyek.Input{Output: out, TaskName: "task"})
+
+	if len(out.writes) != 3 {
+		t.Fatalf("got %d writes, want task, status, and panic records: %q", len(out.writes), out.writes)
+	}
+	if got, want := out.writes[2], "panic: boom\n\nstack\n"; got != want {
+		t.Fatalf("panic record = %q, want %q", got, want)
+	}
+}
+
+func TestReportStatus_nilOutput(t *testing.T) {
+	var gotOutput io.Writer
+	runner := middleware.ReportStatus(func(in goyek.Input) goyek.Result {
+		gotOutput = in.Output
+		return goyek.Result{Status: goyek.StatusPassed}
+	})
+
+	runner(goyek.Input{TaskName: "task"})
+
+	if gotOutput != io.Discard {
+		t.Fatalf("next runner received %T output, want io.Discard", gotOutput)
+	}
+}
+
+type recordingWriter struct {
+	writes []string
+}
+
+func (w *recordingWriter) Write(p []byte) (int, error) {
+	w.writes = append(w.writes, string(p))
+	return len(p), nil
 }

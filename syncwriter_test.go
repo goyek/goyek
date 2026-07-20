@@ -207,3 +207,23 @@ func TestSyncWriter_nil(t *testing.T) {
 		t.Fatalf("SyncWriter(nil) = %T, want nil", got)
 	}
 }
+
+func ExampleSyncWriter() {
+	var output strings.Builder
+	out := goyek.SyncWriter(&output)
+
+	var wg sync.WaitGroup
+	for _, message := range []string{"first\n", "second\n"} {
+		wg.Add(1)
+		go func(message string) {
+			defer wg.Done()
+			_, _ = io.WriteString(out, message)
+		}(message)
+	}
+	wg.Wait()
+
+	lines := strings.Split(strings.TrimSpace(output.String()), "\n")
+	sort.Strings(lines)
+	fmt.Println(lines)
+	// Output: [first second]
+}
