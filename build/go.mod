@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint/v2 v2.12.2
-	github.com/goyek/goyek/v3 v3.0.0-00010101000000-000000000000
+	github.com/goyek/goyek/v3 v3.0.1
 )
 
 replace github.com/goyek/goyek/v3 => ../
