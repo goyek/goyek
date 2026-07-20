@@ -153,9 +153,9 @@ func (f *Flow) Output() io.Writer {
 // parallel tasks, middleware, loggers, and the signal handler. A middleware
 // that replaces the writer is responsible for synchronizing its replacement.
 // Access through a retained reference to out is outside Flow's synchronization.
-// If out is shared with another flow or accessed concurrently outside an
-// execution, call [SyncWriter] once and share the returned writer. Passing nil
-// restores [os.Stdout].
+// If out is not independently safe for concurrent use and may be written by
+// another flow or outside an execution at the same time, call [SyncWriter] once
+// and share the returned writer. Passing nil restores [os.Stdout].
 func SetOutput(out io.Writer) {
 	DefaultFlow.SetOutput(out)
 }
@@ -166,9 +166,10 @@ func SetOutput(out io.Writer) {
 // provide to parallel tasks, middleware, loggers, and the signal handler. A
 // middleware that replaces the writer is responsible for synchronizing its
 // replacement. Access through a retained reference to out is outside Flow's
-// synchronization. If out is shared with another flow or accessed concurrently
-// outside an execution, call [SyncWriter] once and share the returned writer.
-// Passing nil restores [os.Stdout].
+// synchronization. If out is not independently safe for concurrent use and may
+// be written by another flow or outside an execution at the same time, call
+// [SyncWriter] once and share the returned writer. Passing nil restores
+// [os.Stdout].
 func (f *Flow) SetOutput(out io.Writer) {
 	f.output = out
 }

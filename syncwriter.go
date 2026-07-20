@@ -43,8 +43,9 @@ var _ io.StringWriter = (*syncWriter)(nil)
 //
 // [Flow.Execute] and [Flow.Main] already serialize writes they route to their
 // configured output. SyncWriter is useful for standalone runner or executor
-// inputs, middleware replacements, and a destination shared across flows or
-// with code outside a flow execution.
+// inputs and middleware replacements when the destination is not independently
+// safe for concurrent use. It can also coordinate such a destination when it
+// is concurrently shared across flows or with code outside a flow execution.
 func SyncWriter(w io.Writer) io.Writer {
 	if w == nil {
 		return nil

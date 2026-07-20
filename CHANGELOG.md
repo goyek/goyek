@@ -20,8 +20,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   during `Execute` and `Main`, while standalone runner and executor inputs and
   middleware replacement writers must be safe for concurrent use. Use
   `SyncWriter` when synchronization is needed outside a flow execution.
-- `NewRunner` no longer adds synchronization to a non-nil `Input.Output`. Direct
-  callers using writers such as `bytes.Buffer` or `strings.Builder` with
+- Clarify that `NewRunner` passes a non-nil `Input.Output` through unchanged.
+  Direct callers using writers such as `bytes.Buffer` or `strings.Builder` with
   concurrent task output must pass `SyncWriter(out)`.
 - Clarify the concurrency requirements for runner and executor lifecycles and
   custom logger implementations.
