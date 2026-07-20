@@ -57,6 +57,9 @@ func Example() {
 	}
 
 	// Parse the args.
+	// Parsing happens before Main, so refreshing this retained writer is
+	// single-threaded. The usage function refreshes it again during Main.
+	flag.CommandLine.SetOutput(goyek.Output())
 	flag.Usage = usage
 	tasks, args := goyek.SplitTasks(os.Args[1:])
 	if err := flag.CommandLine.Parse(args); err != nil {
