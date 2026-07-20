@@ -9,8 +9,8 @@ import (
 type (
 	// Executor represents a flow execution function.
 	//
-	// An Executor must not return while goroutines it started are still using
-	// ExecuteInput.Output or ExecuteInput.Logger.
+	// An Executor must not retain ExecuteInput.Output or ExecuteInput.Logger for
+	// use after it returns and must wait for all goroutines using them to finish.
 	Executor func(ExecuteInput) error
 
 	// ExecuteInput received by the flow executor.
@@ -32,11 +32,12 @@ type (
 	// ExecutorMiddleware represents a flow execution interceptor.
 	//
 	// If an ExecutorMiddleware replaces [ExecuteInput.Output] with a non-nil
-	// writer, the replacement must be safe for concurrent use. An
-	// ExecutorMiddleware must not return while goroutines it started are still
-	// using [ExecuteInput.Output] or [ExecuteInput.Logger]. Middleware that writes
-	// before calling the next Executor must treat a nil ExecuteInput.Output as
-	// [io.Discard].
+	// writer, the replacement must be safe for concurrent use. The Executor
+	// returned by an ExecutorMiddleware must not retain [ExecuteInput.Output] or
+	// [ExecuteInput.Logger] for use after it returns and must wait for all
+	// goroutines using them to finish. Middleware that writes to
+	// ExecuteInput.Output, before or after calling the next Executor, must treat a
+	// nil writer as [io.Discard].
 	ExecutorMiddleware func(Executor) Executor
 
 	executor struct {

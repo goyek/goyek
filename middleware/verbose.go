@@ -19,7 +19,7 @@ func SilentNonFailed(next goyek.Runner) goyek.Runner {
 		result := next(in)
 
 		if result.Status == goyek.StatusFailed {
-			io.Copy(originalOut, strings.NewReader(streamWriter.String())) //nolint:errcheck // not checking errors when writing to output
+			io.WriteString(originalOut, streamWriter.String()) //nolint:errcheck // not checking errors when writing to output
 		}
 
 		return result

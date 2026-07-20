@@ -10,8 +10,8 @@ import (
 type (
 	// Runner represents a task runner function.
 	//
-	// A Runner must not return while goroutines it started are still using
-	// Input.Output or Input.Logger.
+	// A Runner must not retain Input.Output or Input.Logger for use after it
+	// returns and must wait for all goroutines using them to finish.
 	Runner func(Input) Result
 
 	// Input received by the task runner.
@@ -36,10 +36,11 @@ type (
 	// Middleware represents a task runner interceptor.
 	//
 	// If a Middleware replaces [Input.Output] with a non-nil writer, the
-	// replacement must be safe for concurrent use. A Middleware must not return
-	// while goroutines it started are still using [Input.Output] or
-	// [Input.Logger]. Middleware that writes before calling the next Runner must
-	// treat a nil Input.Output as [io.Discard].
+	// replacement must be safe for concurrent use. The Runner returned by a
+	// Middleware must not retain [Input.Output] or [Input.Logger] for use after it
+	// returns and must wait for all goroutines using them to finish. Middleware
+	// that writes to Input.Output, before or after calling the next Runner, must
+	// treat a nil writer as [io.Discard].
 	Middleware func(Runner) Runner
 )
 

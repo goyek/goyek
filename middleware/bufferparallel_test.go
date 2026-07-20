@@ -96,3 +96,22 @@ func TestBufferParallel_nilOutput(t *testing.T) {
 		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusPassed)
 	}
 }
+
+func TestBufferParallel_flushesBufferedOutputInOneWrite(t *testing.T) {
+	out := &recordingWriter{}
+	runner := middleware.BufferParallel(func(in goyek.Input) goyek.Result {
+		_, _ = io.WriteString(in.Output, "first")
+		_, _ = io.WriteString(in.Output, "second")
+		return goyek.Result{Status: goyek.StatusPassed}
+	})
+
+	result := runner(goyek.Input{Parallel: true, Output: out})
+
+	if result.Status != goyek.StatusPassed {
+		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusPassed)
+	}
+	writes := out.records()
+	if len(writes) != 1 || writes[0] != "firstsecond" {
+		t.Fatalf("writes = %q, want %q", writes, []string{"firstsecond"})
+	}
+}
