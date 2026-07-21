@@ -24,6 +24,8 @@ const maxTempDirTaskNameLen = 64
 //
 // The other reporting methods, such as the variations of Log and Error,
 // may be called simultaneously from multiple goroutines.
+// The task must not retain A or [A.Output] for use after its runner returns and
+// must wait for all goroutines using them to finish.
 type A struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
@@ -53,6 +55,14 @@ func (a *A) Name() string {
 }
 
 // Output returns the destination used for printing messages.
+//
+// It returns the writer supplied to the innermost runner. [Flow.Execute] starts
+// execution with a synchronized writer, which may wrap the output configured
+// for the Flow; middleware may replace it under the [Input.Output] contract.
+// [NewRunner] itself passes a non-nil Input.Output through unchanged; if it is
+// nil, Output returns [io.Discard]. Direct NewRunner callers must satisfy that
+// concurrency contract. Callers must not rely on the writer's concrete type or
+// optional interfaces.
 func (a *A) Output() io.Writer {
 	return a.output
 }

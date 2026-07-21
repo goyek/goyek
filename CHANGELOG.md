@@ -12,6 +12,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
+- Add `SyncWriter` to adapt an output writer for concurrent use.
 
 ### Fixed
 
@@ -22,14 +23,20 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   to resource leaks.
 - Fix races in `middleware.BufferParallel` and `middleware.SilentNonFailed`
   when task output is written from multiple goroutines.
+- Treat nil output as `io.Discard` in bundled output-writing middleware.
+- Emit each `middleware.ReportStatus` panic report with one write so concurrent
+  records cannot split its header from its stack.
+- Synchronize flow output before executor middleware so middleware, tasks,
+  loggers, and `Flow.Main` signal reporting share the Flow writer lock until a
+  middleware replaces the output.
 - Fix a resource leak in `A.Chdir` where a file descriptor could remain
   open.
 - Fix a resource leak in `A.WithContext` where derived contexts were
   not canceled when the task finished.
 - `A.TempDir` now truncates the sanitized task name to prevent
   "file name too long" errors.
-- Fix races when task output is written from multiple goroutines
-  by automatically wrapping the output in a synchronized writer.
+- Ensure `middleware.ReportLongRun` stops its reporting goroutine if the next
+  runner panics.
 - Fix signal handling in `Flow.Main` to support `SIGTERM` on Unix and
   synchronize output during shutdown.
 - Document that `Flow` and `DefinedTask` are not safe for concurrent use.

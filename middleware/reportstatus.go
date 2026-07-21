@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/goyek/goyek/v3"
@@ -13,25 +14,30 @@ import (
 // The format is based on the reports provided by the Go test runner.
 func ReportStatus(next goyek.Runner) goyek.Runner {
 	return func(in goyek.Input) goyek.Result {
+		out := outputOrDiscard(in.Output)
+		in.Output = out
+
 		// report start task
-		fmt.Fprintf(in.Output, "===== TASK  %s\n", in.TaskName)
+		fmt.Fprintf(out, "===== TASK  %s\n", in.TaskName)
 		start := time.Now()
 
 		// run
 		res := next(in)
 
 		// report task end
-		fmt.Fprintf(in.Output, "----- %s: %s (%.2fs)\n", res.Status, in.TaskName, time.Since(start).Seconds())
+		fmt.Fprintf(out, "----- %s: %s (%.2fs)\n", res.Status, in.TaskName, time.Since(start).Seconds())
 
 		// report panic if happened
 		if res.PanicStack != nil {
+			var report strings.Builder
 			if res.PanicValue != nil {
-				io.WriteString(in.Output, fmt.Sprintf("panic: %v", res.PanicValue)) //nolint:errcheck // not checking errors when writing to output
+				fmt.Fprintf(&report, "panic: %v", res.PanicValue)
 			} else {
-				io.WriteString(in.Output, "panic(nil) or runtime.Goexit() called") //nolint:errcheck // not checking errors when writing to output
+				report.WriteString("panic(nil) or runtime.Goexit() called")
 			}
-			io.WriteString(in.Output, "\n\n") //nolint:errcheck // not checking errors when writing to output
-			in.Output.Write(res.PanicStack)   //nolint:errcheck // not checking errors when writing to output
+			report.WriteString("\n\n")
+			report.Write(res.PanicStack)
+			io.WriteString(out, report.String()) //nolint:errcheck // not checking errors when writing to output
 		}
 
 		return res

@@ -635,6 +635,127 @@ func TestFlow_UseExecutor_nil_middleware(t *testing.T) {
 	assertPanics(t, act, "should panic on nil middleware")
 }
 
+func TestFlow_Execute_synchronizesOutputOnce(t *testing.T) {
+	out := io.Discard
+	flow := &goyek.Flow{}
+	flow.SetOutput(out)
+
+	var executorOutput, runnerOutput, actionOutput io.Writer
+	flow.UseExecutor(func(next goyek.Executor) goyek.Executor {
+		return func(in goyek.ExecuteInput) error {
+			executorOutput = in.Output
+			return next(in)
+		}
+	})
+	flow.Use(func(next goyek.Runner) goyek.Runner {
+		return func(in goyek.Input) goyek.Result {
+			runnerOutput = in.Output
+			return next(in)
+		}
+	})
+	flow.Define(goyek.Task{
+		Name: "task",
+		Action: func(a *goyek.A) {
+			actionOutput = a.Output()
+		},
+	})
+
+	err := flow.Execute(context.Background(), []string{"task"})
+
+	assertPass(t, err, "should pass")
+	if executorOutput == out {
+		t.Fatal("executor middleware received the unsynchronized output")
+	}
+	if runnerOutput != executorOutput {
+		t.Fatal("runner middleware received a different output wrapper")
+	}
+	if actionOutput != executorOutput {
+		t.Fatal("task action received a different output wrapper")
+	}
+	if goyek.SyncWriter(executorOutput) != executorOutput {
+		t.Fatal("Flow.Execute output was wrapped more than once")
+	}
+	if flow.Output() != out {
+		t.Fatal("Flow.Execute changed the configured output")
+	}
+}
+
+func TestFlow_Execute_reusesSyncWriter(t *testing.T) {
+	out := goyek.SyncWriter(io.Discard)
+	flow := &goyek.Flow{}
+	flow.SetOutput(out)
+
+	var executorOutput io.Writer
+	flow.UseExecutor(func(next goyek.Executor) goyek.Executor {
+		return func(in goyek.ExecuteInput) error {
+			executorOutput = in.Output
+			return next(in)
+		}
+	})
+	flow.Define(goyek.Task{Name: "task"})
+
+	err := flow.Execute(context.Background(), []string{"task"})
+
+	assertPass(t, err, "should pass")
+	if executorOutput != out {
+		t.Fatal("Flow.Execute wrapped a SyncWriter result again")
+	}
+}
+
+func TestFlow_Execute_sharesConfiguredSyncWriter(t *testing.T) {
+	var output strings.Builder
+	out := goyek.SyncWriter(&output)
+
+	ready := &sync.WaitGroup{}
+	ready.Add(3)
+	start := make(chan struct{})
+	newFlow := func(message string) *goyek.Flow {
+		flow := &goyek.Flow{}
+		flow.SetOutput(out)
+		flow.Define(goyek.Task{
+			Name: "task",
+			Action: func(a *goyek.A) {
+				ready.Done()
+				<-start
+				_, _ = io.WriteString(a.Output(), message+"\n")
+			},
+		})
+		return flow
+	}
+	flows := []*goyek.Flow{newFlow("first"), newFlow("second")}
+
+	errs := make(chan error, len(flows))
+	var wg sync.WaitGroup
+	for _, flow := range flows {
+		wg.Add(1)
+		go func(flow *goyek.Flow) {
+			defer wg.Done()
+			errs <- flow.Execute(context.Background(), []string{"task"})
+		}(flow)
+	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ready.Done()
+		<-start
+		_, _ = io.WriteString(out, "external\n")
+	}()
+	ready.Wait()
+	close(start)
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		assertPass(t, err, "should pass")
+	}
+
+	got := output.String()
+	for _, message := range []string{"first\n", "second\n", "external\n"} {
+		if strings.Count(got, message) != 1 {
+			t.Errorf("output %q does not contain exactly one %q", got, message)
+		}
+	}
+}
+
 func TestFlow_Undefine(t *testing.T) {
 	flow := &goyek.Flow{}
 	task := flow.Define(goyek.Task{Name: "name"})

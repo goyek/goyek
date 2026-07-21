@@ -12,7 +12,8 @@ import (
 // The format is based on the reports provided by the Go test runner.
 func ReportFlow(next goyek.Executor) goyek.Executor {
 	return func(in goyek.ExecuteInput) error {
-		out := in.Output
+		out := outputOrDiscard(in.Output)
+		in.Output = out
 
 		from := time.Now()
 		if err := next(in); err != nil {

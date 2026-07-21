@@ -124,14 +124,22 @@ func (f *Flow) isDefined(name string, flow *Flow) bool {
 	return ok
 }
 
-// Output returns the destination used for printing messages.
-// [os.Stdout] is returned if output was not set or was set to nil.
+// Output returns the current output destination. [os.Stdout] is returned if
+// output was not set or was set to nil. Outside [Main], it returns the writer
+// configured by [SetOutput] unchanged. While Main is running, it may return the
+// synchronized writer used by that execution and its signal handler. Outside
+// Main, writes made directly through the returned writer are not synchronized
+// by the Flow.
 func Output() io.Writer {
 	return DefaultFlow.Output()
 }
 
-// Output returns the destination used for printing messages.
-// [os.Stdout] is returned if output was not set or was set to nil.
+// Output returns the current output destination. [os.Stdout] is returned if
+// output was not set or was set to nil. Outside [Flow.Main], it returns the
+// writer configured by [Flow.SetOutput] unchanged. While Flow.Main is running,
+// it may return the synchronized writer used by that execution and its signal
+// handler. Outside Flow.Main, writes made directly through the returned writer
+// are not synchronized by the Flow.
 func (f *Flow) Output() io.Writer {
 	if f.output == nil {
 		return os.Stdout
@@ -140,11 +148,28 @@ func (f *Flow) Output() io.Writer {
 }
 
 // SetOutput sets the output destination.
+//
+// [Execute] and [Main] serialize writes made through the writer they provide to
+// parallel tasks, middleware, loggers, and the signal handler. A middleware
+// that replaces the writer is responsible for synchronizing its replacement.
+// Access through a retained reference to out is outside Flow's synchronization.
+// If out is not independently safe for concurrent use and may be written by
+// another flow or outside an execution at the same time, call [SyncWriter] once
+// and share the returned writer. Passing nil restores [os.Stdout].
 func SetOutput(out io.Writer) {
 	DefaultFlow.SetOutput(out)
 }
 
 // SetOutput sets the output destination.
+//
+// [Flow.Execute] and [Flow.Main] serialize writes made through the writer they
+// provide to parallel tasks, middleware, loggers, and the signal handler. A
+// middleware that replaces the writer is responsible for synchronizing its
+// replacement. Access through a retained reference to out is outside Flow's
+// synchronization. If out is not independently safe for concurrent use and may
+// be written by another flow or outside an execution at the same time, call
+// [SyncWriter] once and share the returned writer. Passing nil restores
+// [os.Stdout].
 func (f *Flow) SetOutput(out io.Writer) {
 	f.output = out
 }
@@ -328,6 +353,10 @@ func (err *FailError) Error() string {
 // Returns nil if no task has failed,
 // [*FailError] if a task failed,
 // other errors in case of invalid input or context error.
+//
+// Execute adapts the configured output for concurrent use before invoking
+// executor middleware. The same writer is passed through the execution unless
+// middleware replaces it.
 func Execute(ctx context.Context, tasks []string, opts ...Option) error {
 	return DefaultFlow.Execute(ctx, tasks, opts...)
 }
@@ -337,6 +366,10 @@ func Execute(ctx context.Context, tasks []string, opts ...Option) error {
 // Returns nil if no task has failed,
 // [*FailError] if a task failed,
 // other errors in case of invalid input or context error.
+//
+// Execute adapts the configured output for concurrent use before invoking
+// executor middleware. The same writer is passed through the execution unless
+// middleware replaces it.
 func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) error {
 	var middlewares []Middleware
 	middlewares = append(middlewares, f.middlewares...)
@@ -364,7 +397,7 @@ func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) erro
 		Tasks:     tasks,
 		SkipTasks: cfg.skipTasks,
 		NoDeps:    cfg.noDeps,
-		Output:    f.Output(),
+		Output:    SyncWriter(f.Output()),
 		Logger:    f.Logger(),
 	}
 	return runner(in)
@@ -378,6 +411,9 @@ const (
 
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
+// Main serializes writes routed to the configured output and shares the initial
+// execution writer with its termination-signal handler. Middleware may replace
+// the writer passed farther into the execution.
 // It exits the current program after the run is finished
 // or a termination signal interrupted the execution.
 //   - 0 exit code means that none of the tasks failed.
@@ -391,6 +427,9 @@ func Main(args []string, opts ...Option) {
 
 // Main runs provided tasks and all their dependencies.
 // Each task is executed at most once.
+// Main serializes writes routed to the configured output and shares the initial
+// execution writer with its termination-signal handler. Middleware may replace
+// the writer passed farther into the execution.
 // It exits the current program after the run is finished
 // or a termination signal interrupted the execution.
 //   - 0 exit code means that none of the tasks failed.
@@ -403,7 +442,7 @@ func (f *Flow) Main(args []string, opts ...Option) {
 }
 
 func (f *Flow) runMain(args []string, exit func(int), opts ...Option) int {
-	out := internal.SyncWriter(f.Output())
+	out := SyncWriter(f.Output())
 	originalOutput := f.output
 	f.output = out
 	defer func() {

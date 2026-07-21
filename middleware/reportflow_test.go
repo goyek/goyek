@@ -2,6 +2,7 @@ package middleware_test
 
 import (
 	"context"
+	"io"
 	"strings"
 	"testing"
 
@@ -54,5 +55,20 @@ func TestReportFlow(t *testing.T) {
 				t.Errorf("got: %s; should contain: %s", got, tc.want)
 			}
 		})
+	}
+}
+
+func TestReportFlow_nilOutput(t *testing.T) {
+	var gotOutput io.Writer
+	executor := middleware.ReportFlow(func(in goyek.ExecuteInput) error {
+		gotOutput = in.Output
+		return nil
+	})
+
+	if err := executor(goyek.ExecuteInput{}); err != nil {
+		t.Fatalf("executor returned error: %v", err)
+	}
+	if gotOutput != io.Discard {
+		t.Fatalf("next executor received %T output, want io.Discard", gotOutput)
 	}
 }

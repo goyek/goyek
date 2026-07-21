@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"io"
-
-	"github.com/goyek/goyek/v3/internal"
 )
 
 type (
 	// Executor represents a flow execution function.
+	//
+	// An Executor must not retain ExecuteInput.Output or ExecuteInput.Logger for
+	// use after it returns and must wait for all goroutines using them to finish.
 	Executor func(ExecuteInput) error
 
 	// ExecuteInput received by the flow executor.
@@ -18,11 +19,25 @@ type (
 		Tasks     []string
 		SkipTasks []string
 		NoDeps    bool
-		Output    io.Writer
-		Logger    Logger
+		// A nil Output means discard output. [Flow.Execute] supplies a non-nil,
+		// concurrency-safe writer that may wrap the configured output. Middleware
+		// must not rely on its identity, concrete type, or optional interfaces. A
+		// non-nil Output supplied by another caller must be safe for concurrent
+		// use; use [SyncWriter] to adapt a writer that does not provide its own
+		// synchronization.
+		Output io.Writer
+		Logger Logger
 	}
 
 	// ExecutorMiddleware represents a flow execution interceptor.
+	//
+	// If an ExecutorMiddleware replaces [ExecuteInput.Output] with a non-nil
+	// writer, the replacement must be safe for concurrent use. The Executor
+	// returned by an ExecutorMiddleware must not retain [ExecuteInput.Output] or
+	// [ExecuteInput.Logger] for use after it returns and must wait for all
+	// goroutines using them to finish. Middleware that writes to
+	// ExecuteInput.Output, before or after calling the next Executor, must treat a
+	// nil writer as [io.Discard].
 	ExecutorMiddleware func(Executor) Executor
 
 	executor struct {
@@ -53,7 +68,7 @@ func (r *executor) Execute(in ExecuteInput) error {
 
 	ctx := in.Context
 	tasks := in.Tasks
-	out := internal.SyncWriter(in.Output)
+	out := in.Output
 	for len(tasks) > 0 {
 		name := tasks[0]
 		tasks = tasks[1:]

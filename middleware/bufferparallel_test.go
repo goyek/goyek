@@ -68,10 +68,23 @@ func TestBufferParallel_concurrent_printing_standalone(t *testing.T) {
 	out := &strings.Builder{}
 	runner(goyek.Input{
 		Parallel: true,
-		Output:   out,
+		Output:   goyek.SyncWriter(out),
 	})
 
 	if got, want := strings.Count(out.String(), strings.TrimSpace(message)), goroutines; got != want {
 		t.Fatalf("got %d occurrences, want %d", got, want)
+	}
+}
+
+func TestBufferParallel_nilOutput(t *testing.T) {
+	runner := middleware.BufferParallel(func(in goyek.Input) goyek.Result {
+		_, _ = io.WriteString(in.Output, "discarded")
+		return goyek.Result{Status: goyek.StatusPassed}
+	})
+
+	result := runner(goyek.Input{Parallel: true})
+
+	if result.Status != goyek.StatusPassed {
+		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusPassed)
 	}
 }

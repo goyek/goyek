@@ -1,6 +1,7 @@
 package middleware_test
 
 import (
+	"io"
 	"strings"
 	"testing"
 
@@ -42,7 +43,7 @@ func TestReportStatus(t *testing.T) {
 			r := goyek.Runner(func(goyek.Input) goyek.Result { return goyek.Result{Status: tt.status} })
 			r = middleware.ReportStatus(r)
 
-			r(goyek.Input{TaskName: taskName, Output: sb})
+			r(goyek.Input{TaskName: taskName, Output: goyek.SyncWriter(sb)})
 
 			if !strings.Contains(sb.String(), tt.want) {
 				t.Errorf("got: %q; but should contain: %q", sb.String(), tt.want)
@@ -74,7 +75,7 @@ func TestReportStatus(t *testing.T) {
 			})
 			r = middleware.ReportStatus(r)
 
-			r(goyek.Input{TaskName: taskName, Output: sb})
+			r(goyek.Input{TaskName: taskName, Output: goyek.SyncWriter(sb)})
 
 			if !strings.Contains(sb.String(), tt.want) {
 				t.Errorf("got: %q; but should contain: %q", sb.String(), tt.want)
@@ -84,5 +85,19 @@ func TestReportStatus(t *testing.T) {
 				t.Errorf("got: %q; but should contain: \"stacktrace\"", sb.String())
 			}
 		})
+	}
+}
+
+func TestReportStatus_nilOutput(t *testing.T) {
+	var gotOutput io.Writer
+	runner := middleware.ReportStatus(func(in goyek.Input) goyek.Result {
+		gotOutput = in.Output
+		return goyek.Result{Status: goyek.StatusPassed}
+	})
+
+	runner(goyek.Input{TaskName: "task"})
+
+	if gotOutput != io.Discard {
+		t.Fatalf("next runner received %T output, want io.Discard", gotOutput)
 	}
 }

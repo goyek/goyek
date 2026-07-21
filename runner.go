@@ -4,13 +4,14 @@ import (
 	"context"
 	"io"
 	"sync"
-
-	"github.com/goyek/goyek/v3/internal"
 )
 
 // Task runner types.
 type (
 	// Runner represents a task runner function.
+	//
+	// A Runner must not retain Input.Output or Input.Logger for use after it
+	// returns and must wait for all goroutines using them to finish.
 	Runner func(Input) Result
 
 	// Input received by the task runner.
@@ -18,8 +19,11 @@ type (
 		Context  context.Context
 		TaskName string
 		Parallel bool
-		Output   io.Writer
-		Logger   Logger
+		// A nil Output means discard output. A non-nil Output must be safe for
+		// concurrent use. Use [SyncWriter] to adapt a writer that does not provide
+		// its own synchronization.
+		Output io.Writer
+		Logger Logger
 	}
 
 	// Result of a task run.
@@ -30,6 +34,13 @@ type (
 	}
 
 	// Middleware represents a task runner interceptor.
+	//
+	// If a Middleware replaces [Input.Output] with a non-nil writer, the
+	// replacement must be safe for concurrent use. The Runner returned by a
+	// Middleware must not retain [Input.Output] or [Input.Logger] for use after it
+	// returns and must wait for all goroutines using them to finish. Middleware
+	// that writes to Input.Output, before or after calling the next Runner, must
+	// treat a nil writer as [io.Discard].
 	Middleware func(Runner) Runner
 )
 
@@ -48,6 +59,10 @@ type (
 // It can be also used as a building block for a custom
 // workflow runner if you are missing any functionalities
 // provided by Flow (like concurrent dependencies execution).
+//
+// NewRunner passes a non-nil Input.Output unchanged to [A.Output] and to the
+// configured Logger. It does not add synchronization. Use [SyncWriter] before
+// invoking the runner if the output does not provide its own synchronization.
 func NewRunner(action func(a *A)) Runner {
 	r := taskRunner{action: action}
 	return r.run
@@ -86,7 +101,7 @@ func (r taskRunner) run(in Input) Result {
 		skipped:  &skipped,
 		cleanups: &[]func(){},
 		name:     in.TaskName,
-		output:   internal.SyncWriter(out),
+		output:   out,
 		logger:   logger,
 		parallel: in.Parallel,
 	}

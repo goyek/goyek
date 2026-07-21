@@ -19,7 +19,7 @@ func TestSilentNonFailed_failed(t *testing.T) {
 	}
 	r = middleware.SilentNonFailed(r)
 
-	r(goyek.Input{Output: sb})
+	r(goyek.Input{Output: goyek.SyncWriter(sb)})
 
 	if !strings.Contains(sb.String(), msg) {
 		t.Errorf("got: %q; but should contain: %q", sb.String(), msg)
@@ -54,7 +54,7 @@ func TestSilentNonFailed_notFailed(t *testing.T) {
 			}
 			r = middleware.SilentNonFailed(r)
 
-			r(goyek.Input{Output: sb})
+			r(goyek.Input{Output: goyek.SyncWriter(sb)})
 
 			if strings.Contains(sb.String(), msg) {
 				t.Errorf("got: %q; but should not contain: %q", sb.String(), msg)
@@ -82,9 +82,22 @@ func TestSilentNonFailed_concurrent_printing(t *testing.T) {
 	r = middleware.SilentNonFailed(r)
 
 	sb := &strings.Builder{}
-	r(goyek.Input{Output: sb})
+	r(goyek.Input{Output: goyek.SyncWriter(sb)})
 
 	if got, want := strings.Count(sb.String(), strings.TrimSpace(message)), goroutines; got != want {
 		t.Fatalf("got %d occurrences, want %d", got, want)
+	}
+}
+
+func TestSilentNonFailed_nilOutput(t *testing.T) {
+	runner := middleware.SilentNonFailed(func(in goyek.Input) goyek.Result {
+		_, _ = io.WriteString(in.Output, "discarded")
+		return goyek.Result{Status: goyek.StatusFailed}
+	})
+
+	result := runner(goyek.Input{})
+
+	if result.Status != goyek.StatusFailed {
+		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusFailed)
 	}
 }

@@ -1,6 +1,7 @@
 package goyek_test
 
 import (
+	"io"
 	"strings"
 	"sync"
 	"testing"
@@ -76,9 +77,24 @@ func TestNewRunner_concurrent_printing(t *testing.T) {
 	})
 
 	out := &strings.Builder{}
-	runner(goyek.Input{Output: out})
+	runner(goyek.Input{Output: goyek.SyncWriter(out)})
 
 	if got, want := strings.Count(out.String(), message), goroutines; got != want {
 		t.Fatalf("got %d occurrences, want %d", got, want)
+	}
+}
+
+func TestNewRunner_preservesOutput(t *testing.T) {
+	out := io.Discard
+	var got io.Writer
+	runner := goyek.NewRunner(func(a *goyek.A) {
+		got = a.Output()
+	})
+
+	result := runner(goyek.Input{Output: out})
+
+	assertEqual(t, result.Status, goyek.StatusPassed, "should return proper status")
+	if got != out {
+		t.Fatal("NewRunner replaced Input.Output")
 	}
 }

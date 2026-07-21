@@ -18,8 +18,9 @@ var diff = goyek.Define(goyek.Task{
 
 		sb := &strings.Builder{}
 		cmd := exec.CommandContext(a.Context(), "git", "status", "--porcelain")
-		cmd.Stdout = io.MultiWriter(a.Output(), sb)
-		cmd.Stderr = io.MultiWriter(a.Output(), sb)
+		out := goyek.SyncWriter(io.MultiWriter(a.Output(), sb))
+		cmd.Stdout = out
+		cmd.Stderr = out
 		if err := cmd.Run(); err != nil {
 			a.Error(err)
 		}

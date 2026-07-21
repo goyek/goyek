@@ -46,18 +46,20 @@ var goVer = goyek.Define(goyek.Task{
 })
 
 func Example() {
-	// Use the same output for flow and flag.
-	flag.CommandLine.SetOutput(goyek.Output())
-
 	// Set the help message.
 	usage := func() {
-		fmt.Println("Usage of build: [tasks] [flags] [--] [args]")
+		out := goyek.Output()
+		flag.CommandLine.SetOutput(out)
+		fmt.Fprintln(out, "Usage of build: [tasks] [flags] [--] [args]")
 		goyek.Print()
-		fmt.Println("Flags:")
+		fmt.Fprintln(out, "Flags:")
 		flag.PrintDefaults()
 	}
 
 	// Parse the args.
+	// Parsing happens before Main, so refreshing this retained writer is
+	// single-threaded. The usage function refreshes it again during Main.
+	flag.CommandLine.SetOutput(goyek.Output())
 	flag.Usage = usage
 	tasks, args := goyek.SplitTasks(os.Args[1:])
 	if err := flag.CommandLine.Parse(args); err != nil {

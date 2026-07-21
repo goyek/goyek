@@ -163,6 +163,13 @@ The following repositories demonstrate real-world usage of goyek:
   `middleware.ReportStatus`, `middleware.ReportLongRun`, `middleware.DryRun`,
   `middleware.BufferParallel`, or custom ones via `goyek.Use` and
   `goyek.UseExecutor`.
+- **Understand output ownership**: `Flow.Execute` and `Flow.Main` serialize
+  writes made through the output they provide. Middleware that replaces the
+  output owns its replacement. Use `goyek.SyncWriter` with low-level `Input` or
+  `ExecuteInput` values or replacement writers when the destination is not
+  independently safe for concurrent use. The same applies to a destination
+  concurrently shared with another flow or external code. Create one wrapper
+  and share it so every participant uses the same lock.
 - **Be deliberate with parallelism**: set `Task.Parallel` only when actions are
   safe to run concurrently and rely on `middleware.BufferParallel` to keep
   output readable.
