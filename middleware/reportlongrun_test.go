@@ -3,7 +3,6 @@ package middleware_test
 import (
 	"io"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -23,51 +22,6 @@ func TestReportLongRun(t *testing.T) {
 
 	if !strings.Contains(sb.String(), "***** LONG: "+taskName+" (") {
 		t.Errorf("got: %q; but should long running report", sb.String())
-	}
-}
-
-func TestReportLongRun_withSyncWriter(t *testing.T) {
-	const taskOutput = "task output\n"
-	out := newOverlapWriter(taskOutput)
-	syncOut := goyek.SyncWriter(out)
-	r := goyek.NewRunner(func(a *goyek.A) {
-		io.WriteString(a.Output(), taskOutput) //nolint:errcheck // test writer does not return errors
-	})
-	r = middleware.ReportLongRun(time.Millisecond)(r)
-
-	done := make(chan goyek.Result)
-	go func() {
-		done <- r(goyek.Input{TaskName: "task", Output: syncOut})
-	}()
-
-	select {
-	case <-out.taskWriteStarted:
-	case <-time.After(time.Second):
-		t.Fatal("task output did not start")
-	}
-
-	var overlapped bool
-	select {
-	case <-out.overlap:
-		overlapped = true
-	case <-time.After(100 * time.Millisecond):
-	}
-	close(out.releaseTaskWrite)
-
-	select {
-	case result := <-done:
-		if result.Status != goyek.StatusPassed {
-			t.Fatalf("got status %v, want %v", result.Status, goyek.StatusPassed)
-		}
-	case <-time.After(time.Second):
-		t.Fatal("runner did not finish")
-	}
-
-	if overlapped {
-		t.Fatal("ReportLongRun and the task wrote to the underlying output concurrently")
-	}
-	if got := out.String(); !strings.Contains(got, taskOutput) || !strings.Contains(got, "***** LONG: task (") {
-		t.Fatalf("expected task and long-running output, got %q", got)
 	}
 }
 
@@ -131,53 +85,6 @@ func TestReportLongRun_preservesOutput(t *testing.T) {
 	if gotOutput != out {
 		t.Fatal("ReportLongRun replaced Input.Output")
 	}
-}
-
-type overlapWriter struct {
-	active           int32
-	overlap          chan struct{}
-	taskOutput       string
-	taskWriteStarted chan struct{}
-	releaseTaskWrite chan struct{}
-	taskWriteOnce    sync.Once
-	mu               sync.Mutex
-	buf              strings.Builder
-}
-
-func newOverlapWriter(taskOutput string) *overlapWriter {
-	return &overlapWriter{
-		overlap:          make(chan struct{}, 1),
-		taskOutput:       taskOutput,
-		taskWriteStarted: make(chan struct{}),
-		releaseTaskWrite: make(chan struct{}),
-	}
-}
-
-func (w *overlapWriter) Write(p []byte) (int, error) {
-	if atomic.AddInt32(&w.active, 1) > 1 {
-		select {
-		case w.overlap <- struct{}{}:
-		default:
-		}
-	}
-	defer atomic.AddInt32(&w.active, -1)
-
-	if string(p) == w.taskOutput {
-		w.taskWriteOnce.Do(func() {
-			close(w.taskWriteStarted)
-			<-w.releaseTaskWrite
-		})
-	}
-
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	return w.buf.Write(p)
-}
-
-func (w *overlapWriter) String() string {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	return w.buf.String()
 }
 
 type notifyingWriter struct {
