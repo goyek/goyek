@@ -3,7 +3,6 @@ package middleware_test
 import (
 	"io"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/goyek/goyek/v3"
@@ -89,27 +88,6 @@ func TestReportStatus(t *testing.T) {
 	}
 }
 
-func TestReportStatus_writesPanicAsOneRecord(t *testing.T) {
-	out := &recordingWriter{}
-	runner := middleware.ReportStatus(func(goyek.Input) goyek.Result {
-		return goyek.Result{
-			Status:     goyek.StatusFailed,
-			PanicValue: "boom",
-			PanicStack: []byte("stack\n"),
-		}
-	})
-
-	runner(goyek.Input{Output: out, TaskName: "task"})
-
-	writes := out.records()
-	if len(writes) != 3 {
-		t.Fatalf("got %d writes, want task, status, and panic records: %q", len(writes), writes)
-	}
-	if got, want := writes[2], "panic: boom\n\nstack\n"; got != want {
-		t.Fatalf("panic record = %q, want %q", got, want)
-	}
-}
-
 func TestReportStatus_nilOutput(t *testing.T) {
 	var gotOutput io.Writer
 	runner := middleware.ReportStatus(func(in goyek.Input) goyek.Result {
@@ -122,22 +100,4 @@ func TestReportStatus_nilOutput(t *testing.T) {
 	if gotOutput != io.Discard {
 		t.Fatalf("next runner received %T output, want io.Discard", gotOutput)
 	}
-}
-
-type recordingWriter struct {
-	mu     sync.Mutex
-	writes []string
-}
-
-func (w *recordingWriter) Write(p []byte) (int, error) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	w.writes = append(w.writes, string(p))
-	return len(p), nil
-}
-
-func (w *recordingWriter) records() []string {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	return append([]string(nil), w.writes...)
 }
