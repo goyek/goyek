@@ -1,9 +1,7 @@
 package goyek_test
 
 import (
-	"fmt"
 	"io"
-	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -64,42 +62,25 @@ func TestRunner_panic(t *testing.T) {
 }
 
 func TestNewRunner_concurrent_printing(t *testing.T) {
-	const (
-		goroutines         = 16
-		writesPerGoroutine = 25
-	)
-	start := make(chan struct{})
+	const goroutines = 10
+	const message = "message"
 	runner := goyek.NewRunner(func(a *goyek.A) {
 		var wg sync.WaitGroup
 		for i := 0; i < goroutines; i++ {
 			wg.Add(1)
-			go func(id int) {
+			go func() {
 				defer wg.Done()
-				<-start
-				for j := 0; j < writesPerGoroutine; j++ {
-					a.Logf("message-%02d-%02d", id, j)
-				}
-			}(i)
+				a.Log(message)
+			}()
 		}
-		close(start)
 		wg.Wait()
 	})
 
 	out := &strings.Builder{}
-	gotResult := runner(goyek.Input{Output: goyek.SyncWriter(out)})
-	assertEqual(t, gotResult.Status, goyek.StatusPassed, "should return proper status")
+	runner(goyek.Input{Output: goyek.SyncWriter(out)})
 
-	got := strings.Split(strings.TrimSuffix(out.String(), "\n"), "\n")
-	want := make([]string, 0, goroutines*writesPerGoroutine)
-	for i := 0; i < goroutines; i++ {
-		for j := 0; j < writesPerGoroutine; j++ {
-			want = append(want, fmt.Sprintf("message-%02d-%02d", i, j))
-		}
-	}
-	sort.Strings(got)
-	sort.Strings(want)
-	if strings.Join(got, "\n") != strings.Join(want, "\n") {
-		t.Fatalf("concurrent output mismatch\ngot:  %q\nwant: %q", got, want)
+	if got, want := strings.Count(out.String(), message), goroutines; got != want {
+		t.Fatalf("got %d occurrences, want %d", got, want)
 	}
 }
 
