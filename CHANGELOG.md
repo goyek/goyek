@@ -14,18 +14,6 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   in parallel tasks.
 - Add `SyncWriter` to adapt an output writer for concurrent use.
 
-### Changed
-
-- Define output ownership explicitly: flows synchronize the writes they route
-  during `Execute` and `Main`, while standalone runner and executor inputs and
-  middleware replacement writers must be safe for concurrent use. Use
-  `SyncWriter` when synchronization is needed outside a flow execution.
-- Clarify that `NewRunner` passes a non-nil `Input.Output` through unchanged.
-  Direct callers using writers such as `bytes.Buffer` or `strings.Builder` with
-  concurrent task output must pass `SyncWriter(out)`.
-- Clarify the concurrency requirements for runner and executor lifecycles and
-  custom logger implementations.
-
 ### Fixed
 
 - `A.Cleanup` now panics if a `nil` function is provided.
