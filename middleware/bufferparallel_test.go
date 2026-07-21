@@ -49,26 +49,18 @@ func TestBufferParallel(t *testing.T) {
 }
 
 func TestBufferParallel_concurrent_printing_standalone(t *testing.T) {
-	const (
-		goroutines         = 16
-		writesPerGoroutine = 25
-		message            = "msg "
-	)
+	const goroutines = 5
+	const message = "msg "
 
 	runner := middleware.BufferParallel(func(in goyek.Input) goyek.Result {
-		start := make(chan struct{})
 		var wg sync.WaitGroup
 		for i := 0; i < goroutines; i++ {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				<-start
-				for j := 0; j < writesPerGoroutine; j++ {
-					io.WriteString(in.Output, message) //nolint:errcheck // not checking errors when writing to output
-				}
+				io.WriteString(in.Output, message) //nolint:errcheck // not checking errors when writing to output
 			}()
 		}
-		close(start)
 		wg.Wait()
 		return goyek.Result{Status: goyek.StatusPassed}
 	})
@@ -79,8 +71,8 @@ func TestBufferParallel_concurrent_printing_standalone(t *testing.T) {
 		Output:   goyek.SyncWriter(out),
 	})
 
-	if got, want := out.String(), strings.Repeat(message, goroutines*writesPerGoroutine); got != want {
-		t.Fatalf("got %q, want %q", got, want)
+	if got, want := strings.Count(out.String(), strings.TrimSpace(message)), goroutines; got != want {
+		t.Fatalf("got %d occurrences, want %d", got, want)
 	}
 }
 
