@@ -235,5 +235,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 ## License
 
 **goyek** is licensed under the terms of the [MIT license](LICENSE).
+Portions copied from or derived from the Go standard library retain the
+BSD-style license reproduced in that file.
 
 Note: **goyek** was named **taskflow** before v0.3.0.
