@@ -40,7 +40,7 @@ func localAPIBaseline(a *goyek.A) (string, bool) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = a.Output()
 	if err := cmd.Run(); err != nil {
-		a.Error("no reachable local v3 release tag found")
+		a.Errorf("no reachable local v3 release tag found: %v", err)
 		return "", false
 	}
 
