@@ -10,7 +10,7 @@ import (
 
 var diff = goyek.Define(goyek.Task{
 	Name:  "diff",
-	Usage: "git diff",
+	Usage: "verify clean working tree",
 	Action: func(a *goyek.A) {
 		Exec(a, dirRoot, "git", "diff", "--exit-code")
 

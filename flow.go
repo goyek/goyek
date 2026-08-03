@@ -15,8 +15,8 @@ import (
 )
 
 // Flow is the root type of the package.
-// Use Register methods to register all tasks
-// and Run or Main method to execute provided tasks.
+// Use [Flow.Define] to register tasks and [Flow.Execute] or [Flow.Main]
+// to execute them.
 //
 // A Flow is not safe for concurrent use.
 type Flow struct {
