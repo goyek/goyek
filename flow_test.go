@@ -625,6 +625,25 @@ func TestFlow_UseExecutor(t *testing.T) {
 	assertContains(t, out, "message", "should call executor middleware")
 }
 
+func TestFlow_UseExecutor_observesDefaultTask(t *testing.T) {
+	flow := &goyek.Flow{}
+	task := flow.Define(goyek.Task{Name: "task"})
+	flow.SetDefault(task)
+
+	var gotTasks []string
+	flow.UseExecutor(func(next goyek.Executor) goyek.Executor {
+		return func(in goyek.ExecuteInput) error {
+			gotTasks = append(gotTasks, in.Tasks...)
+			return next(in)
+		}
+	})
+
+	err := flow.Execute(context.Background(), nil)
+
+	assertPass(t, err, "should pass")
+	requireEqual(t, gotTasks, []string{"task"}, "executor middleware should observe the effective task")
+}
+
 func TestFlow_UseExecutor_nil_middleware(t *testing.T) {
 	flow := &goyek.Flow{}
 

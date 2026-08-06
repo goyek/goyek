@@ -23,6 +23,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   to resource leaks.
 - Fix races in `middleware.BufferParallel` and `middleware.SilentNonFailed`
   when task output is written from multiple goroutines.
+- Resolve the default task before executor middleware so authorization and audit
+  middleware observe the task that will actually run.
 - Treat nil output as `io.Discard` in bundled output-writing middleware.
 - Emit each `middleware.ReportStatus` panic report with one write so concurrent
   records cannot split its header from its stack.

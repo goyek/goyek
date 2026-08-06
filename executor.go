@@ -15,7 +15,9 @@ type (
 
 	// ExecuteInput received by the flow executor.
 	ExecuteInput struct {
-		Context   context.Context
+		Context context.Context
+		// Tasks contains the effective task names. [Flow.Execute] resolves a
+		// configured default task before invoking executor middleware.
 		Tasks     []string
 		SkipTasks []string
 		NoDeps    bool
@@ -43,7 +45,6 @@ type (
 	executor struct {
 		defined     map[string]*DefinedTask
 		middlewares []Middleware
-		defaultTask *DefinedTask
 	}
 )
 
@@ -52,11 +53,6 @@ type (
 //
 //nolint:gocyclo // Contains graph traversal logic.
 func (r *executor) Execute(in ExecuteInput) error {
-	// Handle default task.
-	if len(in.Tasks) == 0 && r.defaultTask != nil {
-		in.Tasks = append(in.Tasks, r.defaultTask.name)
-	}
-
 	if err := r.validate(in); err != nil {
 		return err
 	}
