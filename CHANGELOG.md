@@ -10,6 +10,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
+- Add safety checks to `A.Cleanup`, `A.Setenv`, `A.TempDir`, and `A.Chdir`
+  to panic if called after the task has finished to prevent post-completion
+  state and resource leakage.
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
 - Add `SyncWriter` to adapt an output writer for concurrent use.

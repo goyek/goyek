@@ -38,6 +38,7 @@ type A struct {
 	failed   *bool
 	skipped  *bool
 	cleanups *[]func()
+	finished *bool
 }
 
 // Context returns a context that is canceled just before
@@ -243,6 +244,10 @@ func (a *A) Cleanup(fn func()) {
 		panic("nil cleanup")
 	}
 	a.mu.Lock()
+	if a.finished != nil && *a.finished {
+		a.mu.Unlock()
+		panic("Cleanup called after task has finished")
+	}
 	*a.cleanups = append(*a.cleanups, fn)
 	a.mu.Unlock()
 }
@@ -253,6 +258,13 @@ func (a *A) Cleanup(fn func()) {
 // Because Setenv affects the whole process, it should not be used in parallel tasks.
 func (a *A) Setenv(key, value string) {
 	a.Helper()
+	a.mu.Lock()
+	if a.finished != nil && *a.finished {
+		a.mu.Unlock()
+		panic("Setenv called after task has finished")
+	}
+	a.mu.Unlock()
+
 	if a.parallel {
 		a.Fatalf("Setenv called in a parallel task")
 	}
@@ -279,6 +291,13 @@ func (a *A) Setenv(key, value string) {
 // if the directory creation fails, TempDir terminates the action by calling Fatal.
 func (a *A) TempDir() string {
 	a.Helper()
+	a.mu.Lock()
+	if a.finished != nil && *a.finished {
+		a.mu.Unlock()
+		panic("TempDir called after task has finished")
+	}
+	a.mu.Unlock()
+
 	// Drop unusual characters (such as path separators or
 	// characters interacting with globs) from the directory name to
 	// avoid surprising os.MkdirTemp behavior.
@@ -306,6 +325,13 @@ func (a *A) TempDir() string {
 // Because Chdir affects the whole process, it should not be used
 // in parallel tasks.
 func (a *A) Chdir(dir string) {
+	a.mu.Lock()
+	if a.finished != nil && *a.finished {
+		a.mu.Unlock()
+		panic("Chdir called after task has finished")
+	}
+	a.mu.Unlock()
+
 	if a.parallel {
 		a.Fatalf("Chdir called in a parallel task")
 	}

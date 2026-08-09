@@ -211,6 +211,73 @@ func TestA_WithContext_concurrent_fail_derived(t *testing.T) {
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 }
 
+func TestA_PostCompletionPanic(t *testing.T) {
+	var capturedA *goyek.A
+	res := goyek.NewRunner(func(a *goyek.A) {
+		capturedA = a
+	})(goyek.Input{})
+
+	if res.Status != goyek.StatusPassed {
+		t.Fatalf("expected task to pass, got %s", res.Status)
+	}
+
+	t.Run("Cleanup", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("expected Cleanup after task completion to panic, but it did not")
+			} else {
+				want := "Cleanup called after task has finished"
+				if got := r.(string); got != want {
+					t.Errorf("expected panic message %q, got %q", want, got)
+				}
+			}
+		}()
+		capturedA.Cleanup(func() {})
+	})
+
+	t.Run("Setenv", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("expected Setenv after task completion to panic, but it did not")
+			} else {
+				want := "Setenv called after task has finished"
+				if got := r.(string); got != want {
+					t.Errorf("expected panic message %q, got %q", want, got)
+				}
+			}
+		}()
+		capturedA.Setenv("SOME_KEY", "value")
+	})
+
+	t.Run("TempDir", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("expected TempDir after task completion to panic, but it did not")
+			} else {
+				want := "TempDir called after task has finished"
+				if got := r.(string); got != want {
+					t.Errorf("expected panic message %q, got %q", want, got)
+				}
+			}
+		}()
+		capturedA.TempDir()
+	})
+
+	t.Run("Chdir", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("expected Chdir after task completion to panic, but it did not")
+			} else {
+				want := "Chdir called after task has finished"
+				if got := r.(string); got != want {
+					t.Errorf("expected panic message %q, got %q", want, got)
+				}
+			}
+		}()
+		capturedA.Chdir(".")
+	})
+}
+
 func TestA_WithContext_concurrent_fail_original(t *testing.T) {
 	timeout := time.NewTimer(10 * time.Second)
 	defer timeout.Stop()
