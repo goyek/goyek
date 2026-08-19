@@ -18,7 +18,7 @@ A default task can be assigned using [SetDefault].
 
 For executing external programs, use [github.com/goyek/x/cmd.Exec],
 which covers most cases. See [#60] and [#307] for details on why
-his feature is not built-in. In some cases, you may prefer [os/exec].
+this feature is not built-in. In some cases, you may prefer [os/exec].
 
 # Customization
 
