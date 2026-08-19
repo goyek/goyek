@@ -53,6 +53,15 @@ type (
 //
 //nolint:gocyclo // Contains graph traversal logic.
 func (r *executor) Execute(in ExecuteInput) error {
+	if in.Context == nil {
+		in.Context = context.Background()
+	}
+
+	// Handle default task.
+	if len(in.Tasks) == 0 && r.defaultTask != nil {
+		in.Tasks = append(in.Tasks, r.defaultTask.name)
+	}
+
 	if err := r.validate(in); err != nil {
 		return err
 	}
