@@ -53,6 +53,9 @@ type (
 //
 //nolint:gocyclo // Contains graph traversal logic.
 func (r *executor) Execute(in ExecuteInput) error {
+	if in.Context == nil {
+		in.Context = context.Background()
+	}
 	if err := r.validate(in); err != nil {
 		return err
 	}

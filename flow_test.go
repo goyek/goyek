@@ -124,6 +124,25 @@ func Test_successful(t *testing.T) {
 	requireEqual(t, got(), []int{3, 2, 1}, "should execute task 1 and 2 and 3")
 }
 
+func TestFlow_Execute_nil_context(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(io.Discard)
+	var taskContext context.Context
+	flow.Define(goyek.Task{
+		Name: "task",
+		Action: func(a *goyek.A) {
+			taskContext = a.Context()
+		},
+	})
+
+	err := flow.Execute(nil, []string{"task"})
+
+	assertPass(t, err, "nil context should use a background context")
+	if taskContext == nil {
+		t.Fatal("task received a nil context")
+	}
+}
+
 func Test_dependency_failure(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(io.Discard)
