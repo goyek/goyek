@@ -124,6 +124,25 @@ func Test_successful(t *testing.T) {
 	requireEqual(t, got(), []int{3, 2, 1}, "should execute task 1 and 2 and 3")
 }
 
+func TestFlow_Execute_nil_context(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(io.Discard)
+	var taskContext context.Context
+	flow.Define(goyek.Task{
+		Name: "task",
+		Action: func(a *goyek.A) {
+			taskContext = a.Context()
+		},
+	})
+
+	err := flow.Execute(nil, []string{"task"})
+
+	assertPass(t, err, "nil context should use a background context")
+	if taskContext == nil {
+		t.Fatal("task received a nil context")
+	}
+}
+
 func Test_dependency_failure(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(io.Discard)
@@ -623,6 +642,25 @@ func TestFlow_UseExecutor(t *testing.T) {
 	_ = flow.Execute(context.Background(), []string{"task"})
 
 	assertContains(t, out, "message", "should call executor middleware")
+}
+
+func TestFlow_UseExecutor_observesDefaultTask(t *testing.T) {
+	flow := &goyek.Flow{}
+	task := flow.Define(goyek.Task{Name: "task"})
+	flow.SetDefault(task)
+
+	var gotTasks []string
+	flow.UseExecutor(func(next goyek.Executor) goyek.Executor {
+		return func(in goyek.ExecuteInput) error {
+			gotTasks = append(gotTasks, in.Tasks...)
+			return next(in)
+		}
+	})
+
+	err := flow.Execute(context.Background(), nil)
+
+	assertPass(t, err, "should pass")
+	requireEqual(t, gotTasks, []string{"task"}, "executor middleware should observe the effective task")
 }
 
 func TestFlow_UseExecutor_nil_middleware(t *testing.T) {
