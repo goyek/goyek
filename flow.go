@@ -373,6 +373,10 @@ func Execute(ctx context.Context, tasks []string, opts ...Option) error {
 func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) error {
 	var middlewares []Middleware
 	middlewares = append(middlewares, f.middlewares...)
+	// Handle default task.
+	if len(tasks) == 0 && f.defaultTask != nil {
+		tasks = []string{f.defaultTask.name}
+	}
 
 	cfg := &config{}
 	for _, opt := range opts {
@@ -383,7 +387,6 @@ func (f *Flow) Execute(ctx context.Context, tasks []string, opts ...Option) erro
 	r := &executor{
 		defined:     f.tasks,
 		middlewares: middlewares,
-		defaultTask: f.defaultTask,
 	}
 	runner := r.Execute
 
