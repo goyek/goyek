@@ -7,7 +7,7 @@ require (
 	github.com/golangci/misspell v0.8.0
 	github.com/goyek/goyek/v3 v3.0.1
 	golang.org/x/exp v0.0.0-20260813180055-c1d0aacb2297
-	golang.org/x/vuln v1.6.0
+	golang.org/x/vuln v1.7.0
 )
 
 replace github.com/goyek/goyek/v3 => ../
