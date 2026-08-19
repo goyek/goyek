@@ -39,6 +39,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   "file name too long" errors.
 - Ensure `middleware.ReportLongRun` stops its reporting goroutine if the next
   runner panics.
+- Make `middleware.ReportLongRun` ignore non-positive durations instead of
+  panicking.
 - Fix signal handling in `Flow.Main` to support `SIGTERM` on Unix and
   synchronize output during shutdown.
 - Document that `Flow` and `DefinedTask` are not safe for concurrent use.
