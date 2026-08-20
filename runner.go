@@ -110,10 +110,6 @@ func (r taskRunner) run(in Input) Result {
 
 	finished, panicVal, panicStack := a.run(r.action)
 
-	a.mu.Lock()
-	*a.finished = true
-	a.mu.Unlock()
-
 	res := Result{}
 	switch {
 	case a.Failed():

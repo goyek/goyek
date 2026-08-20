@@ -244,12 +244,11 @@ func (a *A) Cleanup(fn func()) {
 		panic("nil cleanup")
 	}
 	a.mu.Lock()
+	defer a.mu.Unlock()
 	if a.finished != nil && *a.finished {
-		a.mu.Unlock()
 		panic("Cleanup called after task has finished")
 	}
 	*a.cleanups = append(*a.cleanups, fn)
-	a.mu.Unlock()
 }
 
 // Setenv calls os.Setenv(key, value) and uses Cleanup to restore the environment variable
@@ -258,31 +257,31 @@ func (a *A) Cleanup(fn func()) {
 // Because Setenv affects the whole process, it should not be used in parallel tasks.
 func (a *A) Setenv(key, value string) {
 	a.Helper()
+	if a.parallel {
+		a.Fatalf("Setenv called in a parallel task")
+	}
+
 	a.mu.Lock()
 	if a.finished != nil && *a.finished {
 		a.mu.Unlock()
 		panic("Setenv called after task has finished")
 	}
-	a.mu.Unlock()
 
-	if a.parallel {
-		a.Fatalf("Setenv called in a parallel task")
-	}
 	prevValue, ok := os.LookupEnv(key)
 
 	if err := os.Setenv(key, value); err != nil {
+		a.mu.Unlock()
 		a.Fatalf("cannot set environment variable: %v", err)
 	}
 
+	var cleanupFn func()
 	if ok {
-		a.Cleanup(func() {
-			os.Setenv(key, prevValue)
-		})
+		cleanupFn = func() { os.Setenv(key, prevValue) }
 	} else {
-		a.Cleanup(func() {
-			os.Unsetenv(key)
-		})
+		cleanupFn = func() { os.Unsetenv(key) }
 	}
+	*a.cleanups = append(*a.cleanups, cleanupFn)
+	a.mu.Unlock()
 }
 
 // TempDir returns a temporary directory for the action to use.
@@ -291,12 +290,12 @@ func (a *A) Setenv(key, value string) {
 // if the directory creation fails, TempDir terminates the action by calling Fatal.
 func (a *A) TempDir() string {
 	a.Helper()
+
 	a.mu.Lock()
 	if a.finished != nil && *a.finished {
 		a.mu.Unlock()
 		panic("TempDir called after task has finished")
 	}
-	a.mu.Unlock()
 
 	// Drop unusual characters (such as path separators or
 	// characters interacting with globs) from the directory name to
@@ -308,13 +307,17 @@ func (a *A) TempDir() string {
 
 	dir, err := os.MkdirTemp("", "goyek-"+name+"-*")
 	if err != nil {
+		a.mu.Unlock()
 		a.Fatalf("cannot create temporary directory: %v", err)
 	}
-	a.Cleanup(func() {
+
+	*a.cleanups = append(*a.cleanups, func() {
 		if err := os.RemoveAll(dir); err != nil {
 			a.Errorf("TempDir RemoveAll cleanup: %v", err)
 		}
 	})
+	a.mu.Unlock()
+
 	return dir
 }
 
@@ -325,21 +328,64 @@ func (a *A) TempDir() string {
 // Because Chdir affects the whole process, it should not be used
 // in parallel tasks.
 func (a *A) Chdir(dir string) {
+	if a.parallel {
+		a.Fatalf("Chdir called in a parallel task")
+	}
+
 	a.mu.Lock()
 	if a.finished != nil && *a.finished {
 		a.mu.Unlock()
 		panic("Chdir called after task has finished")
 	}
-	a.mu.Unlock()
 
-	if a.parallel {
-		a.Fatalf("Chdir called in a parallel task")
-	}
 	oldwd, err := os.Open(".")
 	if err != nil {
+		a.mu.Unlock()
 		a.Fatal(err)
 	}
-	a.Cleanup(func() {
+
+	if err = os.Chdir(dir); err != nil {
+		oldwd.Close()
+		a.mu.Unlock()
+		a.Fatal(err)
+	}
+
+	// On POSIX platforms, PWD represents “an absolute pathname of the
+	// current working directory.” Since we are changing the working
+	// directory, we should also set or update PWD to reflect that.
+	var pwdCleanup func()
+	switch runtime.GOOS {
+	case "windows", "plan9":
+		// Windows and Plan 9 do not use the PWD variable.
+	default:
+		pwdDir := dir
+		if !filepath.IsAbs(pwdDir) {
+			pwdDir, err = os.Getwd()
+			if err != nil {
+				_ = oldwd.Chdir()
+				oldwd.Close()
+				a.mu.Unlock()
+				a.Fatal(err)
+			}
+		}
+		prevPWD, ok := os.LookupEnv("PWD")
+		if err := os.Setenv("PWD", pwdDir); err != nil {
+			_ = oldwd.Chdir()
+			oldwd.Close()
+			a.mu.Unlock()
+			a.Fatalf("cannot set environment variable: %v", err)
+		}
+		if ok {
+			pwdCleanup = func() { os.Setenv("PWD", prevPWD) }
+		} else {
+			pwdCleanup = func() { os.Unsetenv("PWD") }
+		}
+	}
+
+	*a.cleanups = append(*a.cleanups, func() {
+		if pwdCleanup != nil {
+			pwdCleanup()
+		}
 		if e := oldwd.Chdir(); e != nil {
 			// It's not safe to continue with tests if we can't
 			// get back to the original working directory. Since
@@ -348,25 +394,7 @@ func (a *A) Chdir(dir string) {
 		}
 		oldwd.Close()
 	})
-
-	if err = os.Chdir(dir); err != nil {
-		a.Fatal(err)
-	}
-	// On POSIX platforms, PWD represents “an absolute pathname of the
-	// current working directory.” Since we are changing the working
-	// directory, we should also set or update PWD to reflect that.
-	switch runtime.GOOS {
-	case "windows", "plan9":
-		// Windows and Plan 9 do not use the PWD variable.
-	default:
-		if !filepath.IsAbs(dir) {
-			dir, err = os.Getwd()
-			if err != nil {
-				a.Fatal(err)
-			}
-		}
-		a.Setenv("PWD", dir)
-	}
+	a.mu.Unlock()
 }
 
 func (a *A) run(action func(a *A)) (finished bool, panicVal interface{}, panicStack []byte) {
@@ -441,10 +469,15 @@ func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byt
 	defer func() {
 		a.mu.Lock()
 		recur := len(*a.cleanups) > 0
-		a.mu.Unlock()
 		if recur {
+			a.mu.Unlock()
 			a.runCleanups(finished, panicVal, panicStack)
+			return
 		}
+		if a.finished != nil {
+			*a.finished = true
+		}
+		a.mu.Unlock()
 	}()
 
 	for {
@@ -454,8 +487,11 @@ func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byt
 			last := len(*a.cleanups) - 1
 			cleanup = (*a.cleanups)[last]
 			*a.cleanups = (*a.cleanups)[:last]
+		} else if a.finished != nil {
+			*a.finished = true
 		}
 		a.mu.Unlock()
+
 		if cleanup == nil {
 			cleanupFinished = true
 			return

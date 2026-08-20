@@ -2,11 +2,13 @@ package goyek_test
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 	"unicode/utf8"
@@ -209,6 +211,86 @@ func TestA_WithContext_concurrent_fail_derived(t *testing.T) {
 	})(goyek.Input{})
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+}
+
+func TestA_ConcurrentCleanupRace(t *testing.T) {
+	for i := 0; i < 50; i++ {
+		key := fmt.Sprintf("GOYEK_RACE_TEST_%d", i)
+		var (
+			capturedA *goyek.A
+			cleanedUp sync.Map
+		)
+
+		taskDone := make(chan struct{})
+		runnerDone := make(chan struct{})
+
+		go func() {
+			defer close(runnerDone)
+			_ = goyek.NewRunner(func(a *goyek.A) {
+				capturedA = a
+				a.Cleanup(func() {
+					select {
+					case <-taskDone:
+					default:
+						close(taskDone)
+					}
+				})
+			})(goyek.Input{})
+		}()
+
+		<-taskDone
+
+		var wg sync.WaitGroup
+		const numGoroutines = 10
+		for g := 0; g < numGoroutines; g++ {
+			wg.Add(1)
+			go func(id int) {
+				defer wg.Done()
+
+				setenvPanicked := false
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							setenvPanicked = true
+						}
+					}()
+					capturedA.Setenv(key, "1")
+				}()
+
+				if setenvPanicked {
+					if got := os.Getenv(key); got != "" {
+						t.Errorf("Setenv panicked but mutated environment: %q", got)
+					}
+				}
+
+				cleanupPanicked := false
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							cleanupPanicked = true
+						}
+					}()
+					capturedA.Cleanup(func() {
+						cleanedUp.Store(id, true)
+					})
+				}()
+
+				if !cleanupPanicked {
+					<-runnerDone
+					if _, ok := cleanedUp.Load(id); !ok {
+						t.Errorf("Cleanup succeeded but was never executed!")
+					}
+				}
+			}(g)
+		}
+
+		wg.Wait()
+		<-runnerDone
+
+		if got := os.Getenv(key); got != "" {
+			t.Errorf("Environment leaked: %s=%s", key, got)
+		}
+	}
 }
 
 func TestA_PostCompletionPanic(t *testing.T) {
