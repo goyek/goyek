@@ -10,9 +10,10 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
-- Make `A.Cleanup`, `A.Setenv`, `A.TempDir`, and `A.Chdir` panic after task
-  cleanup processing has closed. Calls racing with completion are coordinated
-  so cleanup callbacks cannot be stranded.
+- Make `A.Cleanup`, `A.WithContext`, `A.Setenv`, `A.TempDir`, and `A.Chdir`
+  panic after task cleanup processing has closed. Calls racing with completion
+  are coordinated so accepted calls finish and their cleanup callbacks are
+  drained before the runner returns.
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
 - Add `SyncWriter` to adapt an output writer for concurrent use.

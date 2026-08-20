@@ -96,16 +96,16 @@ func (r taskRunner) run(in Input) Result {
 
 	var failed, skipped, done bool
 	a := &A{
-		mu:         &sync.Mutex{},
-		resourceMu: &sync.Mutex{},
-		failed:     &failed,
-		skipped:    &skipped,
-		done:       &done,
-		cleanups:   &[]cleanupEntry{},
-		name:       in.TaskName,
-		output:     out,
-		logger:     logger,
-		parallel:   in.Parallel,
+		mu:          &sync.Mutex{},
+		activeCalls: &sync.WaitGroup{},
+		failed:      &failed,
+		skipped:     &skipped,
+		done:        &done,
+		cleanups:    &[]cleanupEntry{},
+		name:        in.TaskName,
+		output:      out,
+		logger:      logger,
+		parallel:    in.Parallel,
 	}
 	a = a.WithContext(ctx)
 

@@ -34,14 +34,17 @@ type A struct {
 	logger    Logger
 	parallel  bool
 
-	mu         *sync.Mutex
-	resourceMu *sync.Mutex
-	failed     *bool
-	skipped    *bool
-	cleanups   *[]cleanupEntry
-	done       *bool
+	mu          *sync.Mutex
+	activeCalls *sync.WaitGroup
+	failed      *bool
+	skipped     *bool
+	cleanups    *[]cleanupEntry
+	done        *bool
 }
 
+// A resource entry's fn runs while A.mu is held so it cannot race with setup
+// in runAndCleanup. It must not call A methods that acquire A.mu; reporting
+// belongs in after, which runs unlocked.
 type cleanupEntry struct {
 	fn       func()
 	after    func()
@@ -231,9 +234,10 @@ func (a *A) WithContext(ctx context.Context) *A {
 			cancel()
 		}
 	}()
-	a.runAndCleanup("WithContext", func() cleanupEntry {
+	finishCall := a.runAndCleanup("WithContext", func() cleanupEntry {
 		return cleanupEntry{fn: cancel}
 	})
+	defer finishCall()
 	registered = true
 	res := *a
 	res.ctx = derivedCtx
@@ -261,9 +265,10 @@ func (a *A) Cleanup(fn func()) {
 	if fn == nil {
 		panic("nil cleanup")
 	}
-	a.runAndCleanup("Cleanup", func() cleanupEntry {
+	finishCall := a.runAndCleanup("Cleanup", func() cleanupEntry {
 		return cleanupEntry{fn: fn}
 	})
+	defer finishCall()
 }
 
 // Setenv calls os.Setenv(key, value) and uses Cleanup to restore the environment variable
@@ -272,23 +277,22 @@ func (a *A) Cleanup(fn func()) {
 // Because Setenv affects the whole process, it should not be used in parallel tasks.
 // Setenv panics if called after task cleanup has completed.
 func (a *A) Setenv(key, value string) {
-	a.Helper()
 	var (
 		err      error
 		parallel bool
 	)
-	a.runAndCleanup("Setenv", func() cleanupEntry {
+	finishCall := a.runAndCleanup("Setenv", func() cleanupEntry {
 		if a.parallel {
 			parallel = true
 			return cleanupEntry{}
 		}
-		a.resourceMu.Lock()
-		defer a.resourceMu.Unlock()
 		var restore func()
 		restore, err = setenv(key, value)
 		return cleanupEntry{fn: restore, resource: true}
 	})
+	defer finishCall()
 
+	a.Helper()
 	if parallel {
 		a.Fatalf("Setenv called in a parallel task")
 	}
@@ -303,15 +307,11 @@ func (a *A) Setenv(key, value string) {
 // if the directory creation fails, TempDir terminates the action by calling Fatal.
 // TempDir panics if called after task cleanup has completed.
 func (a *A) TempDir() string {
-	a.Helper()
 	var (
 		dir string
 		err error
 	)
-	a.runAndCleanup("TempDir", func() cleanupEntry {
-		a.resourceMu.Lock()
-		defer a.resourceMu.Unlock()
-
+	finishCall := a.runAndCleanup("TempDir", func() cleanupEntry {
 		// Drop unusual characters (such as path separators or
 		// characters interacting with globs) from the directory name to
 		// avoid surprising os.MkdirTemp behavior.
@@ -337,7 +337,9 @@ func (a *A) TempDir() string {
 			},
 		}
 	})
+	defer finishCall()
 
+	a.Helper()
 	if err != nil {
 		a.Fatalf("cannot create temporary directory: %v", err)
 	}
@@ -356,27 +358,25 @@ func (a *A) Chdir(dir string) {
 		err      error
 		parallel bool
 	)
-	a.runAndCleanup("Chdir", func() cleanupEntry {
+	finishCall := a.runAndCleanup("Chdir", func() cleanupEntry {
 		if a.parallel {
 			parallel = true
 			return cleanupEntry{}
 		}
-		a.resourceMu.Lock()
-		defer a.resourceMu.Unlock()
-
 		oldwd, openErr := os.Open(".")
 		if openErr != nil {
 			err = openErr
 			return cleanupEntry{}
 		}
 		restoreDir := func() {
-			if e := oldwd.Chdir(); e != nil {
+			restoreErr := oldwd.Chdir()
+			_ = oldwd.Close()
+			if restoreErr != nil {
 				// It's not safe to continue with tests if we can't
 				// get back to the original working directory. Since
 				// we are holding a dirfd, this is highly unlikely.
-				panic("goyek.Chdir: " + e.Error())
+				panic("goyek.Chdir: " + restoreErr.Error())
 			}
-			oldwd.Close()
 		}
 
 		if err = os.Chdir(dir); err != nil {
@@ -413,6 +413,7 @@ func (a *A) Chdir(dir string) {
 			},
 		}
 	})
+	defer finishCall()
 
 	if parallel {
 		a.Fatalf("Chdir called in a parallel task")
@@ -422,15 +423,33 @@ func (a *A) Chdir(dir string) {
 	}
 }
 
-func (a *A) runAndCleanup(method string, run func() cleanupEntry) {
+// runAndCleanup admits a lifecycle-sensitive call and registers its cleanup
+// atomically. The caller must defer the returned function until the public
+// method is finished so the runner cannot return while an admitted call is
+// still reporting an error.
+func (a *A) runAndCleanup(method string, run func() cleanupEntry) func() {
 	a.mu.Lock()
-	defer a.mu.Unlock()
-	if a.done != nil && *a.done {
+	if *a.done {
+		a.mu.Unlock()
 		panic(method + " called after task cleanup has completed")
 	}
+
+	// Add is serialized with the transition to done. Once runCleanups starts
+	// waiting, no new call can be added to this WaitGroup.
+	a.activeCalls.Add(1)
+	handedOff := false
+	defer func() {
+		a.mu.Unlock()
+		if !handedOff {
+			a.activeCalls.Done()
+		}
+	}()
+
 	if entry := run(); entry.fn != nil {
 		*a.cleanups = append(*a.cleanups, entry)
 	}
+	handedOff = true
+	return a.activeCalls.Done
 }
 
 func setenv(key, value string) (func(), error) {
@@ -518,13 +537,7 @@ func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byt
 	// Make sure that if a cleanup function panics,
 	// we still run the remaining cleanup functions.
 	defer func() {
-		a.mu.Lock()
-		recur := len(*a.cleanups) > 0
-		if !recur && a.done != nil {
-			*a.done = true
-		}
-		a.mu.Unlock()
-		if recur {
+		if !cleanupFinished {
 			a.runCleanups(finished, panicVal, panicStack)
 		}
 	}()
@@ -532,25 +545,23 @@ func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byt
 	for {
 		var entry cleanupEntry
 		a.mu.Lock()
-		if len(*a.cleanups) > 0 {
-			last := len(*a.cleanups) - 1
-			entry = (*a.cleanups)[last]
-			*a.cleanups = (*a.cleanups)[:last]
-			if entry.resource {
-				a.resourceMu.Lock()
-			}
-		}
-		a.mu.Unlock()
-		if entry.fn == nil {
+		if len(*a.cleanups) == 0 {
+			*a.done = true
+			a.mu.Unlock()
+			a.activeCalls.Wait()
 			cleanupFinished = true
 			return
 		}
+		last := len(*a.cleanups) - 1
+		entry = (*a.cleanups)[last]
+		*a.cleanups = (*a.cleanups)[:last]
 		if entry.resource {
 			func() {
-				defer a.resourceMu.Unlock()
+				defer a.mu.Unlock()
 				entry.fn()
 			}()
 		} else {
+			a.mu.Unlock()
 			entry.fn()
 		}
 		if entry.after != nil {

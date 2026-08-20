@@ -288,33 +288,51 @@ func TestA_PostCompletionPanic(t *testing.T) {
 func TestA_Cleanup_concurrent_with_completion(t *testing.T) {
 	const attempts = 1000
 	const wantPanic = "Cleanup called after task cleanup has completed"
+	timeout := time.NewTimer(10 * time.Second)
+	defer timeout.Stop()
 	for i := 0; i < attempts; i++ {
 		start := make(chan struct{})
 		cleanupCalled := make(chan struct{}, 1)
 		attemptDone := make(chan interface{}, 1)
-		res := goyek.NewRunner(func(a *goyek.A) {
-			a.Cleanup(func() {
-				close(start)
-			})
-			go func() {
-				<-start
-				var panicValue interface{}
-				func() {
-					defer func() {
-						panicValue = recover()
+		runnerDone := make(chan goyek.Result, 1)
+		go func() {
+			runnerDone <- goyek.NewRunner(func(a *goyek.A) {
+				a.Cleanup(func() {
+					close(start)
+				})
+				go func() {
+					<-start
+					var panicValue interface{}
+					func() {
+						defer func() {
+							panicValue = recover()
+						}()
+						a.Cleanup(func() {
+							cleanupCalled <- struct{}{}
+						})
 					}()
-					a.Cleanup(func() {
-						cleanupCalled <- struct{}{}
-					})
+					attemptDone <- panicValue
 				}()
-				attemptDone <- panicValue
-			}()
-		})(goyek.Input{})
+			})(goyek.Input{})
+		}()
+
+		var res goyek.Result
+		select {
+		case res = <-runnerDone:
+		case <-timeout.C:
+			t.Fatalf("attempt %d: runner did not finish", i)
+		}
 
 		if res.Status != goyek.StatusPassed {
 			t.Fatalf("attempt %d: expected task to pass, got %s", i, res.Status)
 		}
-		if panicValue := <-attemptDone; panicValue != nil {
+		var panicValue interface{}
+		select {
+		case panicValue = <-attemptDone:
+		case <-timeout.C:
+			t.Fatalf("attempt %d: Cleanup call did not finish", i)
+		}
+		if panicValue != nil {
 			assertEqual(t, panicValue, wantPanic, "should reject only after cleanup completion")
 			continue
 		}
@@ -332,43 +350,124 @@ func TestA_Setenv_concurrent_with_completion(t *testing.T) {
 		envKey    = "GOYEK_CONCURRENT_COMPLETION_ENV"
 		wantPanic = "Setenv called after task cleanup has completed"
 	)
+	prevEnv, envWasSet := os.LookupEnv(envKey)
 	defer func() {
-		_ = os.Unsetenv(envKey)
+		if envWasSet {
+			_ = os.Setenv(envKey, prevEnv)
+		} else {
+			_ = os.Unsetenv(envKey)
+		}
 	}()
+	timeout := time.NewTimer(10 * time.Second)
+	defer timeout.Stop()
 	for i := 0; i < attempts; i++ {
 		if err := os.Unsetenv(envKey); err != nil {
 			t.Fatal(err)
 		}
 		start := make(chan struct{})
 		attemptDone := make(chan interface{}, 1)
-		res := goyek.NewRunner(func(a *goyek.A) {
-			a.Setenv(envKey, "action")
-			a.Cleanup(func() {
-				close(start)
-			})
-			go func() {
-				<-start
-				var panicValue interface{}
-				func() {
-					defer func() {
-						panicValue = recover()
+		runnerDone := make(chan goyek.Result, 1)
+		go func() {
+			runnerDone <- goyek.NewRunner(func(a *goyek.A) {
+				a.Setenv(envKey, "action")
+				a.Cleanup(func() {
+					close(start)
+				})
+				go func() {
+					<-start
+					var panicValue interface{}
+					func() {
+						defer func() {
+							panicValue = recover()
+						}()
+						a.Setenv(envKey, "late")
 					}()
-					a.Setenv(envKey, "late")
+					attemptDone <- panicValue
 				}()
-				attemptDone <- panicValue
-			}()
-		})(goyek.Input{})
+			})(goyek.Input{})
+		}()
+
+		var res goyek.Result
+		select {
+		case res = <-runnerDone:
+		case <-timeout.C:
+			t.Fatalf("attempt %d: runner did not finish", i)
+		}
 
 		if res.Status != goyek.StatusPassed {
 			t.Fatalf("attempt %d: expected task to pass, got %s", i, res.Status)
 		}
-		if panicValue := <-attemptDone; panicValue != nil {
+		var panicValue interface{}
+		select {
+		case panicValue = <-attemptDone:
+		case <-timeout.C:
+			t.Fatalf("attempt %d: Setenv call did not finish", i)
+		}
+		if panicValue != nil {
 			assertEqual(t, panicValue, wantPanic, "should reject only before changing the environment")
 		}
 		if value, ok := os.LookupEnv(envKey); ok {
 			_ = os.Unsetenv(envKey)
 			t.Fatalf("attempt %d: Setenv left %s=%q after cleanup completion", i, envKey, value)
 		}
+	}
+}
+
+type blockingFatalLogger struct {
+	entered chan struct{}
+	release chan struct{}
+}
+
+func (l *blockingFatalLogger) Log(io.Writer, ...interface{}) {}
+
+func (l *blockingFatalLogger) Logf(io.Writer, string, ...interface{}) {}
+
+func (l *blockingFatalLogger) Fatal(io.Writer, ...interface{}) {
+	close(l.entered)
+	<-l.release
+}
+
+func TestA_FailedCallConcurrentWithCompletion(t *testing.T) {
+	logger := &blockingFatalLogger{
+		entered: make(chan struct{}),
+		release: make(chan struct{}),
+	}
+	actionReturned := make(chan context.Context, 1)
+	runnerDone := make(chan goyek.Result, 1)
+	go func() {
+		runnerDone <- goyek.NewRunner(func(a *goyek.A) {
+			ctx := a.Context()
+			go a.Chdir("non-existent-directory-@!#$")
+			<-logger.entered
+			actionReturned <- ctx
+		})(goyek.Input{Logger: logger})
+	}()
+
+	timeout := time.NewTimer(10 * time.Second)
+	defer timeout.Stop()
+	var ctx context.Context
+	select {
+	case ctx = <-actionReturned:
+	case <-timeout.C:
+		t.Fatal("failed Chdir call did not reach Logger.Fatal")
+	}
+	select {
+	case <-ctx.Done():
+	case <-timeout.C:
+		t.Fatal("task cleanup did not start")
+	}
+	select {
+	case result := <-runnerDone:
+		t.Fatalf("runner returned %s before the admitted Chdir call finished", result.Status)
+	default:
+	}
+
+	close(logger.release)
+	select {
+	case result := <-runnerDone:
+		assertEqual(t, result.Status, goyek.StatusFailed, "should include the admitted Chdir failure")
+	case <-timeout.C:
+		t.Fatal("runner did not finish after Logger.Fatal was released")
 	}
 }
 
@@ -554,6 +653,49 @@ func TestA_TempDir(t *testing.T) {
 	assertTrue(t, os.IsNotExist(err), "should remove the dir after the action")
 }
 
+func TestA_TempDir_error(t *testing.T) {
+	if runtime.GOOS == "windows" || runtime.GOOS == "plan9" {
+		t.Skip("TMPDIR is not used on this platform")
+	}
+
+	missingTempDir := filepath.Join(t.TempDir(), "missing")
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a.Setenv("TMPDIR", missingTempDir)
+		a.TempDir()
+	})(goyek.Input{})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should fail when the temporary directory cannot be created")
+}
+
+func TestA_TempDir_cleanup_error(t *testing.T) {
+	if runtime.GOOS == "windows" || runtime.GOOS == "plan9" {
+		t.Skip("directory permissions differ on this platform")
+	}
+
+	var (
+		dir      string
+		setupErr error
+	)
+	got := goyek.NewRunner(func(a *goyek.A) {
+		dir = a.TempDir()
+		if setupErr = os.Mkdir(filepath.Join(dir, "child"), 0o700); setupErr != nil {
+			a.Fatal(setupErr)
+		}
+		if setupErr = os.Chmod(dir, 0); setupErr != nil {
+			a.Fatal(setupErr)
+		}
+	})(goyek.Input{})
+	defer func() {
+		_ = os.Chmod(dir, 0o700) //nolint:gosec // restore directory access for cleanup
+		_ = os.RemoveAll(dir)
+	}()
+	if setupErr != nil {
+		t.Fatal(setupErr)
+	}
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should report a temporary directory cleanup failure")
+}
+
 func TestA_TempDir_UTF8SafeTruncation(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -693,6 +835,68 @@ func TestA_Chdir(t *testing.T) {
 				t.Fatalf("failed to restore wd to %s: getwd: %s", oldDir, newDir)
 			}
 		})
+	}
+}
+
+func TestA_Chdir_open_error(t *testing.T) {
+	if runtime.GOOS == "windows" || runtime.GOOS == "plan9" {
+		t.Skip("directory permissions differ on this platform")
+	}
+
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	lockedDir := t.TempDir()
+	targetDir := t.TempDir()
+	if err := os.Chdir(lockedDir); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(lockedDir, 0); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = os.Chmod(lockedDir, 0o700) //nolint:gosec // restore directory access for cleanup
+		_ = os.Chdir(originalDir)
+	}()
+
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a.Chdir(targetDir)
+	})(goyek.Input{})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should fail when the current directory cannot be opened")
+}
+
+func TestA_Chdir_restore_error(t *testing.T) {
+	if runtime.GOOS == "windows" || runtime.GOOS == "plan9" {
+		t.Skip("directory permissions differ on this platform")
+	}
+
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sourceDir := t.TempDir()
+	targetDir := t.TempDir()
+	if err := os.Chdir(sourceDir); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = os.Chmod(sourceDir, 0o700) //nolint:gosec // restore directory access for cleanup
+		_ = os.Chdir(originalDir)
+	}()
+
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a.Chdir(targetDir)
+		if err := os.Chmod(sourceDir, 0); err != nil {
+			a.Fatal(err)
+		}
+	})(goyek.Input{})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should fail when the working directory cannot be restored")
+	panicValue, ok := got.PanicValue.(string)
+	if !ok || !strings.Contains(panicValue, "goyek.Chdir:") {
+		t.Errorf("expected a Chdir restoration panic, got %#v", got.PanicValue)
 	}
 }
 
