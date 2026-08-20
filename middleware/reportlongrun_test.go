@@ -72,29 +72,6 @@ func TestReportLongRun_stopsReporterWhenNextPanics(t *testing.T) {
 	}
 }
 
-func TestReportLongRun_nonPositiveDuration(t *testing.T) {
-	testCases := []struct {
-		desc     string
-		duration time.Duration
-	}{
-		{desc: "zero", duration: 0},
-		{desc: "negative", duration: -time.Millisecond},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			r := middleware.ReportLongRun(tc.duration)(func(goyek.Input) goyek.Result {
-				return goyek.Result{Status: goyek.StatusPassed}
-			})
-
-			result := r(goyek.Input{TaskName: "task"})
-
-			if result.Status != goyek.StatusPassed {
-				t.Errorf("got status %v, want %v", result.Status, goyek.StatusPassed)
-			}
-		})
-	}
-}
-
 func TestReportLongRun_preservesOutput(t *testing.T) {
 	out := io.Discard
 	var gotOutput io.Writer

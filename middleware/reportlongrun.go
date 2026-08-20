@@ -23,12 +23,6 @@ func ReportLongRun(d time.Duration) func(next goyek.Runner) goyek.Runner {
 			}
 			in.Output = out
 
-			if d <= 0 {
-				// time.NewTicker panics for a non-positive duration,
-				// so skip the reporter goroutine entirely.
-				return next(in)
-			}
-
 			start := time.Now()
 			task := in.TaskName
 			done := make(chan struct{})

@@ -34,21 +34,30 @@ type A struct {
 	logger    Logger
 	parallel  bool
 
-	mu          *sync.Mutex
-	activeCalls *sync.WaitGroup
-	failed      *bool
-	skipped     *bool
-	cleanups    *[]cleanupEntry
-	done        *bool
+	mu       *sync.Mutex
+	failed   *bool
+	skipped  *bool
+	cleanups *[]func()
+	finished *bool
+	wg       *sync.WaitGroup
 }
 
-// A resource entry's fn runs while A.mu is held so it cannot race with setup
-// in runAndCleanup. It must not call A methods that acquire A.mu; reporting
-// belongs in after, which runs unlocked.
-type cleanupEntry struct {
-	fn       func()
-	after    func()
-	resource bool
+func (a *A) beginOp(opName string) func() {
+	a.mu.Lock()
+	if a.finished != nil && *a.finished {
+		a.mu.Unlock()
+		panic(opName + " called after task has finished")
+	}
+	if a.wg != nil {
+		a.wg.Add(1)
+	}
+	a.mu.Unlock()
+
+	return func() {
+		if a.wg != nil {
+			a.wg.Done()
+		}
+	}
 }
 
 // Context returns a context that is canceled just before
@@ -221,24 +230,13 @@ func (a *A) SkipNow() {
 
 // WithContext returns a derived a with its context changed
 // to ctx. The provided ctx must be non-nil.
-// WithContext panics if called after task cleanup has completed.
 func (a *A) WithContext(ctx context.Context) *A {
 	if ctx == nil {
 		panic("nil context")
 	}
 
 	derivedCtx, cancel := context.WithCancel(ctx)
-	registered := false
-	defer func() {
-		if !registered {
-			cancel()
-		}
-	}()
-	finishCall := a.runAndCleanup("WithContext", func() cleanupEntry {
-		return cleanupEntry{fn: cancel}
-	})
-	defer finishCall()
-	registered = true
+	a.Cleanup(cancel)
 	res := *a
 	res.ctx = derivedCtx
 	res.ctxCancel = cancel
@@ -260,211 +258,131 @@ func (a *A) Helper() {
 // Cleanup functions will be called in the last-added first-called order.
 //
 // The provided function must be non-nil.
-// Cleanup panics if called after task cleanup has completed.
 func (a *A) Cleanup(fn func()) {
 	if fn == nil {
 		panic("nil cleanup")
 	}
-	finishCall := a.runAndCleanup("Cleanup", func() cleanupEntry {
-		return cleanupEntry{fn: fn}
-	})
-	defer finishCall()
+	done := a.beginOp("Cleanup")
+	defer done()
+
+	a.mu.Lock()
+	*a.cleanups = append(*a.cleanups, fn)
+	a.mu.Unlock()
 }
 
 // Setenv calls os.Setenv(key, value) and uses Cleanup to restore the environment variable
 // to its original value after the action.
 //
 // Because Setenv affects the whole process, it should not be used in parallel tasks.
-// Setenv panics if called after task cleanup has completed.
 func (a *A) Setenv(key, value string) {
-	var (
-		err      error
-		parallel bool
-	)
-	finishCall := a.runAndCleanup("Setenv", func() cleanupEntry {
-		if a.parallel {
-			parallel = true
-			return cleanupEntry{}
-		}
-		var restore func()
-		restore, err = setenv(key, value)
-		return cleanupEntry{fn: restore, resource: true}
-	})
-	defer finishCall()
-
 	a.Helper()
-	if parallel {
+	if a.parallel {
 		a.Fatalf("Setenv called in a parallel task")
 	}
-	if err != nil {
+
+	done := a.beginOp("Setenv")
+	defer done()
+
+	prevValue, ok := os.LookupEnv(key)
+
+	if err := os.Setenv(key, value); err != nil {
 		a.Fatalf("cannot set environment variable: %v", err)
 	}
+
+	a.mu.Lock()
+	var cleanupFn func()
+	if ok {
+		cleanupFn = func() { os.Setenv(key, prevValue) }
+	} else {
+		cleanupFn = func() { os.Unsetenv(key) }
+	}
+	*a.cleanups = append(*a.cleanups, cleanupFn)
+	a.mu.Unlock()
 }
 
 // TempDir returns a temporary directory for the action to use.
 // The directory is automatically removed by Cleanup when the action completes.
 // Each subsequent call to TempDir returns a unique directory;
 // if the directory creation fails, TempDir terminates the action by calling Fatal.
-// TempDir panics if called after task cleanup has completed.
 func (a *A) TempDir() string {
-	var (
-		dir string
-		err error
-	)
-	finishCall := a.runAndCleanup("TempDir", func() cleanupEntry {
-		// Drop unusual characters (such as path separators or
-		// characters interacting with globs) from the directory name to
-		// avoid surprising os.MkdirTemp behavior.
-		name := strings.Map(tempDirMapper, a.Name())
-		if len(name) > maxTempDirTaskNameLen {
-			name = truncateUTF8(name[:maxTempDirTaskNameLen])
-		}
-
-		dir, err = os.MkdirTemp("", "goyek-"+name+"-*")
-		if err != nil {
-			return cleanupEntry{}
-		}
-		var cleanupErr error
-		return cleanupEntry{
-			resource: true,
-			fn: func() {
-				cleanupErr = os.RemoveAll(dir)
-			},
-			after: func() {
-				if cleanupErr != nil {
-					a.Errorf("TempDir RemoveAll cleanup: %v", cleanupErr)
-				}
-			},
-		}
-	})
-	defer finishCall()
-
 	a.Helper()
+
+	done := a.beginOp("TempDir")
+	defer done()
+
+	// Drop unusual characters (such as path separators or
+	// characters interacting with globs) from the directory name to
+	// avoid surprising os.MkdirTemp behavior.
+	name := strings.Map(tempDirMapper, a.Name())
+	if len(name) > maxTempDirTaskNameLen {
+		name = truncateUTF8(name[:maxTempDirTaskNameLen])
+	}
+
+	dir, err := os.MkdirTemp("", "goyek-"+name+"-*")
 	if err != nil {
 		a.Fatalf("cannot create temporary directory: %v", err)
 	}
+
+	a.mu.Lock()
+	*a.cleanups = append(*a.cleanups, func() {
+		if err := os.RemoveAll(dir); err != nil {
+			a.Errorf("TempDir RemoveAll cleanup: %v", err)
+		}
+	})
+	a.mu.Unlock()
+
 	return dir
 }
 
 // Chdir calls os.Chdir(dir) and uses Cleanup to restore the current
-// working directory to its original value after the action. On Unix, it
-// also sets PWD environment variable for the duration of the action.
+// working directory to its original value after the test. On Unix, it
+// also sets PWD environment variable for the duration of the test.
 //
 // Because Chdir affects the whole process, it should not be used
 // in parallel tasks.
-// Chdir panics if called after task cleanup has completed.
 func (a *A) Chdir(dir string) {
-	var (
-		err      error
-		parallel bool
-	)
-	finishCall := a.runAndCleanup("Chdir", func() cleanupEntry {
-		if a.parallel {
-			parallel = true
-			return cleanupEntry{}
-		}
-		oldwd, openErr := os.Open(".")
-		if openErr != nil {
-			err = openErr
-			return cleanupEntry{}
-		}
-		restoreDir := func() {
-			restoreErr := oldwd.Chdir()
-			_ = oldwd.Close()
-			if restoreErr != nil {
-				// It's not safe to continue with tests if we can't
-				// get back to the original working directory. Since
-				// we are holding a dirfd, this is highly unlikely.
-				panic("goyek.Chdir: " + restoreErr.Error())
-			}
-		}
-
-		if err = os.Chdir(dir); err != nil {
-			return cleanupEntry{fn: restoreDir, resource: true}
-		}
-
-		var restoreEnv func()
-		// On POSIX platforms, PWD represents “an absolute pathname of the
-		// current working directory.” Since we are changing the working
-		// directory, we should also set or update PWD to reflect that.
-		switch runtime.GOOS {
-		case "windows", "plan9":
-			// Windows and Plan 9 do not use the PWD variable.
-		default:
-			if !filepath.IsAbs(dir) {
-				dir, err = os.Getwd()
-				if err != nil {
-					return cleanupEntry{fn: restoreDir, resource: true}
-				}
-			}
-			restoreEnv, err = setenv("PWD", dir)
-			if err != nil {
-				return cleanupEntry{fn: restoreDir, resource: true}
-			}
-		}
-
-		return cleanupEntry{
-			resource: true,
-			fn: func() {
-				if restoreEnv != nil {
-					restoreEnv()
-				}
-				restoreDir()
-			},
-		}
-	})
-	defer finishCall()
-
-	if parallel {
+	if a.parallel {
 		a.Fatalf("Chdir called in a parallel task")
 	}
+
+	done := a.beginOp("Chdir")
+	defer done()
+
+	oldwd, err := os.Open(".")
 	if err != nil {
 		a.Fatal(err)
 	}
-}
 
-// runAndCleanup admits a lifecycle-sensitive call and registers its cleanup
-// atomically. The caller must defer the returned function until the public
-// method is finished so the runner cannot return while an admitted call is
-// still reporting an error.
-func (a *A) runAndCleanup(method string, run func() cleanupEntry) func() {
+	if err = os.Chdir(dir); err != nil {
+		oldwd.Close()
+		a.Fatal(err)
+	}
+
 	a.mu.Lock()
-	if *a.done {
-		a.mu.Unlock()
-		panic(method + " called after task cleanup has completed")
-	}
-
-	// Add is serialized with the transition to done. Once runCleanups starts
-	// waiting, no new call can be added to this WaitGroup.
-	a.activeCalls.Add(1)
-	handedOff := false
-	defer func() {
-		a.mu.Unlock()
-		if !handedOff {
-			a.activeCalls.Done()
+	*a.cleanups = append(*a.cleanups, func() {
+		err := oldwd.Chdir()
+		oldwd.Close()
+		if err != nil {
+			panic("goyek.Chdir: " + err.Error())
 		}
-	}()
+	})
+	a.mu.Unlock()
 
-	if entry := run(); entry.fn != nil {
-		*a.cleanups = append(*a.cleanups, entry)
+	// On POSIX platforms, PWD represents “an absolute pathname of the
+	// current working directory.” Since we are changing the working
+	// directory, we should also set or update PWD to reflect that.
+	switch runtime.GOOS {
+	case "windows", "plan9":
+		// Windows and Plan 9 do not use the PWD variable.
+	default:
+		if !filepath.IsAbs(dir) {
+			dir, err = os.Getwd()
+			if err != nil {
+				a.Fatal(err)
+			}
+		}
+		a.Setenv("PWD", dir)
 	}
-	handedOff = true
-	return a.activeCalls.Done
-}
-
-func setenv(key, value string) (func(), error) {
-	prevValue, ok := os.LookupEnv(key)
-	if err := os.Setenv(key, value); err != nil {
-		return nil, err
-	}
-	if ok {
-		return func() {
-			os.Setenv(key, prevValue)
-		}, nil
-	}
-	return func() {
-		os.Unsetenv(key)
-	}, nil
 }
 
 func (a *A) run(action func(a *A)) (finished bool, panicVal interface{}, panicStack []byte) {
@@ -537,35 +455,55 @@ func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byt
 	// Make sure that if a cleanup function panics,
 	// we still run the remaining cleanup functions.
 	defer func() {
-		if !cleanupFinished {
+		a.mu.Lock()
+		recur := len(*a.cleanups) > 0
+		if recur {
+			a.mu.Unlock()
+			a.runCleanups(finished, panicVal, panicStack)
+			return
+		}
+		if a.finished != nil {
+			*a.finished = true
+		}
+		a.mu.Unlock()
+		if a.wg != nil {
+			a.wg.Wait()
+		}
+		a.mu.Lock()
+		recur = len(*a.cleanups) > 0
+		a.mu.Unlock()
+		if recur {
 			a.runCleanups(finished, panicVal, panicStack)
 		}
 	}()
 
 	for {
-		var entry cleanupEntry
+		var cleanup func()
 		a.mu.Lock()
-		if len(*a.cleanups) == 0 {
-			*a.done = true
+		if len(*a.cleanups) > 0 {
+			last := len(*a.cleanups) - 1
+			cleanup = (*a.cleanups)[last]
+			*a.cleanups = (*a.cleanups)[:last]
+		} else {
+			if a.finished != nil {
+				*a.finished = true
+			}
 			a.mu.Unlock()
-			a.activeCalls.Wait()
+			if a.wg != nil {
+				a.wg.Wait()
+			}
+			a.mu.Lock()
+			if len(*a.cleanups) > 0 {
+				a.mu.Unlock()
+				a.runCleanups(finished, panicVal, panicStack)
+				return
+			}
+			a.mu.Unlock()
 			cleanupFinished = true
 			return
 		}
-		last := len(*a.cleanups) - 1
-		entry = (*a.cleanups)[last]
-		*a.cleanups = (*a.cleanups)[:last]
-		if entry.resource {
-			func() {
-				defer a.mu.Unlock()
-				entry.fn()
-			}()
-		} else {
-			a.mu.Unlock()
-			entry.fn()
-		}
-		if entry.after != nil {
-			entry.after()
-		}
+		a.mu.Unlock()
+
+		cleanup()
 	}
 }
