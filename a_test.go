@@ -432,12 +432,20 @@ func TestA_FailedCallConcurrentWithCompletion(t *testing.T) {
 		entered: make(chan struct{}),
 		release: make(chan struct{}),
 	}
+	defer func() {
+		select {
+		case <-logger.release:
+		default:
+			close(logger.release)
+		}
+	}()
+	missingDir := filepath.Join(t.TempDir(), "missing")
 	actionReturned := make(chan context.Context, 1)
 	runnerDone := make(chan goyek.Result, 1)
 	go func() {
 		runnerDone <- goyek.NewRunner(func(a *goyek.A) {
 			ctx := a.Context()
-			go a.Chdir("non-existent-directory-@!#$")
+			go a.Chdir(missingDir)
 			<-logger.entered
 			actionReturned <- ctx
 		})(goyek.Input{Logger: logger})
@@ -456,10 +464,12 @@ func TestA_FailedCallConcurrentWithCompletion(t *testing.T) {
 	case <-timeout.C:
 		t.Fatal("task cleanup did not start")
 	}
+	observation := time.NewTimer(100 * time.Millisecond)
+	defer observation.Stop()
 	select {
 	case result := <-runnerDone:
 		t.Fatalf("runner returned %s before the admitted Chdir call finished", result.Status)
-	default:
+	case <-observation.C:
 	}
 
 	close(logger.release)
@@ -667,10 +677,54 @@ func TestA_TempDir_error(t *testing.T) {
 	assertEqual(t, got.Status, goyek.StatusFailed, "should fail when the temporary directory cannot be created")
 }
 
-func TestA_TempDir_cleanup_error(t *testing.T) {
+func requireModePermissionErrors(t *testing.T) {
+	t.Helper()
 	if runtime.GOOS == "windows" || runtime.GOOS == "plan9" {
 		t.Skip("directory permissions differ on this platform")
 	}
+
+	probeDir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(probeDir, "child"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	originalDir, err := os.Open(".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	probeFD, err := os.Open(probeDir) //nolint:gosec // probeDir is created by t.TempDir
+	if err != nil {
+		_ = originalDir.Close()
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = originalDir.Chdir()
+		_ = originalDir.Close()
+		_ = probeFD.Close()
+		_ = os.Chmod(probeDir, 0o700) //nolint:gosec // restore directory access for cleanup
+		_ = os.RemoveAll(probeDir)
+	}()
+
+	if err := os.Chmod(probeDir, 0); err != nil {
+		t.Fatal(err)
+	}
+	openedDir, openErr := os.Open(probeDir) //nolint:gosec // probeDir is created by t.TempDir
+	if openedDir != nil {
+		_ = openedDir.Close()
+	}
+	chdirErr := probeFD.Chdir()
+	if chdirErr == nil {
+		if err := originalDir.Chdir(); err != nil {
+			t.Fatalf("restore working directory after permission probe: %v", err)
+		}
+	}
+	removeErr := os.RemoveAll(probeDir)
+	if openErr == nil || chdirErr == nil || removeErr == nil {
+		t.Skip("process can bypass directory mode permissions")
+	}
+}
+
+func TestA_TempDir_cleanup_error(t *testing.T) {
+	requireModePermissionErrors(t)
 
 	var (
 		dir      string
@@ -839,9 +893,7 @@ func TestA_Chdir(t *testing.T) {
 }
 
 func TestA_Chdir_open_error(t *testing.T) {
-	if runtime.GOOS == "windows" || runtime.GOOS == "plan9" {
-		t.Skip("directory permissions differ on this platform")
-	}
+	requireModePermissionErrors(t)
 
 	originalDir, err := os.Getwd()
 	if err != nil {
@@ -852,13 +904,13 @@ func TestA_Chdir_open_error(t *testing.T) {
 	if err := os.Chdir(lockedDir); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Chmod(lockedDir, 0); err != nil {
-		t.Fatal(err)
-	}
 	defer func() {
 		_ = os.Chmod(lockedDir, 0o700) //nolint:gosec // restore directory access for cleanup
 		_ = os.Chdir(originalDir)
 	}()
+	if err := os.Chmod(lockedDir, 0); err != nil {
+		t.Fatal(err)
+	}
 
 	got := goyek.NewRunner(func(a *goyek.A) {
 		a.Chdir(targetDir)
@@ -868,9 +920,7 @@ func TestA_Chdir_open_error(t *testing.T) {
 }
 
 func TestA_Chdir_restore_error(t *testing.T) {
-	if runtime.GOOS == "windows" || runtime.GOOS == "plan9" {
-		t.Skip("directory permissions differ on this platform")
-	}
+	requireModePermissionErrors(t)
 
 	originalDir, err := os.Getwd()
 	if err != nil {

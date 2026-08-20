@@ -429,26 +429,18 @@ func (a *A) Chdir(dir string) {
 // still reporting an error.
 func (a *A) runAndCleanup(method string, run func() cleanupEntry) func() {
 	a.mu.Lock()
+	defer a.mu.Unlock()
 	if *a.done {
-		a.mu.Unlock()
 		panic(method + " called after task cleanup has completed")
 	}
-
-	// Add is serialized with the transition to done. Once runCleanups starts
-	// waiting, no new call can be added to this WaitGroup.
-	a.activeCalls.Add(1)
-	handedOff := false
-	defer func() {
-		a.mu.Unlock()
-		if !handedOff {
-			a.activeCalls.Done()
-		}
-	}()
 
 	if entry := run(); entry.fn != nil {
 		*a.cleanups = append(*a.cleanups, entry)
 	}
-	handedOff = true
+	// Add is serialized with the transition to done. Once runCleanups starts
+	// waiting, no new call can be added to this WaitGroup. Setup runs under
+	// a.mu, so no active-call entry is needed until setup succeeds.
+	a.activeCalls.Add(1)
 	return a.activeCalls.Done
 }
 
