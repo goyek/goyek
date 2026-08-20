@@ -16,8 +16,7 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Fixed
 
-- Restore `DefinedTask` comparability, isolate task dependencies from caller
-  mutations, and reject stale task handles.
+- Reject stale task handles after an undefined task name is reused.
 - `A.Cleanup` now panics if a `nil` function is provided.
   This prevents accidental misconfigurations where a `nil` cleanup
   function would cause the internal cleanup loop to terminate prematurely,
