@@ -94,25 +94,22 @@ func (r taskRunner) run(in Input) Result {
 		logger = FmtLogger{}
 	}
 
-	var failed, skipped, finishedVar bool
+	var failed, skipped, done bool
 	a := &A{
-		mu:       &sync.Mutex{},
-		failed:   &failed,
-		skipped:  &skipped,
-		finished: &finishedVar,
-		cleanups: &[]func(){},
-		name:     in.TaskName,
-		output:   out,
-		logger:   logger,
-		parallel: in.Parallel,
+		mu:         &sync.Mutex{},
+		resourceMu: &sync.Mutex{},
+		failed:     &failed,
+		skipped:    &skipped,
+		done:       &done,
+		cleanups:   &[]cleanupEntry{},
+		name:       in.TaskName,
+		output:     out,
+		logger:     logger,
+		parallel:   in.Parallel,
 	}
 	a = a.WithContext(ctx)
 
 	finished, panicVal, panicStack := a.run(r.action)
-
-	a.mu.Lock()
-	*a.finished = true
-	a.mu.Unlock()
 
 	res := Result{}
 	switch {
