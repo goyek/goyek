@@ -101,6 +101,7 @@ func (r taskRunner) run(in Input) Result {
 		skipped:  &skipped,
 		finished: &finishedVar,
 		cleanups: &[]func(){},
+		wg:       &sync.WaitGroup{},
 		name:     in.TaskName,
 		output:   out,
 		logger:   logger,

@@ -39,6 +39,25 @@ type A struct {
 	skipped  *bool
 	cleanups *[]func()
 	finished *bool
+	wg       *sync.WaitGroup
+}
+
+func (a *A) beginOp(opName string) func() {
+	a.mu.Lock()
+	if a.finished != nil && *a.finished {
+		a.mu.Unlock()
+		panic(opName + " called after task has finished")
+	}
+	if a.wg != nil {
+		a.wg.Add(1)
+	}
+	a.mu.Unlock()
+
+	return func() {
+		if a.wg != nil {
+			a.wg.Done()
+		}
+	}
 }
 
 // Context returns a context that is canceled just before
@@ -243,12 +262,12 @@ func (a *A) Cleanup(fn func()) {
 	if fn == nil {
 		panic("nil cleanup")
 	}
+	done := a.beginOp("Cleanup")
+	defer done()
+
 	a.mu.Lock()
-	defer a.mu.Unlock()
-	if a.finished != nil && *a.finished {
-		panic("Cleanup called after task has finished")
-	}
 	*a.cleanups = append(*a.cleanups, fn)
+	a.mu.Unlock()
 }
 
 // Setenv calls os.Setenv(key, value) and uses Cleanup to restore the environment variable
@@ -261,24 +280,16 @@ func (a *A) Setenv(key, value string) {
 		a.Fatalf("Setenv called in a parallel task")
 	}
 
-	a.mu.Lock()
-	if a.finished != nil && *a.finished {
-		a.mu.Unlock()
-		panic("Setenv called after task has finished")
-	}
+	done := a.beginOp("Setenv")
+	defer done()
 
-	a.setenvLocked(key, value)
-	a.mu.Unlock()
-}
-
-func (a *A) setenvLocked(key, value string) {
 	prevValue, ok := os.LookupEnv(key)
 
 	if err := os.Setenv(key, value); err != nil {
-		a.mu.Unlock()
 		a.Fatalf("cannot set environment variable: %v", err)
 	}
 
+	a.mu.Lock()
 	var cleanupFn func()
 	if ok {
 		cleanupFn = func() { os.Setenv(key, prevValue) }
@@ -286,6 +297,7 @@ func (a *A) setenvLocked(key, value string) {
 		cleanupFn = func() { os.Unsetenv(key) }
 	}
 	*a.cleanups = append(*a.cleanups, cleanupFn)
+	a.mu.Unlock()
 }
 
 // TempDir returns a temporary directory for the action to use.
@@ -295,11 +307,8 @@ func (a *A) setenvLocked(key, value string) {
 func (a *A) TempDir() string {
 	a.Helper()
 
-	a.mu.Lock()
-	if a.finished != nil && *a.finished {
-		a.mu.Unlock()
-		panic("TempDir called after task has finished")
-	}
+	done := a.beginOp("TempDir")
+	defer done()
 
 	// Drop unusual characters (such as path separators or
 	// characters interacting with globs) from the directory name to
@@ -311,10 +320,10 @@ func (a *A) TempDir() string {
 
 	dir, err := os.MkdirTemp("", "goyek-"+name+"-*")
 	if err != nil {
-		a.mu.Unlock()
 		a.Fatalf("cannot create temporary directory: %v", err)
 	}
 
+	a.mu.Lock()
 	*a.cleanups = append(*a.cleanups, func() {
 		if err := os.RemoveAll(dir); err != nil {
 			a.Errorf("TempDir RemoveAll cleanup: %v", err)
@@ -336,23 +345,28 @@ func (a *A) Chdir(dir string) {
 		a.Fatalf("Chdir called in a parallel task")
 	}
 
-	a.mu.Lock()
-	if a.finished != nil && *a.finished {
-		a.mu.Unlock()
-		panic("Chdir called after task has finished")
-	}
+	done := a.beginOp("Chdir")
+	defer done()
 
 	oldwd, err := os.Open(".")
 	if err != nil {
-		a.mu.Unlock()
 		a.Fatal(err)
 	}
 
 	if err = os.Chdir(dir); err != nil {
 		oldwd.Close()
-		a.mu.Unlock()
 		a.Fatal(err)
 	}
+
+	a.mu.Lock()
+	*a.cleanups = append(*a.cleanups, func() {
+		err := oldwd.Chdir()
+		oldwd.Close()
+		if err != nil {
+			panic("goyek.Chdir: " + err.Error())
+		}
+	})
+	a.mu.Unlock()
 
 	// On POSIX platforms, PWD represents “an absolute pathname of the
 	// current working directory.” Since we are changing the working
@@ -361,29 +375,14 @@ func (a *A) Chdir(dir string) {
 	case "windows", "plan9":
 		// Windows and Plan 9 do not use the PWD variable.
 	default:
-		pwdDir := dir
-		if !filepath.IsAbs(pwdDir) {
-			pwdDir, err = os.Getwd()
+		if !filepath.IsAbs(dir) {
+			dir, err = os.Getwd()
 			if err != nil {
-				_ = oldwd.Chdir()
-				oldwd.Close()
-				a.mu.Unlock()
 				a.Fatal(err)
 			}
 		}
-		a.setenvLocked("PWD", pwdDir)
+		a.Setenv("PWD", dir)
 	}
-
-	*a.cleanups = append(*a.cleanups, func() {
-		if e := oldwd.Chdir(); e != nil {
-			// It's not safe to continue with tests if we can't
-			// get back to the original working directory. Since
-			// we are holding a dirfd, this is highly unlikely.
-			panic("goyek.Chdir: " + e.Error())
-		}
-		oldwd.Close()
-	})
-	a.mu.Unlock()
 }
 
 func (a *A) run(action func(a *A)) (finished bool, panicVal interface{}, panicStack []byte) {
@@ -467,6 +466,15 @@ func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byt
 			*a.finished = true
 		}
 		a.mu.Unlock()
+		if a.wg != nil {
+			a.wg.Wait()
+		}
+		a.mu.Lock()
+		recur = len(*a.cleanups) > 0
+		a.mu.Unlock()
+		if recur {
+			a.runCleanups(finished, panicVal, panicStack)
+		}
 	}()
 
 	for {
@@ -476,15 +484,26 @@ func (a *A) runCleanups(finished *bool, panicVal *interface{}, panicStack *[]byt
 			last := len(*a.cleanups) - 1
 			cleanup = (*a.cleanups)[last]
 			*a.cleanups = (*a.cleanups)[:last]
-		} else if a.finished != nil {
-			*a.finished = true
-		}
-		a.mu.Unlock()
-
-		if cleanup == nil {
+		} else {
+			if a.finished != nil {
+				*a.finished = true
+			}
+			a.mu.Unlock()
+			if a.wg != nil {
+				a.wg.Wait()
+			}
+			a.mu.Lock()
+			if len(*a.cleanups) > 0 {
+				a.mu.Unlock()
+				a.runCleanups(finished, panicVal, panicStack)
+				return
+			}
+			a.mu.Unlock()
 			cleanupFinished = true
 			return
 		}
+		a.mu.Unlock()
+
 		cleanup()
 	}
 }

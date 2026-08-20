@@ -222,9 +222,67 @@ func TestA_TempDir_error(t *testing.T) {
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 }
 
+type blockingLogger struct {
+	started chan struct{}
+	release chan struct{}
+}
+
+func (l *blockingLogger) Log(w io.Writer, args ...interface{}) {
+	close(l.started)
+	<-l.release
+	(goyek.FmtLogger{}).Log(w, args...)
+}
+
+func (l *blockingLogger) Logf(w io.Writer, format string, args ...interface{}) {
+	(goyek.FmtLogger{}).Logf(w, format, args...)
+}
+
+func TestA_InFlightHelperFailure(t *testing.T) {
+	logger := &blockingLogger{
+		started: make(chan struct{}),
+		release: make(chan struct{}),
+	}
+
+	runnerDone := make(chan goyek.Result, 1)
+
+	go func() {
+		res := goyek.NewRunner(func(a *goyek.A) {
+			go func() {
+				a.Chdir("non-existent-directory-@!#$")
+			}()
+			<-logger.started
+		})(goyek.Input{Logger: logger})
+		runnerDone <- res
+	}()
+
+	select {
+	case <-runnerDone:
+		t.Fatal("runner returned before blocked Fatal completed")
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	close(logger.release)
+
+	select {
+	case res := <-runnerDone:
+		assertEqual(t, res.Status, goyek.StatusFailed, "runner should report failure")
+	case <-time.After(5 * time.Second):
+		t.Fatal("runner timed out waiting for in-flight helper to complete")
+	}
+}
+
 func TestA_ConcurrentCleanupRace(t *testing.T) {
 	for i := 0; i < 50; i++ {
 		key := fmt.Sprintf("GOYEK_RACE_TEST_%d", i)
+		prevVal, ok := os.LookupEnv(key)
+		defer func(k, v string, isSet bool) {
+			if isSet {
+				_ = os.Setenv(k, v)
+			} else {
+				_ = os.Unsetenv(k)
+			}
+		}(key, prevVal, ok)
+
 		var (
 			capturedA *goyek.A
 			cleanedUp sync.Map
