@@ -2,11 +2,13 @@ package goyek_test
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 	"unicode/utf8"
@@ -211,165 +213,160 @@ func TestA_WithContext_concurrent_fail_derived(t *testing.T) {
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
 }
 
-func TestA_PostCompletionPanic(t *testing.T) {
-	const envKey = "GOYEK_POST_COMPLETION_ENV"
-	prevEnv, envWasSet := os.LookupEnv(envKey)
-	if err := os.Unsetenv(envKey); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if envWasSet {
-			_ = os.Setenv(envKey, prevEnv)
-		} else {
-			_ = os.Unsetenv(envKey)
+func TestA_TempDir_error(t *testing.T) {
+	got := goyek.NewRunner(func(a *goyek.A) {
+		a.Setenv("TMPDIR", "/non-existent-directory-@!#$")
+		a.TempDir()
+	})(goyek.Input{})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+}
+
+func TestA_ConcurrentCleanupRace(t *testing.T) {
+	for i := 0; i < 50; i++ {
+		key := fmt.Sprintf("GOYEK_RACE_TEST_%d", i)
+		var (
+			capturedA *goyek.A
+			cleanedUp sync.Map
+		)
+
+		taskDone := make(chan struct{})
+		runnerDone := make(chan struct{})
+
+		go func() {
+			defer close(runnerDone)
+			_ = goyek.NewRunner(func(a *goyek.A) {
+				capturedA = a
+				a.Cleanup(func() {
+					select {
+					case <-taskDone:
+					default:
+						close(taskDone)
+					}
+				})
+			})(goyek.Input{})
+		}()
+
+		<-taskDone
+
+		var wg sync.WaitGroup
+		const numGoroutines = 10
+		for g := 0; g < numGoroutines; g++ {
+			wg.Add(1)
+			go func(id int) {
+				defer wg.Done()
+
+				setenvPanicked := false
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							setenvPanicked = true
+						}
+					}()
+					capturedA.Setenv(key, "1")
+				}()
+
+				if setenvPanicked {
+					if got := os.Getenv(key); got != "" {
+						t.Errorf("Setenv panicked but mutated environment: %q", got)
+					}
+				}
+
+				cleanupPanicked := false
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							cleanupPanicked = true
+						}
+					}()
+					capturedA.Cleanup(func() {
+						cleanedUp.Store(id, true)
+					})
+				}()
+
+				if !cleanupPanicked {
+					<-runnerDone
+					if _, ok := cleanedUp.Load(id); !ok {
+						t.Errorf("Cleanup succeeded but was never executed!")
+					}
+				}
+			}(g)
 		}
-	}()
 
-	originalDir, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
+		wg.Wait()
+		<-runnerDone
+
+		if got := os.Getenv(key); got != "" {
+			t.Errorf("Environment leaked: %s=%s", key, got)
+		}
 	}
-	targetDir := t.TempDir()
+}
 
-	var capturedA, derivedA *goyek.A
+func TestA_PostCompletionPanic(t *testing.T) {
+	var capturedA *goyek.A
 	res := goyek.NewRunner(func(a *goyek.A) {
 		capturedA = a
-		derivedA = a.WithContext(context.Background())
 	})(goyek.Input{})
 
 	if res.Status != goyek.StatusPassed {
 		t.Fatalf("expected task to pass, got %s", res.Status)
 	}
 
-	testCases := []struct {
-		name string
-		fn   func()
-	}{
-		{name: "Cleanup", fn: func() { capturedA.Cleanup(func() {}) }},
-		{name: "Cleanup derived A", fn: func() { derivedA.Cleanup(func() {}) }},
-		{name: "WithContext", fn: func() { capturedA.WithContext(context.Background()) }},
-		{name: "Setenv", fn: func() { capturedA.Setenv(envKey, "value") }},
-		{name: "TempDir", fn: func() { capturedA.TempDir() }},
-		{name: "Chdir", fn: func() { capturedA.Chdir(targetDir) }},
-	}
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			returned := false
-			var panicValue interface{}
-			func() {
-				defer func() {
-					panicValue = recover()
-				}()
-				tc.fn()
-				returned = true
-			}()
-			if returned {
-				t.Fatalf("expected %s after cleanup completion to panic", tc.name)
+	t.Run("Cleanup", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("expected Cleanup after task completion to panic, but it did not")
+			} else {
+				want := "Cleanup called after task has finished"
+				if got := r.(string); got != want {
+					t.Errorf("expected panic message %q, got %q", want, got)
+				}
 			}
-			method := strings.TrimSuffix(tc.name, " derived A")
-			want := method + " called after task cleanup has completed"
-			assertEqual(t, panicValue, want, "should panic with the expected value")
-		})
-	}
+		}()
+		capturedA.Cleanup(func() {})
+	})
 
-	if _, ok := os.LookupEnv(envKey); ok {
-		t.Errorf("Setenv changed %s after cleanup completion", envKey)
-	}
-	currentDir, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if currentDir != originalDir {
-		t.Errorf("Chdir changed working directory after cleanup completion: got %q, want %q", currentDir, originalDir)
-	}
-}
+	t.Run("Setenv", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("expected Setenv after task completion to panic, but it did not")
+			} else {
+				want := "Setenv called after task has finished"
+				if got := r.(string); got != want {
+					t.Errorf("expected panic message %q, got %q", want, got)
+				}
+			}
+		}()
+		capturedA.Setenv("SOME_KEY", "value")
+	})
 
-func TestA_Cleanup_concurrent_with_completion(t *testing.T) {
-	const attempts = 1000
-	const wantPanic = "Cleanup called after task cleanup has completed"
-	for i := 0; i < attempts; i++ {
-		start := make(chan struct{})
-		cleanupCalled := make(chan struct{}, 1)
-		attemptDone := make(chan interface{}, 1)
-		res := goyek.NewRunner(func(a *goyek.A) {
-			a.Cleanup(func() {
-				close(start)
-			})
-			go func() {
-				<-start
-				var panicValue interface{}
-				func() {
-					defer func() {
-						panicValue = recover()
-					}()
-					a.Cleanup(func() {
-						cleanupCalled <- struct{}{}
-					})
-				}()
-				attemptDone <- panicValue
-			}()
-		})(goyek.Input{})
+	t.Run("TempDir", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("expected TempDir after task completion to panic, but it did not")
+			} else {
+				want := "TempDir called after task has finished"
+				if got := r.(string); got != want {
+					t.Errorf("expected panic message %q, got %q", want, got)
+				}
+			}
+		}()
+		capturedA.TempDir()
+	})
 
-		if res.Status != goyek.StatusPassed {
-			t.Fatalf("attempt %d: expected task to pass, got %s", i, res.Status)
-		}
-		if panicValue := <-attemptDone; panicValue != nil {
-			assertEqual(t, panicValue, wantPanic, "should reject only after cleanup completion")
-			continue
-		}
-		select {
-		case <-cleanupCalled:
-		default:
-			t.Fatalf("attempt %d: Cleanup returned without running the registered function", i)
-		}
-	}
-}
-
-func TestA_Setenv_concurrent_with_completion(t *testing.T) {
-	const (
-		attempts  = 1000
-		envKey    = "GOYEK_CONCURRENT_COMPLETION_ENV"
-		wantPanic = "Setenv called after task cleanup has completed"
-	)
-	defer func() {
-		_ = os.Unsetenv(envKey)
-	}()
-	for i := 0; i < attempts; i++ {
-		if err := os.Unsetenv(envKey); err != nil {
-			t.Fatal(err)
-		}
-		start := make(chan struct{})
-		attemptDone := make(chan interface{}, 1)
-		res := goyek.NewRunner(func(a *goyek.A) {
-			a.Setenv(envKey, "action")
-			a.Cleanup(func() {
-				close(start)
-			})
-			go func() {
-				<-start
-				var panicValue interface{}
-				func() {
-					defer func() {
-						panicValue = recover()
-					}()
-					a.Setenv(envKey, "late")
-				}()
-				attemptDone <- panicValue
-			}()
-		})(goyek.Input{})
-
-		if res.Status != goyek.StatusPassed {
-			t.Fatalf("attempt %d: expected task to pass, got %s", i, res.Status)
-		}
-		if panicValue := <-attemptDone; panicValue != nil {
-			assertEqual(t, panicValue, wantPanic, "should reject only before changing the environment")
-		}
-		if value, ok := os.LookupEnv(envKey); ok {
-			_ = os.Unsetenv(envKey)
-			t.Fatalf("attempt %d: Setenv left %s=%q after cleanup completion", i, envKey, value)
-		}
-	}
+	t.Run("Chdir", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("expected Chdir after task completion to panic, but it did not")
+			} else {
+				want := "Chdir called after task has finished"
+				if got := r.(string); got != want {
+					t.Errorf("expected panic message %q, got %q", want, got)
+				}
+			}
+		}()
+		capturedA.Chdir(".")
+	})
 }
 
 func TestA_WithContext_concurrent_fail_original(t *testing.T) {

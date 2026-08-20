@@ -10,9 +10,9 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Added
 
-- Make `A.Cleanup`, `A.Setenv`, `A.TempDir`, and `A.Chdir` panic after task
-  cleanup processing has closed. Calls racing with completion are coordinated
-  so cleanup callbacks cannot be stranded.
+- Add safety checks to `A.Cleanup`, `A.Setenv`, `A.TempDir`, and `A.Chdir`
+  to panic if called after the task has finished to prevent post-completion
+  state and resource leakage.
 - Add safety checks to `A.Setenv` and `A.Chdir` to prevent their usage
   in parallel tasks.
 - Add `SyncWriter` to adapt an output writer for concurrent use.
@@ -26,8 +26,6 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   to resource leaks.
 - Fix races in `middleware.BufferParallel` and `middleware.SilentNonFailed`
   when task output is written from multiple goroutines.
-- Resolve the default task before executor middleware so middlewares
-  can observe the task that will actually run.
 - Treat nil output as `io.Discard` in bundled output-writing middleware.
 - Emit each `middleware.ReportStatus` panic report with one write so concurrent
   records cannot split its header from its stack.
@@ -42,8 +40,6 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   "file name too long" errors.
 - Ensure `middleware.ReportLongRun` stops its reporting goroutine if the next
   runner panics.
-- Make `middleware.ReportLongRun` ignore non-positive durations instead of
-  panicking.
 - Fix signal handling in `Flow.Main` to support `SIGTERM` on Unix and
   synchronize output during shutdown.
 - Document that `Flow` and `DefinedTask` are not safe for concurrent use.
