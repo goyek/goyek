@@ -16,9 +16,6 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Fixed
 
-- Prevent task-completion races in `A.Cleanup`, `A.WithContext`, `A.Setenv`,
-  `A.TempDir`, and `A.Chdir` from skipping registered cleanup callbacks or
-  leaking resources and process state.
 - Reject stale task handles after an undefined task name is reused.
 - `A.Cleanup` now panics if a `nil` function is provided.
   This prevents accidental misconfigurations where a `nil` cleanup
