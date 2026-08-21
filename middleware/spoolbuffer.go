@@ -38,9 +38,6 @@ func (b *spoolBuffer) Write(p []byte) (int, error) {
 	}
 	n, err := b.file.Write(p)
 	b.size += int64(n)
-	if n < len(p) && err == nil {
-		err = io.ErrShortWrite
-	}
 	return n, err
 }
 
@@ -57,9 +54,6 @@ func (b *spoolBuffer) WriteString(s string) (int, error) {
 	}
 	n, err := io.WriteString(b.file, s)
 	b.size += int64(n)
-	if n < len(s) && err == nil {
-		err = io.ErrShortWrite
-	}
 	return n, err
 }
 
@@ -68,6 +62,10 @@ func (b *spoolBuffer) spill() error {
 	if err != nil {
 		return err
 	}
+	return b.spillTo(file)
+}
+
+func (b *spoolBuffer) spillTo(file *os.File) error {
 	if _, err := io.WriteString(file, b.buffer.String()); err != nil {
 		_ = file.Close()
 		_ = os.Remove(file.Name())
