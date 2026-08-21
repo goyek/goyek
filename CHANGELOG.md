@@ -72,7 +72,9 @@ import "github.com/goyek/goyek/v3"
 #### Command Line Syntax Change
 
 The recommended command line syntax changed from `[flags] [--] [tasks]` to
-`[tasks] [flags] [--] [args]`.
+`[tasks] [flags]`. Programs that accept positional arguments can extend the
+syntax to `[tasks] [flags] [--] [args]`; they should require the explicit `--`
+so a task placed after a flag is not mistaken for a positional argument.
 
 ```go
 // Before (v2)
@@ -84,7 +86,14 @@ func main() {
 // After (v3)
 func main() {
     tasks, rest := goyek.SplitTasks(os.Args[1:])
-    flag.CommandLine.Parse(rest)
+    if err := flag.CommandLine.Parse(rest); err != nil {
+        fmt.Fprintln(goyek.Output(), err)
+        os.Exit(2)
+    }
+    if flag.NArg() > 0 {
+        fmt.Fprintln(goyek.Output(), "unexpected arguments:", flag.Args())
+        os.Exit(2)
+    }
     goyek.Main(tasks)
 }
 ```
