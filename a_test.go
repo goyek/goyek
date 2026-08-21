@@ -803,6 +803,7 @@ func TestA_Chdir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	oldPWD, oldPWDSet := os.LookupEnv("PWD")
 	defer os.Chdir(oldDir) //nolint:errcheck // not checking errors for cleanup
 
 	// The "relative" test case relies on tmp not being a symlink.
@@ -888,6 +889,15 @@ func TestA_Chdir(t *testing.T) {
 			if newDir != oldDir {
 				t.Fatalf("failed to restore wd to %s: getwd: %s", oldDir, newDir)
 			}
+			switch runtime.GOOS {
+			case "windows", "plan9":
+				// Windows and Plan 9 do not use the PWD variable.
+			default:
+				pwd, pwdSet := os.LookupEnv("PWD")
+				if pwd != oldPWD || pwdSet != oldPWDSet {
+					t.Fatalf("failed to restore PWD: got (%q, %t), want (%q, %t)", pwd, pwdSet, oldPWD, oldPWDSet)
+				}
+			}
 		})
 	}
 }
@@ -931,6 +941,7 @@ func TestA_Chdir_restore_error(t *testing.T) {
 	if err := os.Chdir(sourceDir); err != nil {
 		t.Fatal(err)
 	}
+	oldPWD, oldPWDSet := os.LookupEnv("PWD")
 	defer func() {
 		_ = os.Chmod(sourceDir, 0o700) //nolint:gosec // restore directory access for cleanup
 		_ = os.Chdir(originalDir)
@@ -947,6 +958,10 @@ func TestA_Chdir_restore_error(t *testing.T) {
 	panicValue, ok := got.PanicValue.(string)
 	if !ok || !strings.Contains(panicValue, "goyek.Chdir:") {
 		t.Errorf("expected a Chdir restoration panic, got %#v", got.PanicValue)
+	}
+	pwd, pwdSet := os.LookupEnv("PWD")
+	if pwd != oldPWD || pwdSet != oldPWDSet {
+		t.Errorf("failed to restore PWD after Chdir restoration panic: got (%q, %t), want (%q, %t)", pwd, pwdSet, oldPWD, oldPWDSet)
 	}
 }
 
@@ -1085,4 +1100,54 @@ func TestA_Chdir_error(t *testing.T) {
 	})(goyek.Input{})
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+}
+
+func TestA_Chdir_target_error_does_not_restore(t *testing.T) {
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = os.Chdir(originalDir)
+	}()
+
+	sourceDir := t.TempDir()
+	cleanupDir := t.TempDir()
+	missingDir := filepath.Join(t.TempDir(), "missing")
+	if err := os.Chdir(sourceDir); err != nil {
+		t.Fatal(err)
+	}
+
+	var cleanupErr error
+	got := goyek.NewRunner(func(a *goyek.A) {
+		callDone := make(chan struct{})
+		go func() {
+			defer close(callDone)
+			a.Chdir(missingDir)
+		}()
+		<-callDone
+		a.Cleanup(func() {
+			cleanupErr = os.Chdir(cleanupDir)
+		})
+	})(goyek.Input{})
+
+	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+	if cleanupErr != nil {
+		t.Fatalf("cleanup Chdir failed: %v", cleanupErr)
+	}
+	currentInfo, err := os.Stat(".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cleanupInfo, err := os.Stat(cleanupDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !os.SameFile(currentInfo, cleanupInfo) {
+		currentDir, getwdErr := os.Getwd()
+		if getwdErr != nil {
+			t.Fatalf("failed target Chdir unexpectedly restored another directory; Getwd failed: %v", getwdErr)
+		}
+		t.Fatalf("failed target Chdir unexpectedly restored %q, want %q", currentDir, cleanupDir)
+	}
 }

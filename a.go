@@ -221,7 +221,6 @@ func (a *A) SkipNow() {
 
 // WithContext returns a derived a with its context changed
 // to ctx. The provided ctx must be non-nil.
-// WithContext panics if called after task cleanup has completed.
 func (a *A) WithContext(ctx context.Context) *A {
 	if ctx == nil {
 		panic("nil context")
@@ -260,7 +259,6 @@ func (a *A) Helper() {
 // Cleanup functions will be called in the last-added first-called order.
 //
 // The provided function must be non-nil.
-// Cleanup panics if called after task cleanup has completed.
 func (a *A) Cleanup(fn func()) {
 	if fn == nil {
 		panic("nil cleanup")
@@ -275,7 +273,6 @@ func (a *A) Cleanup(fn func()) {
 // to its original value after the action.
 //
 // Because Setenv affects the whole process, it should not be used in parallel tasks.
-// Setenv panics if called after task cleanup has completed.
 func (a *A) Setenv(key, value string) {
 	var (
 		err      error
@@ -305,7 +302,6 @@ func (a *A) Setenv(key, value string) {
 // The directory is automatically removed by Cleanup when the action completes.
 // Each subsequent call to TempDir returns a unique directory;
 // if the directory creation fails, TempDir terminates the action by calling Fatal.
-// TempDir panics if called after task cleanup has completed.
 func (a *A) TempDir() string {
 	var (
 		dir string
@@ -352,7 +348,6 @@ func (a *A) TempDir() string {
 //
 // Because Chdir affects the whole process, it should not be used
 // in parallel tasks.
-// Chdir panics if called after task cleanup has completed.
 func (a *A) Chdir(dir string) {
 	var (
 		err      error
@@ -380,7 +375,8 @@ func (a *A) Chdir(dir string) {
 		}
 
 		if err = os.Chdir(dir); err != nil {
-			return cleanupEntry{fn: restoreDir, resource: true}
+			_ = oldwd.Close()
+			return cleanupEntry{}
 		}
 
 		var restoreEnv func()
@@ -407,7 +403,7 @@ func (a *A) Chdir(dir string) {
 			resource: true,
 			fn: func() {
 				if restoreEnv != nil {
-					restoreEnv()
+					defer restoreEnv()
 				}
 				restoreDir()
 			},
