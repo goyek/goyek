@@ -2,8 +2,11 @@ package goyek
 
 import (
 	"io"
+	"reflect"
 	"sync"
 )
+
+var discardWriterType = reflect.TypeOf(io.Discard)
 
 type syncWriter struct {
 	writer io.Writer
@@ -22,14 +25,25 @@ func (w *syncWriter) WriteString(s string) (int, error) {
 	return io.WriteString(w.writer, s)
 }
 
-var _ io.StringWriter = (*syncWriter)(nil)
+func (w *syncWriter) ReadFrom(r io.Reader) (int64, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return io.Copy(w.writer, r)
+}
+
+var (
+	_ io.StringWriter = (*syncWriter)(nil)
+	_ io.ReaderFrom   = (*syncWriter)(nil)
+)
 
 // SyncWriter returns a writer safe for concurrent use by serializing calls to
-// Write and WriteString. Each call is a synchronization unit; a logical record
-// split across multiple calls may be interleaved with other writes. The returned
-// writer implements [io.StringWriter], but does not preserve other optional
-// interfaces implemented by w.
+// Write, WriteString, and ReadFrom. Each call is a synchronization unit; a
+// logical record split across multiple calls may be interleaved with other
+// writes. The returned writer implements [io.StringWriter] and [io.ReaderFrom],
+// but does not preserve other optional interfaces implemented by w.
 // It returns nil if w is nil.
+// It returns [io.Discard] unchanged because that writer is already safe for
+// concurrent use and implements both optional interfaces.
 //
 // Calling SyncWriter with a writer previously returned by SyncWriter returns
 // that writer unchanged. Call SyncWriter once and share its result: separately
@@ -49,6 +63,9 @@ var _ io.StringWriter = (*syncWriter)(nil)
 func SyncWriter(w io.Writer) io.Writer {
 	if w == nil {
 		return nil
+	}
+	if reflect.TypeOf(w) == discardWriterType {
+		return w
 	}
 	if sw, ok := w.(*syncWriter); ok {
 		return sw

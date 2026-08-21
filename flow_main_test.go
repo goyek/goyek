@@ -114,7 +114,7 @@ func TestFlow_runMain(t *testing.T) {
 
 func TestFlow_runMain_sharesSynchronizedOutput(t *testing.T) {
 	flow := &Flow{}
-	out := io.Discard
+	out := &strings.Builder{}
 	flow.SetOutput(out)
 	flow.Define(Task{Name: "task"})
 
@@ -148,7 +148,7 @@ func TestFlow_runMain_sharesSynchronizedOutput(t *testing.T) {
 
 func TestFlow_runMain_reusesSyncWriter(t *testing.T) {
 	flow := &Flow{}
-	out := SyncWriter(io.Discard)
+	out := SyncWriter(&strings.Builder{})
 	flow.SetOutput(out)
 	flow.Define(Task{Name: "task"})
 

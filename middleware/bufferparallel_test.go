@@ -40,11 +40,15 @@ func TestBufferParallel(t *testing.T) {
 	_ = flow.Execute(context.Background(), []string{"task"})
 
 	got := out.String()
-	if !strings.Contains(got, "Hello\nFarewell") {
-		t.Fatalf("should have not mixed input from task-1\nGOT:\n%s", got)
-	}
-	if !strings.Contains(got, "Hi\nBye") {
-		t.Fatalf("should have not mixed input from task-2\nGOT:\n%s", got)
+	for _, want := range []string{
+		"=== NAME  task-1\nHello\n",
+		"=== NAME  task-1\nFarewell\n",
+		"=== NAME  task-2\nHi\n",
+		"=== NAME  task-2\nBye\n",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("output does not contain %q\nGOT:\n%s", want, got)
+		}
 	}
 }
 
@@ -78,7 +82,13 @@ func TestBufferParallel_concurrent_printing_standalone(t *testing.T) {
 
 func TestBufferParallel_nilOutput(t *testing.T) {
 	runner := middleware.BufferParallel(func(in goyek.Input) goyek.Result {
-		_, _ = io.WriteString(in.Output, "discarded")
+		if in.Output != io.Discard {
+			t.Fatalf("output = %T, want io.Discard", in.Output)
+		}
+		message := strings.Repeat("x", (1<<20)+1)
+		if n, err := io.WriteString(in.Output, message); err != nil || n != len(message) {
+			t.Fatalf("WriteString returned %d, %v; want %d, nil", n, err, len(message))
+		}
 		return goyek.Result{Status: goyek.StatusPassed}
 	})
 
@@ -87,4 +97,161 @@ func TestBufferParallel_nilOutput(t *testing.T) {
 	if result.Status != goyek.StatusPassed {
 		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusPassed)
 	}
+}
+
+func TestBufferParallel_discardOutput(t *testing.T) {
+	runner := middleware.BufferParallel(func(in goyek.Input) goyek.Result {
+		if in.Output != io.Discard {
+			t.Fatalf("output = %T, want io.Discard", in.Output)
+		}
+		message := strings.Repeat("x", (1<<20)+1)
+		if n, err := io.WriteString(in.Output, message); err != nil || n != len(message) {
+			t.Fatalf("WriteString returned %d, %v; want %d, nil", n, err, len(message))
+		}
+		return goyek.Result{Status: goyek.StatusPassed}
+	})
+
+	result := runner(goyek.Input{Parallel: true, Output: goyek.SyncWriter(io.Discard)})
+
+	if result.Status != goyek.StatusPassed {
+		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusPassed)
+	}
+}
+
+func TestBufferParallel_nonParallelPassThrough(t *testing.T) {
+	output := &strings.Builder{}
+	runner := middleware.BufferParallel(func(in goyek.Input) goyek.Result {
+		if in.Output != output {
+			t.Fatal("non-parallel output was replaced")
+		}
+		_, _ = io.WriteString(in.Output, "message")
+		return goyek.Result{Status: goyek.StatusPassed}
+	})
+
+	result := runner(goyek.Input{Output: output})
+
+	if result.Status != goyek.StatusPassed {
+		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusPassed)
+	}
+	if got, want := output.String(), "message"; got != want {
+		t.Fatalf("output = %q, want %q", got, want)
+	}
+}
+
+func TestBufferParallel_uncomparableOutput(t *testing.T) {
+	runner := middleware.BufferParallel(func(in goyek.Input) goyek.Result {
+		_, _ = io.WriteString(in.Output, "message\n")
+		return goyek.Result{Status: goyek.StatusPassed}
+	})
+
+	result := runner(goyek.Input{
+		TaskName: "task",
+		Parallel: true,
+		Output:   uncomparableWriter(make([]byte, 64)),
+	})
+
+	if result.Status != goyek.StatusPassed {
+		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusPassed)
+	}
+}
+
+func TestBufferParallel_streamsBeforeTaskReturns(t *testing.T) {
+	const message = "message\n"
+	written := make(chan struct{})
+	release := make(chan struct{})
+	writeResult := make(chan struct {
+		n   int
+		err error
+	}, 1)
+	runner := middleware.BufferParallel(func(in goyek.Input) goyek.Result {
+		n, err := io.WriteString(in.Output, message)
+		writeResult <- struct {
+			n   int
+			err error
+		}{n: n, err: err}
+		close(written)
+		<-release
+		return goyek.Result{Status: goyek.StatusPassed}
+	})
+
+	out := &strings.Builder{}
+	done := make(chan goyek.Result)
+	go func() {
+		done <- runner(goyek.Input{
+			TaskName: "task",
+			Parallel: true,
+			Output:   goyek.SyncWriter(out),
+		})
+	}()
+	<-written
+	got := out.String()
+	result := <-writeResult
+	close(release)
+	taskResult := <-done
+
+	if result.err != nil {
+		t.Fatalf("writing output: %v", result.err)
+	}
+	if result.n != len(message) {
+		t.Fatalf("wrote %d bytes, want %d", result.n, len(message))
+	}
+	if want := "=== NAME  task\n" + message; got != want {
+		t.Fatalf("output before task return = %q, want %q", got, want)
+	}
+	if taskResult.Status != goyek.StatusPassed {
+		t.Fatalf("got status %v, want %v", taskResult.Status, goyek.StatusPassed)
+	}
+}
+
+func TestBufferParallel_composesWithSilentNonFailed(t *testing.T) {
+	message := strings.Repeat("x", (1<<20)+1) + "\n"
+	action := func(in goyek.Input) goyek.Result {
+		if n, err := io.WriteString(in.Output, message); err != nil || n != len(message) {
+			t.Fatalf("WriteString returned %d, %v; want %d, nil", n, err, len(message))
+		}
+		return goyek.Result{Status: goyek.StatusFailed}
+	}
+	tests := []struct {
+		name string
+		wrap func(goyek.Runner) goyek.Runner
+	}{
+		{
+			name: "buffer outside silent",
+			wrap: func(next goyek.Runner) goyek.Runner {
+				return middleware.BufferParallel(middleware.SilentNonFailed(next))
+			},
+		},
+		{
+			name: "silent outside buffer",
+			wrap: func(next goyek.Runner) goyek.Runner {
+				return middleware.SilentNonFailed(middleware.BufferParallel(next))
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output := &strings.Builder{}
+			result := tt.wrap(action)(goyek.Input{
+				TaskName: "task",
+				Parallel: true,
+				Output:   goyek.SyncWriter(output),
+			})
+
+			if result.Status != goyek.StatusFailed {
+				t.Fatalf("got status %v, want %v", result.Status, goyek.StatusFailed)
+			}
+			want := "=== NAME  task\n" + strings.Repeat("x", 1<<20) + "\n\t... [output truncated]\n"
+			if got := output.String(); got != want {
+				t.Fatalf("output length = %d, want %d", len(got), len(want))
+			}
+		})
+	}
+}
+
+type uncomparableWriter []byte
+
+func (w uncomparableWriter) Write(p []byte) (int, error) {
+	copy(w, p)
+	return len(p), nil
 }
