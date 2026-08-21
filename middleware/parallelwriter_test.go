@@ -135,6 +135,47 @@ func TestParallelWriter_flushesPartialLine(t *testing.T) {
 	}
 }
 
+func TestParallelWriter_Flush(t *testing.T) {
+	var output bytes.Buffer
+	writer := newParallelWriter(&output, "task")
+
+	if n, err := writer.WriteString("first"); err != nil || n != len("first") {
+		t.Fatalf("WriteString returned %d, %v; want %d, nil", n, err, len("first"))
+	}
+	if err := writer.Flush(); err != nil {
+		t.Fatalf("Flush returned error: %v", err)
+	}
+	if n, err := writer.WriteString("second\n"); err != nil || n != len("second\n") {
+		t.Fatalf("WriteString returned %d, %v; want %d, nil", n, err, len("second\n"))
+	}
+	if got, want := output.String(), "=== NAME  task\nfirst\n=== NAME  task\nsecond\n"; got != want {
+		t.Fatalf("output = %q, want %q", got, want)
+	}
+}
+
+func TestParallelWriter_afterClose(t *testing.T) {
+	writer := newParallelWriter(io.Discard, "task")
+	if err := writer.Close(); err != nil {
+		t.Fatalf("Close returned error: %v", err)
+	}
+
+	if n, err := writer.Write([]byte("message")); n != 0 || !errors.Is(err, io.ErrClosedPipe) {
+		t.Fatalf("Write returned %d, %v; want 0, %v", n, err, io.ErrClosedPipe)
+	}
+	if n, err := writer.WriteString("message"); n != 0 || !errors.Is(err, io.ErrClosedPipe) {
+		t.Fatalf("WriteString returned %d, %v; want 0, %v", n, err, io.ErrClosedPipe)
+	}
+	if n, err := writer.ReadFrom(strings.NewReader("message")); n != 0 || !errors.Is(err, io.ErrClosedPipe) {
+		t.Fatalf("ReadFrom returned %d, %v; want 0, %v", n, err, io.ErrClosedPipe)
+	}
+	if err := writer.Flush(); !errors.Is(err, io.ErrClosedPipe) {
+		t.Fatalf("Flush returned %v, want %v", err, io.ErrClosedPipe)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("second Close returned error: %v", err)
+	}
+}
+
 func TestParallelWriter_truncatesLongLine(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -208,6 +249,68 @@ func TestParallelWriter_truncationPreservesUTF8(t *testing.T) {
 	}
 	if !utf8.ValidString(output.String()) {
 		t.Fatal("truncated output is not valid UTF-8")
+	}
+}
+
+func TestParallelWriter_truncationAcrossWritesPreservesUTF8(t *testing.T) {
+	var output bytes.Buffer
+	writer := newParallelWriter(&output, "task")
+	t.Cleanup(func() { _ = writer.Close() })
+	runeBytes := []byte("€")
+	first := append([]byte(strings.Repeat("x", maxBufferedOutputBytes-2)), runeBytes[:2]...)
+
+	if n, err := writer.Write(first); err != nil || n != len(first) {
+		t.Fatalf("first Write returned %d, %v; want %d, nil", n, err, len(first))
+	}
+	if n, err := writer.Write(append(runeBytes[2:], []byte("discarded")...)); err != nil || n != len("€")-2+len("discarded") {
+		t.Fatalf("second Write returned %d, %v; want %d, nil", n, err, len("€")-2+len("discarded"))
+	}
+
+	want := "=== NAME  task\n" + strings.Repeat("x", maxBufferedOutputBytes-2) + parallelTruncatedMarker
+	if got := output.String(); got != want {
+		t.Fatalf("output length = %d, want %d", len(got), len(want))
+	}
+	if !utf8.ValidString(output.String()) {
+		t.Fatal("truncated output is not valid UTF-8")
+	}
+}
+
+func TestTrimIncompleteUTF8_shortInput(t *testing.T) {
+	input := []byte{0xe2}
+	if got := trimIncompleteUTF8(input); len(got) != 0 {
+		t.Fatalf("trimIncompleteUTF8 returned %x, want empty output", got)
+	}
+}
+
+func TestParallelWriter_invalidOutputCount(t *testing.T) {
+	tests := []struct {
+		name   string
+		output io.Writer
+		wantN  int
+	}{
+		{
+			name: "negative",
+			output: writerFunc(func([]byte) (int, error) {
+				return -1, nil
+			}),
+		},
+		{
+			name: "too large",
+			output: writerFunc(func(p []byte) (int, error) {
+				return len(p) + 1, nil
+			}),
+			wantN: len("message\n"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			writer := newParallelWriter(tt.output, "task")
+			n, err := writer.WriteString("message\n")
+			if n != tt.wantN || !errors.Is(err, io.ErrShortWrite) {
+				t.Fatalf("WriteString returned %d, %v; want %d, %v", n, err, tt.wantN, io.ErrShortWrite)
+			}
+		})
 	}
 }
 
@@ -296,6 +399,12 @@ func TestParallelWriter_partialTruncationWriteErrorIsSticky(t *testing.T) {
 				}
 				if output.calls != 1 {
 					t.Fatalf("underlying Write calls = %d, want 1", output.calls)
+				}
+				if readN, readErr := writer.ReadFrom(strings.NewReader("ignored")); readN != 0 || !errors.Is(readErr, writeErr) {
+					t.Fatalf("ReadFrom after write error returned %d, %v; want 0, %v", readN, readErr, writeErr)
+				}
+				if flushErr := writer.Flush(); !errors.Is(flushErr, writeErr) {
+					t.Fatalf("Flush after write error returned %v, want %v", flushErr, writeErr)
 				}
 			})
 		}

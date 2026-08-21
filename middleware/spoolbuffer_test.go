@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -150,5 +151,96 @@ func TestSpoolBuffer_Reset(t *testing.T) {
 	}
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		t.Fatalf("spill file still exists after Reset: %v", err)
+	}
+}
+
+func TestSpoolBuffer_spillCreateError(t *testing.T) {
+	missingTempDir := filepath.Join(t.TempDir(), "missing")
+	setProcessTempDir(t, missingTempDir)
+
+	tests := []struct {
+		name  string
+		write func(*spoolBuffer) (int, error)
+	}{
+		{
+			name: "Write",
+			write: func(buffer *spoolBuffer) (int, error) {
+				return buffer.Write([]byte("d"))
+			},
+		},
+		{
+			name: "WriteString",
+			write: func(buffer *spoolBuffer) (int, error) {
+				return buffer.WriteString("d")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			buffer := newSpoolBuffer(3)
+			if n, err := buffer.WriteString("abc"); err != nil || n != 3 {
+				t.Fatalf("prefix write returned %d, %v; want 3, nil", n, err)
+			}
+
+			n, err := tt.write(buffer)
+
+			if n != 0 {
+				t.Fatalf("write returned %d, want 0", n)
+			}
+			if err == nil {
+				t.Fatal("write returned nil error for an unavailable temporary directory")
+			}
+			if buffer.file != nil {
+				t.Fatal("failed spill retained a file")
+			}
+			if got := buffer.buffer.String(); got != "abc" {
+				t.Fatalf("buffered output = %q, want %q", got, "abc")
+			}
+			if got := buffer.Len(); got != 3 {
+				t.Fatalf("length = %d, want 3", got)
+			}
+		})
+	}
+}
+
+func TestSpoolBuffer_WriteToClosedFile(t *testing.T) {
+	buffer := newSpoolBuffer(0)
+	t.Cleanup(func() { _ = buffer.Close() })
+	if n, err := buffer.WriteString("message"); err != nil || n != len("message") {
+		t.Fatalf("WriteString returned %d, %v; want %d, nil", n, err, len("message"))
+	}
+	if err := buffer.file.Close(); err != nil {
+		t.Fatalf("closing spill file: %v", err)
+	}
+
+	n, err := buffer.WriteTo(io.Discard)
+
+	if n != 0 {
+		t.Fatalf("WriteTo returned %d, want 0", n)
+	}
+	if err == nil {
+		t.Fatal("WriteTo returned nil error for a closed spill file")
+	}
+}
+
+func TestSpoolBuffer_CloseClosedFile(t *testing.T) {
+	buffer := newSpoolBuffer(0)
+	t.Cleanup(func() { _ = buffer.Close() })
+	if n, err := buffer.WriteString("message"); err != nil || n != len("message") {
+		t.Fatalf("WriteString returned %d, %v; want %d, nil", n, err, len("message"))
+	}
+	path := buffer.file.Name()
+	if err := buffer.file.Close(); err != nil {
+		t.Fatalf("closing spill file: %v", err)
+	}
+
+	err := buffer.Close()
+
+	if err == nil {
+		t.Fatal("Close returned nil error for an already closed spill file")
+	}
+	if _, statErr := os.Stat(path); !os.IsNotExist(statErr) {
+		t.Fatalf("spill file still exists after Close: %v", statErr)
 	}
 }
