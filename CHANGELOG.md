@@ -45,6 +45,10 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 - Fix signal handling in `Flow.Main` to support `SIGTERM` on Unix and
   synchronize output during shutdown.
 - Document that `Flow` and `DefinedTask` are not safe for concurrent use.
+- Stream task-attributed output from `middleware.BufferParallel`, truncating
+  individual lines larger than 1 MiB, and spill `middleware.SilentNonFailed`
+  output larger than 1 MiB to temporary files. Extend `SyncWriter` with atomic
+  `io.ReaderFrom` calls so failed-output replay stays serialized.
 
 ## [3.0.1](https://github.com/goyek/goyek/releases/tag/v3.0.1) - 2025-12-09
 

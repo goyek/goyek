@@ -735,7 +735,7 @@ func TestFlow_UseExecutor_nil_middleware(t *testing.T) {
 }
 
 func TestFlow_Execute_synchronizesOutputOnce(t *testing.T) {
-	out := io.Discard
+	out := &strings.Builder{}
 	flow := &goyek.Flow{}
 	flow.SetOutput(out)
 
@@ -780,7 +780,7 @@ func TestFlow_Execute_synchronizesOutputOnce(t *testing.T) {
 }
 
 func TestFlow_Execute_reusesSyncWriter(t *testing.T) {
-	out := goyek.SyncWriter(io.Discard)
+	out := goyek.SyncWriter(&strings.Builder{})
 	flow := &goyek.Flow{}
 	flow.SetOutput(out)
 

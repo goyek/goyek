@@ -171,8 +171,9 @@ The following repositories demonstrate real-world usage of goyek:
   concurrently shared with another flow or external code. Create one wrapper
   and share it so every participant uses the same lock.
 - **Be deliberate with parallelism**: set `Task.Parallel` only when actions are
-  safe to run concurrently and rely on `middleware.BufferParallel` to keep
-  output readable.
+  safe to run concurrently and use `middleware.BufferParallel` to stream
+  task-attributed output without retaining complete task logs in memory.
+  Individual lines larger than 1 MiB are emitted with a truncation marker.
 - **Treat context and cleanup carefully**: start long-running resources using
   `a.Context()` and release them in `a.Cleanup` callbacks, keeping in mind that
   the task context is canceled before cleanups run.
