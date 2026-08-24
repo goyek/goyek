@@ -665,9 +665,11 @@ func TestA_Setenv_error(t *testing.T) {
 }
 
 func TestA_Chdir_error(t *testing.T) {
+	out := &strings.Builder{}
 	got := goyek.NewRunner(func(a *goyek.A) {
 		a.Chdir("non-existent-directory-@!#$")
-	})(goyek.Input{})
+	})(goyek.Input{Output: goyek.SyncWriter(out), Logger: &goyek.CodeLineLogger{}})
 
 	assertEqual(t, got.Status, goyek.StatusFailed, "should return proper status")
+	assertContains(t, out, "a_test.go:", "should report the caller's code line")
 }
