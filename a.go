@@ -306,6 +306,7 @@ func (a *A) TempDir() string {
 // Because Chdir affects the whole process, it should not be used
 // in parallel tasks.
 func (a *A) Chdir(dir string) {
+	a.Helper()
 	if a.parallel {
 		a.Fatalf("Chdir called in a parallel task")
 	}
