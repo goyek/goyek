@@ -6,7 +6,7 @@ require (
 	github.com/golangci/golangci-lint/v2 v2.13.1
 	github.com/golangci/misspell v0.8.0
 	github.com/goyek/goyek/v3 v3.0.1
-	golang.org/x/exp v0.0.0-20260813180055-c1d0aacb2297
+	golang.org/x/exp v0.0.0-20260824195058-e88cd73687aa
 	golang.org/x/vuln v1.7.0
 )
 
