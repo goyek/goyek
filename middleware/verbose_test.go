@@ -2,6 +2,7 @@ package middleware_test
 
 import (
 	"io"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -91,11 +92,136 @@ func TestSilentNonFailed_concurrent_printing(t *testing.T) {
 
 func TestSilentNonFailed_nilOutput(t *testing.T) {
 	runner := middleware.SilentNonFailed(func(in goyek.Input) goyek.Result {
-		_, _ = io.WriteString(in.Output, "discarded")
+		if in.Output != io.Discard {
+			t.Fatalf("output = %T, want io.Discard", in.Output)
+		}
+		message := strings.Repeat("x", (1<<20)+1)
+		if n, err := io.WriteString(in.Output, message); err != nil || n != len(message) {
+			t.Fatalf("WriteString returned %d, %v; want %d, nil", n, err, len(message))
+		}
 		return goyek.Result{Status: goyek.StatusFailed}
 	})
 
 	result := runner(goyek.Input{})
+
+	if result.Status != goyek.StatusFailed {
+		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusFailed)
+	}
+}
+
+func TestSilentNonFailed_discardOutput(t *testing.T) {
+	runner := middleware.SilentNonFailed(func(in goyek.Input) goyek.Result {
+		if in.Output != io.Discard {
+			t.Fatalf("output = %T, want io.Discard", in.Output)
+		}
+		message := strings.Repeat("x", (1<<20)+1)
+		if n, err := io.WriteString(in.Output, message); err != nil || n != len(message) {
+			t.Fatalf("WriteString returned %d, %v; want %d, nil", n, err, len(message))
+		}
+		return goyek.Result{Status: goyek.StatusFailed}
+	})
+
+	result := runner(goyek.Input{Output: goyek.SyncWriter(io.Discard)})
+
+	if result.Status != goyek.StatusFailed {
+		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusFailed)
+	}
+}
+
+func TestSilentNonFailed_preservesLargeFailedOutput(t *testing.T) {
+	message := strings.Repeat("x", (1<<20)+1)
+	runner := middleware.SilentNonFailed(func(in goyek.Input) goyek.Result {
+		if n, err := io.WriteString(in.Output, message); err != nil || n != len(message) {
+			t.Fatalf("WriteString returned %d, %v; want %d, nil", n, err, len(message))
+		}
+		return goyek.Result{Status: goyek.StatusFailed}
+	})
+
+	output := &strings.Builder{}
+	result := runner(goyek.Input{Output: goyek.SyncWriter(output)})
+
+	if result.Status != goyek.StatusFailed {
+		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusFailed)
+	}
+	if got := output.String(); got != message {
+		t.Fatalf("output length = %d, want %d", len(got), len(message))
+	}
+}
+
+func TestSilentNonFailed_discardsLargeNonFailedOutput(t *testing.T) {
+	message := strings.Repeat("x", (1<<20)+1)
+	runner := middleware.SilentNonFailed(func(in goyek.Input) goyek.Result {
+		if n, err := io.WriteString(in.Output, message); err != nil || n != len(message) {
+			t.Fatalf("WriteString returned %d, %v; want %d, nil", n, err, len(message))
+		}
+		return goyek.Result{Status: goyek.StatusPassed}
+	})
+
+	output := &strings.Builder{}
+	result := runner(goyek.Input{Output: goyek.SyncWriter(output)})
+
+	if result.Status != goyek.StatusPassed {
+		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusPassed)
+	}
+	if got := output.String(); got != "" {
+		t.Fatalf("output = %q, want empty", got)
+	}
+}
+
+func TestSilentNonFailed_preservesConcurrentLargeOutputBlocks(t *testing.T) {
+	previousProcs := runtime.GOMAXPROCS(1)
+	t.Cleanup(func() { runtime.GOMAXPROCS(previousProcs) })
+
+	const outputSize = (1 << 20) + 1024
+	outputs := map[string]string{
+		"task-a": strings.Repeat("a", outputSize),
+		"task-b": strings.Repeat("b", outputSize),
+	}
+	ready := make(chan struct{}, len(outputs))
+	release := make(chan struct{})
+	runner := middleware.SilentNonFailed(func(in goyek.Input) goyek.Result {
+		message := outputs[in.TaskName]
+		if n, err := io.WriteString(in.Output, message); err != nil || n != len(message) {
+			t.Errorf("WriteString returned %d, %v; want %d, nil", n, err, len(message))
+		}
+		ready <- struct{}{}
+		<-release
+		return goyek.Result{Status: goyek.StatusFailed}
+	})
+
+	output := &yieldingWriter{}
+	done := make(chan goyek.Result, len(outputs))
+	for taskName := range outputs {
+		taskName := taskName
+		go func() {
+			done <- runner(goyek.Input{TaskName: taskName, Output: output})
+		}()
+	}
+	for range outputs {
+		<-ready
+	}
+	close(release)
+	for range outputs {
+		if result := <-done; result.Status != goyek.StatusFailed {
+			t.Fatalf("got status %v, want %v", result.Status, goyek.StatusFailed)
+		}
+	}
+
+	got := output.String()
+	wantAB := outputs["task-a"] + outputs["task-b"]
+	wantBA := outputs["task-b"] + outputs["task-a"]
+	if got != wantAB && got != wantBA {
+		t.Fatalf("concurrent output was truncated or interleaved; got length %d, want %d", len(got), len(wantAB))
+	}
+}
+
+func TestSilentNonFailed_uncomparableOutput(t *testing.T) {
+	runner := middleware.SilentNonFailed(func(in goyek.Input) goyek.Result {
+		_, _ = io.WriteString(in.Output, "message")
+		return goyek.Result{Status: goyek.StatusFailed}
+	})
+
+	result := runner(goyek.Input{Output: uncomparableWriter(make([]byte, 64))})
 
 	if result.Status != goyek.StatusFailed {
 		t.Fatalf("got status %v, want %v", result.Status, goyek.StatusFailed)

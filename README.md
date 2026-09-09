@@ -172,7 +172,15 @@ The following repositories demonstrate real-world usage of goyek:
   and share it so every participant uses the same lock.
 - **Be deliberate with parallelism**: set `Task.Parallel` only when actions are
   safe to run concurrently and rely on `middleware.BufferParallel` to keep
-  output readable.
+  output readable. Outside a `Flow`, share one `goyek.SyncWriter` result when a
+  destination is written through multiple independently wrapped runners or by
+  other code so output that spills to disk remains grouped.
+- **Account for buffered output storage**: `middleware.BufferParallel` and
+  `middleware.SilentNonFailed` keep up to 1 MiB per middleware invocation in
+  memory, then spill complete output to a permission-restricted file in the
+  system temporary directory that is removed on a best-effort basis. Large
+  output can consume temporary disk space, and writes can return temporary-file
+  I/O errors after spilling.
 - **Treat context and cleanup carefully**: start long-running resources using
   `a.Context()` and release them in `a.Cleanup` callbacks, keeping in mind that
   the task context is canceled before cleanups run.
