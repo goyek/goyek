@@ -26,6 +26,11 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
   to resource leaks.
 - Fix races in `middleware.BufferParallel` and `middleware.SilentNonFailed`
   when task output is written from multiple goroutines.
+- Bound in-memory output retained by `middleware.BufferParallel` and
+  `middleware.SilentNonFailed`; output larger than 1 MiB now spills to a
+  permission-restricted file in the system temporary directory while remaining
+  complete and grouped by task. Spill files are removed on a best-effort basis,
+  and output writes can report temporary-file I/O errors after spilling.
 - Resolve the default task before executor middleware so middlewares
   can observe the task that will actually run.
 - Treat nil output as `io.Discard` in bundled output-writing middleware.
