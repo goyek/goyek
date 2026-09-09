@@ -16,6 +16,8 @@ as well as to [Module version numbering](https://go.dev/doc/modules/version-numb
 
 ### Fixed
 
+- `A.Chdir` now reports failures with the caller's file and line,
+  like `A.Setenv` and `A.TempDir`.
 - Reject stale task handles after an undefined task name is reused.
 - `A.Cleanup` now panics if a `nil` function is provided.
   This prevents accidental misconfigurations where a `nil` cleanup
