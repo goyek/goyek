@@ -27,16 +27,21 @@ type Task struct {
 //
 // A DefinedTask is not safe for concurrent use.
 type DefinedTask struct {
-	name     string
-	usage    string
-	deps     []*DefinedTask
-	action   func(a *A)
-	parallel bool
-	flow     *Flow
+	*taskSnapshot
+	flow *Flow
 }
 
 // Deps represents a collection of dependencies.
 type Deps []*DefinedTask
+
+// taskSnapshot contains the mutable state owned by a Flow.
+type taskSnapshot struct {
+	name     string
+	usage    string
+	deps     []*taskSnapshot
+	action   func(a *A)
+	parallel bool
+}
 
 // Name returns the name of the task.
 func (r *DefinedTask) Name() string {
@@ -45,11 +50,12 @@ func (r *DefinedTask) Name() string {
 
 // SetName changes the name of the task.
 func (r *DefinedTask) SetName(s string) {
+	r.mustBeDefined()
 	if _, ok := r.flow.tasks[s]; ok {
 		panic("task with the same name is already defined")
 	}
 	oldName := r.name
-	r.flow.tasks[s] = r
+	r.flow.tasks[s] = r.taskSnapshot
 	delete(r.flow.tasks, oldName)
 	r.name = s
 }
@@ -61,6 +67,7 @@ func (r *DefinedTask) Usage() string {
 
 // SetUsage sets the description of the task.
 func (r *DefinedTask) SetUsage(s string) {
+	r.mustBeDefined()
 	r.usage = s
 }
 
@@ -71,6 +78,7 @@ func (r *DefinedTask) Action() func(a *A) {
 
 // SetAction changes the action of the task.
 func (r *DefinedTask) SetAction(fn func(a *A)) {
+	r.mustBeDefined()
 	r.action = fn
 }
 
@@ -80,41 +88,34 @@ func (r *DefinedTask) Deps() Deps {
 		return nil
 	}
 	deps := make(Deps, len(r.deps))
-	copy(deps, r.deps)
+	for i, dep := range r.deps {
+		deps[i] = &DefinedTask{taskSnapshot: dep, flow: r.flow}
+	}
 	return deps
 }
 
 // SetDeps sets all task's dependencies.
 func (r *DefinedTask) SetDeps(deps Deps) {
-	if len(deps) == 0 {
-		r.deps = nil
-		return
-	}
+	r.mustBeDefined()
+	snapshots := r.flow.snapshotDeps(deps)
 
-	for _, dep := range deps {
-		if !r.flow.isDefined(dep.Name(), dep.flow) {
-			panic("dependency was not defined: " + dep.Name())
-		}
-	}
-
-	visited := map[string]bool{}
-	if ok := r.noCycle(deps, visited); !ok {
+	visited := map[*taskSnapshot]bool{}
+	if ok := r.noCycle(snapshots, visited); !ok {
 		panic("circular dependency")
 	}
-	r.deps = deps
+	r.deps = snapshots
 }
 
-func (r *DefinedTask) noCycle(deps Deps, visited map[string]bool) bool {
+func (r *DefinedTask) noCycle(deps []*taskSnapshot, visited map[*taskSnapshot]bool) bool {
 	if len(deps) == 0 {
 		return true
 	}
 	for _, dep := range deps {
-		name := dep.name
-		if visited[name] {
+		if visited[dep] {
 			continue // already checked this branch
 		}
-		visited[name] = true
-		if name == r.name {
+		visited[dep] = true
+		if dep == r.taskSnapshot {
 			return false
 		}
 		if !r.noCycle(dep.deps, visited) {
@@ -122,4 +123,10 @@ func (r *DefinedTask) noCycle(deps Deps, visited map[string]bool) bool {
 		}
 	}
 	return true
+}
+
+func (r *DefinedTask) mustBeDefined() {
+	if !r.flow.isDefined(r) {
+		panic("task was not defined: " + r.name)
+	}
 }

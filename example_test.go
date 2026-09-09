@@ -50,7 +50,7 @@ func Example() {
 	usage := func() {
 		out := goyek.Output()
 		flag.CommandLine.SetOutput(out)
-		fmt.Fprintln(out, "Usage of build: [tasks] [flags] [--] [args]")
+		fmt.Fprintln(out, "Usage of build: [tasks] [flags]")
 		goyek.Print()
 		fmt.Fprintln(out, "Flags:")
 		flag.PrintDefaults()
@@ -64,6 +64,10 @@ func Example() {
 	tasks, args := goyek.SplitTasks(os.Args[1:])
 	if err := flag.CommandLine.Parse(args); err != nil {
 		fmt.Fprintln(goyek.Output(), err)
+		os.Exit(2)
+	}
+	if flag.NArg() > 0 {
+		fmt.Fprintln(goyek.Output(), "unexpected arguments:", flag.Args())
 		os.Exit(2)
 	}
 

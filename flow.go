@@ -24,8 +24,8 @@ type Flow struct {
 	usage  func()
 	logger Logger
 
-	tasks               map[string]*DefinedTask // snapshot of defined tasks
-	defaultTask         *DefinedTask            // task to run when none is explicitly provided
+	tasks               map[string]*taskSnapshot // snapshot of defined tasks
+	defaultTask         *taskSnapshot            // task to run when none is explicitly provided
 	middlewares         []Middleware
 	executorMiddlewares []ExecutorMiddleware
 }
@@ -43,7 +43,7 @@ func Tasks() []*DefinedTask {
 func (f *Flow) Tasks() []*DefinedTask {
 	var tasks []*DefinedTask
 	for _, task := range f.tasks {
-		tasks = append(tasks, task)
+		tasks = append(tasks, &DefinedTask{taskSnapshot: task, flow: f})
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Name() < tasks[j].Name() })
 	return tasks
@@ -60,25 +60,22 @@ func (f *Flow) Define(task Task) *DefinedTask {
 	if task.Name == "" {
 		panic("task name cannot be empty")
 	}
-	if f.isDefined(task.Name, f) {
+	if _, ok := f.tasks[task.Name]; ok {
 		panic("task with the same name is already defined")
 	}
-	for _, dep := range task.Deps {
-		if !f.isDefined(dep.name, dep.flow) {
-			panic("dependency was not defined: " + dep.name)
-		}
+	if f.tasks == nil {
+		f.tasks = map[string]*taskSnapshot{}
 	}
 
-	taskCopy := &DefinedTask{
+	taskCopy := &taskSnapshot{
 		name:     task.Name,
 		usage:    task.Usage,
-		deps:     task.Deps,
+		deps:     f.snapshotDeps(task.Deps),
 		action:   task.Action,
 		parallel: task.Parallel,
-		flow:     f,
 	}
 	f.tasks[task.Name] = taskCopy
-	return taskCopy
+	return &DefinedTask{taskSnapshot: taskCopy, flow: f}
 }
 
 // Undefine unregisters the task. It panics in case of any error.
@@ -88,7 +85,7 @@ func Undefine(task *DefinedTask) {
 
 // Undefine unregisters the task. It panics in case of any error.
 func (f *Flow) Undefine(task *DefinedTask) {
-	if !f.isDefined(task.name, task.flow) {
+	if !f.isDefined(task) {
 		panic("task was not defined: " + task.name)
 	}
 
@@ -98,9 +95,9 @@ func (f *Flow) Undefine(task *DefinedTask) {
 		if len(t.deps) == 0 {
 			continue
 		}
-		var cleanDep []*DefinedTask
+		var cleanDep []*taskSnapshot
 		for _, dep := range t.deps {
-			if dep == task {
+			if dep == task.taskSnapshot {
 				continue
 			}
 			cleanDep = append(cleanDep, dep)
@@ -108,20 +105,31 @@ func (f *Flow) Undefine(task *DefinedTask) {
 		t.deps = cleanDep
 	}
 
-	if f.defaultTask == task {
+	if f.defaultTask == task.taskSnapshot {
 		f.defaultTask = nil
 	}
 }
 
-func (f *Flow) isDefined(name string, flow *Flow) bool {
-	if f.tasks == nil {
-		f.tasks = map[string]*DefinedTask{}
+func (f *Flow) isDefined(task *DefinedTask) bool {
+	if task == nil || task.taskSnapshot == nil || f != task.flow {
+		return false
 	}
-	if f != flow {
-		return false // defined in other flow
+	return f.tasks[task.name] == task.taskSnapshot
+}
+
+func (f *Flow) snapshotDeps(deps Deps) []*taskSnapshot {
+	if len(deps) == 0 {
+		return nil
 	}
-	_, ok := f.tasks[name]
-	return ok
+
+	snapshots := make([]*taskSnapshot, len(deps))
+	for i, dep := range deps {
+		if !f.isDefined(dep) {
+			panic("dependency was not defined: " + dep.Name())
+		}
+		snapshots[i] = dep.taskSnapshot
+	}
+	return snapshots
 }
 
 // Output returns the current output destination. [os.Stdout] is returned if
@@ -255,7 +263,10 @@ func Default() *DefinedTask {
 // Default returns the default task.
 // nil is returned if default was not set.
 func (f *Flow) Default() *DefinedTask {
-	return f.defaultTask
+	if f.defaultTask == nil {
+		return nil
+	}
+	return &DefinedTask{taskSnapshot: f.defaultTask, flow: f}
 }
 
 // SetDefault sets a task to run when none is explicitly provided.
@@ -273,10 +284,10 @@ func (f *Flow) SetDefault(task *DefinedTask) {
 		return
 	}
 
-	if !f.isDefined(task.name, task.flow) {
+	if !f.isDefined(task) {
 		panic("task was not defined: " + task.name)
 	}
-	f.defaultTask = task
+	f.defaultTask = task.taskSnapshot
 }
 
 // Use adds task runner middlewares (interceptors).

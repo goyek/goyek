@@ -42,8 +42,8 @@ func main() {
 
 	flag.CommandLine.SetOutput(out)
 	flag.Usage = usage
-	tasks, args := goyek.SplitTasks(os.Args[1:])
-	if err := flag.CommandLine.Parse(args); err != nil {
+	tasks, err := parseArgs(flag.CommandLine, os.Args[1:])
+	if err != nil {
 		fmt.Fprintln(out, err)
 		os.Exit(exitCodeInvalid)
 	}
@@ -78,8 +78,19 @@ func main() {
 	goyek.Main(tasks, opts...)
 }
 
+func parseArgs(flags *flag.FlagSet, args []string) ([]string, error) {
+	tasks, flagArgs := goyek.SplitTasks(args)
+	if err := flags.Parse(flagArgs); err != nil {
+		return nil, err
+	}
+	if flags.NArg() > 0 {
+		return nil, fmt.Errorf("unexpected arguments: %v", flags.Args())
+	}
+	return tasks, nil
+}
+
 func usage() {
-	fmt.Println("Usage of build: [tasks] [flags] [--] [args]")
+	fmt.Println("Usage of build: [tasks] [flags]")
 	goyek.Print()
 	fmt.Println("Flags:")
 	flag.PrintDefaults()

@@ -6,8 +6,8 @@ package goyek
 //
 // This function does not parse flags, it only separates tasks from flags/args.
 // To parse flags, you can use [flag.FlagSet.Parse] with the returned rest slice.
-// A common pattern is to support the recommended syntax
-// "[tasks] [flags] [--] [args]" in your main function:
+// A program that does not accept positional arguments can support the syntax
+// "[tasks] [flags]" as follows:
 //
 //	func main() {
 //		tasks, args := goyek.SplitTasks(os.Args[1:])
@@ -15,8 +15,18 @@ package goyek
 //			fmt.Fprintln(goyek.Output(), err)
 //			os.Exit(2)
 //		}
+//		if flag.NArg() > 0 {
+//			fmt.Fprintln(goyek.Output(), "unexpected arguments:", flag.Args())
+//			os.Exit(2)
+//		}
 //		goyek.Main(tasks)
 //	}
+//
+// Programs that intentionally accept positional arguments should require them
+// to follow an explicit "--", giving the syntax
+// "[tasks] [flags] [--] [args]". Do not accept every value in [flag.Args] as
+// intentional: flag parsing stops at the first positional argument, so a task
+// placed after a flag would otherwise be mistaken for a task argument.
 //
 // Examples:
 //   - [task1, task2] -> tasks: [task1, task2], rest: nil

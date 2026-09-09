@@ -80,6 +80,67 @@ func Test_Define_bad_dep(t *testing.T) {
 	assertPanics(t, act, "should not be possible use dependencies from different flow")
 }
 
+func Test_Define_copiesDeps(t *testing.T) {
+	flow := &goyek.Flow{}
+	root := flow.Define(goyek.Task{Name: "root"})
+	deps := goyek.Deps{root}
+	task := flow.Define(goyek.Task{Name: "task", Deps: deps})
+	dependent := flow.Define(goyek.Task{Name: "dependent", Deps: goyek.Deps{task}})
+
+	// This would create a cycle if Define retained the caller's slice.
+	deps[0] = dependent
+
+	got := task.Deps()
+	requireEqual(t, len(got), 1, "should keep one dependency")
+	assertEqual(t, got[0], root, "should retain the validated dependency")
+}
+
+func TestFlow_rejectsStaleTask(t *testing.T) {
+	tests := []struct {
+		name string
+		use  func(*goyek.Flow, *goyek.DefinedTask, *goyek.DefinedTask)
+	}{
+		{
+			name: "undefine",
+			use: func(flow *goyek.Flow, stale, _ *goyek.DefinedTask) {
+				flow.Undefine(stale)
+			},
+		},
+		{
+			name: "default",
+			use: func(flow *goyek.Flow, stale, _ *goyek.DefinedTask) {
+				flow.SetDefault(stale)
+			},
+		},
+		{
+			name: "define dependency",
+			use: func(flow *goyek.Flow, stale, _ *goyek.DefinedTask) {
+				flow.Define(goyek.Task{Name: "dependent", Deps: goyek.Deps{stale}})
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			flow := &goyek.Flow{}
+			stale := flow.Define(goyek.Task{Name: "task"})
+			flow.Undefine(stale)
+			replacement := flow.Define(goyek.Task{Name: "task"})
+
+			act := func() { tt.use(flow, stale, replacement) }
+
+			assertPanics(t, act, "should reject a stale task handle")
+			got := flow.Tasks()
+			requireEqual(t, len(got), 1, "should retain only the replacement task")
+			assertEqual(t, got[0], replacement, "should retain the replacement task")
+			assertEqual(t, got[0].Deps(), goyek.Deps(nil), "should not reconfigure the replacement task")
+			if flow.Default() != nil {
+				t.Error("should not configure a stale task as the default")
+			}
+		})
+	}
+}
+
 func Test_successful(t *testing.T) {
 	ctx := context.Background()
 	flow := &goyek.Flow{}
