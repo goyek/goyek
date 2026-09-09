@@ -7,20 +7,10 @@ import (
 	"github.com/goyek/goyek/v3"
 )
 
-// BufferParallel is a middleware which buffers the output from parallel tasks
-// to not have mixed output from parallel tasks execution.
-// It retains up to 1 MiB of output per task in memory, then spills the complete
-// output to a permission-restricted file in the system temporary directory.
-// Output is emitted in full after the task finishes, and the file is removed
-// on a best-effort basis.
-// Writes may return temporary file I/O errors after the in-memory limit is
-// reached.
-//
-// Concurrent invocations through the same BufferParallel-wrapped runner
-// serialize their complete replays. [goyek.Flow] additionally coordinates a
-// replay with other output routed through the Flow. Outside a Flow, callers
-// must share one [goyek.SyncWriter] result when the destination is also written
-// through another runner or directly by other code.
+// BufferParallel is a middleware which buffers output from parallel tasks to
+// prevent it from mixing during parallel task execution. Each parallel task's
+// complete output is emitted after the task finishes. Non-parallel tasks pass
+// through without buffering.
 func BufferParallel(next goyek.Runner) goyek.Runner {
 	var replayMu sync.Mutex
 

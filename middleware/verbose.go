@@ -7,14 +7,10 @@ import (
 	"github.com/goyek/goyek/v3"
 )
 
-// SilentNonFailed is a middleware which makes sure that only output from failed tasks is printed.
+// SilentNonFailed is a middleware which buffers task output and emits it only
+// when the task fails. Output from other task results is discarded.
 //
 // The behavior is based on the Go test runner when it is executed without the -v flag.
-// It retains up to 1 MiB of output per task in memory, then spills the complete
-// output to a permission-restricted file in the system temporary directory.
-// Failed output is emitted in full, and output from other task results is
-// discarded. The file is removed on a best-effort basis. Writes may return
-// temporary file I/O errors after the in-memory limit is reached.
 func SilentNonFailed(next goyek.Runner) goyek.Runner {
 	var replayMu sync.Mutex
 
