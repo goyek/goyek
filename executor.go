@@ -106,16 +106,18 @@ func (r *executor) Execute(in ExecuteInput) error {
 		}
 
 		tasksToRun := []*taskSnapshot{task}
+		batch := map[string]bool{name: true}
 
 		// Find all parallel tasks that have not been run
 		// and have no dependencies.
 		for _, next := range tasks {
 			nextTask := r.defined[next]
-			if !r.canRunTask(nextTask, visited, in.NoDeps) {
+			if !r.canRunTask(nextTask, visited, batch, in.NoDeps) {
 				continue
 			}
 			// Parallel task has none not-executed dependencies so we can run it.
 			visited[nextTask.name] = true
+			batch[nextTask.name] = true
 			tasksToRun = append(tasksToRun, nextTask)
 		}
 
@@ -153,7 +155,7 @@ func (r *executor) validate(in ExecuteInput) error {
 	return nil
 }
 
-func (r *executor) canRunTask(task *taskSnapshot, visited map[string]bool, noDeps bool) bool {
+func (r *executor) canRunTask(task *taskSnapshot, visited, batch map[string]bool, noDeps bool) bool {
 	if visited[task.name] {
 		return false
 	}
@@ -168,6 +170,10 @@ func (r *executor) canRunTask(task *taskSnapshot, visited map[string]bool, noDep
 	}
 
 	for _, dep := range task.deps {
+		if batch[dep.name] {
+			// The task has a dependency which is in the batch that is about to be started.
+			return false
+		}
 		if visited[dep.name] {
 			continue
 		}
