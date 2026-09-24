@@ -1062,6 +1062,38 @@ func TestFlow_Parallel_complex(t *testing.T) {
 	assertEqual(t, executed5, 1, "should execute task-parallel-5 only once")
 }
 
+func TestFlow_Parallel_parallel_dependency(t *testing.T) {
+	flow := &goyek.Flow{}
+	flow.SetOutput(io.Discard)
+	depDone := make(chan struct{})
+	depFinishedFirst := false
+	dep := flow.Define(goyek.Task{
+		Name:     "dep",
+		Parallel: true,
+		Action: func(*goyek.A) {
+			time.Sleep(10 * time.Millisecond)
+			close(depDone)
+		},
+	})
+	flow.Define(goyek.Task{
+		Name:     "task",
+		Parallel: true,
+		Deps:     goyek.Deps{dep},
+		Action: func(*goyek.A) {
+			select {
+			case <-depDone:
+				depFinishedFirst = true
+			default:
+			}
+		},
+	})
+
+	err := flow.Execute(context.Background(), []string{"task"})
+
+	assertPass(t, err, "should pass")
+	assertTrue(t, depFinishedFirst, "should run the parallel dependency before the task")
+}
+
 func TestFlow_Parallel_NoDeps(t *testing.T) {
 	flow := &goyek.Flow{}
 	flow.SetOutput(io.Discard)
